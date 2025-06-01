@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
@@ -64,6 +63,12 @@ const ScheduleTab = () => {
     }
   };
 
+  const handleCloseWorkOrder = () => {
+    setIsCreatingOrder(false);
+    setCurrentStep(1);
+    setShowScheduleMenu(false);
+  };
+
   if (isCreatingOrder) {
     return (
       <WorkOrderFlow
@@ -71,6 +76,7 @@ const ScheduleTab = () => {
         currentStep={currentStep}
         onNextStep={nextStep}
         onPrevStep={prevStep}
+        onClose={handleCloseWorkOrder}
       />
     );
   }
