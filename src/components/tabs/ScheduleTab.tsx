@@ -1,16 +1,18 @@
-
 import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import SwipeCard from '../SwipeCard';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Plus } from 'lucide-react';
 
 const ScheduleTab = () => {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [showScheduleMenu, setShowScheduleMenu] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [selectedScheduleType, setSelectedScheduleType] = useState<string>('');
 
   const handleAction = (action: string, item: string) => {
     toast({
@@ -19,24 +21,44 @@ const ScheduleTab = () => {
     });
   };
 
+  const scheduleTypes = [
+    { id: 'work-order', label: 'Work Order', icon: '🔧', description: 'Report maintenance issues' },
+    { id: 'payment', label: 'Payment', icon: '💳', description: 'Schedule rent or fees' },
+    { id: 'service', label: 'Service', icon: '🏠', description: 'Book cleaning, pest control' },
+    { id: 'event', label: 'Event RSVP', icon: '🎉', description: 'Community events' },
+    { id: 'community', label: 'Community Post', icon: '📝', description: 'Share with neighbors' },
+  ];
+
+  const suggestions = [
+    { id: 1, type: 'payment', title: 'Rent Due Soon', description: 'Due in 3 days - $1,550', priority: 'high' },
+    { id: 2, type: 'service', title: 'Quarterly Cleaning', description: 'Schedule your quarterly deep clean', priority: 'medium' },
+    { id: 3, type: 'event', title: 'Rooftop BBQ', description: 'This Saturday 6PM - RSVP needed', priority: 'low' },
+  ];
+
   const nextStep = () => {
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     } else {
       setIsCreatingOrder(false);
       setCurrentStep(1);
-      handleAction("Submitted", "Work Order");
+      setShowScheduleMenu(false);
+      handleAction("Submitted", selectedScheduleType);
     }
   };
 
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+    } else {
+      setIsCreatingOrder(false);
+      setShowScheduleMenu(true);
     }
   };
 
-  const startCreating = () => {
+  const startScheduling = (type: string) => {
+    setSelectedScheduleType(type);
     setIsCreatingOrder(true);
+    setShowScheduleMenu(false);
     setCurrentStep(1);
   };
 
@@ -44,7 +66,7 @@ const ScheduleTab = () => {
     return (
       <div className="px-4 py-6 pb-24">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Create Work Order</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Schedule {selectedScheduleType}</h1>
           <span className="text-sm text-gray-500">Step {currentStep} of 3</span>
         </div>
         
@@ -75,10 +97,14 @@ const ScheduleTab = () => {
                   <span className="text-4xl">📸</span>
                 </div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Take a Photo</h3>
-              <p className="text-gray-600 mb-4">Capture the issue you'd like to report</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                {selectedScheduleType === 'work-order' ? 'Take a Photo' : 'Add Details'}
+              </h3>
+              <p className="text-gray-600 mb-4">
+                {selectedScheduleType === 'work-order' ? 'Capture the issue you\'d like to report' : 'Provide information about your request'}
+              </p>
               <button className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold">
-                Open Camera
+                {selectedScheduleType === 'work-order' ? 'Open Camera' : 'Add Info'}
               </button>
             </div>
           </SwipeCard>
@@ -130,15 +156,15 @@ const ScheduleTab = () => {
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Confirm Submission</h3>
               <div className="space-y-4">
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-2">Issue Details</h4>
-                  <p className="text-gray-600">Photo captured ✓</p>
+                  <h4 className="font-medium text-gray-900 mb-2">Request Details</h4>
+                  <p className="text-gray-600">Details captured ✓</p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-medium text-gray-900 mb-2">Scheduled Time</h4>
                   <p className="text-gray-600">Tomorrow 10:00 AM</p>
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg">
-                  <p className="text-green-800 font-medium">Ready to submit work order</p>
+                  <p className="text-green-800 font-medium">Ready to submit {selectedScheduleType}</p>
                 </div>
               </div>
             </div>
@@ -148,12 +174,55 @@ const ScheduleTab = () => {
     );
   }
 
+  if (showScheduleMenu) {
+    return (
+      <div className="px-4 py-6 pb-24">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">Schedule Something</h1>
+          <button 
+            onClick={() => setShowScheduleMenu(false)}
+            className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center"
+          >
+            <span className="text-gray-600 text-lg">×</span>
+          </button>
+        </div>
+        
+        <div className="space-y-4">
+          {scheduleTypes.map((type) => (
+            <SwipeCard
+              key={type.id}
+              onSwipeRight={{
+                label: "Select",
+                action: () => startScheduling(type.label),
+                color: "#3B82F6"
+              }}
+              onTap={() => startScheduling(type.label)}
+            >
+              <div className="flex items-center p-4 bg-white rounded-lg">
+                <div className="w-12 h-12 bg-gray-100 rounded-lg mr-4 flex items-center justify-center">
+                  <span className="text-2xl">{type.icon}</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900">{type.label}</h3>
+                  <p className="text-gray-600 text-sm">{type.description}</p>
+                </div>
+              </div>
+            </SwipeCard>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="px-4 py-6 pb-24">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Resident Calendar</h1>
-        <button className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-          <span className="text-white text-lg">+</span>
+        <h1 className="text-3xl font-bold text-gray-900">Schedule</h1>
+        <button 
+          onClick={() => setShowScheduleMenu(true)}
+          className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center shadow-lg"
+        >
+          <Plus className="text-white" size={24} />
         </button>
       </div>
       
@@ -171,8 +240,50 @@ const ScheduleTab = () => {
         />
       </div>
 
-      {/* Timeline Items */}
+      {/* Daily Suggestions */}
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Today's Suggestions</h2>
+        <div className="space-y-3">
+          {suggestions.map((suggestion) => (
+            <SwipeCard
+              key={suggestion.id}
+              onSwipeRight={{
+                label: "Schedule",
+                action: () => startScheduling(suggestion.type),
+                color: "#10B981"
+              }}
+              onSwipeLeft={{
+                label: "Dismiss",
+                action: () => handleAction("Dismissed", suggestion.title),
+                color: "#6B7280"
+              }}
+              onTap={() => handleAction("Viewed", suggestion.title)}
+            >
+              <div className="flex items-center p-4 bg-white rounded-lg border-l-4 border-blue-500">
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-semibold text-gray-900">{suggestion.title}</h3>
+                    <span className={cn(
+                      "text-xs px-2 py-1 rounded-full",
+                      suggestion.priority === 'high' ? "bg-red-100 text-red-800" :
+                      suggestion.priority === 'medium' ? "bg-yellow-100 text-yellow-800" :
+                      "bg-green-100 text-green-800"
+                    )}>
+                      {suggestion.priority}
+                    </span>
+                  </div>
+                  <p className="text-gray-600 text-sm">{suggestion.description}</p>
+                </div>
+              </div>
+            </SwipeCard>
+          ))}
+        </div>
+      </div>
+
+      {/* Scheduled Items */}
       <div className="space-y-4">
+        <h2 className="text-xl font-semibold text-gray-900">Scheduled for {format(selectedDate, 'EEEE, MMM d')}</h2>
+        
         <div className="flex items-start text-sm text-gray-500">
           <span className="mr-4 mt-2 font-medium">9 AM</span>
           <SwipeCard
@@ -202,109 +313,32 @@ const ScheduleTab = () => {
         </div>
 
         <div className="flex items-start text-sm text-gray-500">
-          <span className="mr-4 mt-2 font-medium">10:30</span>
+          <span className="mr-4 mt-2 font-medium">2 PM</span>
           <SwipeCard
             onSwipeRight={{
-              label: "Reply",
-              action: () => handleAction("Replied", "Message"),
-              color: "#8B5CF6"
-            }}
-            onSwipeLeft={{
-              label: "Archive",
-              action: () => handleAction("Archived", "Message"),
-              color: "#6366F1"
-            }}
-            onTap={() => handleAction("Opened", "Message")}
-            className="flex-1"
-          >
-            <div className="flex items-center p-4 bg-white rounded-lg shadow-sm">
-              <div className="w-12 h-12 bg-gray-100 rounded-lg mr-3 flex items-center justify-center">
-                <span className="text-xl">✉️</span>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Message</h3>
-                <p className="text-gray-600 text-sm">Please submit your...</p>
-              </div>
-            </div>
-          </SwipeCard>
-        </div>
-
-        <div className="flex items-start text-sm text-gray-500">
-          <span className="mr-4 mt-2 font-medium">11:00</span>
-          <SwipeCard
-            onSwipeRight={{
-              label: "Accept",
-              action: () => handleAction("Accepted", "Lease Renewal"),
+              label: "Pay Now",
+              action: () => handleAction("Paid", "Rent Payment"),
               color: "#10B981"
             }}
             onSwipeLeft={{
-              label: "Decline",
-              action: () => handleAction("Declined", "Lease Renewal"),
-              color: "#EF4444"
+              label: "Reschedule",
+              action: () => handleAction("Rescheduled", "Rent Payment"),
+              color: "#F59E0B"
             }}
-            onTap={() => handleAction("Viewed", "Lease Renewal")}
+            onTap={() => handleAction("Viewed", "Rent Payment")}
             className="flex-1"
           >
             <div className="flex items-center p-4 bg-white rounded-lg shadow-sm">
               <div className="w-12 h-12 bg-gray-100 rounded-lg mr-3 flex items-center justify-center">
-                <span className="text-xl">🏠</span>
+                <span className="text-xl">💳</span>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Renewal</h3>
-                <p className="text-gray-600 text-sm">New rent: $1,550</p>
+                <h3 className="font-semibold text-gray-900">Rent Payment</h3>
+                <p className="text-gray-600 text-sm">$1,550 due</p>
               </div>
             </div>
           </SwipeCard>
         </div>
-
-        <div className="flex items-start text-sm text-gray-500">
-          <span className="mr-4 mt-2 font-medium">11:30</span>
-          <SwipeCard
-            onSwipeRight={{
-              label: "Save Deal",
-              action: () => handleAction("Saved", "Local Deal"),
-              color: "#F59E0B"
-            }}
-            onSwipeLeft={{
-              label: "Skip",
-              action: () => handleAction("Skipped", "Local Deal"),
-              color: "#6B7280"
-            }}
-            onTap={() => handleAction("Viewed", "Local Deal")}
-            className="flex-1"
-          >
-            <div className="p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="bg-orange-100 text-orange-800 text-xs font-semibold px-2 py-1 rounded-full">
-                  20% OFF
-                </span>
-              </div>
-              <div className="w-full h-24 bg-orange-200 rounded-lg mb-2 flex items-center justify-center">
-                <span className="text-2xl">🍔</span>
-              </div>
-            </div>
-          </SwipeCard>
-        </div>
-      </div>
-
-      {/* Create New Work Order */}
-      <div className="mt-8">
-        <SwipeCard
-          onSwipeRight={{
-            label: "Start",
-            action: startCreating,
-            color: "#3B82F6"
-          }}
-          onTap={startCreating}
-        >
-          <div className="p-6 text-center bg-gradient-to-r from-blue-50 to-indigo-50">
-            <div className="w-16 h-16 bg-blue-100 rounded-full mx-auto flex items-center justify-center mb-4">
-              <span className="text-2xl">➕</span>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Create Work Order</h3>
-            <p className="text-gray-600">Report an issue or request maintenance</p>
-          </div>
-        </SwipeCard>
       </div>
     </div>
   );
