@@ -216,7 +216,7 @@ const SwipeableDiscoveryFlow = () => {
           className="w-full py-3"
           size="lg"
         >
-          {currentStep === 5 ? 'Complete Discovery' : 'Continue'}
+          {currentStep === 5 ? 'Find Home' : 'Continue'}
         </Button>
       </div>
     </div>
