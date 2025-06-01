@@ -44,8 +44,8 @@ const MessageConfirmation = ({ subject, message, recipientType, onDone }: Messag
   };
 
   return (
-    <div className="min-h-screen p-4 pt-8">
-      <div className="max-w-sm mx-auto w-full space-y-6">
+    <div className="min-h-screen p-4 pt-4">
+      <div className="max-w-sm mx-auto w-full space-y-4">
         {/* Success Message */}
         <div className="text-center space-y-3">
           <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto">
@@ -62,7 +62,7 @@ const MessageConfirmation = ({ subject, message, recipientType, onDone }: Messag
         </div>
 
         {/* Response Time Info */}
-        <div className="text-center space-y-3">
+        <div className="text-center space-y-2">
           <h3 className="text-base font-semibold text-gray-900">
             {dayString}
           </h3>
