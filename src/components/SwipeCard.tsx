@@ -50,28 +50,34 @@ const SwipeCard = ({
     const horizontalDistance = Math.abs(deltaX);
     const verticalDistance = Math.abs(deltaY);
     
-    // Require more movement before showing action
-    if (horizontalDistance > 15 || verticalDistance > 15) {
+    // Require much more movement before showing action and reduce sensitivity
+    if (horizontalDistance > 30 || verticalDistance > 30) {
       hasMoved.current = true;
       
-      // Determine primary direction
-      if (verticalDistance > horizontalDistance) {
-        // Vertical swipe
-        setDragOffset({ x: 0, y: deltaY * 0.6 });
-        if (deltaY < -60 && onSwipeUp) setShowAction('up');
+      // Determine primary direction with stricter thresholds
+      if (verticalDistance > horizontalDistance * 1.5) {
+        // Vertical swipe - much more restrictive movement
+        const dampedY = deltaY * 0.3; // Reduced from 0.6 to 0.3 for less jumpy feel
+        setDragOffset({ x: 0, y: Math.max(-80, Math.min(20, dampedY)) }); // Clamp the movement
+        if (deltaY < -100 && onSwipeUp) setShowAction('up'); // Increased threshold from -60 to -100
+        else setShowAction(null);
+      } else if (horizontalDistance > verticalDistance * 1.5) {
+        // Horizontal swipe - much more restrictive movement
+        const dampedX = deltaX * 0.3; // Reduced from 0.6 to 0.3 for less jumpy feel
+        setDragOffset({ x: Math.max(-80, Math.min(80, dampedX)), y: 0 }); // Clamp the movement
+        if (deltaX > 100 && onSwipeRight) setShowAction('right'); // Increased threshold from 60 to 100
+        else if (deltaX < -100 && onSwipeLeft) setShowAction('left'); // Increased threshold from -60 to -100
         else setShowAction(null);
       } else {
-        // Horizontal swipe
-        setDragOffset({ x: deltaX * 0.6, y: 0 });
-        if (deltaX > 60 && onSwipeRight) setShowAction('right');
-        else if (deltaX < -60 && onSwipeLeft) setShowAction('left');
-        else setShowAction(null);
+        // Mixed movement - reset to prevent jumpy behavior
+        setDragOffset({ x: 0, y: 0 });
+        setShowAction(null);
       }
     }
   };
 
   const handleTouchEnd = () => {
-    const threshold = 120;
+    const threshold = 150; // Increased from 120 to 150 for more intentional swipes
     
     if (Math.abs(dragOffset.y) > threshold && dragOffset.y < -threshold && onSwipeUp) {
       onSwipeUp.action();
@@ -94,8 +100,8 @@ const SwipeCard = ({
   const getActionOpacity = () => {
     if (!showAction) return 0;
     const distance = showAction === 'up' ? Math.abs(dragOffset.y) : Math.abs(dragOffset.x);
-    const progress = Math.min(distance / 120, 1);
-    return Math.max(0.2, progress * 0.8);
+    const progress = Math.min(distance / 150, 1); // Updated to match new threshold
+    return Math.max(0.3, progress * 0.9); // Slightly higher base opacity
   };
 
   return (
@@ -166,7 +172,7 @@ const SwipeCard = ({
           className
         )}
         style={{
-          transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) ${isDragging && (Math.abs(dragOffset.x) > 30 || Math.abs(dragOffset.y) > 30) ? 'rotate(' + ((dragOffset.x + dragOffset.y) * 0.01) + 'deg)' : ''}`,
+          transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) ${isDragging && (Math.abs(dragOffset.x) > 40 || Math.abs(dragOffset.y) > 40) ? 'rotate(' + ((dragOffset.x + dragOffset.y) * 0.005) + 'deg)' : ''}`, // Reduced rotation sensitivity
           transition: isDragging ? 'none' : 'transform 0.3s ease-out, box-shadow 0.2s ease-out'
         }}
         onTouchStart={handleTouchStart}
