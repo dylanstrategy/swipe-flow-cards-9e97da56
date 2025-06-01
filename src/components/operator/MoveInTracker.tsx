@@ -21,6 +21,7 @@ const MoveInTracker: React.FC<MoveInTrackerProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'unapproved' | 'incomplete' | 'all'>(initialFilter);
+  const [taskFilter, setTaskFilter] = useState<'all' | 'resident' | 'operator'>('all');
   const [selectedResident, setSelectedResident] = useState<any>(null);
 
   // Sample move-in data based on the spreadsheet
@@ -145,6 +146,10 @@ const MoveInTracker: React.FC<MoveInTrackerProps> = ({
     setFilterStatus(value as 'unapproved' | 'incomplete' | 'all');
   };
 
+  const handleTaskFilterChange = (value: string) => {
+    setTaskFilter(value as 'all' | 'resident' | 'operator');
+  };
+
   const filteredResidents = getFilteredResidents();
 
   // If viewing a specific resident's details
@@ -169,6 +174,20 @@ const MoveInTracker: React.FC<MoveInTrackerProps> = ({
               <p className="text-gray-600">{selectedResident.name} - Unit {selectedResident.unit}</p>
             </div>
           </div>
+        </div>
+
+        {/* Task Filter for Detail View */}
+        <div className="mb-6">
+          <Select value={taskFilter} onValueChange={handleTaskFilterChange}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="Filter tasks" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Tasks</SelectItem>
+              <SelectItem value="resident">Resident Tasks</SelectItem>
+              <SelectItem value="operator">Management Tasks</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-6">
@@ -200,64 +219,68 @@ const MoveInTracker: React.FC<MoveInTrackerProps> = ({
           </Card>
 
           {/* Resident Tasks */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Resident Tasks</span>
-                <Badge variant="outline">
-                  {residentTaskStatus.completed}/{residentTaskStatus.total} Complete
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {Object.entries(selectedResident.residentTasks).map(([key, completed]) => (
-                <div key={key} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    {completed ? (
-                      <CheckCircle className="w-5 h-5 text-green-500" />
-                    ) : (
-                      <XCircle className="w-5 h-5 text-red-500" />
-                    )}
-                    <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+          {(taskFilter === 'all' || taskFilter === 'resident') && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Resident Tasks</span>
+                  <Badge variant="outline">
+                    {residentTaskStatus.completed}/{residentTaskStatus.total} Complete
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {Object.entries(selectedResident.residentTasks).map(([key, completed]) => (
+                  <div key={key} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      {completed ? (
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-red-500" />
+                      )}
+                      <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                    </div>
+                    <Checkbox
+                      checked={completed as boolean}
+                      onCheckedChange={() => handleTaskToggle(selectedResident.id, 'residentTasks', key)}
+                    />
                   </div>
-                  <Checkbox
-                    checked={completed as boolean}
-                    onCheckedChange={() => handleTaskToggle(selectedResident.id, 'residentTasks', key)}
-                  />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Operator Tasks */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Operator Tasks</span>
-                <Badge variant="outline">
-                  {operatorTaskStatus.completed}/{operatorTaskStatus.total} Complete
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {Object.entries(selectedResident.operatorTasks).map(([key, completed]) => (
-                <div key={key} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    {completed ? (
-                      <CheckCircle className="w-5 h-5 text-green-500" />
-                    ) : (
-                      <Clock className="w-5 h-5 text-orange-500" />
-                    )}
-                    <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+          {(taskFilter === 'all' || taskFilter === 'operator') && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Management Tasks</span>
+                  <Badge variant="outline">
+                    {operatorTaskStatus.completed}/{operatorTaskStatus.total} Complete
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {Object.entries(selectedResident.operatorTasks).map(([key, completed]) => (
+                  <div key={key} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      {completed ? (
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <Clock className="w-5 h-5 text-orange-500" />
+                      )}
+                      <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                    </div>
+                    <Checkbox
+                      checked={completed as boolean}
+                      onCheckedChange={() => handleTaskToggle(selectedResident.id, 'operatorTasks', key)}
+                    />
                   </div>
-                  <Checkbox
-                    checked={completed as boolean}
-                    onCheckedChange={() => handleTaskToggle(selectedResident.id, 'operatorTasks', key)}
-                  />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+                ))}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     );
@@ -304,57 +327,16 @@ const MoveInTracker: React.FC<MoveInTrackerProps> = ({
             <SelectItem value="incomplete">Incomplete</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                <XCircle className="w-5 h-5 text-orange-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-orange-600">
-                  {moveInResidents.filter(r => r.status === 'unapproved').length}
-                </p>
-                <p className="text-sm text-gray-600">Unapproved</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <Clock className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-blue-600">
-                  {moveInResidents.filter(r => r.status === 'incomplete').length}
-                </p>
-                <p className="text-sm text-gray-600">Incomplete</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-green-600">
-                  {moveInResidents.filter(r => r.status === 'completed').length}
-                </p>
-                <p className="text-sm text-gray-600">Completed</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <Select value={taskFilter} onValueChange={handleTaskFilterChange}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Filter tasks" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Tasks</SelectItem>
+            <SelectItem value="resident">Resident Tasks</SelectItem>
+            <SelectItem value="operator">Management Tasks</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Residents List */}
@@ -396,7 +378,7 @@ const MoveInTracker: React.FC<MoveInTrackerProps> = ({
                       </div>
                       <div className="flex items-center space-x-2 text-sm text-gray-600">
                         <Home className="w-4 h-4" />
-                        <span>Operator: {operatorTaskStatus.completed}/{operatorTaskStatus.total}</span>
+                        <span>Management: {operatorTaskStatus.completed}/{operatorTaskStatus.total}</span>
                       </div>
                     </div>
 
