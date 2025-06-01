@@ -70,36 +70,36 @@ const Matches = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
+    <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
+      {/* Fixed Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/discovery')}
-              className="p-2"
-            >
-              <ChevronLeft size={20} />
-            </Button>
-            <div className="min-w-0">
-              <h1 className="text-lg sm:text-xl font-semibold truncate">Find your next home like you'd book your next trip</h1>
-              <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Search by date, budget, availability. Book a tour, apply online, and move with ease.</p>
-            </div>
+        <div className="flex items-center space-x-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/discovery')}
+            className="p-2"
+          >
+            <ChevronLeft size={20} />
+          </Button>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg font-semibold truncate">Find your next home like you'd book your next trip</h1>
+            <p className="text-sm text-gray-600 hidden sm:block">Search by date, budget, availability. Book a tour, apply online, and move with ease.</p>
           </div>
         </div>
       </div>
 
-      {/* Search Filters */}
+      {/* Fixed Search Filters */}
       <SearchFilters />
 
-      {/* Home Listings */}
-      <div className="flex-1 overflow-auto p-3 sm:p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 max-w-7xl mx-auto">
-          {homes.map((home) => (
-            <HomeCard key={home.id} home={home} />
-          ))}
+      {/* Scrollable Home Listings */}
+      <div className="flex-1 overflow-auto">
+        <div className="p-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 max-w-7xl mx-auto">
+            {homes.map((home) => (
+              <HomeCard key={home.id} home={home} />
+            ))}
+          </div>
         </div>
       </div>
     </div>
