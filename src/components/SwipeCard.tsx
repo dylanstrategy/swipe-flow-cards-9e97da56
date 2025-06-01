@@ -22,7 +22,7 @@ const SwipeCard = ({
   children, 
   onSwipeRight, 
   onSwipeLeft, 
-  onSwipeUp, 
+  onSwipeUp,
   onTap,
   className 
 }: SwipeCardProps) => {
@@ -31,10 +31,12 @@ const SwipeCard = ({
   const [showAction, setShowAction] = useState<'left' | 'right' | 'up' | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const startPos = useRef({ x: 0, y: 0 });
+  const hasMoved = useRef(false);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     startPos.current = { x: touch.clientX, y: touch.clientY };
+    hasMoved.current = false;
     setIsDragging(true);
   };
 
@@ -45,53 +47,55 @@ const SwipeCard = ({
     const deltaX = touch.clientX - startPos.current.x;
     const deltaY = touch.clientY - startPos.current.y;
     
-    setDragOffset({ x: deltaX, y: deltaY });
+    const horizontalDistance = Math.abs(deltaX);
+    const verticalDistance = Math.abs(deltaY);
     
-    // Show action hints based on drag direction
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      if (deltaX > 30 && onSwipeRight) setShowAction('right');
-      else if (deltaX < -30 && onSwipeLeft) setShowAction('left');
-      else setShowAction(null);
-    } else if (deltaY < -30 && onSwipeUp) {
-      setShowAction('up');
-    } else {
-      setShowAction(null);
+    // Require more movement before showing action
+    if (horizontalDistance > 15 || verticalDistance > 15) {
+      hasMoved.current = true;
+      
+      // Determine primary direction
+      if (verticalDistance > horizontalDistance) {
+        // Vertical swipe
+        setDragOffset({ x: 0, y: deltaY * 0.6 });
+        if (deltaY < -60 && onSwipeUp) setShowAction('up');
+        else setShowAction(null);
+      } else {
+        // Horizontal swipe
+        setDragOffset({ x: deltaX * 0.6, y: 0 });
+        if (deltaX > 60 && onSwipeRight) setShowAction('right');
+        else if (deltaX < -60 && onSwipeLeft) setShowAction('left');
+        else setShowAction(null);
+      }
     }
   };
 
   const handleTouchEnd = () => {
-    const threshold = 80;
+    const threshold = 120;
     
-    if (Math.abs(dragOffset.x) > threshold || Math.abs(dragOffset.y) > threshold) {
-      if (Math.abs(dragOffset.x) > Math.abs(dragOffset.y)) {
-        if (dragOffset.x > threshold && onSwipeRight) {
-          onSwipeRight.action();
-        } else if (dragOffset.x < -threshold && onSwipeLeft) {
-          onSwipeLeft.action();
-        }
-      } else if (dragOffset.y < -threshold && onSwipeUp) {
-        onSwipeUp.action();
+    if (Math.abs(dragOffset.y) > threshold && dragOffset.y < -threshold && onSwipeUp) {
+      onSwipeUp.action();
+    } else if (Math.abs(dragOffset.x) > threshold) {
+      if (dragOffset.x > threshold && onSwipeRight) {
+        onSwipeRight.action();
+      } else if (dragOffset.x < -threshold && onSwipeLeft) {
+        onSwipeLeft.action();
       }
-    } else if (Math.abs(dragOffset.x) < 10 && Math.abs(dragOffset.y) < 10 && onTap) {
+    } else if (!hasMoved.current && onTap) {
       onTap();
     }
     
     setIsDragging(false);
     setDragOffset({ x: 0, y: 0 });
     setShowAction(null);
-  };
-
-  const getActionColor = () => {
-    if (showAction === 'right' && onSwipeRight) return onSwipeRight.color;
-    if (showAction === 'left' && onSwipeLeft) return onSwipeLeft.color;
-    if (showAction === 'up' && onSwipeUp) return onSwipeUp.color;
-    return 'transparent';
+    hasMoved.current = false;
   };
 
   const getActionOpacity = () => {
     if (!showAction) return 0;
-    const progress = Math.min(Math.abs(dragOffset.x) / 100, Math.abs(dragOffset.y) / 100, 1);
-    return Math.max(0.3, progress * 0.9);
+    const distance = showAction === 'up' ? Math.abs(dragOffset.y) : Math.abs(dragOffset.x);
+    const progress = Math.min(distance / 120, 1);
+    return Math.max(0.2, progress * 0.8);
   };
 
   return (
@@ -138,7 +142,7 @@ const SwipeCard = ({
       {onSwipeUp && (
         <div 
           className={cn(
-            "absolute inset-0 flex items-center justify-center transition-all duration-200",
+            "absolute inset-0 flex items-start justify-center pt-8 transition-all duration-200",
             showAction === 'up' ? "opacity-100" : "opacity-0"
           )}
           style={{ 
@@ -146,7 +150,7 @@ const SwipeCard = ({
             opacity: showAction === 'up' ? getActionOpacity() : 0
           }}
         >
-          <div className="text-white font-bold text-xl flex items-center gap-3">
+          <div className="text-white font-bold text-xl flex flex-col items-center gap-2">
             {onSwipeUp.icon && <span className="text-2xl">{onSwipeUp.icon}</span>}
             <span>{onSwipeUp.label}</span>
           </div>
@@ -162,13 +166,13 @@ const SwipeCard = ({
           className
         )}
         style={{
-          transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) ${isDragging ? 'rotate(' + (dragOffset.x * 0.05) + 'deg)' : ''}`,
+          transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) ${isDragging && (Math.abs(dragOffset.x) > 30 || Math.abs(dragOffset.y) > 30) ? 'rotate(' + ((dragOffset.x + dragOffset.y) * 0.01) + 'deg)' : ''}`,
           transition: isDragging ? 'none' : 'transform 0.3s ease-out, box-shadow 0.2s ease-out'
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onClick={onTap}
+        onClick={!hasMoved.current ? onTap : undefined}
       >
         {children}
       </div>

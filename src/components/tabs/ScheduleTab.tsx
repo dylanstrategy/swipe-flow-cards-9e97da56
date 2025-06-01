@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
@@ -25,13 +24,17 @@ const ScheduleTab = () => {
   };
 
   const nextStep = () => {
-    if (currentStep < 3) {
+    if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     } else {
+      // Final submission
       setIsCreatingOrder(false);
       setCurrentStep(1);
       setShowScheduleMenu(false);
-      handleAction("Submitted", selectedScheduleType);
+      toast({
+        title: "Work Order Submitted",
+        description: "Your work order has been successfully submitted. You'll receive a confirmation email shortly.",
+      });
     }
   };
 
@@ -46,9 +49,24 @@ const ScheduleTab = () => {
 
   const startScheduling = (type: string) => {
     setSelectedScheduleType(type);
-    setIsCreatingOrder(true);
-    setShowScheduleMenu(false);
+    if (type === 'Work Order') {
+      setIsCreatingOrder(true);
+      setShowScheduleMenu(false);
+      setCurrentStep(1);
+    } else {
+      // For other types, you can implement different flows
+      toast({
+        title: `${type} Selected`,
+        description: `${type} flow coming soon!`,
+      });
+      setShowScheduleMenu(false);
+    }
+  };
+
+  const handleCloseWorkOrder = () => {
+    setIsCreatingOrder(false);
     setCurrentStep(1);
+    setShowScheduleMenu(false);
   };
 
   if (isCreatingOrder) {
@@ -58,6 +76,7 @@ const ScheduleTab = () => {
         currentStep={currentStep}
         onNextStep={nextStep}
         onPrevStep={prevStep}
+        onClose={handleCloseWorkOrder}
       />
     );
   }

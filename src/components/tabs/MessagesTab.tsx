@@ -1,4 +1,3 @@
-
 import React from 'react';
 import SwipeCard from '../SwipeCard';
 import { useToast } from '@/hooks/use-toast';
@@ -59,12 +58,6 @@ const MessagesTab = () => {
             action: () => handleAction("Sent quick reply", message.subject),
             color: "#3B82F6",
             icon: "💬"
-          }}
-          onSwipeUp={{
-            label: "Message History",
-            action: () => handleAction("Viewed message history with", message.sender),
-            color: "#8B5CF6",
-            icon: "📜"
           }}
           onTap={() => handleAction("Opened full thread", message.subject)}
         >
