@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Check, FileText, CreditCard, Shield, Truck, Zap, Calendar, BookOpen } from 'lucide-react';
+import { Check, FileText, CreditCard, Shield, Truck, Zap, Calendar, BookOpen, ExternalLink, Phone } from 'lucide-react';
 import PointOfSale from '@/components/PointOfSale';
 
 interface MoveInStepModalProps {
@@ -213,7 +214,27 @@ const MoveInStepModal = ({ stepId, onComplete, onClose }: MoveInStepModalProps) 
               </p>
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <span>Electricity (City Power)</span>
+                  <div className="flex-1">
+                    <span className="font-medium">Electricity (PSEG)</span>
+                    <div className="flex items-center space-x-4 mt-1">
+                      <a 
+                        href="https://www.pseg.com" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center space-x-1 text-blue-600 text-sm hover:underline"
+                      >
+                        <ExternalLink size={14} />
+                        <span>pseg.com</span>
+                      </a>
+                      <a 
+                        href="tel:1-800-436-7734" 
+                        className="flex items-center space-x-1 text-blue-600 text-sm hover:underline"
+                      >
+                        <Phone size={14} />
+                        <span>1-800-436-7734</span>
+                      </a>
+                    </div>
+                  </div>
                   <Button size="sm" variant="outline">Set Up</Button>
                 </div>
                 <div className="flex items-center justify-between p-3 border rounded-lg">
