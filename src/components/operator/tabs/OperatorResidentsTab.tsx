@@ -1,18 +1,22 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, User, Phone, Mail, Home, Calendar, ChevronRight, ArrowLeft, Truck, FileText, Upload, Download, Eye } from 'lucide-react';
+import { Search, User, Phone, Mail, Home, Calendar, ChevronRight, ArrowLeft, Truck, FileText, Upload, Download, Eye, TruckIcon } from 'lucide-react';
 import MoveInTracker from '../MoveInTracker';
+import MoveOutTracker from '../MoveOutTracker';
 
 const OperatorResidentsTab = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedResident, setSelectedResident] = useState<any>(null);
   const [showMoveInTracker, setShowMoveInTracker] = useState(false);
+  const [showMoveOutTracker, setShowMoveOutTracker] = useState(false);
   const [moveInResidentId, setMoveInResidentId] = useState<string>('');
+  const [moveOutResidentId, setMoveOutResidentId] = useState<string>('');
 
   const residents = [
     {
@@ -23,11 +27,13 @@ const OperatorResidentsTab = () => {
       email: 'sarah.johnson@email.com',
       birthdate: '1985-03-15',
       leaseStatus: 'active',
+      status: 'current',
       moveInDate: '2023-06-15',
       balance: 0,
       workOrders: 2,
       renewalStatus: 'pending',
       hasMoveInProgress: false,
+      hasMoveOutProgress: false,
       documents: [
         { id: 1, name: 'Lease Agreement.pdf', type: 'lease', uploadDate: '2023-06-10', size: '2.3 MB' },
         { id: 2, name: 'Driver License.jpg', type: 'id', uploadDate: '2023-06-10', size: '1.1 MB' },
@@ -42,11 +48,13 @@ const OperatorResidentsTab = () => {
       email: 'michael.chen@email.com',
       birthdate: '1990-11-22',
       leaseStatus: 'expiring',
+      status: 'notice',
       moveInDate: '2022-08-20',
       balance: 150.00,
       workOrders: 0,
       renewalStatus: 'offered',
       hasMoveInProgress: false,
+      hasMoveOutProgress: true,
       documents: [
         { id: 4, name: 'Lease Agreement.pdf', type: 'lease', uploadDate: '2022-08-15', size: '2.1 MB' },
         { id: 5, name: 'Background Check.pdf', type: 'application', uploadDate: '2022-08-10', size: '450 KB' }
@@ -60,11 +68,13 @@ const OperatorResidentsTab = () => {
       email: 'emily.rodriguez@email.com',
       birthdate: '1988-07-08',
       leaseStatus: 'active',
+      status: 'current',
       moveInDate: '2023-11-10',
       balance: 0,
       workOrders: 1,
       renewalStatus: 'not_due',
       hasMoveInProgress: false,
+      hasMoveOutProgress: false,
       documents: [
         { id: 6, name: 'Lease Agreement.pdf', type: 'lease', uploadDate: '2023-11-05', size: '2.2 MB' },
         { id: 7, name: 'Emergency Contact Form.pdf', type: 'legal', uploadDate: '2023-11-05', size: '320 KB' }
@@ -78,11 +88,13 @@ const OperatorResidentsTab = () => {
       email: 'david.thompson@email.com',
       birthdate: '1982-12-03',
       leaseStatus: 'delinquent',
+      status: 'current',
       moveInDate: '2023-03-05',
       balance: 850.00,
       workOrders: 3,
       renewalStatus: 'not_due',
       hasMoveInProgress: false,
+      hasMoveOutProgress: false,
       documents: [
         { id: 8, name: 'Lease Agreement.pdf', type: 'lease', uploadDate: '2023-03-01', size: '2.4 MB' },
         { id: 9, name: 'Late Notice.pdf', type: 'legal', uploadDate: '2024-01-15', size: '180 KB' },
@@ -97,11 +109,13 @@ const OperatorResidentsTab = () => {
       email: 'aprilchen@email.com',
       birthdate: '1995-04-12',
       leaseStatus: 'move_in_progress',
+      status: 'future',
       moveInDate: '2025-03-21',
       balance: 0,
       workOrders: 0,
       renewalStatus: 'not_due',
       hasMoveInProgress: true,
+      hasMoveOutProgress: false,
       documents: [
         { id: 11, name: 'Application.pdf', type: 'application', uploadDate: '2025-02-15', size: '1.2 MB' },
         { id: 12, name: 'ID Copy.jpg', type: 'id', uploadDate: '2025-02-15', size: '980 KB' }
@@ -115,15 +129,36 @@ const OperatorResidentsTab = () => {
       email: 'zhihan@email.com',
       birthdate: '1992-09-28',
       leaseStatus: 'move_in_progress',
+      status: 'future',
       moveInDate: '2025-03-10',
       balance: 0,
       workOrders: 0,
       renewalStatus: 'not_due',
       hasMoveInProgress: true,
+      hasMoveOutProgress: false,
       documents: [
         { id: 13, name: 'Application.pdf', type: 'application', uploadDate: '2025-02-20', size: '1.1 MB' },
         { id: 14, name: 'Passport Copy.jpg', type: 'id', uploadDate: '2025-02-20', size: '1.5 MB' },
         { id: 15, name: 'Employment Letter.pdf', type: 'application', uploadDate: '2025-02-22', size: '650 KB' }
+      ]
+    },
+    {
+      id: 7,
+      name: 'Jennifer Smith',
+      unit: 'N/A',
+      phone: '(555) 789-0123',
+      email: 'jennifer.smith@email.com',
+      birthdate: '1991-06-14',
+      leaseStatus: 'prospect',
+      status: 'prospect',
+      moveInDate: '',
+      balance: 0,
+      workOrders: 0,
+      renewalStatus: 'not_due',
+      hasMoveInProgress: false,
+      hasMoveOutProgress: false,
+      documents: [
+        { id: 16, name: 'Application.pdf', type: 'application', uploadDate: '2025-03-01', size: '900 KB' }
       ]
     }
   ];
@@ -134,6 +169,17 @@ const OperatorResidentsTab = () => {
       case 'expiring': return 'bg-orange-100 text-orange-800';
       case 'delinquent': return 'bg-red-100 text-red-800';
       case 'move_in_progress': return 'bg-blue-100 text-blue-800';
+      case 'prospect': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getResidentStatusColor = (status: string) => {
+    switch (status) {
+      case 'current': return 'bg-green-100 text-green-800';
+      case 'future': return 'bg-blue-100 text-blue-800';
+      case 'notice': return 'bg-orange-100 text-orange-800';
+      case 'prospect': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -169,6 +215,11 @@ const OperatorResidentsTab = () => {
     setShowMoveInTracker(true);
   };
 
+  const handleMoveOutTracker = (residentId: string) => {
+    setMoveOutResidentId(residentId);
+    setShowMoveOutTracker(true);
+  };
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
@@ -182,6 +233,15 @@ const OperatorResidentsTab = () => {
       <MoveInTracker 
         onClose={() => setShowMoveInTracker(false)}
         residentId={moveInResidentId}
+      />
+    );
+  }
+
+  if (showMoveOutTracker) {
+    return (
+      <MoveOutTracker 
+        onClose={() => setShowMoveOutTracker(false)}
+        residentId={moveOutResidentId}
       />
     );
   }
@@ -240,13 +300,21 @@ const OperatorResidentsTab = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <span className="text-sm text-gray-600">Move-in Date</span>
-                  <p className="font-medium">{new Date(selectedResident.moveInDate).toLocaleDateString()}</p>
+                  <p className="font-medium">{selectedResident.moveInDate ? new Date(selectedResident.moveInDate).toLocaleDateString() : 'N/A'}</p>
                 </div>
                 <div>
                   <span className="text-sm text-gray-600">Lease Status</span>
                   <div className="mt-1">
                     <Badge className={getStatusColor(selectedResident.leaseStatus)}>
                       {selectedResident.leaseStatus.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-600">Resident Status</span>
+                  <div className="mt-1">
+                    <Badge className={getResidentStatusColor(selectedResident.status)}>
+                      {selectedResident.status}
                     </Badge>
                   </div>
                 </div>
@@ -354,6 +422,31 @@ const OperatorResidentsTab = () => {
             </Card>
           )}
 
+          {/* Move-Out Progress (if applicable) */}
+          {selectedResident.hasMoveOutProgress && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <TruckIcon className="w-5 h-5" />
+                  <span>Move-Out Progress</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 mb-4">
+                  This resident has a move-out in progress. Track their move-out tasks and completion status.
+                </p>
+                <Button 
+                  onClick={() => handleMoveOutTracker(selectedResident.id.toString())}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <TruckIcon className="w-4 h-4 mr-2" />
+                  View Move-Out Tracker
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Quick Actions */}
           <Card>
             <CardHeader>
@@ -407,6 +500,7 @@ const OperatorResidentsTab = () => {
             <SelectItem value="expiring">Expiring</SelectItem>
             <SelectItem value="delinquent">Delinquent</SelectItem>
             <SelectItem value="move_in_progress">Move-In Progress</SelectItem>
+            <SelectItem value="prospect">Prospect</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -446,7 +540,7 @@ const OperatorResidentsTab = () => {
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
                       <Calendar className="w-4 h-4" />
-                      <span>Moved in {new Date(resident.moveInDate).toLocaleDateString()}</span>
+                      <span>Born {new Date(resident.birthdate).toLocaleDateString()}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
                       <Home className="w-4 h-4" />
@@ -459,6 +553,9 @@ const OperatorResidentsTab = () => {
                       <Badge className={getStatusColor(resident.leaseStatus)}>
                         {resident.leaseStatus.replace('_', ' ')}
                       </Badge>
+                      <Badge className={getResidentStatusColor(resident.status)}>
+                        {resident.status}
+                      </Badge>
                       <Badge className={getRenewalColor(resident.renewalStatus)}>
                         {resident.renewalStatus.replace('_', ' ')}
                       </Badge>
@@ -466,6 +563,12 @@ const OperatorResidentsTab = () => {
                         <Badge className="bg-blue-100 text-blue-800">
                           <Truck className="w-3 h-3 mr-1" />
                           Move-In
+                        </Badge>
+                      )}
+                      {resident.hasMoveOutProgress && (
+                        <Badge className="bg-orange-100 text-orange-800">
+                          <TruckIcon className="w-3 h-3 mr-1" />
+                          Move-Out
                         </Badge>
                       )}
                     </div>
