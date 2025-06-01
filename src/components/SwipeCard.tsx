@@ -40,6 +40,7 @@ const SwipeCard = ({
     startPos.current = { x: touch.clientX, y: touch.clientY };
     hasMoved.current = false;
     setIsDragging(true);
+    console.log('Touch start', { x: touch.clientX, y: touch.clientY });
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -52,20 +53,26 @@ const SwipeCard = ({
     const horizontalDistance = Math.abs(deltaX);
     const verticalDistance = Math.abs(deltaY);
     
-    if (horizontalDistance > 30 || (enableSwipeUp && verticalDistance > 30)) {
+    if (horizontalDistance > 10 || (enableSwipeUp && verticalDistance > 10)) {
       hasMoved.current = true;
       
       if (enableSwipeUp && verticalDistance > horizontalDistance * 1.5) {
         const dampedY = deltaY * 0.3;
         setDragOffset({ x: 0, y: Math.max(-80, Math.min(20, dampedY)) });
-        if (deltaY < -100 && onSwipeUp) setShowAction('up');
+        if (deltaY < -50 && onSwipeUp) setShowAction('up');
         else setShowAction(null);
-      } else if (horizontalDistance > (enableSwipeUp ? verticalDistance * 1.5 : 10)) {
+      } else if (horizontalDistance > (enableSwipeUp ? verticalDistance * 1.5 : 5)) {
         const dampedX = deltaX * 0.3;
         setDragOffset({ x: Math.max(-80, Math.min(80, dampedX)), y: 0 });
-        if (deltaX > 100 && onSwipeRight) setShowAction('right');
-        else if (deltaX < -100 && onSwipeLeft) setShowAction('left');
-        else setShowAction(null);
+        if (deltaX > 50 && onSwipeRight) {
+          setShowAction('right');
+          console.log('Showing right action');
+        } else if (deltaX < -50 && onSwipeLeft) {
+          setShowAction('left');
+          console.log('Showing left action', onSwipeLeft);
+        } else {
+          setShowAction(null);
+        }
       } else {
         setDragOffset({ x: 0, y: 0 });
         setShowAction(null);
@@ -74,17 +81,23 @@ const SwipeCard = ({
   };
 
   const handleTouchEnd = () => {
-    const threshold = 150;
+    const threshold = 80; // Reduced threshold for easier swiping
+    
+    console.log('Touch end', { dragOffset, threshold, onSwipeLeft, onSwipeRight });
     
     if (enableSwipeUp && Math.abs(dragOffset.y) > threshold && dragOffset.y < -threshold && onSwipeUp) {
+      console.log('Executing swipe up');
       onSwipeUp.action();
     } else if (Math.abs(dragOffset.x) > threshold) {
       if (dragOffset.x > threshold && onSwipeRight) {
+        console.log('Executing swipe right');
         onSwipeRight.action();
       } else if (dragOffset.x < -threshold && onSwipeLeft) {
+        console.log('Executing swipe left', onSwipeLeft.label);
         onSwipeLeft.action();
       }
     } else if (!hasMoved.current && onTap) {
+      console.log('Executing tap');
       onTap();
     }
     
@@ -97,7 +110,7 @@ const SwipeCard = ({
   const getActionOpacity = () => {
     if (!showAction) return 0;
     const distance = showAction === 'up' ? Math.abs(dragOffset.y) : Math.abs(dragOffset.x);
-    const progress = Math.min(distance / 150, 1);
+    const progress = Math.min(distance / 80, 1);
     return Math.max(0.3, progress * 0.9);
   };
 
