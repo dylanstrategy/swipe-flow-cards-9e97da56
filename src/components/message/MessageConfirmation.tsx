@@ -44,10 +44,10 @@ const MessageConfirmation = ({ subject, message, recipientType, onDone }: Messag
   };
 
   return (
-    <div className="min-h-screen flex flex-col p-4 overflow-y-auto">
-      <div className="flex-1 flex flex-col items-center justify-center text-center max-w-sm mx-auto space-y-4">
+    <div className="min-h-screen flex flex-col justify-center p-4">
+      <div className="max-w-sm mx-auto w-full space-y-6">
         {/* Success Message */}
-        <div className="space-y-3">
+        <div className="text-center space-y-3">
           <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto">
             <span className="text-xl">✓</span>
           </div>
@@ -62,7 +62,7 @@ const MessageConfirmation = ({ subject, message, recipientType, onDone }: Messag
         </div>
 
         {/* Response Time Info */}
-        <div className="space-y-3">
+        <div className="text-center space-y-3">
           <h3 className="text-base font-semibold text-gray-900">
             {dayString}
           </h3>
@@ -74,23 +74,23 @@ const MessageConfirmation = ({ subject, message, recipientType, onDone }: Messag
           </div>
         </div>
 
-        {/* Point of Sale Offer - Made more compact */}
+        {/* Point of Sale Offer */}
         <div className="w-full">
           <PointOfSale 
             context="message"
             onOfferClick={handleOfferClick}
           />
         </div>
-      </div>
 
-      {/* Done Button - Fixed at bottom */}
-      <div className="flex-shrink-0 pt-4">
-        <button
-          onClick={onDone}
-          className="w-full bg-black text-white py-3 px-6 rounded-xl font-semibold text-base hover:bg-gray-800 transition-colors"
-        >
-          Done
-        </button>
+        {/* Done Button */}
+        <div className="pt-2">
+          <button
+            onClick={onDone}
+            className="w-full bg-black text-white py-3 px-6 rounded-xl font-semibold text-base hover:bg-gray-800 transition-colors"
+          >
+            Done
+          </button>
+        </div>
       </div>
     </div>
   );
