@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import SwipeableScreen from './SwipeableScreen';
 import PhotoCaptureStep from './steps/PhotoCaptureStep';
@@ -61,19 +60,19 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
     const horizontalDistance = Math.abs(deltaX);
     const verticalDistance = Math.abs(deltaY);
     
-    if (horizontalDistance > 20 || verticalDistance > 20) {
-      if (verticalDistance > horizontalDistance * 1.2) {
-        const dampedY = deltaY * 0.4;
-        setDragOffset({ x: 0, y: Math.max(-60, Math.min(15, dampedY)) });
-        if (deltaY < -50 && canProceedFromCurrentStep()) {
+    if (horizontalDistance > 10 || verticalDistance > 10) {
+      if (verticalDistance > horizontalDistance * 0.8) {
+        const dampedY = deltaY * 0.6;
+        setDragOffset({ x: 0, y: Math.max(-80, Math.min(20, dampedY)) });
+        if (deltaY < -25 && canProceedFromCurrentStep()) {
           setShowAction('up');
         } else {
           setShowAction(null);
         }
-      } else if (horizontalDistance > verticalDistance * 1.2) {
-        const dampedX = deltaX * 0.4;
-        setDragOffset({ x: Math.max(-60, Math.min(60, dampedX)), y: 0 });
-        if (deltaX < -50 && currentStep > 1) {
+      } else if (horizontalDistance > verticalDistance * 0.8) {
+        const dampedX = deltaX * 0.6;
+        setDragOffset({ x: Math.max(-80, Math.min(80, dampedX)), y: 0 });
+        if (deltaX < -40 && currentStep > 1) {
           setShowAction('left');
         } else {
           setShowAction(null);
@@ -86,14 +85,14 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   };
 
   const handleTouchEnd = () => {
-    const threshold = 50;
+    const threshold = 30;
     const deltaTime = Date.now() - startTime.current;
     const velocityY = Math.abs(dragOffset.y) / deltaTime;
     const velocityX = Math.abs(dragOffset.x) / deltaTime;
     
-    const shouldCompleteUp = (Math.abs(dragOffset.y) > threshold || velocityY > 0.3) && 
+    const shouldCompleteUp = (Math.abs(dragOffset.y) > threshold || velocityY > 0.2) && 
                             dragOffset.y < -threshold && canProceedFromCurrentStep();
-    const shouldCompleteLeft = (Math.abs(dragOffset.x) > threshold || velocityX > 0.3) && 
+    const shouldCompleteLeft = (Math.abs(dragOffset.x) > threshold || velocityX > 0.2) && 
                               dragOffset.x < -threshold && currentStep > 1;
     
     if (shouldCompleteUp) {
@@ -110,8 +109,8 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   const getActionOpacity = () => {
     if (!showAction) return 0;
     const distance = showAction === 'up' ? Math.abs(dragOffset.y) : Math.abs(dragOffset.x);
-    const progress = Math.min(distance / 60, 1);
-    return Math.max(0.3, progress * 0.9);
+    const progress = Math.min(distance / 40, 1);
+    return Math.max(0.4, progress * 0.9);
   };
 
   const getRotation = () => {
