@@ -34,10 +34,9 @@ const TodayTab = () => {
     {
       id: 1,
       date: new Date(),
-      time: '9:00 AM',
-      type: 'work_order',
+      time: '09:00',
       title: 'Work Order',
-      description: 'Broken outlet',
+      description: 'Broken outlet - Unit 4B',
       image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400',
       category: 'Maintenance',
       priority: 'high'
@@ -45,20 +44,18 @@ const TodayTab = () => {
     {
       id: 2,
       date: new Date(),
-      time: '10:30 AM',
-      type: 'message',
+      time: '10:30',
       title: 'Message from Management',
-      description: 'Please submit your lease renewal documents',
+      description: 'Please submit your lease renewal documents by Friday',
       category: 'Management',
       priority: 'medium'
     },
     {
       id: 3,
       date: new Date(),
-      time: '11:00 AM',
-      type: 'renewal',
-      title: 'Renewal',
-      description: 'New rent: $1,550',
+      time: '11:00',
+      title: 'Lease Renewal',
+      description: 'New rent: $1,550/month starting March 1st',
       image: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=400',
       category: 'Lease',
       priority: 'high'
@@ -66,19 +63,17 @@ const TodayTab = () => {
     {
       id: 4,
       date: new Date(),
-      time: '11:30 AM',
-      type: 'advertisement',
-      title: '20% OFF',
-      description: 'Local burger restaurant special offer',
+      time: '14:00',
+      title: 'Local Business Offer',
+      description: '20% OFF at Joe\'s Burger Joint - Show this message',
       image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400',
-      category: 'Local Business',
+      category: 'Point of Sale',
       priority: 'low'
     },
     {
       id: 5,
       date: addDays(new Date(), 1),
-      time: '2:00 PM',
-      type: 'event',
+      time: '14:00',
       title: 'Rooftop BBQ Social',
       description: 'Community event - RSVP required',
       category: 'Community Event',
@@ -87,8 +82,7 @@ const TodayTab = () => {
     {
       id: 6,
       date: addDays(new Date(), 2),
-      time: '9:00 AM',
-      type: 'work_order',
+      time: '09:00',
       title: 'HVAC Maintenance',
       description: 'Filter replacement scheduled',
       image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400',
@@ -107,6 +101,14 @@ const TodayTab = () => {
   const getEventsForDate = (date: Date) => {
     return calendarEvents.filter(event => isSameDay(event.date, date))
       .sort((a, b) => a.time.localeCompare(b.time));
+  };
+
+  const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
   };
 
   if (showTimeline) {
@@ -203,13 +205,11 @@ const TodayTab = () => {
         </h2>
         
         {/* Mini Calendar */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-6">
-          <div className="flex justify-center">
-            <div className="flex items-center gap-4 text-sm font-medium text-gray-600 mb-4">
-              <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
-            </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-6">
+          <div className="grid grid-cols-7 gap-2 text-center text-sm font-medium text-gray-600 mb-4">
+            <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
           </div>
-          <div className="flex justify-center gap-4 text-lg">
+          <div className="grid grid-cols-7 gap-2">
             {[-3, -2, -1, 0, 1, 2, 3].map(offset => {
               const date = addDays(new Date(), offset);
               const isSelected = isSameDay(date, selectedDate);
@@ -218,7 +218,7 @@ const TodayTab = () => {
                 <button
                   key={offset}
                   onClick={() => setSelectedDate(date)}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                  className={`h-12 w-12 rounded-full flex items-center justify-center text-lg transition-all ${
                     isSelected 
                       ? 'bg-blue-600 text-white' 
                       : hasEvents 
@@ -239,20 +239,20 @@ const TodayTab = () => {
             <div className="space-y-4">
               {selectedDateEvents.map((event) => (
                 <div key={event.id} className="flex items-start gap-4">
-                  <div className="text-sm font-medium text-gray-600 w-16 flex-shrink-0 pt-4">
-                    {event.time}
+                  <div className="text-sm font-medium text-gray-600 w-20 flex-shrink-0 pt-4">
+                    {formatTime(event.time)}
                   </div>
                   <div className="flex-1">
                     <SwipeCard
                       onSwipeRight={{
-                        label: event.type === 'work_order' ? "Schedule" : event.type === 'renewal' ? "Review" : "Read",
+                        label: event.category === 'Work Order' ? "Schedule" : event.category === 'Lease' ? "Review" : "Read",
                         action: () => handleAction(
-                          event.type === 'work_order' ? "Scheduled" : 
-                          event.type === 'renewal' ? "Reviewed" : "Read", 
+                          event.category === 'Work Order' ? "Scheduled" : 
+                          event.category === 'Lease' ? "Reviewed" : "Read", 
                           event.title
                         ),
                         color: "#10B981",
-                        icon: event.type === 'work_order' ? "🔧" : event.type === 'renewal' ? "📋" : "📖"
+                        icon: event.category === 'Work Order' ? "🔧" : event.category === 'Lease' ? "📋" : "📖"
                       }}
                       onSwipeLeft={{
                         label: "Remind Me",
@@ -271,10 +271,11 @@ const TodayTab = () => {
                             />
                           ) : (
                             <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
-                              {event.type === 'message' ? '✉️' : 
-                               event.type === 'event' ? '🎉' : 
-                               event.type === 'work_order' ? '🔧' :
-                               event.type === 'renewal' ? '📋' : '📢'}
+                              {event.category === 'Management' ? '✉️' : 
+                               event.category === 'Community Event' ? '🎉' : 
+                               event.category === 'Work Order' ? '🔧' :
+                               event.category === 'Lease' ? '📋' :
+                               event.category === 'Point of Sale' ? '🏪' : '📢'}
                             </div>
                           )}
                           <div className="flex-1">
