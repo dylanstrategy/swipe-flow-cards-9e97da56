@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SwipeCard from '../SwipeCard';
 import { useToast } from '@/hooks/use-toast';
-import { Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Clock, ChevronLeft, ChevronRight, CloudSun } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth } from 'date-fns';
 import ResidentTimeline from '../ResidentTimeline';
@@ -12,48 +12,87 @@ const TodayTab = () => {
   const [showTimeline, setShowTimeline] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [weather, setWeather] = useState({ temp: 72, condition: 'Sunny' });
 
-  // Sample calendar events
+  // Simulate live weather updates
+  useEffect(() => {
+    const updateWeather = () => {
+      const conditions = ['Sunny', 'Cloudy', 'Partly Cloudy', 'Clear'];
+      const temps = [68, 70, 72, 74, 76];
+      setWeather({
+        temp: temps[Math.floor(Math.random() * temps.length)],
+        condition: conditions[Math.floor(Math.random() * conditions.length)]
+      });
+    };
+
+    const interval = setInterval(updateWeather, 30000); // Update every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  // Enhanced calendar events with more realistic examples
   const calendarEvents = [
     {
       id: 1,
       date: new Date(),
       type: 'message',
       title: 'Pool Maintenance Update',
-      description: 'Scheduled for tomorrow 9AM-12PM',
-      category: 'Building Notice'
+      description: 'Scheduled for tomorrow 9AM-12PM. Please avoid pool area.',
+      category: 'Building Notice',
+      priority: 'medium'
     },
     {
       id: 2,
       date: addDays(new Date(), 1),
-      type: 'event',
-      title: 'Rooftop BBQ',
-      description: 'Community event this Saturday 6PM',
-      category: 'Community Event'
+      type: 'work_order',
+      title: 'Kitchen Faucet Repair',
+      description: 'Leaky faucet in unit 4B - maintenance scheduled',
+      category: 'Work Order',
+      priority: 'high'
     },
     {
       id: 3,
       date: addDays(new Date(), 2),
-      type: 'work_order',
-      title: 'HVAC Maintenance',
-      description: 'Scheduled maintenance check',
-      category: 'Work Order'
+      type: 'event',
+      title: 'Rooftop BBQ Social',
+      description: 'Community event this Saturday 6PM-9PM. RSVP required.',
+      category: 'Community Event',
+      priority: 'low'
     },
     {
       id: 4,
       date: addDays(new Date(), 3),
       type: 'payment',
-      title: 'Rent Due Reminder',
-      description: 'Monthly rent payment due',
-      category: 'Payment'
+      title: 'Lease Renewal Notice',
+      description: 'Your lease expires in 60 days. Renewal options available.',
+      category: 'Lease Management',
+      priority: 'high'
     },
     {
       id: 5,
-      date: addDays(new Date(), 5),
+      date: addDays(new Date(), 4),
       type: 'advertisement',
-      title: 'Local Gym Discount',
-      description: '20% off membership for residents',
-      category: 'Advertisement'
+      title: 'Local Coffee Shop - 20% Off',
+      description: 'Beans & Brews offering resident discount this week',
+      category: 'Local Business',
+      priority: 'low'
+    },
+    {
+      id: 6,
+      date: addDays(new Date(), 5),
+      type: 'work_order',
+      title: 'HVAC Filter Replacement',
+      description: 'Scheduled maintenance - units 1A-1F',
+      category: 'Work Order',
+      priority: 'medium'
+    },
+    {
+      id: 7,
+      date: addDays(new Date(), 6),
+      type: 'message',
+      title: 'Package Delivery Notice',
+      description: 'Amazon package delivered to front desk',
+      category: 'Package Management',
+      priority: 'medium'
     }
   ];
 
@@ -88,9 +127,17 @@ const TodayTab = () => {
   return (
     <div className="px-4 py-6 pb-24">
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Today</h1>
-          <p className="text-gray-600">Good morning, John!</p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Today</h1>
+            <p className="text-gray-600">Good morning, John!</p>
+          </div>
+          <div className="flex items-center gap-2 bg-blue-50 px-3 py-2 rounded-full">
+            <CloudSun className="text-blue-600" size={18} />
+            <span className="text-sm font-medium text-blue-700">
+              {weather.temp}°F • {weather.condition}
+            </span>
+          </div>
         </div>
         <button
           onClick={() => setShowTimeline(true)}
@@ -139,24 +186,21 @@ const TodayTab = () => {
           }}
           onTap={() => handleAction("Opened", "Work Orders")}
         >
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-4 rounded-lg text-white">
-            <h3 className="font-semibold mb-1">Work Orders</h3>
-            <p className="text-purple-100 text-sm">1 active • 2 pending</p>
+          <div 
+            className="relative p-4 rounded-lg text-white overflow-hidden"
+            style={{
+              backgroundImage: 'url(https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          >
+            <div className="absolute inset-0 bg-purple-600/80 backdrop-blur-[2px] rounded-lg"></div>
+            <div className="relative z-10">
+              <h3 className="font-semibold mb-1">Work Orders</h3>
+              <p className="text-purple-100 text-sm">1 active • 2 pending</p>
+            </div>
           </div>
         </SwipeCard>
-      </div>
-
-      {/* Weather & Building Info */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-gradient-to-br from-orange-400 to-orange-500 p-4 rounded-lg text-white">
-          <h3 className="font-semibold mb-1">Weather</h3>
-          <p className="text-orange-100 text-sm">72°F • Sunny</p>
-        </div>
-        
-        <div className="bg-gradient-to-br from-green-400 to-green-500 p-4 rounded-lg text-white">
-          <h3 className="font-semibold mb-1">Building Status</h3>
-          <p className="text-green-100 text-sm">All systems normal</p>
-        </div>
       </div>
 
       {/* Calendar Section */}
@@ -216,10 +260,14 @@ const TodayTab = () => {
                 <SwipeCard
                   key={event.id}
                   onSwipeRight={{
-                    label: event.type === 'event' ? "RSVP" : "Mark Read",
-                    action: () => handleAction(event.type === 'event' ? "RSVP'd" : "Read", event.title),
+                    label: event.type === 'event' ? "RSVP" : event.type === 'work_order' ? "Schedule" : "Mark Read",
+                    action: () => handleAction(
+                      event.type === 'event' ? "RSVP'd" : 
+                      event.type === 'work_order' ? "Scheduled" : "Read", 
+                      event.title
+                    ),
                     color: "#10B981",
-                    icon: event.type === 'event' ? "✅" : "📖"
+                    icon: event.type === 'event' ? "✅" : event.type === 'work_order' ? "🔧" : "📖"
                   }}
                   onSwipeLeft={{
                     label: "Remind Me",
@@ -230,13 +278,20 @@ const TodayTab = () => {
                   onTap={() => handleAction("Viewed", event.title)}
                 >
                   <div className="flex items-center p-4 bg-white rounded-lg shadow-sm">
-                    <div className={`w-3 h-3 ${getEventTypeColor(event.type)} rounded-full mr-3`}></div>
+                    <div className={`w-3 h-3 ${getEventTypeColor(event.type)} rounded-full mr-3 flex-shrink-0`}></div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
                         <h4 className="font-semibold text-gray-900">{event.title}</h4>
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                          {event.category}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {event.priority === 'high' && (
+                            <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded-full">
+                              High Priority
+                            </span>
+                          )}
+                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                            {event.category}
+                          </span>
+                        </div>
                       </div>
                       <p className="text-gray-600 text-sm">{event.description}</p>
                     </div>
