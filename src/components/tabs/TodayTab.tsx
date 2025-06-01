@@ -314,6 +314,7 @@ const TodayTab = () => {
           }}
           onTap={() => handleAction("Viewed", "Rent Payment")}
           className={getRentUrgencyClass()}
+          enableSwipeUp={false}
         >
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-lg text-white">
             <h3 className="font-semibold mb-1">Rent Due</h3>
@@ -335,6 +336,7 @@ const TodayTab = () => {
             icon: "📋"
           }}
           onTap={() => handleAction("Opened", "Work Orders")}
+          enableSwipeUp={false}
         >
           <div 
             className="relative p-4 rounded-lg text-white overflow-hidden"
@@ -406,6 +408,7 @@ const TodayTab = () => {
                         onSwipeLeft={swipeActions.onSwipeLeft}
                         onTap={() => handleAction("Viewed details", event.title)}
                         className={urgencyClass}
+                        enableSwipeUp={false}
                       >
                         <div className={cn(
                           "bg-blue-50 rounded-lg p-4",

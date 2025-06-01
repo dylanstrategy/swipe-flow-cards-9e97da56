@@ -16,6 +16,7 @@ interface SwipeCardProps {
   onSwipeUp?: SwipeAction;
   onTap?: () => void;
   className?: string;
+  enableSwipeUp?: boolean; // New prop to control swipe up
 }
 
 const SwipeCard = ({ 
@@ -24,7 +25,8 @@ const SwipeCard = ({
   onSwipeLeft, 
   onSwipeUp,
   onTap,
-  className 
+  className,
+  enableSwipeUp = false // Default to false for regular cards
 }: SwipeCardProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -51,22 +53,22 @@ const SwipeCard = ({
     const verticalDistance = Math.abs(deltaY);
     
     // Require much more movement before showing action and reduce sensitivity
-    if (horizontalDistance > 30 || verticalDistance > 30) {
+    if (horizontalDistance > 30 || (enableSwipeUp && verticalDistance > 30)) {
       hasMoved.current = true;
       
       // Determine primary direction with stricter thresholds
-      if (verticalDistance > horizontalDistance * 1.5) {
-        // Vertical swipe - much more restrictive movement
-        const dampedY = deltaY * 0.3; // Reduced from 0.6 to 0.3 for less jumpy feel
-        setDragOffset({ x: 0, y: Math.max(-80, Math.min(20, dampedY)) }); // Clamp the movement
-        if (deltaY < -100 && onSwipeUp) setShowAction('up'); // Increased threshold from -60 to -100
+      if (enableSwipeUp && verticalDistance > horizontalDistance * 1.5) {
+        // Vertical swipe - only if enableSwipeUp is true
+        const dampedY = deltaY * 0.3;
+        setDragOffset({ x: 0, y: Math.max(-80, Math.min(20, dampedY)) });
+        if (deltaY < -100 && onSwipeUp) setShowAction('up');
         else setShowAction(null);
-      } else if (horizontalDistance > verticalDistance * 1.5) {
-        // Horizontal swipe - much more restrictive movement
-        const dampedX = deltaX * 0.3; // Reduced from 0.6 to 0.3 for less jumpy feel
-        setDragOffset({ x: Math.max(-80, Math.min(80, dampedX)), y: 0 }); // Clamp the movement
-        if (deltaX > 100 && onSwipeRight) setShowAction('right'); // Increased threshold from 60 to 100
-        else if (deltaX < -100 && onSwipeLeft) setShowAction('left'); // Increased threshold from -60 to -100
+      } else if (horizontalDistance > (enableSwipeUp ? verticalDistance * 1.5 : 10)) {
+        // Horizontal swipe
+        const dampedX = deltaX * 0.3;
+        setDragOffset({ x: Math.max(-80, Math.min(80, dampedX)), y: 0 });
+        if (deltaX > 100 && onSwipeRight) setShowAction('right');
+        else if (deltaX < -100 && onSwipeLeft) setShowAction('left');
         else setShowAction(null);
       } else {
         // Mixed movement - reset to prevent jumpy behavior
@@ -77,9 +79,9 @@ const SwipeCard = ({
   };
 
   const handleTouchEnd = () => {
-    const threshold = 150; // Increased from 120 to 150 for more intentional swipes
+    const threshold = 150;
     
-    if (Math.abs(dragOffset.y) > threshold && dragOffset.y < -threshold && onSwipeUp) {
+    if (enableSwipeUp && Math.abs(dragOffset.y) > threshold && dragOffset.y < -threshold && onSwipeUp) {
       onSwipeUp.action();
     } else if (Math.abs(dragOffset.x) > threshold) {
       if (dragOffset.x > threshold && onSwipeRight) {
@@ -100,8 +102,8 @@ const SwipeCard = ({
   const getActionOpacity = () => {
     if (!showAction) return 0;
     const distance = showAction === 'up' ? Math.abs(dragOffset.y) : Math.abs(dragOffset.x);
-    const progress = Math.min(distance / 150, 1); // Updated to match new threshold
-    return Math.max(0.3, progress * 0.9); // Slightly higher base opacity
+    const progress = Math.min(distance / 150, 1);
+    return Math.max(0.3, progress * 0.9);
   };
 
   return (
@@ -144,8 +146,8 @@ const SwipeCard = ({
         </div>
       )}
 
-      {/* Up Action Background */}
-      {onSwipeUp && (
+      {/* Up Action Background - only show if enableSwipeUp is true */}
+      {onSwipeUp && enableSwipeUp && (
         <div 
           className={cn(
             "absolute inset-0 flex items-start justify-center pt-8 transition-all duration-200",
@@ -172,7 +174,7 @@ const SwipeCard = ({
           className
         )}
         style={{
-          transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) ${isDragging && (Math.abs(dragOffset.x) > 40 || Math.abs(dragOffset.y) > 40) ? 'rotate(' + ((dragOffset.x + dragOffset.y) * 0.005) + 'deg)' : ''}`, // Reduced rotation sensitivity
+          transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) ${isDragging && (Math.abs(dragOffset.x) > 40 || Math.abs(dragOffset.y) > 40) ? 'rotate(' + ((dragOffset.x + dragOffset.y) * 0.005) + 'deg)' : ''}`,
           transition: isDragging ? 'none' : 'transform 0.3s ease-out, box-shadow 0.2s ease-out'
         }}
         onTouchStart={handleTouchStart}
