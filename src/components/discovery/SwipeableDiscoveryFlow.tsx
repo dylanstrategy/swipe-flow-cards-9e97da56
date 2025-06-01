@@ -15,7 +15,7 @@ interface DiscoveryData {
   moveInTimeframe: string;
   location: string;
   proximityRadius: number;
-  priorities: Array<{ id: string; label: string; rank?: number }>;
+  priorities: Array<{ id: string; label: string; description: string; rank?: number }>;
   lifestyleTags: string[];
 }
 
