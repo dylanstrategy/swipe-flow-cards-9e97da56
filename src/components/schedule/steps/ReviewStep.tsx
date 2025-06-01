@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { CheckCircle, ArrowUp } from 'lucide-react';
+import PointOfSale from '../../PointOfSale';
 
 interface ReviewStepProps {
   onSubmit: () => void;
@@ -14,6 +15,11 @@ interface ReviewStepProps {
 }
 
 const ReviewStep = ({ onSubmit, workOrderDetails, selectedDate, selectedTime }: ReviewStepProps) => {
+  const handleOfferClick = (offer: any) => {
+    console.log('Work order offer clicked:', offer);
+    // Here you could track the offer click, redirect to a partner page, etc.
+  };
+
   return (
     <div className="h-full flex flex-col">
       <div className="text-center mb-4">
@@ -35,6 +41,12 @@ const ReviewStep = ({ onSubmit, workOrderDetails, selectedDate, selectedTime }: 
             {selectedDate?.toLocaleDateString()} at {selectedTime}
           </p>
         </div>
+
+        {/* Point of Sale Offer */}
+        <PointOfSale 
+          context="work-order"
+          onOfferClick={handleOfferClick}
+        />
       </div>
         
       <div className="bg-green-50 p-3 rounded-lg text-center">

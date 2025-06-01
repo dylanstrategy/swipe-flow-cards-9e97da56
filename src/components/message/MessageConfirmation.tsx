@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { format, addHours } from 'date-fns';
+import PointOfSale from '../PointOfSale';
 
 interface MessageConfirmationProps {
   subject: string;
@@ -37,6 +38,11 @@ const MessageConfirmation = ({ subject, message, recipientType, onDone }: Messag
   const timeString = format(expectedResponseTime, 'h:mm a');
   const dayString = format(expectedResponseTime, 'EEEE, MMMM d');
 
+  const handleOfferClick = (offer: any) => {
+    console.log('Offer clicked:', offer);
+    // Here you could track the offer click, redirect to a partner page, etc.
+  };
+
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
       <div className="max-w-sm mx-auto space-y-6">
@@ -67,6 +73,12 @@ const MessageConfirmation = ({ subject, message, recipientType, onDone }: Messag
             </div>
           </div>
         </div>
+
+        {/* Point of Sale Offer */}
+        <PointOfSale 
+          context="message"
+          onOfferClick={handleOfferClick}
+        />
 
         {/* Done Button */}
         <button
