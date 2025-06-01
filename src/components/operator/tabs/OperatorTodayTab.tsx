@@ -2,17 +2,20 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronRight, BarChart3, Grid3X3 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import MoveInTracker from '../MoveInTracker';
 
 const OperatorTodayTab = () => {
   const [viewMode, setViewMode] = useState<'cards' | 'dashboard'>('cards');
+  const [showMoveInTracker, setShowMoveInTracker] = useState(false);
+  const [moveInFilter, setMoveInFilter] = useState<'unapproved' | 'incomplete' | 'all'>('all');
 
   const communityManagementData = [
-    { title: 'Unsupported Move In\'s', count: 18, status: 'urgent' },
+    { title: 'Unsupported Move In\'s', count: 18, status: 'urgent', module: 'move-in-unapproved' },
     { title: 'Unsupported Move Out\'s', count: 8, status: 'normal' },
     { title: 'Unscheduled Inspections', count: 4, status: 'normal' },
     { title: 'Pending Two Week Check In\'s', count: 0, status: 'normal' },
     { title: 'Move In\'s Staged/Ready', count: 0, status: 'normal' },
-    { title: 'Incomplete Move In\'s', count: 14, status: 'normal' },
+    { title: 'Incomplete Move In\'s', count: 14, status: 'normal', module: 'move-in-incomplete' },
     { title: 'Incomplete Move Out\'s', count: 8, status: 'normal' },
     { title: 'Pending Diego\'s', count: 8, status: 'normal' },
     { title: 'Outstanding Terms', count: 0, status: 'normal' },
@@ -121,6 +124,16 @@ const OperatorTodayTab = () => {
     }
   };
 
+  const handleCardClick = (item: any) => {
+    if (item.module === 'move-in-unapproved') {
+      setMoveInFilter('unapproved');
+      setShowMoveInTracker(true);
+    } else if (item.module === 'move-in-incomplete') {
+      setMoveInFilter('incomplete');
+      setShowMoveInTracker(true);
+    }
+  };
+
   const renderSection = (title: string, data: any[], bgColor: string = 'bg-blue-100') => (
     <div className="mb-8">
       <div className={`${bgColor} p-4 rounded-t-lg`}>
@@ -128,7 +141,11 @@ const OperatorTodayTab = () => {
       </div>
       <div className="grid grid-cols-2 gap-4 p-4 bg-white rounded-b-lg border border-t-0 border-gray-200">
         {data.map((item, index) => (
-          <Card key={index} className={`cursor-pointer hover:shadow-md transition-shadow ${getStatusColor(item.status)}`}>
+          <Card 
+            key={index} 
+            className={`cursor-pointer hover:shadow-md transition-shadow ${getStatusColor(item.status)}`}
+            onClick={() => handleCardClick(item)}
+          >
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -239,6 +256,15 @@ const OperatorTodayTab = () => {
       </Card>
     </div>
   );
+
+  if (showMoveInTracker) {
+    return (
+      <MoveInTracker 
+        onClose={() => setShowMoveInTracker(false)}
+        initialFilter={moveInFilter}
+      />
+    );
+  }
 
   return (
     <div className="px-4 py-6 pb-24">

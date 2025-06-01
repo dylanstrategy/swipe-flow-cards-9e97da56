@@ -1,14 +1,18 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Search, User, Phone, Mail, Home, Calendar, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Search, User, Phone, Mail, Home, Calendar, ChevronRight, ArrowLeft, Truck } from 'lucide-react';
+import MoveInTracker from '../MoveInTracker';
 
 const OperatorResidentsTab = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [selectedResident, setSelectedResident] = useState<any>(null);
+  const [showMoveInTracker, setShowMoveInTracker] = useState(false);
+  const [moveInResidentId, setMoveInResidentId] = useState<string>('');
 
   const residents = [
     {
@@ -21,7 +25,8 @@ const OperatorResidentsTab = () => {
       moveInDate: '2023-06-15',
       balance: 0,
       workOrders: 2,
-      renewalStatus: 'pending'
+      renewalStatus: 'pending',
+      hasMoveInProgress: false
     },
     {
       id: 2,
@@ -33,7 +38,8 @@ const OperatorResidentsTab = () => {
       moveInDate: '2022-08-20',
       balance: 150.00,
       workOrders: 0,
-      renewalStatus: 'offered'
+      renewalStatus: 'offered',
+      hasMoveInProgress: false
     },
     {
       id: 3,
@@ -45,7 +51,8 @@ const OperatorResidentsTab = () => {
       moveInDate: '2023-11-10',
       balance: 0,
       workOrders: 1,
-      renewalStatus: 'not_due'
+      renewalStatus: 'not_due',
+      hasMoveInProgress: false
     },
     {
       id: 4,
@@ -57,7 +64,34 @@ const OperatorResidentsTab = () => {
       moveInDate: '2023-03-05',
       balance: 850.00,
       workOrders: 3,
-      renewalStatus: 'not_due'
+      renewalStatus: 'not_due',
+      hasMoveInProgress: false
+    },
+    {
+      id: 5,
+      name: 'April Chen',
+      unit: '424-3',
+      phone: '(555) 567-8901',
+      email: 'aprilchen@email.com',
+      leaseStatus: 'move_in_progress',
+      moveInDate: '2025-03-21',
+      balance: 0,
+      workOrders: 0,
+      renewalStatus: 'not_due',
+      hasMoveInProgress: true
+    },
+    {
+      id: 6,
+      name: 'Zhihan He',
+      unit: '518',
+      phone: '(555) 678-9012',
+      email: 'zhihan@email.com',
+      leaseStatus: 'move_in_progress',
+      moveInDate: '2025-03-10',
+      balance: 0,
+      workOrders: 0,
+      renewalStatus: 'not_due',
+      hasMoveInProgress: true
     }
   ];
 
@@ -66,6 +100,7 @@ const OperatorResidentsTab = () => {
       case 'active': return 'bg-green-100 text-green-800';
       case 'expiring': return 'bg-orange-100 text-orange-800';
       case 'delinquent': return 'bg-red-100 text-red-800';
+      case 'move_in_progress': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -85,6 +120,141 @@ const OperatorResidentsTab = () => {
     const matchesFilter = filterStatus === 'all' || resident.leaseStatus === filterStatus;
     return matchesSearch && matchesFilter;
   });
+
+  const handleMoveInTracker = (residentId: string) => {
+    setMoveInResidentId(residentId);
+    setShowMoveInTracker(true);
+  };
+
+  if (showMoveInTracker) {
+    return (
+      <MoveInTracker 
+        onClose={() => setShowMoveInTracker(false)}
+        residentId={moveInResidentId}
+      />
+    );
+  }
+
+  if (selectedResident) {
+    return (
+      <div className="px-4 py-6 pb-24">
+        <div className="mb-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setSelectedResident(null)}
+              className="p-2"
+            >
+              <ArrowLeft size={20} />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">{selectedResident.name}</h1>
+              <p className="text-gray-600">Unit {selectedResident.unit}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Resident Profile Content */}
+        <div className="space-y-6">
+          {/* Contact Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Contact Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center space-x-3">
+                <Phone className="w-4 h-4 text-gray-500" />
+                <span>{selectedResident.phone}</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Mail className="w-4 h-4 text-gray-500" />
+                <span>{selectedResident.email}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Lease Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Lease Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-sm text-gray-600">Move-in Date</span>
+                  <p className="font-medium">{new Date(selectedResident.moveInDate).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-600">Lease Status</span>
+                  <div className="mt-1">
+                    <Badge className={getStatusColor(selectedResident.leaseStatus)}>
+                      {selectedResident.leaseStatus.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-600">Balance</span>
+                  <p className={`font-medium ${selectedResident.balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    ${selectedResident.balance.toFixed(2)}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-600">Open Work Orders</span>
+                  <p className="font-medium">{selectedResident.workOrders}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Move-In Progress (if applicable) */}
+          {selectedResident.hasMoveInProgress && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Truck className="w-5 h-5" />
+                  <span>Move-In Progress</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 mb-4">
+                  This resident has a move-in in progress. Track their move-in tasks and completion status.
+                </p>
+                <Button 
+                  onClick={() => handleMoveInTracker(selectedResident.id.toString())}
+                  className="w-full"
+                >
+                  <Truck className="w-4 h-4 mr-2" />
+                  View Move-In Tracker
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button variant="outline" className="w-full justify-start">
+                <Mail className="w-4 h-4 mr-2" />
+                Send Message
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                <Calendar className="w-4 h-4 mr-2" />
+                Schedule Appointment
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                <Home className="w-4 h-4 mr-2" />
+                Create Work Order
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 py-6 pb-24">
@@ -113,6 +283,7 @@ const OperatorResidentsTab = () => {
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="expiring">Expiring</SelectItem>
             <SelectItem value="delinquent">Delinquent</SelectItem>
+            <SelectItem value="move_in_progress">Move-In Progress</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -120,7 +291,11 @@ const OperatorResidentsTab = () => {
       {/* Residents List */}
       <div className="space-y-4">
         {filteredResidents.map((resident) => (
-          <Card key={resident.id} className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card 
+            key={resident.id} 
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => setSelectedResident(resident)}
+          >
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -164,6 +339,12 @@ const OperatorResidentsTab = () => {
                       <Badge className={getRenewalColor(resident.renewalStatus)}>
                         {resident.renewalStatus.replace('_', ' ')}
                       </Badge>
+                      {resident.hasMoveInProgress && (
+                        <Badge className="bg-blue-100 text-blue-800">
+                          <Truck className="w-3 h-3 mr-1" />
+                          Move-In
+                        </Badge>
+                      )}
                     </div>
                     {resident.balance > 0 && (
                       <div className="text-sm font-medium text-red-600">
