@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Home, Lightbulb, Wifi, House, Car, Shield, Star, Bell, Community, CircleCheck } from 'lucide-react';
+import { Home, Lightbulb, Wifi, House, Car, Shield, Star, Bell, Users, CircleCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Feature {
@@ -74,19 +74,19 @@ const OptionsStep = ({ features, onUpdate }: OptionsStepProps) => {
       id: 'petFriendlyLiving',
       label: 'Pet-Friendly Living',
       description: 'Comfort and support for living with pets.',
-      icon: Community
+      icon: Home
     },
     {
       id: 'communityVibe',
       label: 'Community Vibe',
       description: 'Friendly, respectful neighbors or active social environment.',
-      icon: Bell
+      icon: Users
     },
     {
       id: 'affordabilityValue',
       label: 'Affordability & Value',
       description: 'Worth the cost, transparent fees, and financial peace.',
-      icon: Home
+      icon: Bell
     }
   ];
 
@@ -136,7 +136,7 @@ const OptionsStep = ({ features, onUpdate }: OptionsStepProps) => {
   };
 
   return (
-    <div className="h-full bg-white overflow-hidden">
+    <div className="h-full bg-white overflow-hidden" style={{ touchAction: 'pan-y' }}>
       {/* Fixed Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-4 pt-6 pb-4">
         <div className="text-center space-y-2">
@@ -145,15 +145,15 @@ const OptionsStep = ({ features, onUpdate }: OptionsStepProps) => {
             What are your Top 5?
           </h2>
           <div className={`transition-all duration-300 ${isScrolled ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'}`}>
-            <p className="text-sm text-gray-600">
-              Select up to 5 priorities that matter most to you
+            <p className="text-xs text-gray-600">
+              Select up to 5 priorities
             </p>
           </div>
         </div>
       </div>
 
       {/* Scrollable Content */}
-      <div className="px-4 pb-32 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+      <div className="px-4 pb-32 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)', touchAction: 'pan-y' }}>
         <div className="grid gap-3 py-4">
           {priorities.map((priority) => {
             const rank = getPriorityRank(priority.id);
@@ -164,11 +164,12 @@ const OptionsStep = ({ features, onUpdate }: OptionsStepProps) => {
               <div
                 key={priority.id}
                 onClick={() => handlePriorityToggle(priority.id)}
-                className={`relative p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer touch-manipulation ${
+                className={`relative p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
                   isSelected 
                     ? 'border-green-500 bg-green-50 shadow-md' 
                     : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
                 }`}
+                style={{ touchAction: 'manipulation' }}
               >
                 {/* Rank Badge */}
                 {isSelected && (
