@@ -13,7 +13,6 @@ interface SwipeCardProps {
   children: React.ReactNode;
   onSwipeRight?: SwipeAction;
   onSwipeLeft?: SwipeAction;
-  onSwipeUp?: SwipeAction;
   onTap?: () => void;
   className?: string;
 }
@@ -22,19 +21,20 @@ const SwipeCard = ({
   children, 
   onSwipeRight, 
   onSwipeLeft, 
-  onSwipeUp, 
   onTap,
   className 
 }: SwipeCardProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [showAction, setShowAction] = useState<'left' | 'right' | 'up' | null>(null);
+  const [showAction, setShowAction] = useState<'left' | 'right' | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const startPos = useRef({ x: 0, y: 0 });
+  const hasMoved = useRef(false);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     startPos.current = { x: touch.clientX, y: touch.clientY };
+    hasMoved.current = false;
     setIsDragging(true);
   };
 
@@ -45,53 +45,51 @@ const SwipeCard = ({
     const deltaX = touch.clientX - startPos.current.x;
     const deltaY = touch.clientY - startPos.current.y;
     
-    setDragOffset({ x: deltaX, y: deltaY });
+    // Only track horizontal movement, ignore vertical
+    const horizontalDistance = Math.abs(deltaX);
+    const verticalDistance = Math.abs(deltaY);
     
-    // Show action hints based on drag direction
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      if (deltaX > 30 && onSwipeRight) setShowAction('right');
-      else if (deltaX < -30 && onSwipeLeft) setShowAction('left');
+    // If moving more vertically than horizontally, don't treat as swipe
+    if (verticalDistance > horizontalDistance * 1.5) {
+      return;
+    }
+    
+    // Require more movement before showing action (increased threshold)
+    if (horizontalDistance > 15) {
+      hasMoved.current = true;
+      setDragOffset({ x: deltaX * 0.6, y: 0 }); // Reduced sensitivity
+      
+      // Show action hints only for significant horizontal movement
+      if (deltaX > 60 && onSwipeRight) setShowAction('right');
+      else if (deltaX < -60 && onSwipeLeft) setShowAction('left');
       else setShowAction(null);
-    } else if (deltaY < -30 && onSwipeUp) {
-      setShowAction('up');
-    } else {
-      setShowAction(null);
     }
   };
 
   const handleTouchEnd = () => {
-    const threshold = 80;
+    const threshold = 120; // Increased threshold for more deliberate swipes
     
-    if (Math.abs(dragOffset.x) > threshold || Math.abs(dragOffset.y) > threshold) {
-      if (Math.abs(dragOffset.x) > Math.abs(dragOffset.y)) {
-        if (dragOffset.x > threshold && onSwipeRight) {
-          onSwipeRight.action();
-        } else if (dragOffset.x < -threshold && onSwipeLeft) {
-          onSwipeLeft.action();
-        }
-      } else if (dragOffset.y < -threshold && onSwipeUp) {
-        onSwipeUp.action();
+    if (Math.abs(dragOffset.x) > threshold) {
+      if (dragOffset.x > threshold && onSwipeRight) {
+        onSwipeRight.action();
+      } else if (dragOffset.x < -threshold && onSwipeLeft) {
+        onSwipeLeft.action();
       }
-    } else if (Math.abs(dragOffset.x) < 10 && Math.abs(dragOffset.y) < 10 && onTap) {
+    } else if (!hasMoved.current && onTap) {
+      // Only trigger tap if there was minimal movement
       onTap();
     }
     
     setIsDragging(false);
     setDragOffset({ x: 0, y: 0 });
     setShowAction(null);
-  };
-
-  const getActionColor = () => {
-    if (showAction === 'right' && onSwipeRight) return onSwipeRight.color;
-    if (showAction === 'left' && onSwipeLeft) return onSwipeLeft.color;
-    if (showAction === 'up' && onSwipeUp) return onSwipeUp.color;
-    return 'transparent';
+    hasMoved.current = false;
   };
 
   const getActionOpacity = () => {
     if (!showAction) return 0;
-    const progress = Math.min(Math.abs(dragOffset.x) / 100, Math.abs(dragOffset.y) / 100, 1);
-    return Math.max(0.3, progress * 0.9);
+    const progress = Math.min(Math.abs(dragOffset.x) / 120, 1);
+    return Math.max(0.2, progress * 0.8);
   };
 
   return (
@@ -133,25 +131,6 @@ const SwipeCard = ({
           </div>
         </div>
       )}
-
-      {/* Up Action Background */}
-      {onSwipeUp && (
-        <div 
-          className={cn(
-            "absolute inset-0 flex items-center justify-center transition-all duration-200",
-            showAction === 'up' ? "opacity-100" : "opacity-0"
-          )}
-          style={{ 
-            backgroundColor: onSwipeUp.color,
-            opacity: showAction === 'up' ? getActionOpacity() : 0
-          }}
-        >
-          <div className="text-white font-bold text-xl flex items-center gap-3">
-            {onSwipeUp.icon && <span className="text-2xl">{onSwipeUp.icon}</span>}
-            <span>{onSwipeUp.label}</span>
-          </div>
-        </div>
-      )}
       
       {/* Card */}
       <div
@@ -162,13 +141,13 @@ const SwipeCard = ({
           className
         )}
         style={{
-          transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) ${isDragging ? 'rotate(' + (dragOffset.x * 0.05) + 'deg)' : ''}`,
+          transform: `translateX(${dragOffset.x}px) ${isDragging && Math.abs(dragOffset.x) > 30 ? 'rotate(' + (dragOffset.x * 0.02) + 'deg)' : ''}`,
           transition: isDragging ? 'none' : 'transform 0.3s ease-out, box-shadow 0.2s ease-out'
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onClick={onTap}
+        onClick={!hasMoved.current ? onTap : undefined}
       >
         {children}
       </div>

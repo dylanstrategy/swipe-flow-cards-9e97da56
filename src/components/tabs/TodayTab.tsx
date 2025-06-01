@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import SwipeCard from '../SwipeCard';
 import { useToast } from '@/hooks/use-toast';
@@ -126,12 +125,6 @@ const TodayTab = () => {
             action: () => handleAction("Cancelled appointment", event.title),
             color: "#EF4444",
             icon: "❌"
-          },
-          onSwipeUp: {
-            label: "Add Review",
-            action: () => handleAction("Added post-visit review", event.title),
-            color: "#8B5CF6",
-            icon: "📝"
           }
         };
       
@@ -148,12 +141,6 @@ const TodayTab = () => {
             action: () => handleAction("Quick replied", event.title),
             color: "#3B82F6",
             icon: "💬"
-          },
-          onSwipeUp: {
-            label: "Message Inbox",
-            action: () => handleAction("Opened Message Inbox", event.title),
-            color: "#10B981",
-            icon: "📧"
           }
         };
       
@@ -170,12 +157,6 @@ const TodayTab = () => {
             action: () => handleAction("Requested changes", event.title),
             color: "#F59E0B",
             icon: "💬"
-          },
-          onSwipeUp: {
-            label: "View History",
-            action: () => handleAction("Viewed rent history", event.title),
-            color: "#8B5CF6",
-            icon: "📊"
           }
         };
       
@@ -192,12 +173,6 @@ const TodayTab = () => {
             action: () => handleAction("Skipped offer", event.title),
             color: "#6B7280",
             icon: "👎"
-          },
-          onSwipeUp: {
-            label: "Share",
-            action: () => handleAction("Shared offer", event.title),
-            color: "#3B82F6",
-            icon: "📤"
           }
         };
       
@@ -214,12 +189,6 @@ const TodayTab = () => {
             action: () => handleAction("Withdrew RSVP", event.title),
             color: "#EF4444",
             icon: "❌"
-          },
-          onSwipeUp: {
-            label: "Share/Directions",
-            action: () => handleAction("Getting directions", event.title),
-            color: "#3B82F6",
-            icon: "🗺️"
           }
         };
       
@@ -378,7 +347,6 @@ const TodayTab = () => {
                       <SwipeCard
                         onSwipeRight={swipeActions.onSwipeRight}
                         onSwipeLeft={swipeActions.onSwipeLeft}
-                        onSwipeUp={swipeActions.onSwipeUp}
                         onTap={() => handleAction("Viewed details", event.title)}
                       >
                         <div className="bg-blue-50 rounded-lg p-4">
