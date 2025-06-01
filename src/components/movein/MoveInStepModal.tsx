@@ -14,6 +14,9 @@ interface MoveInStepModalProps {
 const MoveInStepModal = ({ stepId, onComplete, onClose }: MoveInStepModalProps) => {
   const [isCompleting, setIsCompleting] = useState(false);
   const [hasPet, setHasPet] = useState(false);
+  const [needsParking, setNeedsParking] = useState(false);
+  const [parkingType, setParkingType] = useState('');
+  const [needsStorage, setNeedsStorage] = useState(false);
 
   const getStepContent = (stepId: string) => {
     switch (stepId) {
@@ -282,6 +285,119 @@ const MoveInStepModal = ({ stepId, onComplete, onClose }: MoveInStepModalProps) 
                   <div className="font-medium">March 16</div>
                   <div className="text-sm text-gray-600">1:00 PM</div>
                 </button>
+              </div>
+
+              {/* Parking Selection */}
+              <div className="bg-blue-50 rounded-lg p-4">
+                <h4 className="font-semibold text-blue-800 mb-3">Parking</h4>
+                <div className="flex items-center space-x-3 mb-4">
+                  <span className="text-sm font-medium text-blue-700">Do you need parking?</span>
+                  <div className="flex space-x-4">
+                    <label className="flex items-center space-x-2">
+                      <input 
+                        type="radio" 
+                        name="needsParking" 
+                        value="yes"
+                        checked={needsParking}
+                        onChange={() => setNeedsParking(true)}
+                        className="text-blue-600"
+                      />
+                      <span className="text-sm text-blue-700">Yes</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input 
+                        type="radio" 
+                        name="needsParking" 
+                        value="no"
+                        checked={!needsParking}
+                        onChange={() => setNeedsParking(false)}
+                        className="text-blue-600"
+                      />
+                      <span className="text-sm text-blue-700">No</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Parking Type Selection - Only show if user needs parking */}
+                {needsParking && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-blue-700 mb-2">Parking Type</label>
+                      <div className="space-y-2">
+                        <label className="flex items-center justify-between p-3 border border-blue-200 rounded-md cursor-pointer hover:bg-blue-50">
+                          <div className="flex items-center space-x-2">
+                            <input 
+                              type="radio" 
+                              name="parkingType" 
+                              value="uncovered"
+                              checked={parkingType === 'uncovered'}
+                              onChange={(e) => setParkingType(e.target.value)}
+                              className="text-blue-600"
+                            />
+                            <span className="text-sm text-blue-700">Uncovered Parking</span>
+                          </div>
+                          <span className="text-sm font-medium text-blue-800">$250/month</span>
+                        </label>
+                        <label className="flex items-center justify-between p-3 border border-blue-200 rounded-md cursor-pointer hover:bg-blue-50">
+                          <div className="flex items-center space-x-2">
+                            <input 
+                              type="radio" 
+                              name="parkingType" 
+                              value="covered"
+                              checked={parkingType === 'covered'}
+                              onChange={(e) => setParkingType(e.target.value)}
+                              className="text-blue-600"
+                            />
+                            <span className="text-sm text-blue-700">Covered Parking</span>
+                          </div>
+                          <span className="text-sm font-medium text-blue-800">$300/month</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Storage Selection */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-800 mb-3">Storage</h4>
+                <div className="flex items-center space-x-3 mb-4">
+                  <span className="text-sm font-medium text-gray-700">Do you need storage?</span>
+                  <div className="flex space-x-4">
+                    <label className="flex items-center space-x-2">
+                      <input 
+                        type="radio" 
+                        name="needsStorage" 
+                        value="yes"
+                        checked={needsStorage}
+                        onChange={() => setNeedsStorage(true)}
+                        className="text-gray-600"
+                      />
+                      <span className="text-sm text-gray-700">Yes</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input 
+                        type="radio" 
+                        name="needsStorage" 
+                        value="no"
+                        checked={!needsStorage}
+                        onChange={() => setNeedsStorage(false)}
+                        className="text-gray-600"
+                      />
+                      <span className="text-sm text-gray-700">No</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Storage Information - Only show if user needs storage */}
+                {needsStorage && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 border border-gray-200 rounded-md bg-white">
+                      <span className="text-sm text-gray-700">Storage Unit</span>
+                      <span className="text-sm font-medium text-gray-800">$50/month</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ),
