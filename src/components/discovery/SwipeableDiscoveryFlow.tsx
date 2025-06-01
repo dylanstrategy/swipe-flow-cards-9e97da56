@@ -40,40 +40,17 @@ const SwipeableDiscoveryFlow = () => {
     ],
     lifestyleTags: [],
     features: [
-      // In-Unit Experience
-      { id: 'naturalLight', label: 'Natural light & airflow', selected: false },
-      { id: 'washerDryer', label: 'In-unit washer/dryer', selected: false },
-      { id: 'modernAppliances', label: 'Modern finishes & appliances', selected: false },
-      { id: 'quietness', label: 'Quiet & soundproofing', selected: false },
-      { id: 'outdoorSpace', label: 'Private outdoor space (balcony/patio)', selected: false },
-      
-      // Building Features
-      { id: 'gym', label: 'Gym or wellness space', selected: false },
-      { id: 'packageRoom', label: 'Package lockers / mailroom', selected: false },
-      { id: 'coWorking', label: 'Co-working or lounge areas', selected: false },
-      { id: 'secureEntry', label: 'Secure entry (fob, doorman, cameras)', selected: false },
-      { id: 'petFriendly', label: 'Pet-friendly (with dog run or wash)', selected: false },
-      
-      // Lifestyle & Community
-      { id: 'communityEvents', label: 'Active community events / social vibe', selected: false },
-      { id: 'quietEnvironment', label: 'Clean, quiet, respectful environment', selected: false },
-      { id: 'inclusive', label: 'LGBTQ+ & diversity-inclusive', selected: false },
-      { id: 'familyFriendly', label: 'Family or roommate-friendly', selected: false },
-      { id: 'responsiveStaff', label: 'On-site staff responsiveness & friendliness', selected: false },
-      
-      // Location & Convenience
-      { id: 'transitAccess', label: 'Proximity to transit', selected: false },
-      { id: 'walkable', label: 'Walkable to groceries / coffee / dining', selected: false },
-      { id: 'commute', label: 'Commute to work/school', selected: false },
-      { id: 'safety', label: 'Safety of neighborhood', selected: false },
-      { id: 'greenSpace', label: 'Nearby green space or dog park', selected: false },
-      
-      // Technology & Modern Living
-      { id: 'highSpeedInternet', label: 'High-speed internet quality', selected: false },
-      { id: 'smartHome', label: 'Smart home features (locks, thermostat)', selected: false },
-      { id: 'residentApp', label: 'Resident app / digital access', selected: false },
-      { id: 'cellSignal', label: 'Reliable cell signal', selected: false },
-      { id: 'evParking', label: 'EV parking / tech-enabled services', selected: false }
+      // New simplified priority structure
+      { id: 'naturalLightQuiet', label: 'Natural Light & Quiet', selected: false },
+      { id: 'modernFunctional', label: 'Modern & Functional Unit', selected: false },
+      { id: 'reliableWifiTech', label: 'Reliable Wi-Fi & Tech', selected: false },
+      { id: 'walkabilityTransit', label: 'Walkability & Transit Access', selected: false },
+      { id: 'amenitiesLife', label: 'Amenities that Fit My Life', selected: false },
+      { id: 'safetySecurity', label: 'Safety & Security', selected: false },
+      { id: 'cleanlinessMainten', label: 'Cleanliness & Maintenance', selected: false },
+      { id: 'petFriendlyLiving', label: 'Pet-Friendly Living', selected: false },
+      { id: 'communityVibe', label: 'Community Vibe', selected: false },
+      { id: 'affordabilityValue', label: 'Affordability & Value', selected: false }
     ]
   });
 

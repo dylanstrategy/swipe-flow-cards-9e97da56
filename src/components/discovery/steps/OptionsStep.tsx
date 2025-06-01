@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Home } from 'lucide-react';
+import { Home, Lightbulb, Wifi, House, Car, Shield, Star, Bell, Community, CircleCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Feature {
@@ -17,88 +17,112 @@ interface OptionsStepProps {
 
 const OptionsStep = ({ features, onUpdate }: OptionsStepProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const selectedCount = features.filter(f => f.selected).length;
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      setIsScrolled(window.scrollY > 30);
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Organize features into categories
-  const categories = [
+  const priorities = [
     {
-      id: 'in-unit',
-      title: 'In-Unit Experience',
-      subtitle: 'Comfort, privacy, daily ease',
-      features: [
-        { id: 'naturalLight', label: 'Natural light & airflow' },
-        { id: 'washerDryer', label: 'In-unit washer/dryer' },
-        { id: 'modernAppliances', label: 'Modern finishes & appliances' },
-        { id: 'quietness', label: 'Quiet & soundproofing' },
-        { id: 'outdoorSpace', label: 'Private outdoor space (balcony/patio)' },
-      ]
+      id: 'naturalLightQuiet',
+      label: 'Natural Light & Quiet',
+      description: 'A calm, well-lit space that feels good to be in.',
+      icon: Lightbulb
     },
     {
-      id: 'building',
-      title: 'Building Features',
-      subtitle: 'Shared amenities that enhance daily life',
-      features: [
-        { id: 'gym', label: 'Gym or wellness space' },
-        { id: 'packageRoom', label: 'Package lockers / mailroom' },
-        { id: 'coWorking', label: 'Co-working or lounge areas' },
-        { id: 'secureEntry', label: 'Secure entry (fob, doorman, cameras)' },
-        { id: 'petFriendly', label: 'Pet-friendly (with dog run or wash)' },
-      ]
+      id: 'modernFunctional',
+      label: 'Modern & Functional Unit',
+      description: 'Updated appliances, layout, and in-unit washer/dryer.',
+      icon: House
     },
     {
-      id: 'lifestyle',
-      title: 'Lifestyle & Community',
-      subtitle: 'Emotional + social alignment',
-      features: [
-        { id: 'communityEvents', label: 'Active community events / social vibe' },
-        { id: 'quietEnvironment', label: 'Clean, quiet, respectful environment' },
-        { id: 'inclusive', label: 'LGBTQ+ & diversity-inclusive' },
-        { id: 'familyFriendly', label: 'Family or roommate-friendly' },
-        { id: 'responsiveStaff', label: 'On-site staff responsiveness & friendliness' },
-      ]
+      id: 'reliableWifiTech',
+      label: 'Reliable Wi-Fi & Tech',
+      description: 'Strong internet, smart home features, or digital access.',
+      icon: Wifi
     },
     {
-      id: 'location',
-      title: 'Location & Convenience',
-      subtitle: 'Neighborhood value + daily needs',
-      features: [
-        { id: 'transitAccess', label: 'Proximity to transit' },
-        { id: 'walkable', label: 'Walkable to groceries / coffee / dining' },
-        { id: 'commute', label: 'Commute to work/school' },
-        { id: 'safety', label: 'Safety of neighborhood' },
-        { id: 'greenSpace', label: 'Nearby green space or dog park' },
-      ]
+      id: 'walkabilityTransit',
+      label: 'Walkability & Transit Access',
+      description: 'Easy access to groceries, cafes, public transit.',
+      icon: Car
     },
     {
-      id: 'technology',
-      title: 'Technology & Modern Living',
-      subtitle: 'Connectivity + smart systems',
-      features: [
-        { id: 'highSpeedInternet', label: 'High-speed internet quality' },
-        { id: 'smartHome', label: 'Smart home features (locks, thermostat)' },
-        { id: 'residentApp', label: 'Resident app / digital access' },
-        { id: 'cellSignal', label: 'Reliable cell signal' },
-        { id: 'evParking', label: 'EV parking / tech-enabled services' },
-      ]
+      id: 'amenitiesLife',
+      label: 'Amenities that Fit My Life',
+      description: 'Gym, coworking, lounge, rooftop, pet areas, etc.',
+      icon: Star
+    },
+    {
+      id: 'safetySecurity',
+      label: 'Safety & Security',
+      description: 'Secure entry, neighborhood safety, peace of mind.',
+      icon: Shield
+    },
+    {
+      id: 'cleanlinessMainten',
+      label: 'Cleanliness & Maintenance',
+      description: 'Well-kept common areas and fast issue resolution.',
+      icon: CircleCheck
+    },
+    {
+      id: 'petFriendlyLiving',
+      label: 'Pet-Friendly Living',
+      description: 'Comfort and support for living with pets.',
+      icon: Community
+    },
+    {
+      id: 'communityVibe',
+      label: 'Community Vibe',
+      description: 'Friendly, respectful neighbors or active social environment.',
+      icon: Bell
+    },
+    {
+      id: 'affordabilityValue',
+      label: 'Affordability & Value',
+      description: 'Worth the cost, transparent fees, and financial peace.',
+      icon: Home
     }
   ];
 
-  const handleFeatureToggle = (featureId: string) => {
-    const updatedFeatures = features.map(f => 
-      f.id === featureId 
-        ? { ...f, selected: !f.selected, importance: f.selected ? undefined : 3 }
-        : f
-    );
-    onUpdate(updatedFeatures);
+  const selectedPriorities = features.filter(f => f.selected && f.importance).sort((a, b) => (a.importance || 0) - (b.importance || 0));
+  const selectedCount = selectedPriorities.length;
+
+  const handlePriorityToggle = (priorityId: string) => {
+    const currentFeature = features.find(f => f.id === priorityId);
+    
+    if (currentFeature?.selected) {
+      // Remove from selection
+      const updatedFeatures = features.map(f => 
+        f.id === priorityId 
+          ? { ...f, selected: false, importance: undefined }
+          : f
+      );
+      
+      // Reorder remaining priorities
+      const remainingSelected = updatedFeatures.filter(f => f.selected && f.importance);
+      remainingSelected.sort((a, b) => (a.importance || 0) - (b.importance || 0));
+      remainingSelected.forEach((feature, index) => {
+        feature.importance = index + 1;
+      });
+      
+      onUpdate(updatedFeatures);
+    } else {
+      // Add to selection if under 5
+      if (selectedCount < 5) {
+        const updatedFeatures = features.map(f => 
+          f.id === priorityId 
+            ? { ...f, selected: true, importance: selectedCount + 1 }
+            : f
+        );
+        onUpdate(updatedFeatures);
+      }
+    }
   };
 
   const handleSkip = () => {
@@ -106,76 +130,77 @@ const OptionsStep = ({ features, onUpdate }: OptionsStepProps) => {
     onUpdate(clearedFeatures);
   };
 
+  const getPriorityRank = (priorityId: string) => {
+    const feature = features.find(f => f.id === priorityId);
+    return feature?.importance;
+  };
+
   return (
-    <div className="h-full bg-white">
+    <div className="h-full bg-white overflow-hidden">
       {/* Fixed Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-4 pt-6 pb-4">
         <div className="text-center space-y-2">
           <Home className="mx-auto text-green-600" size={28} />
           <h2 className="text-xl font-bold text-gray-900">
-            Perfect the details
+            What are your Top 5?
           </h2>
           <div className={`transition-all duration-300 ${isScrolled ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'}`}>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              What are your top 5 residential living priorities? You can either rank your top 5 overall, or choose one from each category below.
+            <p className="text-sm text-gray-600">
+              Select up to 5 priorities that matter most to you
             </p>
           </div>
         </div>
       </div>
 
       {/* Scrollable Content */}
-      <div className="px-4 pb-32">
-        <div className="space-y-8 py-6">
-          {categories.map((category) => (
-            <div key={category.id} className="space-y-4">
-              <div className="space-y-1">
-                <h3 className="font-semibold text-gray-900 text-lg">
-                  {category.title}
-                </h3>
-                <p className="text-sm text-gray-500 italic">
-                  {category.subtitle}
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                {category.features.map((categoryFeature) => {
-                  const feature = features.find(f => f.id === categoryFeature.id) || 
-                    { ...categoryFeature, selected: false };
+      <div className="px-4 pb-32 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+        <div className="grid gap-3 py-4">
+          {priorities.map((priority) => {
+            const rank = getPriorityRank(priority.id);
+            const isSelected = rank !== undefined;
+            const IconComponent = priority.icon;
+            
+            return (
+              <div
+                key={priority.id}
+                onClick={() => handlePriorityToggle(priority.id)}
+                className={`relative p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer touch-manipulation ${
+                  isSelected 
+                    ? 'border-green-500 bg-green-50 shadow-md' 
+                    : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+                }`}
+              >
+                {/* Rank Badge */}
+                {isSelected && (
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-sm shadow-lg">
+                    #{rank}
+                  </div>
+                )}
+                
+                <div className="flex items-start gap-4">
+                  <div className={`p-3 rounded-lg ${isSelected ? 'bg-green-100' : 'bg-gray-100'}`}>
+                    <IconComponent 
+                      size={24} 
+                      className={isSelected ? 'text-green-600' : 'text-gray-600'} 
+                    />
+                  </div>
                   
-                  return (
-                    <button
-                      key={feature.id}
-                      onClick={() => handleFeatureToggle(feature.id)}
-                      className={`w-full p-4 rounded-lg border-2 transition-all duration-200 text-left ${
-                        feature.selected 
-                          ? 'border-green-500 bg-green-50' 
-                          : 'border-gray-200 bg-white hover:border-gray-300'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                          feature.selected 
-                            ? 'border-green-500 bg-green-500' 
-                            : 'border-gray-300'
-                        }`}>
-                          {feature.selected && (
-                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </div>
-                        <span className={`text-base ${
-                          feature.selected ? 'text-green-900 font-medium' : 'text-gray-700'
-                        }`}>
-                          {feature.label}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
+                  <div className="flex-1 min-w-0">
+                    <h3 className={`font-semibold text-base ${
+                      isSelected ? 'text-green-900' : 'text-gray-900'
+                    }`}>
+                      {priority.label}
+                    </h3>
+                    <p className={`text-sm mt-1 ${
+                      isSelected ? 'text-green-700' : 'text-gray-600'
+                    }`}>
+                      {priority.description}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -184,7 +209,7 @@ const OptionsStep = ({ features, onUpdate }: OptionsStepProps) => {
         <div className="space-y-3">
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              Selected: {selectedCount} feature{selectedCount !== 1 ? 's' : ''}
+              Selected: {selectedCount}/5 priorities
             </p>
           </div>
           
