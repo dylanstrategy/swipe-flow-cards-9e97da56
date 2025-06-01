@@ -174,12 +174,6 @@ const TodayTab = () => {
             action: () => handleAction("Requested reschedule", event.title),
             color: "#F59E0B",
             icon: "📅"
-          },
-          onSwipeLeft: {
-            label: "Quick Reply",
-            action: () => handleQuickReply(event.title, 'maintenance'),
-            color: "#3B82F6",
-            icon: "💬"
           }
         };
       
@@ -206,12 +200,6 @@ const TodayTab = () => {
             action: () => handleAction("Accepted lease renewal", event.title),
             color: "#10B981",
             icon: "✅"
-          },
-          onSwipeLeft: {
-            label: "Quick Reply",
-            action: () => handleQuickReply(event.title, 'leasing'),
-            color: "#3B82F6",
-            icon: "💬"
           }
         };
       
@@ -222,12 +210,6 @@ const TodayTab = () => {
             action: () => handleAction("Saved to wallet", event.title),
             color: "#10B981",
             icon: "💾"
-          },
-          onSwipeLeft: {
-            label: "Skip/Hide",
-            action: () => handleAction("Skipped offer", event.title),
-            color: "#6B7280",
-            icon: "👎"
           }
         };
       
@@ -238,12 +220,6 @@ const TodayTab = () => {
             action: () => handleAction("Confirmed attendance", event.title),
             color: "#10B981",
             icon: "✅"
-          },
-          onSwipeLeft: {
-            label: "Withdraw RSVP",
-            action: () => handleAction("Withdrew RSVP", event.title),
-            color: "#EF4444",
-            icon: "❌"
           }
         };
 
@@ -254,12 +230,6 @@ const TodayTab = () => {
             action: () => handleAction("Paid", event.title),
             color: "#10B981",
             icon: "💳"
-          },
-          onSwipeLeft: {
-            label: "Schedule",
-            action: () => handleAction("Scheduled payment", event.title),
-            color: "#F59E0B",
-            icon: "📅"
           }
         };
       
@@ -270,12 +240,6 @@ const TodayTab = () => {
             action: () => handleAction("Viewed", event.title),
             color: "#3B82F6",
             icon: "👁️"
-          },
-          onSwipeLeft: {
-            label: "Quick Reply",
-            action: () => handleQuickReply(event.title, 'management'),
-            color: "#3B82F6",
-            icon: "💬"
           }
         };
     }

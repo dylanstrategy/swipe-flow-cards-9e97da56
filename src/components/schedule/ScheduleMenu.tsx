@@ -10,18 +10,18 @@ interface ScheduleMenuProps {
 const ScheduleMenu = ({ onSelectType, onClose }: ScheduleMenuProps) => {
   const scheduleTypes = [
     {
-      id: 'Work Order',
-      title: 'Work Order',
-      description: 'Report maintenance issues',
-      icon: Wrench,
-      color: 'bg-orange-500'
-    },
-    {
       id: 'Message',
       title: 'Send Message',
       description: 'Contact management, leasing, or maintenance',
       icon: MessageCircle,
       color: 'bg-blue-500'
+    },
+    {
+      id: 'Work Order',
+      title: 'Work Order',
+      description: 'Report maintenance issues',
+      icon: Wrench,
+      color: 'bg-orange-500'
     },
     {
       id: 'Appointment',
