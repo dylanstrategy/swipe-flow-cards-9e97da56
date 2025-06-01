@@ -111,6 +111,107 @@ const TodayTab = () => {
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
+  const getSwipeActionsForEvent = (event: any) => {
+    switch (event.category) {
+      case 'Maintenance':
+      case 'Work Order':
+        return {
+          onSwipeRight: {
+            label: "Schedule",
+            action: () => handleAction("Scheduled", event.title),
+            color: "#10B981",
+            icon: "📅"
+          },
+          onSwipeLeft: {
+            label: "Contact",
+            action: () => handleAction("Contacted", "Maintenance Team"),
+            color: "#3B82F6",
+            icon: "📞"
+          }
+        };
+      
+      case 'Management':
+        return {
+          onSwipeRight: {
+            label: "Reply",
+            action: () => handleAction("Replied", event.title),
+            color: "#3B82F6",
+            icon: "💬"
+          },
+          onSwipeLeft: {
+            label: "Archive",
+            action: () => handleAction("Archived", event.title),
+            color: "#6B7280",
+            icon: "📦"
+          }
+        };
+      
+      case 'Lease':
+        return {
+          onSwipeRight: {
+            label: "Sign",
+            action: () => handleAction("Signed", event.title),
+            color: "#10B981",
+            icon: "✍️"
+          },
+          onSwipeLeft: {
+            label: "Review",
+            action: () => handleAction("Reviewed", event.title),
+            color: "#F59E0B",
+            icon: "👁️"
+          }
+        };
+      
+      case 'Point of Sale':
+        return {
+          onSwipeRight: {
+            label: "Use Offer",
+            action: () => handleAction("Used", event.title),
+            color: "#10B981",
+            icon: "🎟️"
+          },
+          onSwipeLeft: {
+            label: "Save",
+            action: () => handleAction("Saved", event.title),
+            color: "#8B5CF6",
+            icon: "💾"
+          }
+        };
+      
+      case 'Community Event':
+        return {
+          onSwipeRight: {
+            label: "RSVP",
+            action: () => handleAction("RSVP'd", event.title),
+            color: "#10B981",
+            icon: "🎉"
+          },
+          onSwipeLeft: {
+            label: "Maybe",
+            action: () => handleAction("Maybe", event.title),
+            color: "#F59E0B",
+            icon: "🤔"
+          }
+        };
+      
+      default:
+        return {
+          onSwipeRight: {
+            label: "View",
+            action: () => handleAction("Viewed", event.title),
+            color: "#3B82F6",
+            icon: "👁️"
+          },
+          onSwipeLeft: {
+            label: "Remind Me",
+            action: () => handleAction("Reminded", event.title),
+            color: "#F59E0B",
+            icon: "⏰"
+          }
+        };
+    }
+  };
+
   if (showTimeline) {
     return <ResidentTimeline onClose={() => setShowTimeline(false)} />;
   }
@@ -237,57 +338,46 @@ const TodayTab = () => {
         <div>
           {selectedDateEvents.length > 0 ? (
             <div className="space-y-4">
-              {selectedDateEvents.map((event) => (
-                <div key={event.id} className="flex items-start gap-4">
-                  <div className="text-sm font-medium text-gray-600 w-20 flex-shrink-0 pt-4">
-                    {formatTime(event.time)}
-                  </div>
-                  <div className="flex-1">
-                    <SwipeCard
-                      onSwipeRight={{
-                        label: event.category === 'Work Order' ? "Schedule" : event.category === 'Lease' ? "Review" : "Read",
-                        action: () => handleAction(
-                          event.category === 'Work Order' ? "Scheduled" : 
-                          event.category === 'Lease' ? "Reviewed" : "Read", 
-                          event.title
-                        ),
-                        color: "#10B981",
-                        icon: event.category === 'Work Order' ? "🔧" : event.category === 'Lease' ? "📋" : "📖"
-                      }}
-                      onSwipeLeft={{
-                        label: "Remind Me",
-                        action: () => handleAction("Reminded", event.title),
-                        color: "#F59E0B",
-                        icon: "⏰"
-                      }}
-                      onTap={() => handleAction("Viewed", event.title)}
-                    >
-                      <div className="bg-blue-50 rounded-lg p-4">
-                        <div className="flex items-start gap-3">
-                          {event.image ? (
-                            <div 
-                              className="w-16 h-16 rounded-lg bg-cover bg-center flex-shrink-0"
-                              style={{ backgroundImage: `url(${event.image})` }}
-                            />
-                          ) : (
-                            <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
-                              {event.category === 'Management' ? '✉️' : 
-                               event.category === 'Community Event' ? '🎉' : 
-                               event.category === 'Work Order' ? '🔧' :
-                               event.category === 'Lease' ? '📋' :
-                               event.category === 'Point of Sale' ? '🏪' : '📢'}
+              {selectedDateEvents.map((event) => {
+                const swipeActions = getSwipeActionsForEvent(event);
+                return (
+                  <div key={event.id} className="flex items-start gap-4">
+                    <div className="text-sm font-medium text-gray-600 w-20 flex-shrink-0 pt-4">
+                      {formatTime(event.time)}
+                    </div>
+                    <div className="flex-1">
+                      <SwipeCard
+                        onSwipeRight={swipeActions.onSwipeRight}
+                        onSwipeLeft={swipeActions.onSwipeLeft}
+                        onTap={() => handleAction("Viewed", event.title)}
+                      >
+                        <div className="bg-blue-50 rounded-lg p-4">
+                          <div className="flex items-start gap-3">
+                            {event.image ? (
+                              <div 
+                                className="w-16 h-16 rounded-lg bg-cover bg-center flex-shrink-0"
+                                style={{ backgroundImage: `url(${event.image})` }}
+                              />
+                            ) : (
+                              <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
+                                {event.category === 'Management' ? '✉️' : 
+                                 event.category === 'Community Event' ? '🎉' : 
+                                 event.category === 'Work Order' ? '🔧' :
+                                 event.category === 'Lease' ? '📋' :
+                                 event.category === 'Point of Sale' ? '🏪' : '📢'}
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-gray-900 mb-1">{event.title}</h4>
+                              <p className="text-gray-600 text-sm">{event.description}</p>
                             </div>
-                          )}
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900 mb-1">{event.title}</h4>
-                            <p className="text-gray-600 text-sm">{event.description}</p>
                           </div>
                         </div>
-                      </div>
-                    </SwipeCard>
+                      </SwipeCard>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
