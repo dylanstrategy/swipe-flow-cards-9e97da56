@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef } from 'react';
 import SwipeableScreen from './SwipeableScreen';
 import PhotoCaptureStep from './steps/PhotoCaptureStep';
@@ -75,8 +76,8 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
           setShowAction(null);
         }
       } else {
-        // Horizontal movement - check for swipe left
-        if (deltaX < -30 && currentStep > 1) {
+        // Horizontal movement - check for swipe left (made easier)
+        if (deltaX < -20 && currentStep > 1) { // Reduced from -30 to -20
           setShowAction('left');
         } else {
           setShowAction(null);
@@ -94,13 +95,13 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
     const velocityY = Math.abs(deltaY) / Math.max(deltaTime, 1);
     const velocityX = Math.abs(deltaX) / Math.max(deltaTime, 1);
     
-    // Very low thresholds - either distance OR velocity can trigger
-    const upThreshold = 20; // Much lower threshold
-    const leftThreshold = 40;
-    const velocityThreshold = 0.1; // Lower velocity threshold
+    // Lower thresholds for easier swiping
+    const upThreshold = 20;
+    const leftThreshold = 30; // Reduced from 40 to 30
+    const velocityThreshold = 0.1;
     
     const shouldCompleteUp = (Math.abs(deltaY) > upThreshold || velocityY > velocityThreshold) && 
-                            deltaY < -10 && canProceedFromCurrentStep(); // Just needs to be moving up
+                            deltaY < -10 && canProceedFromCurrentStep();
     const shouldCompleteLeft = (Math.abs(deltaX) > leftThreshold || velocityX > velocityThreshold) && 
                               deltaX < -leftThreshold && currentStep > 1;
     
@@ -122,7 +123,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   const getActionOpacity = () => {
     if (!showAction) return 0;
     const distance = showAction === 'up' ? Math.abs(dragOffset.y) : Math.abs(dragOffset.x);
-    const progress = Math.min(distance / 30, 1); // Lower distance for full opacity
+    const progress = Math.min(distance / 25, 1); // Reduced for faster opacity response
     return Math.max(0.5, progress * 0.9);
   };
 
@@ -228,3 +229,4 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
 };
 
 export default WorkOrderFlow;
+
