@@ -3,20 +3,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronRight, BarChart3, Grid3X3 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import MoveInTracker from '../MoveInTracker';
+import MoveOutTracker from '../MoveOutTracker';
 
 const OperatorTodayTab = () => {
   const [viewMode, setViewMode] = useState<'cards' | 'dashboard'>('cards');
   const [showMoveInTracker, setShowMoveInTracker] = useState(false);
+  const [showMoveOutTracker, setShowMoveOutTracker] = useState(false);
   const [moveInFilter, setMoveInFilter] = useState<'unapproved' | 'incomplete' | 'all'>('all');
+  const [moveOutFilter, setMoveOutFilter] = useState<'unapproved' | 'incomplete' | 'all'>('all');
 
   const communityManagementData = [
     { title: 'Unsupported Move In\'s', count: 18, status: 'urgent', module: 'move-in-unapproved' },
-    { title: 'Unsupported Move Out\'s', count: 8, status: 'normal' },
+    { title: 'Unsupported Move Out\'s', count: 8, status: 'normal', module: 'move-out-unapproved' },
     { title: 'Unscheduled Inspections', count: 4, status: 'normal' },
     { title: 'Pending Two Week Check In\'s', count: 0, status: 'normal' },
     { title: 'Move In\'s Staged/Ready', count: 0, status: 'normal' },
     { title: 'Incomplete Move In\'s', count: 14, status: 'normal', module: 'move-in-incomplete' },
-    { title: 'Incomplete Move Out\'s', count: 8, status: 'normal' },
+    { title: 'Incomplete Move Out\'s', count: 8, status: 'normal', module: 'move-out-incomplete' },
     { title: 'Pending Dispo', count: 8, status: 'normal' },
     { title: 'Outstanding Terms', count: 0, status: 'normal' },
     { title: 'Birthdays This Month', count: 3, status: 'normal' },
@@ -131,6 +134,12 @@ const OperatorTodayTab = () => {
     } else if (item.module === 'move-in-incomplete') {
       setMoveInFilter('incomplete');
       setShowMoveInTracker(true);
+    } else if (item.module === 'move-out-unapproved') {
+      setMoveOutFilter('unapproved');
+      setShowMoveOutTracker(true);
+    } else if (item.module === 'move-out-incomplete') {
+      setMoveOutFilter('incomplete');
+      setShowMoveOutTracker(true);
     }
   };
 
@@ -262,6 +271,15 @@ const OperatorTodayTab = () => {
       <MoveInTracker 
         onClose={() => setShowMoveInTracker(false)}
         initialFilter={moveInFilter}
+      />
+    );
+  }
+
+  if (showMoveOutTracker) {
+    return (
+      <MoveOutTracker 
+        onClose={() => setShowMoveOutTracker(false)}
+        initialFilter={moveOutFilter}
       />
     );
   }
