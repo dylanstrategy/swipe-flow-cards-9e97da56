@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import SwipeCard from '../SwipeCard';
 import { Calendar } from '@/components/ui/calendar';
@@ -45,9 +44,9 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   };
 
   return (
-    <div className="fixed inset-0 bg-white z-[9999] flex flex-col">
+    <div className="fixed inset-0 bg-white z-[9999] flex flex-col overflow-hidden">
       {/* Header with X button */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Create Work Order</h1>
           <span className="text-sm text-gray-500">Step {currentStep} of 4</span>
@@ -61,7 +60,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
       </div>
       
       {/* Progress Bar */}
-      <div className="px-4 py-3">
+      <div className="px-4 py-3 flex-shrink-0">
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
             className="bg-blue-600 h-2 rounded-full transition-all duration-300"
@@ -70,8 +69,8 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
         </div>
       </div>
 
-      {/* Content Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+      {/* Content Area - No scrolling, full height */}
+      <div className="flex-1 flex flex-col overflow-hidden">
         {currentStep === 1 && (
           <SwipeCard
             onSwipeUp={photoCaptured ? {
@@ -85,11 +84,12 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
               action: onPrevStep,
               color: "#6B7280"
             }}
+            className="flex-1 m-4"
           >
-            <div className="p-6 text-center">
-              <div className="mb-6 relative">
+            <div className="p-6 text-center h-full flex flex-col justify-center">
+              <div className="mb-6 relative flex-shrink-0">
                 {isCapturing ? (
-                  <div className="w-full h-64 bg-gray-900 rounded-lg flex items-center justify-center relative overflow-hidden">
+                  <div className="w-full h-48 bg-gray-900 rounded-lg flex items-center justify-center relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-b from-gray-800 to-gray-900"></div>
                     <div className="relative z-10">
                       <div className="w-24 h-32 bg-amber-100 rounded-lg border-2 border-amber-200 flex flex-col items-center justify-center">
@@ -120,7 +120,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
                     <div className="absolute bottom-4 right-4 w-6 h-6 border-r-2 border-b-2 border-white"></div>
                   </div>
                 ) : photoCaptured ? (
-                  <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center relative">
+                  <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center relative">
                     <div className="w-24 h-32 bg-amber-100 rounded-lg border-2 border-amber-200 flex flex-col items-center justify-center">
                       <div className="w-16 h-16 bg-amber-200 rounded border border-amber-300 flex items-center justify-center mb-2">
                         <div className="flex flex-col space-y-1">
@@ -169,7 +169,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
               {photoCaptured && (
                 <>
                   <h3 className="text-xl font-semibold text-gray-900 mb-3">Photo Captured!</h3>
-                  <p className="text-gray-600 mb-4">Swipe up or tap continue to add details</p>
+                  <p className="text-gray-600 mb-4">Swipe up to add details</p>
                   <div className="flex items-center justify-center mb-4">
                     <ArrowUp className="text-blue-600 animate-bounce" size={32} />
                   </div>
@@ -198,10 +198,11 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
               action: onPrevStep,
               color: "#6B7280"
             }}
+            className="flex-1 m-4"
           >
-            <div className="p-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Add Details</h3>
-              <div className="space-y-4">
+            <div className="p-6 h-full flex flex-col">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 flex-shrink-0">Add Details</h3>
+              <div className="space-y-4 flex-1">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Issue Title *</label>
                   <input
@@ -219,7 +220,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
                     onChange={(e) => setWorkOrderDetails({...workOrderDetails, description: e.target.value})}
                     placeholder="Describe the issue in detail..."
                     rows={3}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                   />
                 </div>
                 <div>
@@ -234,20 +235,20 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
                 </div>
               </div>
               {canProceedFromDetails() && (
-                <div className="mt-6 text-center">
+                <div className="text-center flex-shrink-0 mt-4">
                   <p className="text-green-600 mb-2">Ready to continue!</p>
-                  <ArrowUp className="text-blue-600 animate-bounce mx-auto mb-4" size={32} />
-                  <p className="text-sm text-gray-500 mb-4">Swipe up or tap continue to schedule</p>
+                  <ArrowUp className="text-blue-600 animate-bounce mx-auto mb-2" size={24} />
+                  <p className="text-sm text-gray-500 mb-3">Swipe up to schedule</p>
                   <button
                     onClick={onNextStep}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
                   >
-                    Continue to Schedule
+                    Continue
                   </button>
                 </div>
               )}
               {!canProceedFromDetails() && (
-                <div className="mt-6 text-center">
+                <div className="text-center flex-shrink-0 mt-4">
                   <p className="text-gray-500">Please fill in required fields to continue</p>
                 </div>
               )}
@@ -268,60 +269,63 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
               action: onPrevStep,
               color: "#6B7280"
             }}
+            className="flex-1 m-4"
           >
-            <div className="p-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Schedule Repair</h3>
+            <div className="p-6 h-full flex flex-col">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 flex-shrink-0">Schedule Repair</h3>
               
-              <div className="mb-6">
-                <h4 className="font-medium text-gray-700 mb-3">Select Date</h4>
-                <div className="bg-white rounded-lg border border-gray-200">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    className={cn("p-3 pointer-events-auto")}
-                    disabled={(date) => date < new Date()}
-                  />
-                </div>
-              </div>
-
-              {selectedDate && (
-                <div className="mb-6">
-                  <h4 className="font-medium text-gray-700 mb-3">Available Times</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {availableTimeSlots.map((time) => (
-                      <button
-                        key={time}
-                        onClick={() => setSelectedTime(time)}
-                        className={cn(
-                          "p-3 border rounded-lg text-sm font-medium transition-colors",
-                          selectedTime === time
-                            ? "border-blue-500 bg-blue-50 text-blue-700"
-                            : "border-gray-200 text-gray-700 hover:border-gray-300"
-                        )}
-                      >
-                        {time}
-                      </button>
-                    ))}
+              <div className="flex-1 space-y-4">
+                <div>
+                  <h4 className="font-medium text-gray-700 mb-3">Select Date</h4>
+                  <div className="bg-white rounded-lg border border-gray-200">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      className={cn("p-3 pointer-events-auto")}
+                      disabled={(date) => date < new Date()}
+                    />
                   </div>
                 </div>
-              )}
+
+                {selectedDate && (
+                  <div>
+                    <h4 className="font-medium text-gray-700 mb-3">Available Times</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {availableTimeSlots.map((time) => (
+                        <button
+                          key={time}
+                          onClick={() => setSelectedTime(time)}
+                          className={cn(
+                            "p-3 border rounded-lg text-sm font-medium transition-colors",
+                            selectedTime === time
+                              ? "border-blue-500 bg-blue-50 text-blue-700"
+                              : "border-gray-200 text-gray-700 hover:border-gray-300"
+                          )}
+                        >
+                          {time}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {canProceedFromSchedule() && (
-                <div className="text-center">
+                <div className="text-center flex-shrink-0 mt-4">
                   <p className="text-green-600 mb-2">Schedule selected!</p>
-                  <ArrowUp className="text-blue-600 animate-bounce mx-auto mb-4" size={32} />
-                  <p className="text-sm text-gray-500 mb-4">Swipe up or tap continue to review</p>
+                  <ArrowUp className="text-blue-600 animate-bounce mx-auto mb-2" size={24} />
+                  <p className="text-sm text-gray-500 mb-3">Swipe up to review</p>
                   <button
                     onClick={onNextStep}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
                   >
-                    Continue to Review
+                    Continue
                   </button>
                 </div>
               )}
               {!canProceedFromSchedule() && (
-                <div className="text-center">
+                <div className="text-center flex-shrink-0 mt-4">
                   <p className="text-gray-500">Please select a date and time to continue</p>
                 </div>
               )}
@@ -342,14 +346,15 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
               action: onPrevStep,
               color: "#6B7280"
             }}
+            className="flex-1 m-4"
           >
-            <div className="p-6">
-              <div className="text-center mb-6">
+            <div className="p-6 h-full flex flex-col">
+              <div className="text-center mb-4 flex-shrink-0">
                 <CheckCircle className="mx-auto text-green-600 mb-4" size={48} />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Review & Submit</h3>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-4 flex-1">
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-medium text-gray-900 mb-2">Work Order Details</h4>
                   <p className="text-sm text-gray-600 mb-1"><strong>Issue:</strong> {workOrderDetails.title}</p>
@@ -363,19 +368,19 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
                     {selectedDate?.toLocaleDateString()} at {selectedTime}
                   </p>
                 </div>
+              </div>
                 
-                <div className="bg-green-50 p-4 rounded-lg text-center">
-                  <p className="text-green-800 font-medium">Ready to submit work order</p>
-                  <p className="text-green-600 text-sm mb-3">You'll receive a confirmation once submitted</p>
-                  <ArrowUp className="text-green-600 animate-bounce mx-auto mb-4" size={32} />
-                  <p className="text-sm text-green-600 mb-4">Swipe up or tap submit</p>
-                  <button
-                    onClick={onNextStep}
-                    className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
-                  >
-                    Submit Work Order
-                  </button>
-                </div>
+              <div className="bg-green-50 p-4 rounded-lg text-center flex-shrink-0">
+                <p className="text-green-800 font-medium">Ready to submit work order</p>
+                <p className="text-green-600 text-sm mb-2">You'll receive a confirmation once submitted</p>
+                <ArrowUp className="text-green-600 animate-bounce mx-auto mb-2" size={24} />
+                <p className="text-sm text-green-600 mb-3">Swipe up to submit</p>
+                <button
+                  onClick={onNextStep}
+                  className="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                >
+                  Submit Work Order
+                </button>
               </div>
             </div>
           </SwipeCard>
