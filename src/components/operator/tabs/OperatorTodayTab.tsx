@@ -19,7 +19,7 @@ const OperatorTodayTab = () => {
     { title: 'Incomplete Move Out\'s', count: 8, status: 'normal' },
     { title: 'Pending Dispo', count: 8, status: 'normal' },
     { title: 'Outstanding Terms', count: 0, status: 'normal' },
-    { title: 'Agent Make Ready Inspections', count: 0, status: 'normal' },
+    { title: 'Birthdays This Month', count: 3, status: 'normal' },
     { title: 'Response Time', count: -1.00, suffix: 'days old', status: 'urgent' }
   ];
 
