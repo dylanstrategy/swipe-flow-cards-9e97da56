@@ -2,6 +2,7 @@
 import React from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { ChevronRight, User } from 'lucide-react';
+import SwipeCard from '../SwipeCard';
 
 const AccountTab = () => {
   const { toast } = useToast();
@@ -13,48 +14,110 @@ const AccountTab = () => {
     });
   };
 
-  const accountSections = [
+  const accountCards = [
     {
-      title: "Open Work Orders",
-      count: "5 WORK ORDERS",
-      icon: "🔧",
-      image: "/placeholder.svg",
-      tag: "ELECTRICAL",
-      action: () => handleAction("Viewed", "Work Orders")
+      id: 'lease',
+      title: "Lease Management",
+      subtitle: "8 months remaining",
+      icon: "🧾",
+      swipeActions: {
+        onSwipeRight: {
+          label: "Renew Lease",
+          action: () => handleAction("Started lease renewal", "Lease"),
+          color: "#10B981",
+          icon: "📝"
+        },
+        onSwipeLeft: {
+          label: "Transfer/Cancel",
+          action: () => handleAction("Started transfer request", "Lease"),
+          color: "#EF4444",
+          icon: "🔄"
+        },
+        onSwipeUp: {
+          label: "Lease Docs",
+          action: () => handleAction("Viewed lease documents", "Lease"),
+          color: "#8B5CF6",
+          icon: "📄"
+        }
+      }
     },
     {
-      title: "Open Messages", 
-      count: "3 MESSAGES",
-      preview: "Is the pool open today?",
-      action: () => handleAction("Viewed", "Messages")
+      id: 'maintenance',
+      title: "Maintenance",
+      subtitle: "5 work orders",
+      icon: "🧺",
+      swipeActions: {
+        onSwipeRight: {
+          label: "Submit New",
+          action: () => handleAction("Started new work order", "Maintenance"),
+          color: "#3B82F6",
+          icon: "➕"
+        },
+        onSwipeLeft: {
+          label: "Vendor Contact",
+          action: () => handleAction("Viewed vendor contact", "Maintenance"),
+          color: "#F59E0B",
+          icon: "📞"
+        },
+        onSwipeUp: {
+          label: "Rate Service",
+          action: () => handleAction("Opened service rating", "Maintenance"),
+          color: "#8B5CF6",
+          icon: "⭐"
+        }
+      }
     },
     {
-      title: "Pending Moves",
-      count: "2 MOVES", 
-      icon: "📦",
-      image: "/placeholder.svg",
-      tag: "MOVING",
-      action: () => handleAction("Viewed", "Moves")
+      id: 'payments',
+      title: "Payments",
+      subtitle: "$1,800 rent due",
+      icon: "💸",
+      swipeActions: {
+        onSwipeRight: {
+          label: "Make Payment",
+          action: () => handleAction("Started payment", "Rent"),
+          color: "#10B981",
+          icon: "💳"
+        },
+        onSwipeLeft: {
+          label: "Setup Autopay",
+          action: () => handleAction("Setup autopay", "Payments"),
+          color: "#3B82F6",
+          icon: "🔄"
+        },
+        onSwipeUp: {
+          label: "Payment History",
+          action: () => handleAction("Viewed payment history", "Payments"),
+          color: "#8B5CF6",
+          icon: "📊"
+        }
+      }
     },
     {
-      title: "Pending Leases",
-      count: "2 LEASES",
-      icon: "📄", 
-      image: "/placeholder.svg",
-      tag: "LEASE",
-      action: () => handleAction("Viewed", "Leases")
-    },
-    {
-      title: "Pending Work Orders",
-      count: "4 WORK ORDERS",
-      listView: true,
-      action: () => handleAction("Viewed", "Pending Work Orders")
-    },
-    {
-      title: "Upcoming Events",
-      count: "1 EVENT",
-      icon: "📅",
-      action: () => handleAction("Viewed", "Events")
+      id: 'loyalty',
+      title: "Loyalty & Lifestyle",
+      subtitle: "250 points available",
+      icon: "🎯",
+      swipeActions: {
+        onSwipeRight: {
+          label: "Redeem",
+          action: () => handleAction("Started redemption", "Rewards"),
+          color: "#10B981",
+          icon: "🎁"
+        },
+        onSwipeLeft: {
+          label: "Share with Friend",
+          action: () => handleAction("Shared rewards", "Loyalty Program"),
+          color: "#3B82F6",
+          icon: "👥"
+        },
+        onSwipeUp: {
+          label: "View Tags",
+          action: () => handleAction("Viewed earned tags", "Lifestyle"),
+          color: "#8B5CF6",
+          icon: "🏷️"
+        }
+      }
     }
   ];
 
@@ -98,8 +161,35 @@ const AccountTab = () => {
         </div>
       </div>
 
+      {/* Main Account Cards */}
+      <div className="space-y-4 mb-6">
+        {accountCards.map((card) => (
+          <SwipeCard
+            key={card.id}
+            onSwipeRight={card.swipeActions.onSwipeRight}
+            onSwipeLeft={card.swipeActions.onSwipeLeft}
+            onSwipeUp={card.swipeActions.onSwipeUp}
+            onTap={() => handleAction("Viewed", card.title)}
+          >
+            <div className="bg-white rounded-xl p-6 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="text-3xl">{card.icon}</div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">{card.title}</h3>
+                    <p className="text-gray-600">{card.subtitle}</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-400" />
+              </div>
+            </div>
+          </SwipeCard>
+        ))}
+      </div>
+
       {/* Quick Actions */}
-      <div className="bg-white rounded-2xl p-4 mb-6 shadow-sm">
+      <div className="bg-white rounded-2xl p-4 shadow-sm">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 px-3">Quick Actions</h3>
         {quickActions.map((item, index) => (
           <button
             key={index}
@@ -108,66 +198,6 @@ const AccountTab = () => {
           >
             <span className="text-lg font-medium text-gray-900">{item.title}</span>
             <ChevronRight className="w-5 h-5 text-gray-400" />
-          </button>
-        ))}
-      </div>
-
-      {/* Account Sections Grid */}
-      <div className="grid grid-cols-2 gap-4">
-        {accountSections.map((section, index) => (
-          <button
-            key={index}
-            onClick={section.action}
-            className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow text-left"
-          >
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">{section.title}</h3>
-            
-            {section.image && (
-              <div className="relative mb-3">
-                <div className="w-full h-24 bg-gray-200 rounded-lg mb-2 flex items-center justify-center">
-                  <span className="text-2xl">{section.icon}</span>
-                </div>
-                {section.tag && (
-                  <span className="absolute top-2 left-2 bg-yellow-400 text-yellow-900 px-2 py-1 rounded text-xs font-semibold">
-                    {section.tag}
-                  </span>
-                )}
-              </div>
-            )}
-
-            {section.preview && (
-              <div className="mb-3">
-                <p className="text-gray-600 text-sm">{section.preview}</p>
-              </div>
-            )}
-
-            {section.listView && (
-              <div className="mb-3 space-y-2">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                  <div className="flex-1 h-2 bg-gray-200 rounded"></div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                  <div className="flex-1 h-2 bg-gray-200 rounded"></div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                  <div className="flex-1 h-2 bg-gray-200 rounded"></div>
-                </div>
-              </div>
-            )}
-
-            {section.icon && !section.image && (
-              <div className="mb-3">
-                <span className="text-2xl">{section.icon}</span>
-              </div>
-            )}
-
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-600">{section.count}</span>
-              <ChevronRight className="w-4 h-4 text-gray-400" />
-            </div>
           </button>
         ))}
       </div>

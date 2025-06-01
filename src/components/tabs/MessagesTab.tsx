@@ -49,24 +49,24 @@ const MessagesTab = () => {
         <SwipeCard
           key={message.id}
           onSwipeRight={{
-            label: "Read",
-            action: () => handleAction("Read", message.subject),
-            color: "#3B82F6",
-            icon: "📖"
+            label: "Mark Handled",
+            action: () => handleAction("Marked as handled", message.subject),
+            color: "#10B981",
+            icon: "✅"
           }}
           onSwipeLeft={{
-            label: "Archive",
-            action: () => handleAction("Archived", message.subject),
-            color: "#8B5CF6",
-            icon: "📦"
+            label: "Quick Reply",
+            action: () => handleAction("Sent quick reply", message.subject),
+            color: "#3B82F6",
+            icon: "💬"
           }}
           onSwipeUp={{
-            label: "Move...",
-            action: () => handleAction("Moved", message.subject),
-            color: "#06B6D4",
-            icon: "📁"
+            label: "Message History",
+            action: () => handleAction("Viewed message history with", message.sender),
+            color: "#8B5CF6",
+            icon: "📜"
           }}
-          onTap={() => handleAction("Opened", message.subject)}
+          onTap={() => handleAction("Opened full thread", message.subject)}
         >
           <div className="p-6">
             <div className="flex items-center justify-between mb-3">

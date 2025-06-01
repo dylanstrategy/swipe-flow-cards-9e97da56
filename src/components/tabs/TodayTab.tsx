@@ -38,7 +38,7 @@ const TodayTab = () => {
       title: 'Work Order',
       description: 'Broken outlet - Unit 4B',
       image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400',
-      category: 'Maintenance',
+      category: 'Work Order',
       priority: 'high'
     },
     {
@@ -113,84 +113,113 @@ const TodayTab = () => {
 
   const getSwipeActionsForEvent = (event: any) => {
     switch (event.category) {
-      case 'Maintenance':
       case 'Work Order':
         return {
           onSwipeRight: {
-            label: "Schedule",
-            action: () => handleAction("Scheduled", event.title),
-            color: "#10B981",
+            label: "Reschedule",
+            action: () => handleAction("Requested reschedule", event.title),
+            color: "#F59E0B",
             icon: "📅"
           },
           onSwipeLeft: {
-            label: "Contact",
-            action: () => handleAction("Contacted", "Maintenance Team"),
-            color: "#3B82F6",
-            icon: "📞"
+            label: "Cancel",
+            action: () => handleAction("Cancelled appointment", event.title),
+            color: "#EF4444",
+            icon: "❌"
+          },
+          onSwipeUp: {
+            label: "Add Review",
+            action: () => handleAction("Added post-visit review", event.title),
+            color: "#8B5CF6",
+            icon: "📝"
           }
         };
       
       case 'Management':
         return {
           onSwipeRight: {
-            label: "Reply",
-            action: () => handleAction("Replied", event.title),
-            color: "#3B82F6",
-            icon: "💬"
-          },
-          onSwipeLeft: {
             label: "Archive",
             action: () => handleAction("Archived", event.title),
             color: "#6B7280",
             icon: "📦"
+          },
+          onSwipeLeft: {
+            label: "Quick Reply",
+            action: () => handleAction("Quick replied", event.title),
+            color: "#3B82F6",
+            icon: "💬"
+          },
+          onSwipeUp: {
+            label: "Message Inbox",
+            action: () => handleAction("Opened Message Inbox", event.title),
+            color: "#10B981",
+            icon: "📧"
           }
         };
       
       case 'Lease':
         return {
           onSwipeRight: {
-            label: "Sign",
-            action: () => handleAction("Signed", event.title),
+            label: "Accept",
+            action: () => handleAction("Accepted lease renewal", event.title),
             color: "#10B981",
-            icon: "✍️"
+            icon: "✅"
           },
           onSwipeLeft: {
-            label: "Review",
-            action: () => handleAction("Reviewed", event.title),
+            label: "Request Changes",
+            action: () => handleAction("Requested changes", event.title),
             color: "#F59E0B",
-            icon: "👁️"
+            icon: "💬"
+          },
+          onSwipeUp: {
+            label: "View History",
+            action: () => handleAction("Viewed rent history", event.title),
+            color: "#8B5CF6",
+            icon: "📊"
           }
         };
       
       case 'Point of Sale':
         return {
           onSwipeRight: {
-            label: "Use Offer",
-            action: () => handleAction("Used", event.title),
+            label: "Save to Wallet",
+            action: () => handleAction("Saved to wallet", event.title),
             color: "#10B981",
-            icon: "🎟️"
+            icon: "💾"
           },
           onSwipeLeft: {
-            label: "Save",
-            action: () => handleAction("Saved", event.title),
-            color: "#8B5CF6",
-            icon: "💾"
+            label: "Skip/Hide",
+            action: () => handleAction("Skipped offer", event.title),
+            color: "#6B7280",
+            icon: "👎"
+          },
+          onSwipeUp: {
+            label: "Share",
+            action: () => handleAction("Shared offer", event.title),
+            color: "#3B82F6",
+            icon: "📤"
           }
         };
       
       case 'Community Event':
         return {
           onSwipeRight: {
-            label: "RSVP",
-            action: () => handleAction("RSVP'd", event.title),
+            label: "Confirm Attendance",
+            action: () => handleAction("Confirmed attendance", event.title),
             color: "#10B981",
-            icon: "🎉"
+            icon: "✅"
           },
           onSwipeLeft: {
-            label: "Maybe",
-            action: () => handleAction("Maybe", event.title),
-            color: "#F59E0B",
-            icon: "🤔"
+            label: "Withdraw RSVP",
+            action: () => handleAction("Withdrew RSVP", event.title),
+            color: "#EF4444",
+            icon: "❌"
+          },
+          onSwipeUp: {
+            label: "Share/Directions",
+            action: () => handleAction("Getting directions", event.title),
+            color: "#3B82F6",
+            icon: "🗺️"
           }
         };
       
@@ -349,7 +378,8 @@ const TodayTab = () => {
                       <SwipeCard
                         onSwipeRight={swipeActions.onSwipeRight}
                         onSwipeLeft={swipeActions.onSwipeLeft}
-                        onTap={() => handleAction("Viewed", event.title)}
+                        onSwipeUp={swipeActions.onSwipeUp}
+                        onTap={() => handleAction("Viewed details", event.title)}
                       >
                         <div className="bg-blue-50 rounded-lg p-4">
                           <div className="flex items-start gap-3">
