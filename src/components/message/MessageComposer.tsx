@@ -3,7 +3,6 @@ import React, { useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import SwipeCard from '../SwipeCard';
 
 interface MessageComposerProps {
   initialSubject: string;
@@ -14,7 +13,6 @@ interface MessageComposerProps {
 const MessageComposer = ({ initialSubject, onSend, recipientType }: MessageComposerProps) => {
   const [subject, setSubject] = useState(initialSubject);
   const [message, setMessage] = useState('');
-  const [isDragging, setIsDragging] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSend = () => {
@@ -34,10 +32,12 @@ const MessageComposer = ({ initialSubject, onSend, recipientType }: MessageCompo
     }
   };
 
+  const isFormValid = subject.trim() !== '' && message.trim() !== '';
+
   return (
-    <div className="flex-1 flex flex-col p-4">
+    <div className="flex-1 flex flex-col">
       {/* Form Fields */}
-      <div className="space-y-6 flex-1">
+      <div className="space-y-6 flex-1 mb-4">
         <div className="space-y-2">
           <Label htmlFor="subject" className="text-base font-medium text-gray-900">
             Subject
@@ -67,30 +67,16 @@ const MessageComposer = ({ initialSubject, onSend, recipientType }: MessageCompo
         </div>
       </div>
 
-      {/* Send Action Card */}
-      <div className="mt-6">
-        <SwipeCard
-          onSwipeUp={{
-            label: "Send",
-            action: handleSend,
-            color: "#000000",
-            icon: "↑"
-          }}
-          enableSwipeUp={true}
-          className="mb-4"
-        >
-          <div className="bg-black text-white p-6 rounded-xl text-center">
-            <div className="text-xl font-semibold mb-2">Ready to Send</div>
-            <div className="text-gray-300 text-sm">
-              Swipe up to send your message
-            </div>
-            <div className="mt-4 text-xs text-gray-400 flex items-center justify-center gap-2">
-              <span>↑</span>
-              <span>Send</span>
-            </div>
+      {/* Swipe Instruction */}
+      {isFormValid && (
+        <div className="py-4 text-center text-gray-500 text-sm border-t border-gray-100">
+          <p>Swipe up to send your message</p>
+          <div className="mt-2 text-xs flex items-center justify-center gap-1">
+            <span className="text-gray-400">↑</span>
+            <span>Send message</span>
           </div>
-        </SwipeCard>
-      </div>
+        </div>
+      )}
     </div>
   );
 };
