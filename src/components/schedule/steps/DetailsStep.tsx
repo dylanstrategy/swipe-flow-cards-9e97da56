@@ -1,18 +1,18 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { ArrowUp } from 'lucide-react';
 
 interface DetailsStepProps {
   onNext: () => void;
+  workOrderDetails: {
+    title: string;
+    description: string;
+    location: string;
+  };
+  setWorkOrderDetails: (details: { title: string; description: string; location: string; }) => void;
 }
 
-const DetailsStep = ({ onNext }: DetailsStepProps) => {
-  const [workOrderDetails, setWorkOrderDetails] = useState({
-    title: '',
-    description: '',
-    location: ''
-  });
-
+const DetailsStep = ({ onNext, workOrderDetails, setWorkOrderDetails }: DetailsStepProps) => {
   const canProceed = () => {
     return workOrderDetails.title.trim() && workOrderDetails.description.trim();
   };
@@ -29,6 +29,7 @@ const DetailsStep = ({ onNext }: DetailsStepProps) => {
             onChange={(e) => setWorkOrderDetails({...workOrderDetails, title: e.target.value})}
             placeholder="e.g., Broken outlet"
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            style={{ fontSize: '16px', touchAction: 'manipulation' }}
           />
         </div>
         <div>
@@ -39,6 +40,7 @@ const DetailsStep = ({ onNext }: DetailsStepProps) => {
             placeholder="Describe the issue in detail..."
             rows={3}
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none"
+            style={{ fontSize: '16px', touchAction: 'manipulation' }}
           />
         </div>
         <div>
@@ -49,6 +51,7 @@ const DetailsStep = ({ onNext }: DetailsStepProps) => {
             onChange={(e) => setWorkOrderDetails({...workOrderDetails, location: e.target.value})}
             placeholder="e.g., Kitchen, Living room"
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            style={{ fontSize: '16px', touchAction: 'manipulation' }}
           />
         </div>
       </div>

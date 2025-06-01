@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, ReactNode, useEffect } from 'react';
 import { ArrowUp, X } from 'lucide-react';
 
@@ -11,6 +10,7 @@ interface SwipeableScreenProps {
   currentStep: number;
   totalSteps: number;
   onClose: () => void;
+  hideSwipeHandling?: boolean;
 }
 
 const SwipeableScreen = ({ 
@@ -21,7 +21,8 @@ const SwipeableScreen = ({
   title,
   currentStep,
   totalSteps,
-  onClose
+  onClose,
+  hideSwipeHandling = false
 }: SwipeableScreenProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -30,7 +31,7 @@ const SwipeableScreen = ({
   const startTime = useRef(0);
 
   useEffect(() => {
-    // Prevent zoom on mount
+    // Prevent zoom on mount and add input focus handling
     const viewport = document.querySelector('meta[name=viewport]');
     const originalContent = viewport?.getAttribute('content');
     
@@ -45,8 +46,20 @@ const SwipeableScreen = ({
       }
     };
 
+    // Prevent zoom on input focus
+    const preventInputZoom = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        if (viewport) {
+          viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+        }
+      }
+    };
+
     document.addEventListener('touchstart', preventZoom, { passive: false });
     document.addEventListener('touchmove', preventZoom, { passive: false });
+    document.addEventListener('focusin', preventInputZoom);
+    document.addEventListener('focusout', preventInputZoom);
 
     return () => {
       // Restore original viewport on unmount
@@ -55,6 +68,8 @@ const SwipeableScreen = ({
       }
       document.removeEventListener('touchstart', preventZoom);
       document.removeEventListener('touchmove', preventZoom);
+      document.removeEventListener('focusin', preventInputZoom);
+      document.removeEventListener('focusout', preventInputZoom);
     };
   }, []);
 
@@ -129,6 +144,41 @@ const SwipeableScreen = ({
     if (!isDragging) return 0;
     return (dragOffset.x * 0.02);
   };
+
+  if (hideSwipeHandling) {
+    return (
+      <div className="flex flex-col h-full">
+        {/* Header with X button */}
+        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200 relative z-10">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">{title}</h1>
+            <span className="text-xs text-gray-500">Step {currentStep} of {totalSteps}</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X className="text-gray-600" size={20} />
+          </button>
+        </div>
+        
+        {/* Progress Bar */}
+        <div className="flex-shrink-0 px-4 py-2 relative z-10">
+          <div className="w-full bg-gray-200 rounded-full h-1.5">
+            <div 
+              className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
+              style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 p-4 overflow-hidden relative z-10">
+          {children}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 

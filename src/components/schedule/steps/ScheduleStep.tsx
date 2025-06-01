@@ -1,17 +1,18 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { ArrowUp } from 'lucide-react';
 
 interface ScheduleStepProps {
   onNext: () => void;
+  selectedDate?: Date;
+  setSelectedDate: (date: Date | undefined) => void;
+  selectedTime: string;
+  setSelectedTime: (time: string) => void;
 }
 
-const ScheduleStep = ({ onNext }: ScheduleStepProps) => {
-  const [selectedDate, setSelectedDate] = useState<Date>();
-  const [selectedTime, setSelectedTime] = useState<string>('');
-
+const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, setSelectedTime }: ScheduleStepProps) => {
   const availableTimeSlots = [
     '9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM'
   ];
