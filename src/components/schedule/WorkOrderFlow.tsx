@@ -13,6 +13,8 @@ interface WorkOrderFlowProps {
 }
 
 const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevStep, onClose }: WorkOrderFlowProps) => {
+  console.log('WorkOrderFlow rendered - currentStep:', currentStep, 'selectedScheduleType:', selectedScheduleType);
+
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [isCapturing, setIsCapturing] = useState(false);
@@ -54,7 +56,10 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
           <span className="text-sm text-gray-500">Step {currentStep} of 4</span>
         </div>
         <button
-          onClick={onClose}
+          onClick={() => {
+            console.log('Close button clicked');
+            onClose();
+          }}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
         >
           <X className="text-gray-600" size={24} />
@@ -77,13 +82,19 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
           <SwipeCard
             onSwipeUp={photoCaptured ? {
               label: "Continue",
-              action: onNextStep,
+              action: () => {
+                console.log('SwipeCard swipe up action called');
+                onNextStep();
+              },
               color: "#3B82F6",
               icon: "↑"
             } : undefined}
             onSwipeLeft={{
               label: "Back",
-              action: onPrevStep,
+              action: () => {
+                console.log('SwipeCard swipe left action called');
+                onPrevStep();
+              },
               color: "#6B7280"
             }}
             className="flex-1 m-4"
@@ -194,13 +205,19 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
           <SwipeCard
             onSwipeUp={canProceedFromDetails() ? {
               label: "Continue",
-              action: onNextStep,
+              action: () => {
+                console.log('SwipeCard swipe up action called');
+                onNextStep();
+              },
               color: "#3B82F6",
               icon: "↑"
             } : undefined}
             onSwipeLeft={{
               label: "Back",
-              action: onPrevStep,
+              action: () => {
+                console.log('SwipeCard swipe left action called');
+                onPrevStep();
+              },
               color: "#6B7280"
             }}
             className="flex-1 m-4"
@@ -265,13 +282,19 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
           <SwipeCard
             onSwipeUp={canProceedFromSchedule() ? {
               label: "Continue",
-              action: onNextStep,
+              action: () => {
+                console.log('SwipeCard swipe up action called');
+                onNextStep();
+              },
               color: "#3B82F6",
               icon: "↑"
             } : undefined}
             onSwipeLeft={{
               label: "Back",
-              action: onPrevStep,
+              action: () => {
+                console.log('SwipeCard swipe left action called');
+                onPrevStep();
+              },
               color: "#6B7280"
             }}
             className="flex-1 m-4"
@@ -342,13 +365,19 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
           <SwipeCard
             onSwipeUp={{
               label: "Submit",
-              action: onNextStep,
+              action: () => {
+                console.log('SwipeCard swipe up action called');
+                onNextStep();
+              },
               color: "#10B981",
               icon: "↑"
             }}
             onSwipeLeft={{
               label: "Back",
-              action: onPrevStep,
+              action: () => {
+                console.log('SwipeCard swipe left action called');
+                onPrevStep();
+              },
               color: "#6B7280"
             }}
             className="flex-1 m-4"

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +17,8 @@ const ScheduleTab = () => {
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [selectedScheduleType, setSelectedScheduleType] = useState<string>('');
 
+  console.log('ScheduleTab render - isCreatingOrder:', isCreatingOrder, 'showScheduleMenu:', showScheduleMenu);
+
   const handleAction = (action: string, item: string) => {
     toast({
       title: `${action}`,
@@ -24,10 +27,12 @@ const ScheduleTab = () => {
   };
 
   const nextStep = () => {
+    console.log('nextStep called - currentStep:', currentStep);
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     } else {
       // Final submission
+      console.log('Final submission - closing work order');
       setIsCreatingOrder(false);
       setCurrentStep(1);
       setShowScheduleMenu(false);
@@ -39,17 +44,21 @@ const ScheduleTab = () => {
   };
 
   const prevStep = () => {
+    console.log('prevStep called - currentStep:', currentStep);
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     } else {
+      console.log('Going back to schedule menu');
       setIsCreatingOrder(false);
       setShowScheduleMenu(true);
     }
   };
 
   const startScheduling = (type: string) => {
+    console.log('startScheduling called with type:', type);
     setSelectedScheduleType(type);
     if (type === 'Work Order') {
+      console.log('Starting work order flow');
       setIsCreatingOrder(true);
       setShowScheduleMenu(false);
       setCurrentStep(1);
@@ -64,12 +73,16 @@ const ScheduleTab = () => {
   };
 
   const handleCloseWorkOrder = () => {
+    console.log('handleCloseWorkOrder called');
     setIsCreatingOrder(false);
     setCurrentStep(1);
     setShowScheduleMenu(false);
   };
 
+  console.log('About to render - isCreatingOrder:', isCreatingOrder);
+
   if (isCreatingOrder) {
+    console.log('Rendering WorkOrderFlow');
     return (
       <WorkOrderFlow
         selectedScheduleType={selectedScheduleType}
@@ -82,14 +95,19 @@ const ScheduleTab = () => {
   }
 
   if (showScheduleMenu) {
+    console.log('Rendering ScheduleMenu');
     return (
       <ScheduleMenu
         onSelectType={startScheduling}
-        onClose={() => setShowScheduleMenu(false)}
+        onClose={() => {
+          console.log('Closing schedule menu');
+          setShowScheduleMenu(false);
+        }}
       />
     );
   }
 
+  console.log('Rendering main schedule tab');
   return (
     <div className="px-4 py-6 pb-24 relative">
       <div className="flex items-center justify-between mb-6">
@@ -98,7 +116,10 @@ const ScheduleTab = () => {
       
       {/* Floating Plus Button */}
       <button 
-        onClick={() => setShowScheduleMenu(true)}
+        onClick={() => {
+          console.log('Plus button clicked - opening schedule menu');
+          setShowScheduleMenu(true);
+        }}
         className="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-700 transition-all duration-200 hover:scale-110 z-50"
       >
         <Plus className="text-white" size={28} />
