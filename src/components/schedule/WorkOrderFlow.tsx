@@ -28,8 +28,10 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   ];
 
   const handleCapture = () => {
+    console.log('Camera capture initiated');
     setIsCapturing(true);
     setTimeout(() => {
+      console.log('Camera capture completed');
       setIsCapturing(false);
       setPhotoCaptured(true);
     }, 2000);
@@ -156,7 +158,10 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
                   <h3 className="text-xl font-semibold text-gray-900 mb-3">Take a Photo</h3>
                   <p className="text-gray-600 mb-4">Capture the issue you'd like to report</p>
                   <button 
-                    onClick={handleCapture}
+                    onClick={() => {
+                      console.log('Open Camera button clicked');
+                      handleCapture();
+                    }}
                     className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
                   >
                     Open Camera
