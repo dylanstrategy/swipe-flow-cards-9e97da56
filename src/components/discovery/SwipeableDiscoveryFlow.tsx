@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SwipeableScreen from '@/components/schedule/SwipeableScreen';
@@ -26,15 +25,18 @@ const SwipeableDiscoveryFlow = () => {
     location: '',
     proximityRadius: 5,
     priorities: [
-      { id: 'price', label: 'Price' },
-      { id: 'location', label: 'Location' },
-      { id: 'layout', label: 'Layout / Size' },
-      { id: 'moveInDate', label: 'Move-in Date' },
-      { id: 'amenities', label: 'Amenities' },
-      { id: 'petPolicy', label: 'Pet Policy' },
-      { id: 'quietness', label: 'Quietness / Soundproofing' },
-      { id: 'transit', label: 'Proximity to Transit' },
-      { id: 'leaseTerms', label: 'Flexibility of Lease Terms' }
+      { id: 'price', label: 'Affordable rent within budget' },
+      { id: 'location', label: 'Safe neighborhood' },
+      { id: 'layout', label: 'Spacious layout and storage' },
+      { id: 'moveInDate', label: 'Available move-in date' },
+      { id: 'amenities', label: 'Modern amenities (gym, laundry, etc.)' },
+      { id: 'transit', label: 'Close to public transportation' },
+      { id: 'quietness', label: 'Quiet environment' },
+      { id: 'petPolicy', label: 'Pet-friendly policy' },
+      { id: 'parking', label: 'Parking availability' },
+      { id: 'naturalLight', label: 'Natural light and views' },
+      { id: 'maintenance', label: 'Responsive maintenance' },
+      { id: 'leaseTerms', label: 'Flexible lease terms' }
     ],
     lifestyleTags: [],
     features: [
@@ -59,7 +61,7 @@ const SwipeableDiscoveryFlow = () => {
       case 1:
         return discoveryData.moveInTimeframe !== '' && discoveryData.location.trim() !== '';
       case 2:
-        return discoveryData.priorities.filter(p => p.rank).length >= 3;
+        return discoveryData.priorities.filter(p => p.rank).length >= 5;
       case 3:
         return discoveryData.lifestyleTags.length > 0;
       case 4:

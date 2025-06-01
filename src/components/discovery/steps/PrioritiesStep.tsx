@@ -25,7 +25,7 @@ const PrioritiesStep = ({ priorities, onUpdate }: PrioritiesStepProps) => {
           What matters most to you?
         </h2>
         <p className="text-gray-600">
-          Choose your top 3 priorities and drag to rank them.
+          Choose your top 5 priorities and rank them in order of importance.
         </p>
       </div>
 
@@ -36,11 +36,11 @@ const PrioritiesStep = ({ priorities, onUpdate }: PrioritiesStepProps) => {
 
       <div className="text-center space-y-2">
         <p className="text-sm text-gray-500">
-          Selected: {selectedCount}/3
+          Selected: {selectedCount}/5
         </p>
-        {selectedCount >= 3 && (
+        {selectedCount >= 5 && (
           <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded-lg">
-            Swipe up to explore lifestyle preferences
+            Swipe up to explore what makes home feel like home
           </div>
         )}
       </div>

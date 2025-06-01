@@ -23,9 +23,9 @@ const PriorityRanker = ({ priorities, onPrioritiesChange }: PriorityRankerProps)
           // Remove rank if already selected
           return { ...p, rank: undefined };
         } else {
-          // Add rank (find next available rank 1-3)
+          // Add rank (find next available rank 1-5)
           const rankedPriorities = priorities.filter(pr => pr.rank).length;
-          if (rankedPriorities < 3) {
+          if (rankedPriorities < 5) {
             return { ...p, rank: rankedPriorities + 1 };
           }
         }
@@ -84,8 +84,7 @@ const PriorityRanker = ({ priorities, onPrioritiesChange }: PriorityRankerProps)
 
   const getRankDisplay = (rank?: number) => {
     if (!rank) return '';
-    const labels = ['1st', '2nd', '3rd'];
-    return labels[rank - 1] || '';
+    return `#${rank}`;
   };
 
   // Sort priorities: ranked items first (by rank), then unranked
@@ -97,7 +96,7 @@ const PriorityRanker = ({ priorities, onPrioritiesChange }: PriorityRankerProps)
   });
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 max-h-[60vh] overflow-y-auto">
       {sortedPriorities.map((priority) => (
         <div
           key={priority.id}
@@ -124,7 +123,7 @@ const PriorityRanker = ({ priorities, onPrioritiesChange }: PriorityRankerProps)
           
           {priority.rank && (
             <div className="flex items-center gap-2">
-              <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded-full font-medium">
+              <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded-full font-bold">
                 {getRankDisplay(priority.rank)}
               </span>
               <span className="text-blue-600 text-sm">⋮⋮</span>

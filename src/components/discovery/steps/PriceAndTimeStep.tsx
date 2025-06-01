@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, MapPin } from 'lucide-react';
 
 interface PriceAndTimeStepProps {
   priceRange: [number, number];
@@ -28,9 +28,11 @@ const PriceAndTimeStep = ({
   onContinue,
   canContinue
 }: PriceAndTimeStepProps) => {
-  const [isSliding, setIsSliding] = useState(false);
-  const [slidePosition, setSlidePosition] = useState(0);
   const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragProgress, setDragProgress] = useState(0);
+  const slideRef = useRef<HTMLDivElement>(null);
+  const startX = useRef(0);
 
   const timeframeOptions = [
     { id: 'asap', label: 'ASAP (Within 2 weeks)' },
@@ -40,34 +42,25 @@ const PriceAndTimeStep = ({
     { id: 'flexible', label: 'Flexible timeline' }
   ];
 
-  const commonLocations = [
-    'Financial District, NYC',
-    'Midtown Manhattan, NYC',
-    'Brooklyn Heights, NYC',
-    'Long Island City, NYC',
-    'Jersey City, NJ',
-    'Hoboken, NJ',
-    'Upper East Side, NYC',
-    'Upper West Side, NYC'
-  ];
-
   const mockAddresses = [
-    '123 Wall Street, New York, NY',
-    '456 Broadway, New York, NY',
-    '789 Fifth Avenue, New York, NY',
-    '321 Park Avenue, New York, NY',
-    '654 Madison Avenue, New York, NY'
+    '123 Wall Street, Financial District, NYC',
+    '456 Broadway, SoHo, NYC', 
+    '789 Fifth Avenue, Midtown, NYC',
+    '321 Park Avenue, Upper East Side, NYC',
+    '654 Madison Avenue, Upper East Side, NYC',
+    '987 Atlantic Avenue, Brooklyn Heights, NYC',
+    '159 Court Street, Downtown Brooklyn, NYC',
+    '753 Metropolitan Avenue, Williamsburg, NYC'
   ];
 
   const handleLocationChange = (value: string) => {
     onUpdate({ location: value });
     
-    // Mock address suggestions
     if (value.length > 2) {
       const filtered = mockAddresses.filter(addr => 
         addr.toLowerCase().includes(value.toLowerCase())
       );
-      setAddressSuggestions(filtered.slice(0, 3));
+      setAddressSuggestions(filtered.slice(0, 5));
     } else {
       setAddressSuggestions([]);
     }
@@ -75,29 +68,35 @@ const PriceAndTimeStep = ({
 
   const handleSlideStart = (e: React.MouseEvent | React.TouchEvent) => {
     if (!canContinue) return;
-    setIsSliding(true);
-    setSlidePosition(0);
+    
+    setIsDragging(true);
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    startX.current = clientX;
+    setDragProgress(0);
   };
 
   const handleSlideMove = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isSliding || !canContinue) return;
+    if (!isDragging || !canContinue || !slideRef.current) return;
     
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const position = Math.max(0, Math.min(clientX - rect.left, rect.width - 60));
-    setSlidePosition(position);
-
-    // Trigger continue when slid far enough
-    if (position > rect.width * 0.8) {
-      setIsSliding(false);
-      setSlidePosition(0);
+    const rect = slideRef.current.getBoundingClientRect();
+    const deltaX = clientX - startX.current;
+    const maxDistance = rect.width - 56; // Button width
+    const progress = Math.max(0, Math.min(deltaX / maxDistance, 1));
+    
+    setDragProgress(progress);
+    
+    // Auto-complete when dragged 85% of the way
+    if (progress >= 0.85) {
+      setIsDragging(false);
+      setDragProgress(0);
       onContinue();
     }
   };
 
   const handleSlideEnd = () => {
-    setIsSliding(false);
-    setSlidePosition(0);
+    setIsDragging(false);
+    setDragProgress(0);
   };
 
   return (
@@ -118,20 +117,18 @@ const PriceAndTimeStep = ({
             What's your budget range?
           </h3>
           <div className="space-y-3">
-            <div className="flex justify-between text-sm text-gray-600">
+            <div className="flex justify-between text-sm font-medium text-gray-700">
               <span>${priceRange[0].toLocaleString()}</span>
               <span>${priceRange[1].toLocaleString()}</span>
             </div>
-            <div className="relative">
-              <Slider
-                value={priceRange}
-                onValueChange={(value) => onUpdate({ priceRange: value as [number, number] })}
-                max={6000}
-                min={500}
-                step={50}
-                className="w-full"
-              />
-            </div>
+            <Slider
+              value={priceRange}
+              onValueChange={(value) => onUpdate({ priceRange: value as [number, number] })}
+              max={6000}
+              min={500}
+              step={50}
+              className="w-full"
+            />
             <div className="flex justify-between text-xs text-gray-500">
               <span>$500</span>
               <span>$6,000+</span>
@@ -167,17 +164,20 @@ const PriceAndTimeStep = ({
             Where do you want to live?
           </h3>
           <div className="relative">
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => handleLocationChange(e.target.value)}
-              placeholder="Enter neighborhood, city, or address..."
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => handleLocationChange(e.target.value)}
+                placeholder="Enter neighborhood or address..."
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
             
             {/* Address Suggestions */}
             {addressSuggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
                 {addressSuggestions.map((suggestion, index) => (
                   <button
                     key={index}
@@ -185,26 +185,14 @@ const PriceAndTimeStep = ({
                       onUpdate({ location: suggestion });
                       setAddressSuggestions([]);
                     }}
-                    className="w-full p-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                    className="w-full p-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-2"
                   >
+                    <MapPin size={16} className="text-gray-400" />
                     {suggestion}
                   </button>
                 ))}
               </div>
             )}
-          </div>
-          
-          {/* Quick Location Options */}
-          <div className="grid grid-cols-1 gap-2">
-            {commonLocations.map((loc) => (
-              <button
-                key={loc}
-                onClick={() => onUpdate({ location: loc })}
-                className="p-2 text-sm border border-gray-200 rounded-lg hover:border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors text-left"
-              >
-                {loc}
-              </button>
-            ))}
           </div>
         </div>
 
@@ -219,7 +207,7 @@ const PriceAndTimeStep = ({
                 <span className="text-2xl font-bold text-blue-600">
                   {proximityRadius} {proximityRadius === 1 ? 'mile' : 'miles'}
                 </span>
-                <p className="text-sm text-gray-600">from {location}</p>
+                <p className="text-sm text-gray-600">from your chosen area</p>
               </div>
               <Slider
                 value={[proximityRadius]}
@@ -238,13 +226,14 @@ const PriceAndTimeStep = ({
         )}
       </div>
 
-      {/* Fixed Bottom Section with Slide to Unlock */}
+      {/* Fixed Bottom Section with Slide to Continue */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-6">
         <div className="flex flex-col items-center space-y-4">
-          {/* Slide to Unlock Button */}
+          {/* Slide to Continue Button */}
           <div className="w-full max-w-sm">
             <div 
-              className={`relative h-14 rounded-full border-2 transition-all duration-200 ${
+              ref={slideRef}
+              className={`relative h-14 rounded-full border-2 transition-all duration-200 overflow-hidden ${
                 canContinue 
                   ? 'border-blue-500 bg-blue-50' 
                   : 'border-gray-300 bg-gray-100'
@@ -255,11 +244,20 @@ const PriceAndTimeStep = ({
               onTouchMove={handleSlideMove}
               onTouchEnd={handleSlideEnd}
             >
+              {/* Background Progress */}
+              <div 
+                className="absolute inset-0 bg-blue-200 transition-all duration-100"
+                style={{ 
+                  width: `${dragProgress * 100}%`,
+                  opacity: isDragging ? 0.3 : 0
+                }}
+              />
+              
               {/* Background Text */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className={`text-sm font-medium ${
+                <span className={`text-sm font-medium transition-opacity duration-200 ${
                   canContinue ? 'text-blue-600' : 'text-gray-400'
-                }`}>
+                } ${isDragging && dragProgress > 0.3 ? 'opacity-0' : 'opacity-100'}`}>
                   {canContinue ? 'Slide to continue' : 'Complete all fields'}
                 </span>
               </div>
@@ -267,10 +265,14 @@ const PriceAndTimeStep = ({
               {/* Sliding Button */}
               {canContinue && (
                 <div
-                  className={`absolute top-1 left-1 w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center cursor-pointer transition-all duration-200 ${
-                    isSliding ? 'shadow-lg' : 'shadow-md'
+                  className={`absolute top-1 left-1 w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center cursor-grab transition-all duration-100 ${
+                    isDragging ? 'cursor-grabbing shadow-lg scale-105' : 'shadow-md'
                   }`}
-                  style={{ transform: `translateX(${slidePosition}px)` }}
+                  style={{ 
+                    transform: slideRef.current 
+                      ? `translateX(${dragProgress * (slideRef.current.offsetWidth - 56)}px)` 
+                      : 'translateX(0px)'
+                  }}
                   onMouseDown={handleSlideStart}
                   onTouchStart={handleSlideStart}
                 >
