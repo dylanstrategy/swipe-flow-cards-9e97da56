@@ -1,15 +1,29 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import SwipeCard from '../SwipeCard';
+import MessageModule from '../message/MessageModule';
 import { useToast } from '@/hooks/use-toast';
 
 const MessagesTab = () => {
   const { toast } = useToast();
+  const [showMessageModule, setShowMessageModule] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<any>(null);
 
   const handleAction = (action: string, item: string) => {
     toast({
       title: `${action}`,
       description: `${item} - Action completed`,
     });
+  };
+
+  const handleQuickReply = (message: any) => {
+    setSelectedMessage(message);
+    setShowMessageModule(true);
+  };
+
+  const handleViewMessage = (message: any) => {
+    setSelectedMessage(message);
+    setShowMessageModule(true);
   };
 
   const messages = [
@@ -19,7 +33,8 @@ const MessagesTab = () => {
       subject: "Pool Maintenance Update",
       preview: "The pool maintenance has been rescheduled to...",
       time: "2 hours ago",
-      unread: true
+      unread: true,
+      type: 'management'
     },
     {
       id: 2,
@@ -27,7 +42,8 @@ const MessagesTab = () => {
       subject: "Work Order #1234 Complete",
       preview: "Your HVAC maintenance request has been completed...",
       time: "Yesterday",
-      unread: false
+      unread: false,
+      type: 'maintenance'
     },
     {
       id: 3,
@@ -35,9 +51,24 @@ const MessagesTab = () => {
       subject: "Lease Renewal Available",
       preview: "Your lease renewal options are now available...",
       time: "3 days ago",
-      unread: true
+      unread: true,
+      type: 'leasing'
     }
   ];
+
+  if (showMessageModule) {
+    return (
+      <MessageModule
+        onClose={() => {
+          setShowMessageModule(false);
+          setSelectedMessage(null);
+        }}
+        initialSubject={selectedMessage ? `Re: ${selectedMessage.subject}` : ''}
+        recipientType={selectedMessage?.type || 'management'}
+        mode="reply"
+      />
+    );
+  }
 
   return (
     <div className="px-4 py-6 pb-24">
@@ -55,11 +86,12 @@ const MessagesTab = () => {
           }}
           onSwipeLeft={{
             label: "Quick Reply",
-            action: () => handleAction("Sent quick reply", message.subject),
+            action: () => handleQuickReply(message),
             color: "#3B82F6",
             icon: "💬"
           }}
-          onTap={() => handleAction("Opened full thread", message.subject)}
+          onTap={() => handleViewMessage(message)}
+          enableSwipeUp={false}
         >
           <div className="p-6">
             <div className="flex items-center justify-between mb-3">

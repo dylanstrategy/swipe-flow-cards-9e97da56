@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SwipeCard from '../SwipeCard';
+import MessageModule from '../message/MessageModule';
 import { useToast } from '@/hooks/use-toast';
 import { Clock, ChevronLeft, ChevronRight, CloudSun } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
@@ -10,6 +11,12 @@ import { cn } from '@/lib/utils';
 const TodayTab = () => {
   const { toast } = useToast();
   const [showTimeline, setShowTimeline] = useState(false);
+  const [showMessageModule, setShowMessageModule] = useState(false);
+  const [messageConfig, setMessageConfig] = useState({
+    subject: '',
+    recipientType: 'management' as 'management' | 'maintenance' | 'leasing',
+    mode: 'compose' as 'compose' | 'reply'
+  });
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [weather, setWeather] = useState({ temp: 72, condition: 'Sunny' });
@@ -112,6 +119,15 @@ const TodayTab = () => {
     });
   };
 
+  const handleQuickReply = (subject: string, recipientType: 'management' | 'maintenance' | 'leasing' = 'management') => {
+    setMessageConfig({
+      subject,
+      recipientType,
+      mode: 'reply'
+    });
+    setShowMessageModule(true);
+  };
+
   const getEventsForDate = (date: Date) => {
     return calendarEvents.filter(event => isSameDay(event.date, date))
       .sort((a, b) => a.time.localeCompare(b.time));
@@ -177,7 +193,7 @@ const TodayTab = () => {
           },
           onSwipeLeft: {
             label: "Quick Reply",
-            action: () => handleAction("Quick replied", event.title),
+            action: () => handleQuickReply(`Re: ${event.title}`, 'management'),
             color: "#3B82F6",
             icon: "💬"
           }
@@ -193,7 +209,7 @@ const TodayTab = () => {
           },
           onSwipeLeft: {
             label: "Request Changes",
-            action: () => handleAction("Requested changes", event.title),
+            action: () => handleQuickReply(`Re: ${event.title}`, 'leasing'),
             color: "#F59E0B",
             icon: "💬"
           }
@@ -264,6 +280,17 @@ const TodayTab = () => {
         };
     }
   };
+
+  if (showMessageModule) {
+    return (
+      <MessageModule
+        onClose={() => setShowMessageModule(false)}
+        initialSubject={messageConfig.subject}
+        recipientType={messageConfig.recipientType}
+        mode={messageConfig.mode}
+      />
+    );
+  }
 
   if (showTimeline) {
     return <ResidentTimeline onClose={() => setShowTimeline(false)} />;
