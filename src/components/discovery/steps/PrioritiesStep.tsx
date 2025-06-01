@@ -2,6 +2,7 @@
 import React from 'react';
 import { Home, Lightbulb, Wifi, House, Car, Shield, Star, Bell, Users, CircleCheck, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Priority {
   id: string;
@@ -143,23 +144,23 @@ const PrioritiesStep = ({ priorities, onUpdate }: PrioritiesStepProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="px-6 py-8 text-center">
+    <div className="h-full flex flex-col bg-white">
+      {/* Fixed Header */}
+      <div className="flex-shrink-0 px-6 pt-8 pb-4 text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
           What matters most to you?
         </h1>
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-600 mb-4">
           Select up to 5 priorities in order of importance
         </p>
         
         {/* Progress indicator */}
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mb-4">
           <div className="flex items-center space-x-2">
             {[1, 2, 3, 4, 5].map((num) => (
               <div 
                 key={num}
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
                   num <= selectedCount 
                     ? 'bg-blue-500 text-white' 
                     : 'bg-gray-200 text-gray-500'
@@ -172,68 +173,70 @@ const PrioritiesStep = ({ priorities, onUpdate }: PrioritiesStepProps) => {
         </div>
       </div>
 
-      {/* Priority Cards */}
-      <div className="px-6 space-y-3">
-        {priorityOptions.map((option) => {
-          const rank = getPriorityRank(option.id);
-          const isSelected = rank !== undefined;
-          const IconComponent = option.icon;
-          
-          return (
-            <div
-              key={option.id}
-              className={`relative rounded-2xl border-2 p-4 cursor-pointer transition-all duration-200 ${
-                isSelected 
-                  ? 'border-blue-500 bg-blue-50' 
-                  : `${option.color} hover:shadow-md`
-              }`}
-              onClick={() => handlePriorityToggle(option.id)}
-            >
-              <div className="flex items-center space-x-4">
-                {/* Icon */}
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                  isSelected ? 'bg-blue-100' : 'bg-white'
-                }`}>
-                  <IconComponent 
-                    size={24} 
-                    className={isSelected ? 'text-blue-600' : option.iconColor} 
-                  />
-                </div>
-                
-                {/* Content */}
-                <div className="flex-1">
-                  <h3 className={`font-semibold text-lg ${
-                    isSelected ? 'text-blue-900' : 'text-gray-900'
+      {/* Scrollable Priority Cards */}
+      <ScrollArea className="flex-1 px-6">
+        <div className="space-y-2 pb-4">
+          {priorityOptions.map((option) => {
+            const rank = getPriorityRank(option.id);
+            const isSelected = rank !== undefined;
+            const IconComponent = option.icon;
+            
+            return (
+              <div
+                key={option.id}
+                className={`relative rounded-xl border-2 p-3 cursor-pointer transition-all duration-200 ${
+                  isSelected 
+                    ? 'border-blue-500 bg-blue-50' 
+                    : `${option.color} hover:shadow-md`
+                }`}
+                onClick={() => handlePriorityToggle(option.id)}
+              >
+                <div className="flex items-center space-x-3">
+                  {/* Icon */}
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    isSelected ? 'bg-blue-100' : 'bg-white'
                   }`}>
-                    {option.label}
-                  </h3>
-                </div>
-                
-                {/* Selection indicator */}
-                <div className="flex-shrink-0">
-                  {isSelected ? (
-                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">{rank}</span>
-                    </div>
-                  ) : (
-                    <div className="w-8 h-8 border-2 border-gray-300 rounded-full"></div>
-                  )}
+                    <IconComponent 
+                      size={20} 
+                      className={isSelected ? 'text-blue-600' : option.iconColor} 
+                    />
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="flex-1">
+                    <h3 className={`font-medium text-base ${
+                      isSelected ? 'text-blue-900' : 'text-gray-900'
+                    }`}>
+                      {option.label}
+                    </h3>
+                  </div>
+                  
+                  {/* Selection indicator */}
+                  <div className="flex-shrink-0">
+                    {isSelected ? (
+                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">{rank}</span>
+                      </div>
+                    ) : (
+                      <div className="w-6 h-6 border-2 border-gray-300 rounded-full"></div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      </ScrollArea>
 
-      {/* Bottom section */}
-      <div className="px-6 py-8">
+      {/* Fixed Bottom section */}
+      <div className="flex-shrink-0 px-6 py-6">
         {selectedCount > 0 && (
-          <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200 mb-6">
-            <p className="text-blue-700 font-medium">
+          <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200 mb-4">
+            <p className="text-blue-700 font-medium text-sm">
               Great! You've selected {selectedCount} priorit{selectedCount === 1 ? 'y' : 'ies'}.
             </p>
             {selectedCount === 5 && (
-              <p className="text-sm text-blue-600 mt-1">
+              <p className="text-xs text-blue-600 mt-1">
                 Swipe up when ready to continue! 🎉
               </p>
             )}
