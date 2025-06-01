@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronRight, BarChart3, Grid3X3 } from 'lucide-react';
@@ -48,13 +47,10 @@ const OperatorTodayTab = () => {
     { title: 'Total Available', count: 10.00, status: 'normal' },
     { title: 'Vacant', count: 0.00, status: 'normal' },
     { title: 'Avg. Vacancy Loss', count: 6.20, status: 'normal' },
-    { title: 'Required Leases', count: 0.02, status: 'normal' },
-    { title: 'Required Shows', count: 0.06, status: 'normal' },
-    { title: 'Required Prospect Outreach', count: 0.51, status: 'normal' },
-    { title: '30 Day Occupancy', count: '97.06%', status: 'good' },
     { title: 'Required Leases', count: 3.02, status: 'normal' },
     { title: 'Required Shows', count: 8.51, status: 'normal' },
     { title: 'Required Prospect Outreach', count: 42.55, status: 'normal' },
+    { title: '30 Day Occupancy', count: '97.06%', status: 'good' },
     { title: '60 Day Occupancy', count: '5', status: 'normal' }
   ];
 
