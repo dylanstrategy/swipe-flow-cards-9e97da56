@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +24,7 @@ const MoveInTracker: React.FC<MoveInTrackerProps> = ({
   const [selectedResident, setSelectedResident] = useState<any>(null);
 
   // Sample move-in data based on the spreadsheet
-  const moveInResidents = [
+  const [moveInResidents, setMoveInResidents] = useState([
     {
       id: '5',
       name: 'April Chen',
@@ -95,7 +94,7 @@ const MoveInTracker: React.FC<MoveInTrackerProps> = ({
         unitPrep: true
       }
     }
-  ];
+  ]);
 
   const getFilteredResidents = () => {
     let filtered = moveInResidents;
@@ -138,8 +137,33 @@ const MoveInTracker: React.FC<MoveInTrackerProps> = ({
   };
 
   const handleTaskToggle = (residentId: string, taskType: 'residentTasks' | 'operatorTasks', taskKey: string) => {
-    // In a real app, this would update the backend
     console.log(`Toggling ${taskType}.${taskKey} for resident ${residentId}`);
+    
+    setMoveInResidents(prevResidents => 
+      prevResidents.map(resident => {
+        if (resident.id === residentId) {
+          return {
+            ...resident,
+            [taskType]: {
+              ...resident[taskType],
+              [taskKey]: !resident[taskType][taskKey]
+            }
+          };
+        }
+        return resident;
+      })
+    );
+
+    // Update selectedResident if it's the one being modified
+    if (selectedResident && selectedResident.id === residentId) {
+      setSelectedResident(prev => ({
+        ...prev,
+        [taskType]: {
+          ...prev[taskType],
+          [taskKey]: !prev[taskType][taskKey]
+        }
+      }));
+    }
   };
 
   const handleFilterChange = (value: string) => {
