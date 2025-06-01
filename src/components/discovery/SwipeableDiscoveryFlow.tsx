@@ -1,7 +1,9 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import SwipeableScreen from '@/components/schedule/SwipeableScreen';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { ChevronLeft, X } from 'lucide-react';
 import PriceAndTimeStep from './steps/PriceAndTimeStep';
 import PriorityIntroStep from './steps/PriorityIntroStep';
 import PrioritiesStep from './steps/PrioritiesStep';
@@ -42,7 +44,6 @@ const SwipeableDiscoveryFlow = () => {
     ],
     lifestyleTags: [],
     features: [
-      // New simplified priority structure
       { id: 'naturalLightQuiet', label: 'Natural Light & Quiet', selected: false },
       { id: 'modernFunctional', label: 'Modern & Functional Unit', selected: false },
       { id: 'reliableWifiTech', label: 'Reliable Wi-Fi & Tech', selected: false },
@@ -77,7 +78,6 @@ const SwipeableDiscoveryFlow = () => {
     if (currentStep < 5) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Final step - save preferences and navigate to matches
       localStorage.setItem('userPreferences', JSON.stringify(discoveryData));
       console.log('Discovery completed:', discoveryData);
       navigate('/matches');
@@ -88,6 +88,10 @@ const SwipeableDiscoveryFlow = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  const handleGoToStep1 = () => {
+    setCurrentStep(1);
   };
 
   const handleClose = () => {
@@ -161,24 +165,77 @@ const SwipeableDiscoveryFlow = () => {
     }
   };
 
-  // For the first step, render without SwipeableScreen wrapper
+  // For the first step, render without header wrapper
   if (currentStep === 1) {
-    return renderCurrentStep();
+    return (
+      <div className="min-h-screen bg-white" style={{ touchAction: 'manipulation' }}>
+        {renderCurrentStep()}
+      </div>
+    );
   }
 
-  // For subsequent steps, use SwipeableScreen with swipe gestures
+  // For subsequent steps, render with header and navigation
   return (
-    <SwipeableScreen
-      title={getStepTitle()}
-      currentStep={currentStep}
-      totalSteps={5}
-      onClose={handleClose}
-      onSwipeUp={canProceedFromCurrentStep() ? handleNextStep : undefined}
-      onSwipeLeft={currentStep > 1 ? handlePrevStep : undefined}
-      canSwipeUp={canProceedFromCurrentStep()}
-    >
-      {renderCurrentStep()}
-    </SwipeableScreen>
+    <div className="min-h-screen bg-white flex flex-col" style={{ touchAction: 'manipulation' }}>
+      {/* Header with Progress and Navigation */}
+      <div className="flex-shrink-0 bg-white border-b border-gray-200 px-4 py-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handlePrevStep}
+              className="p-2"
+            >
+              <ChevronLeft size={20} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleGoToStep1}
+              className="text-sm text-blue-600 hover:text-blue-700"
+            >
+              Start Over
+            </Button>
+          </div>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleClose}
+            className="p-2"
+          >
+            <X size={20} />
+          </Button>
+        </div>
+        
+        {/* Progress Bar */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm text-gray-600">
+            <span>{getStepTitle()}</span>
+            <span>Step {currentStep} of 5</span>
+          </div>
+          <Progress value={(currentStep / 5) * 100} className="h-2" />
+        </div>
+      </div>
+
+      {/* Step Content */}
+      <div className="flex-1 overflow-auto" style={{ touchAction: 'manipulation' }}>
+        {renderCurrentStep()}
+      </div>
+
+      {/* Continue Button for steps 2-5 */}
+      <div className="flex-shrink-0 p-4 bg-white border-t border-gray-200">
+        <Button
+          onClick={handleNextStep}
+          disabled={!canProceedFromCurrentStep()}
+          className="w-full py-3"
+          size="lg"
+        >
+          {currentStep === 5 ? 'Complete Discovery' : 'Continue'}
+        </Button>
+      </div>
+    </div>
   );
 };
 

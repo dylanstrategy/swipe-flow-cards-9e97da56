@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Star } from 'lucide-react';
 
 interface PriorityIntroStepProps {
@@ -9,7 +8,7 @@ interface PriorityIntroStepProps {
 
 const PriorityIntroStep = ({ onContinue }: PriorityIntroStepProps) => {
   return (
-    <div className="h-full flex flex-col justify-center items-center px-6 bg-white">
+    <div className="h-full flex flex-col justify-center items-center px-6 bg-white" style={{ touchAction: 'manipulation' }}>
       <div className="text-center max-w-md">
         <div className="mb-6">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -32,19 +31,7 @@ const PriorityIntroStep = ({ onContinue }: PriorityIntroStepProps) => {
             <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
             Rank them in order of importance
           </div>
-          <div className="flex items-center text-sm text-gray-500">
-            <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-            Swipe up when ready to continue
-          </div>
         </div>
-        
-        <Button 
-          onClick={onContinue}
-          className="w-full py-3"
-          size="lg"
-        >
-          Get Started
-        </Button>
       </div>
     </div>
   );

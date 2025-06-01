@@ -1,7 +1,6 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Home, Lightbulb, Wifi, House, Car, Shield, Star, Bell, Users, CircleCheck, DollarSign } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 interface Priority {
   id: string;
@@ -143,20 +142,17 @@ const PrioritiesStep = ({ priorities, onUpdate }: PrioritiesStepProps) => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-white overflow-hidden">
-      {/* Fixed Header */}
-      <div className="flex-shrink-0 px-6 pt-6 pb-4 bg-white">
-        <div className="text-center mb-4">
-          <h1 className="text-lg font-bold text-gray-900 mb-1">
-            Select Your Top 5 Priorities
-          </h1>
-          <p className="text-gray-600 text-sm">
-            Tap to rank in order of importance
-          </p>
-        </div>
+    <div className="p-6 pb-24" style={{ touchAction: 'manipulation' }}>
+      <div className="text-center mb-6">
+        <h1 className="text-xl font-bold text-gray-900 mb-2">
+          Select Your Top 5 Priorities
+        </h1>
+        <p className="text-gray-600 text-sm mb-4">
+          Tap to rank in order of importance
+        </p>
         
         {/* Progress indicator */}
-        <div className="flex justify-center">
+        <div className="flex justify-center mb-6">
           <div className="flex items-center space-x-2">
             {[1, 2, 3, 4, 5].map((num) => (
               <div 
@@ -174,80 +170,67 @@ const PrioritiesStep = ({ priorities, onUpdate }: PrioritiesStepProps) => {
         </div>
       </div>
 
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto px-6">
-        <div className="space-y-2 pb-24">
-          {priorityOptions.map((option) => {
-            const rank = getPriorityRank(option.id);
-            const isSelected = rank !== undefined;
-            const IconComponent = option.icon;
-            
-            return (
-              <div
-                key={option.id}
-                className={`relative rounded-lg border-2 p-3 cursor-pointer transition-all duration-200 select-none ${
-                  isSelected 
-                    ? 'border-blue-500 bg-blue-50' 
-                    : `${option.color} hover:shadow-sm active:scale-95`
-                }`}
-                onClick={() => handlePriorityToggle(option.id)}
-              >
-                <div className="flex items-center space-x-3">
-                  {/* Icon */}
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                    isSelected ? 'bg-blue-100' : 'bg-white'
+      {/* Options Grid */}
+      <div className="space-y-3">
+        {priorityOptions.map((option) => {
+          const rank = getPriorityRank(option.id);
+          const isSelected = rank !== undefined;
+          const IconComponent = option.icon;
+          
+          return (
+            <div
+              key={option.id}
+              className={`relative rounded-lg border-2 p-3 cursor-pointer transition-all duration-200 select-none ${
+                isSelected 
+                  ? 'border-blue-500 bg-blue-50' 
+                  : `${option.color} hover:shadow-sm`
+              }`}
+              onClick={() => handlePriorityToggle(option.id)}
+              style={{ touchAction: 'manipulation' }}
+            >
+              <div className="flex items-center space-x-3">
+                {/* Icon */}
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                  isSelected ? 'bg-blue-100' : 'bg-white'
+                }`}>
+                  <IconComponent 
+                    size={16} 
+                    className={isSelected ? 'text-blue-600' : option.iconColor} 
+                  />
+                </div>
+                
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <h3 className={`font-medium text-sm ${
+                    isSelected ? 'text-blue-900' : 'text-gray-900'
                   }`}>
-                    <IconComponent 
-                      size={16} 
-                      className={isSelected ? 'text-blue-600' : option.iconColor} 
-                    />
-                  </div>
-                  
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className={`font-medium text-sm ${
-                      isSelected ? 'text-blue-900' : 'text-gray-900'
-                    }`}>
-                      {option.label}
-                    </h3>
-                  </div>
-                  
-                  {/* Selection indicator */}
-                  <div className="flex-shrink-0">
-                    {isSelected ? (
-                      <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">{rank}</span>
-                      </div>
-                    ) : (
-                      <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
-                    )}
-                  </div>
+                    {option.label}
+                  </h3>
+                </div>
+                
+                {/* Selection indicator */}
+                <div className="flex-shrink-0">
+                  {isSelected ? (
+                    <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">{rank}</span>
+                    </div>
+                  ) : (
+                    <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                  )}
                 </div>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Fixed Bottom section */}
-      <div className="flex-shrink-0 px-6 py-4 bg-white border-t border-gray-100">
-        {selectedCount > 0 && (
-          <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200 mb-3">
-            <p className="text-blue-700 font-medium text-sm">
-              {selectedCount === 5 ? "Perfect! Swipe up to continue 🎉" : `${selectedCount}/5 priorities selected`}
-            </p>
-          </div>
-        )}
-        
-        <Button 
-          variant="outline" 
-          onClick={() => onUpdate(priorities.map(p => ({ ...p, rank: undefined })))}
-          className="w-full py-2"
-          size="lg"
-        >
-          Skip for now
-        </Button>
-      </div>
+      {selectedCount > 0 && (
+        <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200 mt-6">
+          <p className="text-blue-700 font-medium text-sm">
+            {selectedCount === 5 ? "Perfect! 🎉" : `${selectedCount}/5 priorities selected`}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
