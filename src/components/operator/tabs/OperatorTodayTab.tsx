@@ -17,7 +17,7 @@ const OperatorTodayTab = () => {
     { title: 'Move In\'s Staged/Ready', count: 0, status: 'normal' },
     { title: 'Incomplete Move In\'s', count: 14, status: 'normal', module: 'move-in-incomplete' },
     { title: 'Incomplete Move Out\'s', count: 8, status: 'normal' },
-    { title: 'Pending Diego\'s', count: 8, status: 'normal' },
+    { title: 'Pending Dispo', count: 8, status: 'normal' },
     { title: 'Outstanding Terms', count: 0, status: 'normal' },
     { title: 'Agent Make Ready Inspections', count: 0, status: 'normal' },
     { title: 'Response Time', count: -1.00, suffix: 'days old', status: 'urgent' }
