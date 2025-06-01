@@ -66,8 +66,11 @@ const PriceAndTimeStep = ({
     }
   };
 
-  const handleSlideStart = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleSlideStart = (e: React.TouchEvent | React.MouseEvent) => {
     if (!canContinue) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
     
     setIsDragging(true);
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
@@ -75,33 +78,39 @@ const PriceAndTimeStep = ({
     setDragProgress(0);
   };
 
-  const handleSlideMove = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleSlideMove = (e: React.TouchEvent | React.MouseEvent) => {
     if (!isDragging || !canContinue || !slideRef.current) return;
     
     e.preventDefault();
+    e.stopPropagation();
+    
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const rect = slideRef.current.getBoundingClientRect();
     const deltaX = clientX - startX.current;
-    const maxDistance = rect.width - 56;
+    const maxDistance = rect.width - 60; // Account for button width
     const progress = Math.max(0, Math.min(deltaX / maxDistance, 1));
     
     setDragProgress(progress);
     
-    if (progress >= 0.8) {
+    // Complete action when dragged 90% of the way
+    if (progress >= 0.9) {
       setIsDragging(false);
       setDragProgress(0);
       onContinue();
     }
   };
 
-  const handleSlideEnd = () => {
+  const handleSlideEnd = (e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     setIsDragging(false);
     setDragProgress(0);
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="px-4 sm:px-6 py-6 space-y-8 max-w-2xl mx-auto">
+    <div className="min-h-screen bg-white touch-pan-y">
+      <div className="px-4 sm:px-6 py-6 space-y-6 max-w-2xl mx-auto pb-32">
         <div className="text-center space-y-3">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
             This move will be a breeze.
@@ -229,71 +238,73 @@ const PriceAndTimeStep = ({
           </div>
         )}
 
-        {/* Slide to Continue Button - Now at bottom of content */}
-        <div className="pt-8 pb-4">
-          <div className="flex flex-col items-center space-y-4 max-w-sm mx-auto">
-            <div className="w-full">
+        {/* Slide to Continue Button */}
+        <div className="pt-8 space-y-4">
+          <div className="max-w-sm mx-auto">
+            <div 
+              ref={slideRef}
+              className={`relative h-16 rounded-full border-2 transition-colors duration-200 overflow-hidden touch-none ${
+                canContinue 
+                  ? 'border-blue-500 bg-blue-50' 
+                  : 'border-gray-300 bg-gray-100'
+              }`}
+              style={{ touchAction: 'none' }}
+            >
+              {/* Background Progress */}
               <div 
-                ref={slideRef}
-                className={`relative h-14 sm:h-16 rounded-full border-2 transition-all duration-200 overflow-hidden ${
-                  canContinue 
-                    ? 'border-blue-500 bg-blue-50' 
-                    : 'border-gray-300 bg-gray-100'
-                }`}
-                onMouseMove={handleSlideMove}
-                onMouseUp={handleSlideEnd}
-                onMouseLeave={handleSlideEnd}
-                onTouchMove={handleSlideMove}
-                onTouchEnd={handleSlideEnd}
-              >
-                {/* Background Progress */}
-                <div 
-                  className="absolute inset-0 bg-blue-200 transition-all duration-75"
-                  style={{ 
-                    width: `${dragProgress * 100}%`,
-                    opacity: isDragging ? 0.3 : 0
-                  }}
-                />
-                
-                {/* Background Text */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className={`text-sm sm:text-base font-medium transition-opacity duration-200 ${
-                    canContinue ? 'text-blue-600' : 'text-gray-400'
-                  } ${isDragging && dragProgress > 0.3 ? 'opacity-0' : 'opacity-100'}`}>
-                    {canContinue ? 'Slide to continue' : 'Complete all fields'}
-                  </span>
-                </div>
-                
-                {/* Sliding Button */}
-                {canContinue && (
-                  <div
-                    className={`absolute top-1 left-1 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-blue-500 flex items-center justify-center cursor-grab transition-all duration-75 ${
-                      isDragging ? 'cursor-grabbing shadow-xl scale-105' : 'shadow-lg hover:shadow-xl'
-                    }`}
-                    style={{ 
-                      transform: slideRef.current 
-                        ? `translateX(${dragProgress * (slideRef.current.offsetWidth - 56)}px)` 
-                        : 'translateX(0px)'
-                    }}
-                    onMouseDown={handleSlideStart}
-                    onTouchStart={handleSlideStart}
-                  >
-                    <ChevronRight className="text-white" size={20} />
-                  </div>
-                )}
+                className="absolute inset-0 bg-blue-200 transition-all duration-100"
+                style={{ 
+                  width: `${dragProgress * 100}%`,
+                  opacity: isDragging ? 0.5 : 0
+                }}
+              />
+              
+              {/* Background Text */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <span className={`text-base font-medium transition-opacity duration-200 ${
+                  canContinue ? 'text-blue-600' : 'text-gray-400'
+                } ${isDragging && dragProgress > 0.3 ? 'opacity-30' : 'opacity-100'}`}>
+                  {canContinue ? 'Swipe to continue' : 'Complete all fields'}
+                </span>
               </div>
+              
+              {/* Sliding Button */}
+              {canContinue && (
+                <div
+                  className={`absolute top-1 left-1 w-14 h-14 rounded-full bg-blue-500 flex items-center justify-center transition-all duration-100 ${
+                    isDragging ? 'shadow-2xl scale-110' : 'shadow-lg'
+                  }`}
+                  style={{ 
+                    transform: slideRef.current 
+                      ? `translateX(${dragProgress * (slideRef.current.offsetWidth - 60)}px)` 
+                      : 'translateX(0px)',
+                    touchAction: 'none'
+                  }}
+                  onTouchStart={handleSlideStart}
+                  onTouchMove={handleSlideMove}
+                  onTouchEnd={handleSlideEnd}
+                  onMouseDown={handleSlideStart}
+                  onMouseMove={handleSlideMove}
+                  onMouseUp={handleSlideEnd}
+                  onMouseLeave={handleSlideEnd}
+                >
+                  <ChevronRight className="text-white" size={24} />
+                </div>
+              )}
             </div>
+          </div>
 
-            {/* Fallback Button */}
+          {/* Fallback Button */}
+          <div className="max-w-sm mx-auto">
             <Button 
               onClick={onContinue}
               disabled={!canContinue}
               variant="outline"
-              className="w-full text-sm sm:text-base"
-              size="sm"
+              className="w-full text-base"
+              size="default"
             >
               Or tap here to continue
-            </Button>
+            </button>
           </div>
         </div>
       </div>
