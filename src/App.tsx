@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Discovery from "./pages/Discovery";
 import Matches from "./pages/Matches";
 import MoveIn from "./pages/MoveIn";
+import Operator from "./pages/Operator";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/discovery" element={<Discovery />} />
           <Route path="/matches" element={<Matches />} />
           <Route path="/move-in/:homeId" element={<MoveIn />} />
+          <Route path="/operator" element={<Operator />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
