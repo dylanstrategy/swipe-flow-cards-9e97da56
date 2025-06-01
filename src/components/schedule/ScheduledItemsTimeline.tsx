@@ -28,12 +28,6 @@ const ScheduledItemsTimeline = ({ selectedDate, onAction }: ScheduledItemsTimeli
             color: "#EF4444",
             icon: "❌"
           }}
-          onSwipeUp={{
-            label: "Move...",
-            action: () => onAction("Moved", "Work Order"),
-            color: "#6366F1",
-            icon: "📁"
-          }}
           onTap={() => onAction("Viewed", "Work Order")}
           className="flex-1"
         >
@@ -63,12 +57,6 @@ const ScheduledItemsTimeline = ({ selectedDate, onAction }: ScheduledItemsTimeli
             action: () => onAction("Reminded", "Rent Payment"),
             color: "#F59E0B",
             icon: "⏰"
-          }}
-          onSwipeUp={{
-            label: "Move...",
-            action: () => onAction("Moved", "Rent Payment"),
-            color: "#6366F1",
-            icon: "📁"
           }}
           onTap={() => onAction("Viewed", "Rent Payment")}
           className="flex-1"

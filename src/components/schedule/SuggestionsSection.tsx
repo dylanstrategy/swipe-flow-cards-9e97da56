@@ -42,12 +42,6 @@ const SuggestionsSection = ({ onSchedule, onAction }: SuggestionsSectionProps) =
               color: "#F59E0B",
               icon: "⏰"
             }}
-            onSwipeUp={{
-              label: "Move...",
-              action: () => onAction("Moved", suggestion.title),
-              color: "#6366F1",
-              icon: "📁"
-            }}
             onTap={() => onAction("Viewed", suggestion.title)}
           >
             <div className="flex items-center p-4 bg-white rounded-lg border-l-4 border-blue-500">
