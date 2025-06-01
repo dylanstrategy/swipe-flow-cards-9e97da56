@@ -56,7 +56,7 @@ const ScheduleMenu = ({ onSelectType, onClose }: ScheduleMenuProps) => {
   return (
     <div className="fixed inset-0 bg-white z-50 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
         <button 
           onClick={onClose}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -69,23 +69,23 @@ const ScheduleMenu = ({ onSelectType, onClose }: ScheduleMenuProps) => {
         <div className="w-10" /> {/* Spacer for centering */}
       </div>
 
-      {/* Menu Options */}
-      <div className="flex-1 p-4">
-        <div className="grid gap-4">
+      {/* Scrollable Menu Options */}
+      <div className="flex-1 overflow-y-auto p-4 pb-8">
+        <div className="grid gap-3 max-w-md mx-auto">
           {scheduleTypes.map((type) => {
             const IconComponent = type.icon;
             return (
               <button
                 key={type.id}
                 onClick={() => onSelectType(type.id)}
-                className="flex items-center p-4 bg-white rounded-xl border border-gray-200 hover:border-gray-300 transition-colors text-left"
+                className="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors text-left shadow-sm"
               >
-                <div className={`w-12 h-12 ${type.color} rounded-lg flex items-center justify-center mr-4`}>
-                  <IconComponent className="text-white" size={24} />
+                <div className={`w-10 h-10 ${type.color} rounded-lg flex items-center justify-center mr-3 flex-shrink-0`}>
+                  <IconComponent className="text-white" size={20} />
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1">{type.title}</h3>
-                  <p className="text-gray-600 text-sm">{type.description}</p>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 mb-0.5 text-sm">{type.title}</h3>
+                  <p className="text-gray-600 text-xs leading-tight">{type.description}</p>
                 </div>
               </button>
             );
