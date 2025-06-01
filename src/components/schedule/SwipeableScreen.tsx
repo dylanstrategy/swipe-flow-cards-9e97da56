@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, ReactNode } from 'react';
+import React, { useState, useRef, ReactNode, useEffect } from 'react';
 import { ArrowUp, X } from 'lucide-react';
 
 interface SwipeableScreenProps {
@@ -28,6 +28,35 @@ const SwipeableScreen = ({
   const [showAction, setShowAction] = useState<'up' | 'left' | null>(null);
   const startPos = useRef({ x: 0, y: 0 });
   const startTime = useRef(0);
+
+  useEffect(() => {
+    // Prevent zoom on mount
+    const viewport = document.querySelector('meta[name=viewport]');
+    const originalContent = viewport?.getAttribute('content');
+    
+    if (viewport) {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    }
+
+    // Prevent pinch zoom
+    const preventZoom = (e: TouchEvent) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('touchstart', preventZoom, { passive: false });
+    document.addEventListener('touchmove', preventZoom, { passive: false });
+
+    return () => {
+      // Restore original viewport on unmount
+      if (viewport && originalContent) {
+        viewport.setAttribute('content', originalContent);
+      }
+      document.removeEventListener('touchstart', preventZoom);
+      document.removeEventListener('touchmove', preventZoom);
+    };
+  }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
@@ -110,7 +139,8 @@ const SwipeableScreen = ({
       style={{
         transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${getRotation()}deg)`,
         transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.2, 0, 0, 1)',
-        transformOrigin: 'center center'
+        transformOrigin: 'center center',
+        touchAction: 'pan-x pan-y'
       }}
     >
       {/* Swipe Action Overlays */}

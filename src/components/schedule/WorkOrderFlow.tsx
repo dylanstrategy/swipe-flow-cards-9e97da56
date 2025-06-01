@@ -23,14 +23,14 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
     location: ''
   });
 
-  const canProceedFromCurrentStep = () => {
+  const canProceedFromCurrentStep = (): boolean => {
     switch (currentStep) {
       case 1:
         return true; // PhotoCaptureStep handles its own validation
       case 2:
-        return workOrderDetails.title.trim() && workOrderDetails.description.trim();
+        return workOrderDetails.title.trim() !== '' && workOrderDetails.description.trim() !== '';
       case 3:
-        return selectedDate && selectedTime;
+        return selectedDate !== undefined && selectedTime !== '';
       case 4:
         return true;
       default:
