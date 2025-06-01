@@ -1,13 +1,15 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, User, Phone, Mail, Home, Calendar, ChevronRight, ArrowLeft, Truck, FileText, Upload, Download, Eye, TruckIcon } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Search, User, Phone, Mail, Home, Calendar, ChevronRight, ArrowLeft, Truck, FileText, Upload, Download, Eye, TruckIcon, RefreshCw, AlertTriangle } from 'lucide-react';
 import MoveInTracker from '../MoveInTracker';
 import MoveOutTracker from '../MoveOutTracker';
+import RenewalForm from '../../forms/RenewalForm';
+import NoticeToVacateForm from '../../forms/NoticeToVacateForm';
 
 const OperatorResidentsTab = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,6 +19,8 @@ const OperatorResidentsTab = () => {
   const [showMoveOutTracker, setShowMoveOutTracker] = useState(false);
   const [moveInResidentId, setMoveInResidentId] = useState<string>('');
   const [moveOutResidentId, setMoveOutResidentId] = useState<string>('');
+  const [showRenewalForm, setShowRenewalForm] = useState(false);
+  const [showNoticeForm, setShowNoticeForm] = useState(false);
 
   const residents = [
     {
@@ -34,6 +38,7 @@ const OperatorResidentsTab = () => {
       renewalStatus: 'pending',
       hasMoveInProgress: false,
       hasMoveOutProgress: false,
+      currentRent: 1800,
       documents: [
         { id: 1, name: 'Lease Agreement.pdf', type: 'lease', uploadDate: '2023-06-10', size: '2.3 MB' },
         { id: 2, name: 'Driver License.jpg', type: 'id', uploadDate: '2023-06-10', size: '1.1 MB' },
@@ -55,6 +60,7 @@ const OperatorResidentsTab = () => {
       renewalStatus: 'offered',
       hasMoveInProgress: false,
       hasMoveOutProgress: true,
+      currentRent: 1650,
       documents: [
         { id: 4, name: 'Lease Agreement.pdf', type: 'lease', uploadDate: '2022-08-15', size: '2.1 MB' },
         { id: 5, name: 'Background Check.pdf', type: 'application', uploadDate: '2022-08-10', size: '450 KB' }
@@ -75,6 +81,7 @@ const OperatorResidentsTab = () => {
       renewalStatus: 'not_due',
       hasMoveInProgress: false,
       hasMoveOutProgress: false,
+      currentRent: 1950,
       documents: [
         { id: 6, name: 'Lease Agreement.pdf', type: 'lease', uploadDate: '2023-11-05', size: '2.2 MB' },
         { id: 7, name: 'Emergency Contact Form.pdf', type: 'legal', uploadDate: '2023-11-05', size: '320 KB' }
@@ -95,6 +102,7 @@ const OperatorResidentsTab = () => {
       renewalStatus: 'not_due',
       hasMoveInProgress: false,
       hasMoveOutProgress: false,
+      currentRent: 1750,
       documents: [
         { id: 8, name: 'Lease Agreement.pdf', type: 'lease', uploadDate: '2023-03-01', size: '2.4 MB' },
         { id: 9, name: 'Late Notice.pdf', type: 'legal', uploadDate: '2024-01-15', size: '180 KB' },
@@ -116,6 +124,7 @@ const OperatorResidentsTab = () => {
       renewalStatus: 'not_due',
       hasMoveInProgress: true,
       hasMoveOutProgress: false,
+      currentRent: 1900,
       documents: [
         { id: 11, name: 'Application.pdf', type: 'application', uploadDate: '2025-02-15', size: '1.2 MB' },
         { id: 12, name: 'ID Copy.jpg', type: 'id', uploadDate: '2025-02-15', size: '980 KB' }
@@ -136,6 +145,7 @@ const OperatorResidentsTab = () => {
       renewalStatus: 'not_due',
       hasMoveInProgress: true,
       hasMoveOutProgress: false,
+      currentRent: 2100,
       documents: [
         { id: 13, name: 'Application.pdf', type: 'application', uploadDate: '2025-02-20', size: '1.1 MB' },
         { id: 14, name: 'Passport Copy.jpg', type: 'id', uploadDate: '2025-02-20', size: '1.5 MB' },
@@ -157,6 +167,7 @@ const OperatorResidentsTab = () => {
       renewalStatus: 'not_due',
       hasMoveInProgress: false,
       hasMoveOutProgress: false,
+      currentRent: 0,
       documents: [
         { id: 16, name: 'Application.pdf', type: 'application', uploadDate: '2025-03-01', size: '900 KB' }
       ]
@@ -319,6 +330,10 @@ const OperatorResidentsTab = () => {
                   </div>
                 </div>
                 <div>
+                  <span className="text-sm text-gray-600">Current Rent</span>
+                  <p className="font-medium">${selectedResident.currentRent?.toFixed(2) || '0.00'}</p>
+                </div>
+                <div>
                   <span className="text-sm text-gray-600">Balance</span>
                   <p className={`font-medium ${selectedResident.balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
                     ${selectedResident.balance.toFixed(2)}
@@ -328,6 +343,55 @@ const OperatorResidentsTab = () => {
                   <span className="text-sm text-gray-600">Open Work Orders</span>
                   <p className="font-medium">{selectedResident.workOrders}</p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Lease Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Lease Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Dialog open={showRenewalForm} onOpenChange={setShowRenewalForm}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start">
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Submit Renewal Offer
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Submit Lease Renewal Offer</DialogTitle>
+                    </DialogHeader>
+                    <RenewalForm 
+                      residentName={selectedResident.name}
+                      currentRent={selectedResident.currentRent}
+                      isOperator={true}
+                      onClose={() => setShowRenewalForm(false)}
+                    />
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog open={showNoticeForm} onOpenChange={setShowNoticeForm}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start">
+                      <AlertTriangle className="w-4 h-4 mr-2" />
+                      Issue Notice to Vacate
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Issue Notice to Vacate</DialogTitle>
+                    </DialogHeader>
+                    <NoticeToVacateForm 
+                      residentName={selectedResident.name}
+                      isOperator={true}
+                      onClose={() => setShowNoticeForm(false)}
+                    />
+                  </DialogContent>
+                </Dialog>
               </div>
             </CardContent>
           </Card>

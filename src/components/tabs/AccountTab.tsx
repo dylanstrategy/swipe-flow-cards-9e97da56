@@ -1,10 +1,17 @@
+
 import React from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { ChevronRight, User } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import SwipeCard from '../SwipeCard';
+import RenewalForm from '../forms/RenewalForm';
+import NoticeToVacateForm from '../forms/NoticeToVacateForm';
 
 const AccountTab = () => {
   const { toast } = useToast();
+  const [showRenewalForm, setShowRenewalForm] = React.useState(false);
+  const [showNoticeForm, setShowNoticeForm] = React.useState(false);
 
   const handleAction = (action: string, item: string) => {
     toast({
@@ -22,13 +29,13 @@ const AccountTab = () => {
       swipeActions: {
         onSwipeRight: {
           label: "Renew Lease",
-          action: () => handleAction("Started lease renewal", "Lease"),
+          action: () => setShowRenewalForm(true),
           color: "#10B981",
           icon: "📝"
         },
         onSwipeLeft: {
-          label: "Transfer/Cancel",
-          action: () => handleAction("Started transfer request", "Lease"),
+          label: "Notice to Vacate",
+          action: () => setShowNoticeForm(true),
           color: "#EF4444",
           icon: "🔄"
         }
@@ -133,6 +140,49 @@ const AccountTab = () => {
             <p className="text-3xl font-bold text-blue-600 mb-1">8 mos</p>
             <p className="text-gray-500">Remaining</p>
           </div>
+        </div>
+      </div>
+
+      {/* Lease Actions */}
+      <div className="bg-white rounded-2xl p-4 mb-6 shadow-sm">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 px-3">Lease Actions</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Dialog open={showRenewalForm} onOpenChange={setShowRenewalForm}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full justify-start">
+                📝 Request Lease Renewal
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Request Lease Renewal</DialogTitle>
+              </DialogHeader>
+              <RenewalForm 
+                residentName="John Smith"
+                currentRent={1800}
+                isOperator={false}
+                onClose={() => setShowRenewalForm(false)}
+              />
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={showNoticeForm} onOpenChange={setShowNoticeForm}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full justify-start">
+                🚪 Submit Notice to Vacate
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Submit Notice to Vacate</DialogTitle>
+              </DialogHeader>
+              <NoticeToVacateForm 
+                residentName="John Smith"
+                isOperator={false}
+                onClose={() => setShowNoticeForm(false)}
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
