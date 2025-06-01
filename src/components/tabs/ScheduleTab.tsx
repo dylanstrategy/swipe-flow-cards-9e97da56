@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
@@ -7,6 +8,7 @@ import ScheduleMenu from '../schedule/ScheduleMenu';
 import WorkOrderFlow from '../schedule/WorkOrderFlow';
 import SuggestionsSection from '../schedule/SuggestionsSection';
 import ScheduledItemsTimeline from '../schedule/ScheduledItemsTimeline';
+import MessageModule from '../message/MessageModule';
 
 const ScheduleTab = () => {
   const { toast } = useToast();
@@ -15,6 +17,12 @@ const ScheduleTab = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [selectedScheduleType, setSelectedScheduleType] = useState<string>('');
+  const [showMessageModule, setShowMessageModule] = useState(false);
+  const [messageConfig, setMessageConfig] = useState({
+    subject: '',
+    recipientType: 'management' as 'management' | 'maintenance' | 'leasing',
+    mode: 'compose' as 'compose' | 'reply'
+  });
 
   const handleAction = (action: string, item: string) => {
     toast({
@@ -53,6 +61,14 @@ const ScheduleTab = () => {
       setIsCreatingOrder(true);
       setShowScheduleMenu(false);
       setCurrentStep(1);
+    } else if (type === 'Message') {
+      setMessageConfig({
+        subject: '',
+        recipientType: 'management',
+        mode: 'compose'
+      });
+      setShowMessageModule(true);
+      setShowScheduleMenu(false);
     } else {
       // For other types, you can implement different flows
       toast({
@@ -68,6 +84,22 @@ const ScheduleTab = () => {
     setCurrentStep(1);
     setShowScheduleMenu(false);
   };
+
+  const handleCloseMessage = () => {
+    setShowMessageModule(false);
+    setShowScheduleMenu(false);
+  };
+
+  if (showMessageModule) {
+    return (
+      <MessageModule
+        onClose={handleCloseMessage}
+        initialSubject={messageConfig.subject}
+        recipientType={messageConfig.recipientType}
+        mode={messageConfig.mode}
+      />
+    );
+  }
 
   if (isCreatingOrder) {
     return (

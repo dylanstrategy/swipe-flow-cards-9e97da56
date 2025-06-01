@@ -121,7 +121,7 @@ const TodayTab = () => {
 
   const handleQuickReply = (subject: string, recipientType: 'management' | 'maintenance' | 'leasing' = 'management') => {
     setMessageConfig({
-      subject,
+      subject: `Re: ${subject}`,
       recipientType,
       mode: 'reply'
     });
@@ -176,10 +176,10 @@ const TodayTab = () => {
             icon: "📅"
           },
           onSwipeLeft: {
-            label: "Cancel",
-            action: () => handleAction("Cancelled appointment", event.title),
-            color: "#EF4444",
-            icon: "❌"
+            label: "Quick Reply",
+            action: () => handleQuickReply(event.title, 'maintenance'),
+            color: "#3B82F6",
+            icon: "💬"
           }
         };
       
@@ -193,7 +193,7 @@ const TodayTab = () => {
           },
           onSwipeLeft: {
             label: "Quick Reply",
-            action: () => handleQuickReply(`Re: ${event.title}`, 'management'),
+            action: () => handleQuickReply(event.title, 'management'),
             color: "#3B82F6",
             icon: "💬"
           }
@@ -208,9 +208,9 @@ const TodayTab = () => {
             icon: "✅"
           },
           onSwipeLeft: {
-            label: "Request Changes",
-            action: () => handleQuickReply(`Re: ${event.title}`, 'leasing'),
-            color: "#F59E0B",
+            label: "Quick Reply",
+            action: () => handleQuickReply(event.title, 'leasing'),
+            color: "#3B82F6",
             icon: "💬"
           }
         };
@@ -272,10 +272,10 @@ const TodayTab = () => {
             icon: "👁️"
           },
           onSwipeLeft: {
-            label: "Remind Me",
-            action: () => handleAction("Reminded", event.title),
-            color: "#F59E0B",
-            icon: "⏰"
+            label: "Quick Reply",
+            action: () => handleQuickReply(event.title, 'management'),
+            color: "#3B82F6",
+            icon: "💬"
           }
         };
     }
