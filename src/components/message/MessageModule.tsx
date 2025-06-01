@@ -1,9 +1,16 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
 import MessageComposer from './MessageComposer';
 import MessageConfirmation from './MessageConfirmation';
 import SwipeableScreen from '../schedule/SwipeableScreen';
+
+interface Attachment {
+  id: string;
+  name: string;
+  type: 'file' | 'photo';
+  url: string;
+  size?: number;
+}
 
 interface MessageModuleProps {
   onClose: () => void;
@@ -22,7 +29,8 @@ const MessageModule = ({
   const [messageData, setMessageData] = useState({
     subject: initialSubject,
     message: '',
-    recipientType
+    recipientType,
+    attachments: [] as Attachment[]
   });
 
   const [isDragging, setIsDragging] = useState(false);
@@ -74,8 +82,8 @@ const MessageModule = ({
     };
   }, []);
 
-  const handleSendMessage = (subject: string, message: string) => {
-    setMessageData({ subject, message, recipientType });
+  const handleSendMessage = (subject: string, message: string, attachments: Attachment[]) => {
+    setMessageData({ subject, message, recipientType, attachments });
     setCurrentStep(2);
   };
 

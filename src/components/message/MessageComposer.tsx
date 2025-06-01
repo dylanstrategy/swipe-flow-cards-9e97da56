@@ -1,23 +1,34 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import AttachmentSection from './AttachmentSection';
+
+interface Attachment {
+  id: string;
+  name: string;
+  type: 'file' | 'photo';
+  url: string;
+  size?: number;
+}
 
 interface MessageComposerProps {
   initialSubject: string;
-  onSend: (subject: string, message: string) => void;
+  onSend: (subject: string, message: string, attachments: Attachment[]) => void;
   recipientType: 'management' | 'maintenance' | 'leasing';
   messageData: {
     subject: string;
     message: string;
     recipientType: string;
+    attachments?: Attachment[];
   };
   setMessageData: (data: any) => void;
 }
 
 const MessageComposer = ({ initialSubject, onSend, recipientType, messageData, setMessageData }: MessageComposerProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [attachments, setAttachments] = useState<Attachment[]>(messageData.attachments || []);
 
   const handleSubjectChange = (value: string) => {
     setMessageData({ ...messageData, subject: value });
@@ -25,6 +36,18 @@ const MessageComposer = ({ initialSubject, onSend, recipientType, messageData, s
 
   const handleMessageChange = (value: string) => {
     setMessageData({ ...messageData, message: value });
+  };
+
+  const handleAddAttachment = (attachment: Attachment) => {
+    const newAttachments = [...attachments, attachment];
+    setAttachments(newAttachments);
+    setMessageData({ ...messageData, attachments: newAttachments });
+  };
+
+  const handleRemoveAttachment = (id: string) => {
+    const newAttachments = attachments.filter(att => att.id !== id);
+    setAttachments(newAttachments);
+    setMessageData({ ...messageData, attachments: newAttachments });
   };
 
   const getPlaceholderText = () => {
@@ -68,9 +91,15 @@ const MessageComposer = ({ initialSubject, onSend, recipientType, messageData, s
             value={messageData.message}
             onChange={(e) => handleMessageChange(e.target.value)}
             placeholder={getPlaceholderText()}
-            className="flex-1 min-h-[200px] text-base p-4 resize-none"
+            className="flex-1 min-h-[150px] text-base p-4 resize-none"
           />
         </div>
+
+        <AttachmentSection
+          attachments={attachments}
+          onAddAttachment={handleAddAttachment}
+          onRemoveAttachment={handleRemoveAttachment}
+        />
       </div>
 
       {/* Swipe Instruction */}
