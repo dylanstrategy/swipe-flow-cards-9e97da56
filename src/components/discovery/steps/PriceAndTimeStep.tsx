@@ -304,7 +304,7 @@ const PriceAndTimeStep = ({
               size="default"
             >
               Or tap here to continue
-            </button>
+            </Button>
           </div>
         </div>
       </div>
