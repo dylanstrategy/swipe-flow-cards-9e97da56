@@ -15,21 +15,21 @@ const LifestyleIntroStep = ({ onContinue }: LifestyleIntroStepProps) => {
             <Heart className="w-8 h-8 text-red-600" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-3">
-            What's going to make this feel like home?
+            What Makes It Feel Like Home?
           </h1>
           <p className="text-gray-600 leading-relaxed">
-            Tell us about your lifestyle so we can find a place that truly fits who you are.
+            Tell us what's important to you so we can find a place that truly feels like home.
           </p>
         </div>
         
         <div className="space-y-3 mb-8">
           <div className="flex items-center text-sm text-gray-500">
             <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
-            Choose up to 3 lifestyle preferences
+            Choose up to 3 things that matter most
           </div>
           <div className="flex items-center text-sm text-gray-500">
             <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
-            Select what resonates most with you
+            Select what resonates with your ideal home
           </div>
         </div>
       </div>
