@@ -89,13 +89,49 @@ const MoveInStepModal = ({ stepId, onComplete, onClose }: MoveInStepModalProps) 
                 <li>• Property damage coverage</li>
                 <li>• Valid for your move-in date</li>
               </ul>
+              
+              {/* Pet Information Section */}
+              <div className="bg-purple-50 rounded-lg p-4">
+                <h4 className="font-semibold text-purple-800 mb-2">Pet Information</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-purple-700 mb-1">Pet Type</label>
+                    <select className="w-full p-2 border border-purple-200 rounded-md text-sm">
+                      <option value="">Select pet type</option>
+                      <option value="dog">Dog</option>
+                      <option value="cat">Cat</option>
+                      <option value="bird">Bird</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-purple-700 mb-1">Pet Name</label>
+                    <input type="text" placeholder="Pet's name" className="w-full p-2 border border-purple-200 rounded-md text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-purple-700 mb-1">Breed</label>
+                    <input type="text" placeholder="Breed" className="w-full p-2 border border-purple-200 rounded-md text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-purple-700 mb-1">Weight (lbs)</label>
+                    <input type="number" placeholder="Weight" className="w-full p-2 border border-purple-200 rounded-md text-sm" />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm text-purple-700">Pet is spayed/neutered</span>
+                  </label>
+                </div>
+              </div>
+
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                 <p className="text-gray-500">Drop your insurance document here or click to browse</p>
               </div>
             </div>
           ),
           actionText: 'Upload Document',
-          context: 'document' as const
+          context: 'pet-service' as const
         };
 
       case 'book-movers':
@@ -130,7 +166,7 @@ const MoveInStepModal = ({ stepId, onComplete, onClose }: MoveInStepModalProps) 
             </div>
           ),
           actionText: 'Book Movers',
-          context: 'service' as const
+          context: 'moving-service' as const
         };
 
       case 'utilities':
@@ -163,7 +199,7 @@ const MoveInStepModal = ({ stepId, onComplete, onClose }: MoveInStepModalProps) 
             </div>
           ),
           actionText: 'Complete Setup',
-          context: 'service' as const
+          context: 'home-setup' as const
         };
 
       case 'inspection':

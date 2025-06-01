@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ShoppingBag, Store, Coffee, Car, Package, Utensils } from 'lucide-react';
+import { ShoppingBag, Store, Coffee, Car, Package, Utensils, Heart, Sofa, Flower, Scissors } from 'lucide-react';
 
 interface OfferData {
   title: string;
@@ -14,7 +14,7 @@ interface OfferData {
 }
 
 interface PointOfSaleProps {
-  context: 'message' | 'work-order' | 'appointment' | 'service' | 'document' | 'event';
+  context: 'message' | 'work-order' | 'appointment' | 'service' | 'document' | 'event' | 'pet-service' | 'moving-service' | 'home-setup';
   onOfferClick: (offer: OfferData) => void;
 }
 
@@ -103,6 +103,66 @@ const PointOfSale = ({ context, onOfferClick }: PointOfSaleProps) => {
           icon: Utensils,
           color: "bg-pink-500",
           cta: "Get Quote"
+        }
+      ],
+      'pet-service': [
+        {
+          title: "Dog Walking Service",
+          description: "Professional pet care for your furry friend",
+          discount: "30% OFF",
+          business: "Happy Paws Walking",
+          icon: Heart,
+          color: "bg-pink-500",
+          cta: "Book Walker"
+        },
+        {
+          title: "Pet Grooming",
+          description: "Keep your pet looking their best",
+          discount: "$15 OFF",
+          business: "Pampered Pets Spa",
+          icon: Scissors,
+          color: "bg-purple-500",
+          cta: "Book Grooming"
+        }
+      ],
+      'moving-service': [
+        {
+          title: "Furniture Assembly",
+          description: "Professional furniture setup service",
+          discount: "25% OFF",
+          business: "Build It Right",
+          icon: Sofa,
+          color: "bg-blue-600",
+          cta: "Book Service"
+        },
+        {
+          title: "Houseplants Delivery",
+          description: "Brighten your new home with plants",
+          discount: "$20 OFF",
+          business: "Green Thumb Nursery",
+          icon: Flower,
+          color: "bg-green-600",
+          cta: "Shop Plants"
+        }
+      ],
+      'home-setup': [
+        {
+          title: "Home Furniture",
+          description: "Complete your space with style",
+          discount: "15% OFF",
+          business: "Modern Living Co.",
+          icon: Sofa,
+          color: "bg-gray-600",
+          cta: "Shop Now"
+        },
+        {
+          title: "Indoor Plants",
+          description: "Add life to your new home",
+          discount: "$10 OFF",
+          business: "Plant Paradise",
+          icon: Flower,
+          color: "bg-emerald-600",
+          cta: "Browse Plants"
         }
       ]
     };
