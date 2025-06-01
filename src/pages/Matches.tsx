@@ -2,8 +2,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, Heart, MapPin } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
+import HomeCard from '@/components/matches/HomeCard';
+import SearchFilters from '@/components/matches/SearchFilters';
 
 interface Home {
   id: string;
@@ -68,17 +69,10 @@ const Matches = () => {
     }
   ];
 
-  const getMatchColor = (score: number) => {
-    if (score >= 90) return 'bg-green-500';
-    if (score >= 80) return 'bg-blue-500';
-    if (score >= 70) return 'bg-yellow-500';
-    return 'bg-gray-500';
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4">
+      <div className="bg-white border-b border-gray-200 px-4 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Button
@@ -89,111 +83,22 @@ const Matches = () => {
             >
               <ChevronLeft size={20} />
             </Button>
-            <div>
-              <h1 className="text-xl font-semibold">Find your next home like you'd book your next trip</h1>
-              <p className="text-sm text-gray-600">Search by date, budget, availability. Book a tour, apply online, and move with ease.</p>
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl font-semibold truncate">Find your next home like you'd book your next trip</h1>
+              <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Search by date, budget, availability. Book a tour, apply online, and move with ease.</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Search Filters */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4">
-        <div className="flex items-center space-x-4 text-sm">
-          <div className="flex items-center space-x-2">
-            <span className="text-gray-600">Budget:</span>
-            <span className="font-medium">$1,600 – $2,400</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-gray-600">Move-in Date:</span>
-            <span className="font-medium">May 2024</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-gray-600">Room Type:</span>
-            <span className="font-medium">Any</span>
-          </div>
-          <Button size="sm" className="ml-auto">
-            Search
-          </Button>
-        </div>
-      </div>
+      <SearchFilters />
 
       {/* Home Listings */}
-      <div className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="flex-1 overflow-auto p-3 sm:p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 max-w-7xl mx-auto">
           {homes.map((home) => (
-            <div key={home.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-              {/* Image */}
-              <div className="relative">
-                <img
-                  src={home.image}
-                  alt={home.title}
-                  className="w-full h-48 object-cover"
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute top-2 right-2 p-2 bg-white/80 hover:bg-white"
-                >
-                  <Heart size={16} />
-                </Button>
-                <Badge
-                  className={`absolute top-2 left-2 text-white ${getMatchColor(home.matchScore)}`}
-                >
-                  {home.matchScore}% Match
-                </Badge>
-              </div>
-
-              {/* Content */}
-              <div className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h3 className="font-semibold text-lg">{home.title}</h3>
-                    <div className="flex items-center text-gray-600 text-sm">
-                      <MapPin size={14} className="mr-1" />
-                      {home.address}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-lg">{home.price}</div>
-                    <div className="text-sm text-gray-600">Move-In: {home.moveIn}</div>
-                  </div>
-                </div>
-
-                {/* Amenities */}
-                <div className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Apartment Amenities</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {home.amenities.map((amenity) => (
-                      <Badge key={amenity} variant="secondary" className="text-xs">
-                        {amenity}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Building Amenities</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {home.buildingAmenities.map((amenity) => (
-                      <Badge key={amenity} variant="outline" className="text-xs">
-                        {amenity}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex space-x-2">
-                  <Button className="flex-1" size="sm">
-                    Book a Tour
-                  </Button>
-                  <Button variant="outline" className="flex-1" size="sm">
-                    Apply Now
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <HomeCard key={home.id} home={home} />
           ))}
         </div>
       </div>
