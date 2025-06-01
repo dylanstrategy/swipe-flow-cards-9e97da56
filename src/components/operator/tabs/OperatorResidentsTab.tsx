@@ -614,25 +614,12 @@ const OperatorResidentsTab = () => {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <Badge className={getStatusColor(resident.leaseStatus)}>
-                        {resident.leaseStatus.replace('_', ' ')}
-                      </Badge>
                       <Badge className={getResidentStatusColor(resident.status)}>
                         {resident.status}
                       </Badge>
-                      <Badge className={getRenewalColor(resident.renewalStatus)}>
-                        {resident.renewalStatus.replace('_', ' ')}
-                      </Badge>
-                      {resident.hasMoveInProgress && (
-                        <Badge className="bg-blue-100 text-blue-800">
-                          <Truck className="w-3 h-3 mr-1" />
-                          Move-In
-                        </Badge>
-                      )}
-                      {resident.hasMoveOutProgress && (
-                        <Badge className="bg-orange-100 text-orange-800">
-                          <TruckIcon className="w-3 h-3 mr-1" />
-                          Move-Out
+                      {resident.leaseStatus === 'delinquent' && (
+                        <Badge className="bg-red-100 text-red-800">
+                          Delinquent
                         </Badge>
                       )}
                     </div>
