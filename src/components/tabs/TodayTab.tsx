@@ -3,8 +3,9 @@ import SwipeCard from '../SwipeCard';
 import { useToast } from '@/hooks/use-toast';
 import { Clock, ChevronLeft, ChevronRight, CloudSun } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
-import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth } from 'date-fns';
+import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, differenceInDays, isPast, isToday } from 'date-fns';
 import ResidentTimeline from '../ResidentTimeline';
+import { cn } from '@/lib/utils';
 
 const TodayTab = () => {
   const { toast } = useToast();
@@ -38,7 +39,8 @@ const TodayTab = () => {
       description: 'Broken outlet - Unit 4B',
       image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400',
       category: 'Work Order',
-      priority: 'high'
+      priority: 'high',
+      dueDate: addDays(new Date(), -1) // Overdue
     },
     {
       id: 2,
@@ -57,7 +59,8 @@ const TodayTab = () => {
       description: 'New rent: $1,550/month starting March 1st',
       image: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=400',
       category: 'Lease',
-      priority: 'high'
+      priority: 'high',
+      dueDate: addDays(new Date(), 2) // Due soon
     },
     {
       id: 4,
@@ -90,6 +93,18 @@ const TodayTab = () => {
     }
   ];
 
+  // Add special event for rent due
+  const rentDueEvent = {
+    id: 999,
+    date: new Date(),
+    time: '14:00',
+    title: 'Rent Payment Due',
+    description: '$1,550 due in 3 days',
+    category: 'Payment',
+    priority: 'high',
+    dueDate: addDays(new Date(), 3) // Due in 3 days
+  };
+
   const handleAction = (action: string, item: string) => {
     toast({
       title: `${action}`,
@@ -108,6 +123,30 @@ const TodayTab = () => {
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour % 12 || 12;
     return `${displayHour}:${minutes} ${ampm}`;
+  };
+
+  const getUrgencyClass = (event: any) => {
+    if (!event.dueDate) return '';
+    
+    const daysUntilDue = differenceInDays(event.dueDate, new Date());
+    const isOverdue = isPast(event.dueDate) && !isToday(event.dueDate);
+    const isDueSoon = daysUntilDue <= 3 && daysUntilDue >= 0;
+    
+    if (isOverdue) {
+      return 'wiggle-urgent pulse-urgent';
+    } else if (isDueSoon && event.priority === 'high') {
+      return 'wiggle-urgent';
+    }
+    
+    return '';
+  };
+
+  const getRentUrgencyClass = () => {
+    const daysUntilRentDue = 3; // Rent due in 3 days
+    if (daysUntilRentDue <= 3) {
+      return 'wiggle-urgent';
+    }
+    return '';
   };
 
   const getSwipeActionsForEvent = (event: any) => {
@@ -191,6 +230,22 @@ const TodayTab = () => {
             icon: "❌"
           }
         };
+
+      case 'Payment':
+        return {
+          onSwipeRight: {
+            label: "Pay Now",
+            action: () => handleAction("Paid", event.title),
+            color: "#10B981",
+            icon: "💳"
+          },
+          onSwipeLeft: {
+            label: "Schedule",
+            action: () => handleAction("Scheduled payment", event.title),
+            color: "#F59E0B",
+            icon: "📅"
+          }
+        };
       
       default:
         return {
@@ -242,7 +297,7 @@ const TodayTab = () => {
         </button>
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions with urgency animations */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <SwipeCard
           onSwipeRight={{
@@ -258,6 +313,7 @@ const TodayTab = () => {
             icon: "📅"
           }}
           onTap={() => handleAction("Viewed", "Rent Payment")}
+          className={getRentUrgencyClass()}
         >
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-lg text-white">
             <h3 className="font-semibold mb-1">Rent Due</h3>
@@ -332,12 +388,13 @@ const TodayTab = () => {
           </div>
         </div>
 
-        {/* Timeline View for Selected Date */}
+        {/* Timeline View for Selected Date with urgency animations */}
         <div>
           {selectedDateEvents.length > 0 ? (
             <div className="space-y-4">
               {selectedDateEvents.map((event) => {
                 const swipeActions = getSwipeActionsForEvent(event);
+                const urgencyClass = getUrgencyClass(event);
                 return (
                   <div key={event.id} className="flex items-start gap-4">
                     <div className="text-sm font-medium text-gray-600 w-20 flex-shrink-0 pt-4">
@@ -348,8 +405,12 @@ const TodayTab = () => {
                         onSwipeRight={swipeActions.onSwipeRight}
                         onSwipeLeft={swipeActions.onSwipeLeft}
                         onTap={() => handleAction("Viewed details", event.title)}
+                        className={urgencyClass}
                       >
-                        <div className="bg-blue-50 rounded-lg p-4">
+                        <div className={cn(
+                          "bg-blue-50 rounded-lg p-4",
+                          urgencyClass && "border-2 border-red-200"
+                        )}>
                           <div className="flex items-start gap-3">
                             {event.image ? (
                               <div 
@@ -368,6 +429,11 @@ const TodayTab = () => {
                             <div className="flex-1">
                               <h4 className="font-semibold text-gray-900 mb-1">{event.title}</h4>
                               <p className="text-gray-600 text-sm">{event.description}</p>
+                              {urgencyClass && (
+                                <p className="text-red-600 text-xs mt-1 font-medium">
+                                  {isPast(event.dueDate || new Date()) ? 'OVERDUE!' : 'DUE SOON!'}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </div>
