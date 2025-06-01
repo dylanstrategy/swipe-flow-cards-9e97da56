@@ -25,73 +25,74 @@ const TodayTab = () => {
       });
     };
 
-    const interval = setInterval(updateWeather, 30000); // Update every 30 seconds
+    const interval = setInterval(updateWeather, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // Enhanced calendar events with more realistic examples
+  // Enhanced calendar events with realistic examples and times
   const calendarEvents = [
     {
       id: 1,
       date: new Date(),
-      type: 'message',
-      title: 'Pool Maintenance Update',
-      description: 'Scheduled for tomorrow 9AM-12PM. Please avoid pool area.',
-      category: 'Building Notice',
-      priority: 'medium'
+      time: '9:00 AM',
+      type: 'work_order',
+      title: 'Work Order',
+      description: 'Broken outlet',
+      image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400',
+      category: 'Maintenance',
+      priority: 'high'
     },
     {
       id: 2,
-      date: addDays(new Date(), 1),
-      type: 'work_order',
-      title: 'Kitchen Faucet Repair',
-      description: 'Leaky faucet in unit 4B - maintenance scheduled',
-      category: 'Work Order',
-      priority: 'high'
+      date: new Date(),
+      time: '10:30 AM',
+      type: 'message',
+      title: 'Message from Management',
+      description: 'Please submit your lease renewal documents',
+      category: 'Management',
+      priority: 'medium'
     },
     {
       id: 3,
-      date: addDays(new Date(), 2),
-      type: 'event',
-      title: 'Rooftop BBQ Social',
-      description: 'Community event this Saturday 6PM-9PM. RSVP required.',
-      category: 'Community Event',
-      priority: 'low'
-    },
-    {
-      id: 4,
-      date: addDays(new Date(), 3),
-      type: 'payment',
-      title: 'Lease Renewal Notice',
-      description: 'Your lease expires in 60 days. Renewal options available.',
-      category: 'Lease Management',
+      date: new Date(),
+      time: '11:00 AM',
+      type: 'renewal',
+      title: 'Renewal',
+      description: 'New rent: $1,550',
+      image: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=400',
+      category: 'Lease',
       priority: 'high'
     },
     {
-      id: 5,
-      date: addDays(new Date(), 4),
+      id: 4,
+      date: new Date(),
+      time: '11:30 AM',
       type: 'advertisement',
-      title: 'Local Coffee Shop - 20% Off',
-      description: 'Beans & Brews offering resident discount this week',
+      title: '20% OFF',
+      description: 'Local burger restaurant special offer',
+      image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400',
       category: 'Local Business',
       priority: 'low'
     },
     {
-      id: 6,
-      date: addDays(new Date(), 5),
-      type: 'work_order',
-      title: 'HVAC Filter Replacement',
-      description: 'Scheduled maintenance - units 1A-1F',
-      category: 'Work Order',
-      priority: 'medium'
+      id: 5,
+      date: addDays(new Date(), 1),
+      time: '2:00 PM',
+      type: 'event',
+      title: 'Rooftop BBQ Social',
+      description: 'Community event - RSVP required',
+      category: 'Community Event',
+      priority: 'low'
     },
     {
-      id: 7,
-      date: addDays(new Date(), 6),
-      type: 'message',
-      title: 'Package Delivery Notice',
-      description: 'Amazon package delivered to front desk',
-      category: 'Package Management',
+      id: 6,
+      date: addDays(new Date(), 2),
+      time: '9:00 AM',
+      type: 'work_order',
+      title: 'HVAC Maintenance',
+      description: 'Filter replacement scheduled',
+      image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400',
+      category: 'Work Order',
       priority: 'medium'
     }
   ];
@@ -104,18 +105,8 @@ const TodayTab = () => {
   };
 
   const getEventsForDate = (date: Date) => {
-    return calendarEvents.filter(event => isSameDay(event.date, date));
-  };
-
-  const getEventTypeColor = (type: string) => {
-    const colors = {
-      message: 'bg-blue-500',
-      event: 'bg-green-500',
-      work_order: 'bg-purple-500',
-      payment: 'bg-orange-500',
-      advertisement: 'bg-pink-500'
-    };
-    return colors[type as keyof typeof colors] || 'bg-gray-500';
+    return calendarEvents.filter(event => isSameDay(event.date, date))
+      .sort((a, b) => a.time.localeCompare(b.time));
   };
 
   if (showTimeline) {
@@ -129,14 +120,16 @@ const TodayTab = () => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Today</h1>
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-3xl font-bold text-gray-900">
+                {isSameDay(selectedDate, new Date()) ? 'Today' : format(selectedDate, 'EEEE')}
+              </h1>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <CloudSun size={16} className="text-blue-600" />
+                <span>{weather.temp}°F • {weather.condition}</span>
+              </div>
+            </div>
             <p className="text-gray-600">Good morning, John!</p>
-          </div>
-          <div className="flex items-center gap-2 bg-blue-50 px-3 py-2 rounded-full">
-            <CloudSun className="text-blue-600" size={18} />
-            <span className="text-sm font-medium text-blue-700">
-              {weather.temp}°F • {weather.condition}
-            </span>
           </div>
         </div>
         <button
@@ -205,103 +198,99 @@ const TodayTab = () => {
 
       {/* Calendar Section */}
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Calendar</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          {isSameDay(selectedDate, new Date()) ? 'Resident Calendar' : 'Calendar'}
+        </h2>
         
-        {/* Calendar Header */}
-        <div className="flex items-center justify-between mb-4 px-4">
-          <button
-            onClick={() => setCurrentMonth(addDays(currentMonth, -30))}
-            className="p-2 hover:bg-gray-100 rounded-lg"
-          >
-            <ChevronLeft size={20} className="text-gray-600" />
-          </button>
-          <h3 className="text-lg font-semibold text-gray-900">
-            {format(currentMonth, 'MMMM yyyy')}
-          </h3>
-          <button
-            onClick={() => setCurrentMonth(addDays(currentMonth, 30))}
-            className="p-2 hover:bg-gray-100 rounded-lg"
-          >
-            <ChevronRight size={20} className="text-gray-600" />
-          </button>
-        </div>
-
-        {/* Calendar Grid */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-4">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={(date) => date && setSelectedDate(date)}
-            month={currentMonth}
-            onMonthChange={setCurrentMonth}
-            className="w-full"
-            modifiers={{
-              hasEvents: (date) => getEventsForDate(date).length > 0
-            }}
-            modifiersStyles={{
-              hasEvents: { 
-                backgroundColor: '#3B82F6', 
-                color: 'white',
-                borderRadius: '50%'
-              }
-            }}
-          />
-        </div>
-
-        {/* Selected Date Events */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">
-            {format(selectedDate, 'EEEE, MMMM d')}
-          </h3>
-          
-          {selectedDateEvents.length > 0 ? (
-            <div className="space-y-3">
-              {selectedDateEvents.map((event) => (
-                <SwipeCard
-                  key={event.id}
-                  onSwipeRight={{
-                    label: event.type === 'event' ? "RSVP" : event.type === 'work_order' ? "Schedule" : "Mark Read",
-                    action: () => handleAction(
-                      event.type === 'event' ? "RSVP'd" : 
-                      event.type === 'work_order' ? "Scheduled" : "Read", 
-                      event.title
-                    ),
-                    color: "#10B981",
-                    icon: event.type === 'event' ? "✅" : event.type === 'work_order' ? "🔧" : "📖"
-                  }}
-                  onSwipeLeft={{
-                    label: "Remind Me",
-                    action: () => handleAction("Reminded", event.title),
-                    color: "#F59E0B",
-                    icon: "⏰"
-                  }}
-                  onTap={() => handleAction("Viewed", event.title)}
+        {/* Mini Calendar */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-6">
+          <div className="flex justify-center">
+            <div className="flex items-center gap-4 text-sm font-medium text-gray-600 mb-4">
+              <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+            </div>
+          </div>
+          <div className="flex justify-center gap-4 text-lg">
+            {[-3, -2, -1, 0, 1, 2, 3].map(offset => {
+              const date = addDays(new Date(), offset);
+              const isSelected = isSameDay(date, selectedDate);
+              const hasEvents = getEventsForDate(date).length > 0;
+              return (
+                <button
+                  key={offset}
+                  onClick={() => setSelectedDate(date)}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                    isSelected 
+                      ? 'bg-blue-600 text-white' 
+                      : hasEvents 
+                        ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' 
+                        : 'text-gray-600 hover:bg-gray-100'
+                  }`}
                 >
-                  <div className="flex items-center p-4 bg-white rounded-lg shadow-sm">
-                    <div className={`w-3 h-3 ${getEventTypeColor(event.type)} rounded-full mr-3 flex-shrink-0`}></div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className="font-semibold text-gray-900">{event.title}</h4>
-                        <div className="flex items-center gap-2">
-                          {event.priority === 'high' && (
-                            <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded-full">
-                              High Priority
-                            </span>
+                  {format(date, 'd')}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Timeline View for Selected Date */}
+        <div>
+          {selectedDateEvents.length > 0 ? (
+            <div className="space-y-4">
+              {selectedDateEvents.map((event) => (
+                <div key={event.id} className="flex items-start gap-4">
+                  <div className="text-sm font-medium text-gray-600 w-16 flex-shrink-0 pt-4">
+                    {event.time}
+                  </div>
+                  <div className="flex-1">
+                    <SwipeCard
+                      onSwipeRight={{
+                        label: event.type === 'work_order' ? "Schedule" : event.type === 'renewal' ? "Review" : "Read",
+                        action: () => handleAction(
+                          event.type === 'work_order' ? "Scheduled" : 
+                          event.type === 'renewal' ? "Reviewed" : "Read", 
+                          event.title
+                        ),
+                        color: "#10B981",
+                        icon: event.type === 'work_order' ? "🔧" : event.type === 'renewal' ? "📋" : "📖"
+                      }}
+                      onSwipeLeft={{
+                        label: "Remind Me",
+                        action: () => handleAction("Reminded", event.title),
+                        color: "#F59E0B",
+                        icon: "⏰"
+                      }}
+                      onTap={() => handleAction("Viewed", event.title)}
+                    >
+                      <div className="bg-blue-50 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          {event.image ? (
+                            <div 
+                              className="w-16 h-16 rounded-lg bg-cover bg-center flex-shrink-0"
+                              style={{ backgroundImage: `url(${event.image})` }}
+                            />
+                          ) : (
+                            <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
+                              {event.type === 'message' ? '✉️' : 
+                               event.type === 'event' ? '🎉' : 
+                               event.type === 'work_order' ? '🔧' :
+                               event.type === 'renewal' ? '📋' : '📢'}
+                            </div>
                           )}
-                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                            {event.category}
-                          </span>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-900 mb-1">{event.title}</h4>
+                            <p className="text-gray-600 text-sm">{event.description}</p>
+                          </div>
                         </div>
                       </div>
-                      <p className="text-gray-600 text-sm">{event.description}</p>
-                    </div>
+                    </SwipeCard>
                   </div>
-                </SwipeCard>
+                </div>
               ))}
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              <p>No events scheduled for this date</p>
+              <p>No events scheduled for {format(selectedDate, 'EEEE, MMMM d')}</p>
             </div>
           )}
         </div>
