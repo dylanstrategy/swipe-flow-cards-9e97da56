@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
@@ -23,12 +22,13 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
     location: ''
   });
 
-  // Swipe handling state
+  // Tinder-style swipe state
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [showAction, setShowAction] = useState<'up' | 'left' | null>(null);
   const startPos = useRef({ x: 0, y: 0 });
-  const hasMoved = useRef(false);
+  const startTime = useRef(0);
+  const lastPos = useRef({ x: 0, y: 0 });
 
   const availableTimeSlots = [
     '9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM'
@@ -65,11 +65,12 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
     }
   };
 
-  // Touch handlers for full screen swipe
+  // Tinder-style touch handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     startPos.current = { x: touch.clientX, y: touch.clientY };
-    hasMoved.current = false;
+    lastPos.current = { x: touch.clientX, y: touch.clientY };
+    startTime.current = Date.now();
     setIsDragging(true);
   };
 
@@ -80,81 +81,98 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
     const deltaX = touch.clientX - startPos.current.x;
     const deltaY = touch.clientY - startPos.current.y;
     
-    const horizontalDistance = Math.abs(deltaX);
-    const verticalDistance = Math.abs(deltaY);
+    lastPos.current = { x: touch.clientX, y: touch.clientY };
     
-    if (horizontalDistance > 20 || verticalDistance > 20) {
-      hasMoved.current = true;
-      
-      if (verticalDistance > horizontalDistance * 1.2) {
-        // Vertical swipe
-        const dampedY = deltaY * 0.4;
-        setDragOffset({ x: 0, y: Math.max(-100, Math.min(20, dampedY)) });
-        if (deltaY < -80 && canProceedFromCurrentStep()) {
-          setShowAction('up');
-        } else {
-          setShowAction(null);
-        }
-      } else if (horizontalDistance > verticalDistance * 1.2) {
-        // Horizontal swipe (for going back)
-        const dampedX = deltaX * 0.4;
-        setDragOffset({ x: Math.max(-100, Math.min(100, dampedX)), y: 0 });
-        if (deltaX < -80) {
-          setShowAction('left');
-        } else {
-          setShowAction(null);
-        }
+    // Much more responsive - follow finger immediately
+    setDragOffset({ x: deltaX * 0.8, y: deltaY * 0.8 });
+    
+    // Show action hints with lower thresholds
+    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      // Vertical dominant
+      if (deltaY < -30 && canProceedFromCurrentStep()) {
+        setShowAction('up');
       } else {
-        setDragOffset({ x: 0, y: 0 });
+        setShowAction(null);
+      }
+    } else {
+      // Horizontal dominant
+      if (deltaX < -30) {
+        setShowAction('left');
+      } else {
         setShowAction(null);
       }
     }
   };
 
   const handleTouchEnd = () => {
-    const threshold = 120;
+    if (!isDragging) return;
+
+    const deltaX = dragOffset.x;
+    const deltaY = dragOffset.y;
+    const deltaTime = Date.now() - startTime.current;
     
-    if (Math.abs(dragOffset.y) > threshold && dragOffset.y < -threshold && canProceedFromCurrentStep()) {
+    // Calculate velocity (pixels per millisecond)
+    const velocityX = Math.abs(deltaX) / deltaTime;
+    const velocityY = Math.abs(deltaY) / deltaTime;
+    
+    // Much lower thresholds for completion - Tinder style
+    const distanceThreshold = 50;
+    const velocityThreshold = 0.3;
+    
+    // Check if swipe should complete based on distance OR velocity
+    const shouldCompleteUp = (Math.abs(deltaY) > distanceThreshold || velocityY > velocityThreshold) && 
+                            deltaY < -distanceThreshold && canProceedFromCurrentStep();
+    const shouldCompleteLeft = (Math.abs(deltaX) > distanceThreshold || velocityX > velocityThreshold) && 
+                              deltaX < -distanceThreshold;
+    
+    if (shouldCompleteUp) {
       onNextStep();
-    } else if (Math.abs(dragOffset.x) > threshold && dragOffset.x < -threshold) {
+    } else if (shouldCompleteLeft) {
       onPrevStep();
     }
     
+    // Reset state
     setIsDragging(false);
     setDragOffset({ x: 0, y: 0 });
     setShowAction(null);
-    hasMoved.current = false;
   };
 
   const getActionOpacity = () => {
     if (!showAction) return 0;
     const distance = showAction === 'up' ? Math.abs(dragOffset.y) : Math.abs(dragOffset.x);
-    const progress = Math.min(distance / 120, 1);
-    return Math.max(0.4, progress * 0.9);
+    const progress = Math.min(distance / 80, 1); // Lower threshold for opacity
+    return Math.max(0.2, progress * 0.8);
+  };
+
+  const getRotation = () => {
+    if (!isDragging) return 0;
+    // Subtle rotation based on horizontal movement
+    return (dragOffset.x * 0.02);
   };
 
   return (
     <div 
-      className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen overflow-hidden"
+      className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen overflow-hidden select-none"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       style={{
-        transform: `translateY(${dragOffset.y}px) translateX(${dragOffset.x}px)`,
-        transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+        transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${getRotation()}deg)`,
+        transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.2, 0, 0, 1)',
+        transformOrigin: 'center center'
       }}
     >
       {/* Swipe Action Overlays */}
       {showAction === 'up' && canProceedFromCurrentStep() && (
         <div 
-          className="absolute inset-0 flex items-start justify-center pt-8 transition-all duration-200 pointer-events-none z-50"
+          className="absolute inset-0 flex items-start justify-center pt-16 transition-all duration-200 pointer-events-none z-50"
           style={{ 
-            backgroundColor: '#3B82F6',
+            backgroundColor: '#22C55E',
             opacity: getActionOpacity()
           }}
         >
-          <div className="text-white font-bold text-xl flex flex-col items-center gap-2">
-            <ArrowUp size={32} />
+          <div className="text-white font-bold text-2xl flex flex-col items-center gap-3">
+            <ArrowUp size={40} />
             <span>Continue</span>
           </div>
         </div>
@@ -162,14 +180,14 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
 
       {showAction === 'left' && (
         <div 
-          className="absolute inset-0 flex items-center justify-start pl-8 transition-all duration-200 pointer-events-none z-50"
+          className="absolute inset-0 flex items-center justify-start pl-12 transition-all duration-200 pointer-events-none z-50"
           style={{ 
-            backgroundColor: '#6B7280',
+            backgroundColor: '#EF4444',
             opacity: getActionOpacity()
           }}
         >
-          <div className="text-white font-bold text-xl flex items-center gap-3">
-            <span>←</span>
+          <div className="text-white font-bold text-2xl flex items-center gap-4">
+            <span className="text-3xl">←</span>
             <span>Back</span>
           </div>
         </div>
@@ -270,7 +288,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
               <div className="text-center">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Photo Captured!</h3>
                 <p className="text-gray-600 mb-3 text-sm">Swipe up anywhere to continue</p>
-                <ArrowUp className="text-blue-600 animate-bounce mx-auto mb-3" size={24} />
+                <ArrowUp className="text-green-600 animate-bounce mx-auto mb-3" size={24} />
                 <button
                   onClick={onNextStep}
                   className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
@@ -321,7 +339,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
             {canProceedFromDetails() && (
               <div className="text-center mt-4">
                 <p className="text-green-600 mb-2 text-sm">Ready to continue!</p>
-                <ArrowUp className="text-blue-600 animate-bounce mx-auto mb-2" size={24} />
+                <ArrowUp className="text-green-600 animate-bounce mx-auto mb-2" size={24} />
                 <p className="text-xs text-gray-500 mb-3">Swipe up anywhere to schedule</p>
                 <button
                   onClick={onNextStep}
@@ -395,7 +413,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
             {canProceedFromSchedule() && (
               <div className="text-center">
                 <p className="text-green-600 mb-2 text-sm">Schedule selected!</p>
-                <ArrowUp className="text-blue-600 animate-bounce mx-auto mb-2" size={24} />
+                <ArrowUp className="text-green-600 animate-bounce mx-auto mb-2" size={24} />
                 <p className="text-xs text-gray-500 mb-3">Swipe up anywhere to review</p>
                 <button
                   onClick={onNextStep}
