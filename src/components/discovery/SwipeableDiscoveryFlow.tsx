@@ -7,6 +7,7 @@ import { ChevronLeft, X } from 'lucide-react';
 import PriceAndTimeStep from './steps/PriceAndTimeStep';
 import PriorityIntroStep from './steps/PriorityIntroStep';
 import PrioritiesStep from './steps/PrioritiesStep';
+import LifestyleIntroStep from './steps/LifestyleIntroStep';
 import LifestyleStep from './steps/LifestyleStep';
 import OptionsStep from './steps/OptionsStep';
 
@@ -62,12 +63,14 @@ const SwipeableDiscoveryFlow = () => {
       case 1:
         return discoveryData.moveInTimeframe !== '' && discoveryData.location.trim() !== '';
       case 2:
-        return true; // Intro step - always can proceed
+        return true; // Priority intro step - always can proceed
       case 3:
         return discoveryData.priorities.filter(p => p.rank).length >= 5;
       case 4:
-        return discoveryData.lifestyleTags.length > 0;
+        return true; // Lifestyle intro step - always can proceed
       case 5:
+        return discoveryData.lifestyleTags.length > 0;
+      case 6:
         return true;
       default:
         return false;
@@ -75,7 +78,7 @@ const SwipeableDiscoveryFlow = () => {
   };
 
   const handleNextStep = () => {
-    if (currentStep < 5) {
+    if (currentStep < 6) {
       setCurrentStep(currentStep + 1);
     } else {
       localStorage.setItem('userPreferences', JSON.stringify(discoveryData));
@@ -131,12 +134,18 @@ const SwipeableDiscoveryFlow = () => {
         );
       case 4:
         return (
+          <LifestyleIntroStep
+            onContinue={handleNextStep}
+          />
+        );
+      case 5:
+        return (
           <LifestyleStep
             lifestyleTags={discoveryData.lifestyleTags}
             onUpdate={(lifestyleTags) => updateDiscoveryData({ lifestyleTags })}
           />
         );
-      case 5:
+      case 6:
         return (
           <OptionsStep
             features={discoveryData.features}
@@ -159,6 +168,8 @@ const SwipeableDiscoveryFlow = () => {
       case 4:
         return 'What Makes Home';
       case 5:
+        return 'Lifestyle Selection';
+      case 6:
         return 'Desired Features';
       default:
         return 'Discovery';
@@ -168,7 +179,7 @@ const SwipeableDiscoveryFlow = () => {
   // For the first step, render without header wrapper
   if (currentStep === 1) {
     return (
-      <div className="min-h-screen bg-white" style={{ touchAction: 'manipulation' }}>
+      <div className="min-h-screen bg-white">
         {renderCurrentStep()}
       </div>
     );
@@ -176,7 +187,7 @@ const SwipeableDiscoveryFlow = () => {
 
   // For subsequent steps, render with header and navigation
   return (
-    <div className="min-h-screen bg-white flex flex-col" style={{ touchAction: 'manipulation' }}>
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Header with Progress and Navigation */}
       <div className="flex-shrink-0 bg-white border-b border-gray-200 px-4 py-4">
         <div className="flex items-center justify-between mb-4">
@@ -213,18 +224,18 @@ const SwipeableDiscoveryFlow = () => {
         <div className="space-y-2">
           <div className="flex justify-between text-sm text-gray-600">
             <span>{getStepTitle()}</span>
-            <span>Step {currentStep} of 5</span>
+            <span>Step {currentStep} of 6</span>
           </div>
-          <Progress value={(currentStep / 5) * 100} className="h-2" />
+          <Progress value={(currentStep / 6) * 100} className="h-2" />
         </div>
       </div>
 
       {/* Step Content */}
-      <div className="flex-1 overflow-auto" style={{ touchAction: 'manipulation' }}>
+      <div className="flex-1 overflow-auto">
         {renderCurrentStep()}
       </div>
 
-      {/* Continue Button for steps 2-5 */}
+      {/* Continue Button for steps 2-6 */}
       <div className="flex-shrink-0 p-4 bg-white border-t border-gray-200">
         <Button
           onClick={handleNextStep}
@@ -232,7 +243,7 @@ const SwipeableDiscoveryFlow = () => {
           className="w-full py-3"
           size="lg"
         >
-          {currentStep === 5 ? 'Complete Discovery' : 'Continue'}
+          {currentStep === 6 ? 'Complete Discovery' : 'Continue'}
         </Button>
       </div>
     </div>
