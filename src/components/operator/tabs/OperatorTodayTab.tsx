@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronRight, BarChart3, Grid3X3 } from 'lucide-react';
@@ -15,13 +16,13 @@ const OperatorTodayTab = () => {
   const communityManagementData = [
     { title: 'Unsupported Move In\'s', count: 18, status: 'urgent', module: 'move-in-unapproved' },
     { title: 'Unsupported Move Out\'s', count: 8, status: 'normal', module: 'move-out-unapproved' },
-    { title: 'Unscheduled Inspections', count: 4, status: 'normal' },
+    { title: 'Unscheduled Inspections', count: 26, status: 'normal' },
     { title: 'Pending Two Week Check In\'s', count: 0, status: 'normal' },
     { title: 'Move In\'s Staged/Ready', count: 0, status: 'normal' },
     { title: 'Incomplete Move In\'s', count: 14, status: 'normal', module: 'move-in-incomplete' },
     { title: 'Incomplete Move Out\'s', count: 8, status: 'normal', module: 'move-out-incomplete' },
     { title: 'Pending Dispo', count: 8, status: 'normal' },
-    { title: 'Outstanding Terms', count: 0, status: 'normal' },
+    { title: 'Outstanding Turns', count: 0, status: 'normal' },
     { title: 'Birthdays This Month', count: 3, status: 'normal' },
     { title: 'Response Time', count: -1.00, suffix: 'days old', status: 'urgent' }
   ];
