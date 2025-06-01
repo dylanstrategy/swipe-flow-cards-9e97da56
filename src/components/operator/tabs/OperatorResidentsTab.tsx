@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, User, Phone, Mail, Home, Calendar, ChevronRight, ArrowLeft, Truck } from 'lucide-react';
+import { Search, User, Phone, Mail, Home, Calendar, ChevronRight, ArrowLeft, Truck, FileText, Upload, Download, Eye } from 'lucide-react';
 import MoveInTracker from '../MoveInTracker';
 
 const OperatorResidentsTab = () => {
@@ -21,12 +21,18 @@ const OperatorResidentsTab = () => {
       unit: 'A204',
       phone: '(555) 123-4567',
       email: 'sarah.johnson@email.com',
+      birthdate: '1985-03-15',
       leaseStatus: 'active',
       moveInDate: '2023-06-15',
       balance: 0,
       workOrders: 2,
       renewalStatus: 'pending',
-      hasMoveInProgress: false
+      hasMoveInProgress: false,
+      documents: [
+        { id: 1, name: 'Lease Agreement.pdf', type: 'lease', uploadDate: '2023-06-10', size: '2.3 MB' },
+        { id: 2, name: 'Driver License.jpg', type: 'id', uploadDate: '2023-06-10', size: '1.1 MB' },
+        { id: 3, name: 'Application.pdf', type: 'application', uploadDate: '2023-06-08', size: '850 KB' }
+      ]
     },
     {
       id: 2,
@@ -34,12 +40,17 @@ const OperatorResidentsTab = () => {
       unit: 'B156',
       phone: '(555) 234-5678',
       email: 'michael.chen@email.com',
+      birthdate: '1990-11-22',
       leaseStatus: 'expiring',
       moveInDate: '2022-08-20',
       balance: 150.00,
       workOrders: 0,
       renewalStatus: 'offered',
-      hasMoveInProgress: false
+      hasMoveInProgress: false,
+      documents: [
+        { id: 4, name: 'Lease Agreement.pdf', type: 'lease', uploadDate: '2022-08-15', size: '2.1 MB' },
+        { id: 5, name: 'Background Check.pdf', type: 'application', uploadDate: '2022-08-10', size: '450 KB' }
+      ]
     },
     {
       id: 3,
@@ -47,12 +58,17 @@ const OperatorResidentsTab = () => {
       unit: 'C302',
       phone: '(555) 345-6789',
       email: 'emily.rodriguez@email.com',
+      birthdate: '1988-07-08',
       leaseStatus: 'active',
       moveInDate: '2023-11-10',
       balance: 0,
       workOrders: 1,
       renewalStatus: 'not_due',
-      hasMoveInProgress: false
+      hasMoveInProgress: false,
+      documents: [
+        { id: 6, name: 'Lease Agreement.pdf', type: 'lease', uploadDate: '2023-11-05', size: '2.2 MB' },
+        { id: 7, name: 'Emergency Contact Form.pdf', type: 'legal', uploadDate: '2023-11-05', size: '320 KB' }
+      ]
     },
     {
       id: 4,
@@ -60,12 +76,18 @@ const OperatorResidentsTab = () => {
       unit: 'A108',
       phone: '(555) 456-7890',
       email: 'david.thompson@email.com',
+      birthdate: '1982-12-03',
       leaseStatus: 'delinquent',
       moveInDate: '2023-03-05',
       balance: 850.00,
       workOrders: 3,
       renewalStatus: 'not_due',
-      hasMoveInProgress: false
+      hasMoveInProgress: false,
+      documents: [
+        { id: 8, name: 'Lease Agreement.pdf', type: 'lease', uploadDate: '2023-03-01', size: '2.4 MB' },
+        { id: 9, name: 'Late Notice.pdf', type: 'legal', uploadDate: '2024-01-15', size: '180 KB' },
+        { id: 10, name: 'Payment Plan Agreement.pdf', type: 'legal', uploadDate: '2024-02-01', size: '220 KB' }
+      ]
     },
     {
       id: 5,
@@ -73,12 +95,17 @@ const OperatorResidentsTab = () => {
       unit: '424-3',
       phone: '(555) 567-8901',
       email: 'aprilchen@email.com',
+      birthdate: '1995-04-12',
       leaseStatus: 'move_in_progress',
       moveInDate: '2025-03-21',
       balance: 0,
       workOrders: 0,
       renewalStatus: 'not_due',
-      hasMoveInProgress: true
+      hasMoveInProgress: true,
+      documents: [
+        { id: 11, name: 'Application.pdf', type: 'application', uploadDate: '2025-02-15', size: '1.2 MB' },
+        { id: 12, name: 'ID Copy.jpg', type: 'id', uploadDate: '2025-02-15', size: '980 KB' }
+      ]
     },
     {
       id: 6,
@@ -86,12 +113,18 @@ const OperatorResidentsTab = () => {
       unit: '518',
       phone: '(555) 678-9012',
       email: 'zhihan@email.com',
+      birthdate: '1992-09-28',
       leaseStatus: 'move_in_progress',
       moveInDate: '2025-03-10',
       balance: 0,
       workOrders: 0,
       renewalStatus: 'not_due',
-      hasMoveInProgress: true
+      hasMoveInProgress: true,
+      documents: [
+        { id: 13, name: 'Application.pdf', type: 'application', uploadDate: '2025-02-20', size: '1.1 MB' },
+        { id: 14, name: 'Passport Copy.jpg', type: 'id', uploadDate: '2025-02-20', size: '1.5 MB' },
+        { id: 15, name: 'Employment Letter.pdf', type: 'application', uploadDate: '2025-02-22', size: '650 KB' }
+      ]
     }
   ];
 
@@ -114,6 +147,16 @@ const OperatorResidentsTab = () => {
     }
   };
 
+  const getDocumentTypeColor = (type: string) => {
+    switch (type) {
+      case 'lease': return 'bg-blue-100 text-blue-800';
+      case 'id': return 'bg-green-100 text-green-800';
+      case 'application': return 'bg-purple-100 text-purple-800';
+      case 'legal': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   const filteredResidents = residents.filter(resident => {
     const matchesSearch = resident.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          resident.unit.toLowerCase().includes(searchTerm.toLowerCase());
@@ -124,6 +167,14 @@ const OperatorResidentsTab = () => {
   const handleMoveInTracker = (residentId: string) => {
     setMoveInResidentId(residentId);
     setShowMoveInTracker(true);
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      console.log('Uploading files:', Array.from(files).map(f => f.name));
+      // In a real app, this would upload to a server
+    }
   };
 
   if (showMoveInTracker) {
@@ -163,13 +214,19 @@ const OperatorResidentsTab = () => {
               <CardTitle>Contact Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <Phone className="w-4 h-4 text-gray-500" />
-                <span>{selectedResident.phone}</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Mail className="w-4 h-4 text-gray-500" />
-                <span>{selectedResident.email}</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex items-center space-x-3">
+                  <Phone className="w-4 h-4 text-gray-500" />
+                  <span>{selectedResident.phone}</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Mail className="w-4 h-4 text-gray-500" />
+                  <span>{selectedResident.email}</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Calendar className="w-4 h-4 text-gray-500" />
+                  <span>Born: {new Date(selectedResident.birthdate).toLocaleDateString()}</span>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -203,6 +260,72 @@ const OperatorResidentsTab = () => {
                   <span className="text-sm text-gray-600">Open Work Orders</span>
                   <p className="font-medium">{selectedResident.workOrders}</p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Documents */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center space-x-2">
+                  <FileText className="w-5 h-5" />
+                  <span>Documents</span>
+                </CardTitle>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id={`file-upload-${selectedResident.id}`}
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => document.getElementById(`file-upload-${selectedResident.id}`)?.click()}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {selectedResident.documents.map((doc: any) => (
+                  <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <FileText className="w-5 h-5 text-gray-500" />
+                      <div>
+                        <p className="font-medium text-sm">{doc.name}</p>
+                        <div className="flex items-center space-x-2 text-xs text-gray-500">
+                          <Badge variant="outline" className={getDocumentTypeColor(doc.type)}>
+                            {doc.type}
+                          </Badge>
+                          <span>{doc.size}</span>
+                          <span>•</span>
+                          <span>{new Date(doc.uploadDate).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="ghost" size="sm">
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm">
+                        <Download className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                {selectedResident.documents.length === 0 && (
+                  <div className="text-center py-6 text-gray-500">
+                    <FileText className="mx-auto h-12 w-12 text-gray-400 mb-2" />
+                    <p>No documents uploaded yet</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
