@@ -33,12 +33,20 @@ const SuggestionsSection = ({ onSchedule, onAction }: SuggestionsSectionProps) =
             onSwipeRight={{
               label: "Schedule",
               action: () => onSchedule(suggestion.type),
-              color: "#10B981"
+              color: "#10B981",
+              icon: "📅"
             }}
             onSwipeLeft={{
-              label: "Dismiss",
-              action: () => onAction("Dismissed", suggestion.title),
-              color: "#6B7280"
+              label: "Remind Me",
+              action: () => onAction("Remind Me", suggestion.title),
+              color: "#F59E0B",
+              icon: "⏰"
+            }}
+            onSwipeUp={{
+              label: "Move...",
+              action: () => onAction("Moved", suggestion.title),
+              color: "#6366F1",
+              icon: "📁"
             }}
             onTap={() => onAction("Viewed", suggestion.title)}
           >

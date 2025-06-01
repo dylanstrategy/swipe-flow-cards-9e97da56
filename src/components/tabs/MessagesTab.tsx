@@ -49,19 +49,22 @@ const MessagesTab = () => {
         <SwipeCard
           key={message.id}
           onSwipeRight={{
-            label: "Archive",
-            action: () => handleAction("Archived", message.subject),
-            color: "#6366F1"
+            label: "Read",
+            action: () => handleAction("Read", message.subject),
+            color: "#3B82F6",
+            icon: "📖"
           }}
           onSwipeLeft={{
-            label: "Quick Reply",
-            action: () => handleAction("Quick Reply", message.subject),
-            color: "#8B5CF6"
+            label: "Archive",
+            action: () => handleAction("Archived", message.subject),
+            color: "#8B5CF6",
+            icon: "📦"
           }}
           onSwipeUp={{
-            label: "Open Thread",
-            action: () => handleAction("Opened Thread", message.subject),
-            color: "#06B6D4"
+            label: "Move...",
+            action: () => handleAction("Moved", message.subject),
+            color: "#06B6D4",
+            icon: "📁"
           }}
           onTap={() => handleAction("Opened", message.subject)}
         >

@@ -19,12 +19,20 @@ const ScheduledItemsTimeline = ({ selectedDate, onAction }: ScheduledItemsTimeli
           onSwipeRight={{
             label: "Reschedule",
             action: () => onAction("Rescheduled", "Work Order"),
-            color: "#F59E0B"
+            color: "#F59E0B",
+            icon: "📅"
           }}
           onSwipeLeft={{
             label: "Cancel",
             action: () => onAction("Cancelled", "Work Order"),
-            color: "#EF4444"
+            color: "#EF4444",
+            icon: "❌"
+          }}
+          onSwipeUp={{
+            label: "Move...",
+            action: () => onAction("Moved", "Work Order"),
+            color: "#6366F1",
+            icon: "📁"
           }}
           onTap={() => onAction("Viewed", "Work Order")}
           className="flex-1"
@@ -47,12 +55,20 @@ const ScheduledItemsTimeline = ({ selectedDate, onAction }: ScheduledItemsTimeli
           onSwipeRight={{
             label: "Pay Now",
             action: () => onAction("Paid", "Rent Payment"),
-            color: "#10B981"
+            color: "#10B981",
+            icon: "💳"
           }}
           onSwipeLeft={{
-            label: "Reschedule",
-            action: () => onAction("Rescheduled", "Rent Payment"),
-            color: "#F59E0B"
+            label: "Remind Me",
+            action: () => onAction("Reminded", "Rent Payment"),
+            color: "#F59E0B",
+            icon: "⏰"
+          }}
+          onSwipeUp={{
+            label: "Move...",
+            action: () => onAction("Moved", "Rent Payment"),
+            color: "#6366F1",
+            icon: "📁"
           }}
           onTap={() => onAction("Viewed", "Rent Payment")}
           className="flex-1"

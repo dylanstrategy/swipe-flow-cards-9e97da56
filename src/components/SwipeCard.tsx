@@ -6,6 +6,7 @@ interface SwipeAction {
   label: string;
   action: () => void;
   color: string;
+  icon?: string;
 }
 
 interface SwipeCardProps {
@@ -48,10 +49,10 @@ const SwipeCard = ({
     
     // Show action hints based on drag direction
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      if (deltaX > 50 && onSwipeRight) setShowAction('right');
-      else if (deltaX < -50 && onSwipeLeft) setShowAction('left');
+      if (deltaX > 30 && onSwipeRight) setShowAction('right');
+      else if (deltaX < -30 && onSwipeLeft) setShowAction('left');
       else setShowAction(null);
-    } else if (deltaY < -50 && onSwipeUp) {
+    } else if (deltaY < -30 && onSwipeUp) {
       setShowAction('up');
     } else {
       setShowAction(null);
@@ -87,33 +88,82 @@ const SwipeCard = ({
     return 'transparent';
   };
 
+  const getActionOpacity = () => {
+    if (!showAction) return 0;
+    const progress = Math.min(Math.abs(dragOffset.x) / 100, Math.abs(dragOffset.y) / 100, 1);
+    return Math.max(0.3, progress * 0.9);
+  };
+
   return (
-    <div className="relative mb-4">
-      {/* Action hint background */}
-      <div 
-        className={cn(
-          "absolute inset-0 rounded-xl transition-all duration-200 flex items-center justify-center",
-          showAction ? "opacity-100" : "opacity-0"
-        )}
-        style={{ backgroundColor: getActionColor() }}
-      >
-        <span className="text-white font-semibold text-lg">
-          {showAction === 'right' && onSwipeRight?.label}
-          {showAction === 'left' && onSwipeLeft?.label}
-          {showAction === 'up' && onSwipeUp?.label}
-        </span>
-      </div>
+    <div className="relative mb-4 overflow-hidden rounded-xl">
+      {/* Left Action Background */}
+      {onSwipeLeft && (
+        <div 
+          className={cn(
+            "absolute inset-0 flex items-center justify-start pl-8 transition-all duration-200",
+            showAction === 'left' ? "opacity-100" : "opacity-0"
+          )}
+          style={{ 
+            backgroundColor: onSwipeLeft.color,
+            opacity: showAction === 'left' ? getActionOpacity() : 0
+          }}
+        >
+          <div className="text-white font-bold text-xl flex items-center gap-3">
+            {onSwipeLeft.icon && <span className="text-2xl">{onSwipeLeft.icon}</span>}
+            <span>{onSwipeLeft.label}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Right Action Background */}
+      {onSwipeRight && (
+        <div 
+          className={cn(
+            "absolute inset-0 flex items-center justify-end pr-8 transition-all duration-200",
+            showAction === 'right' ? "opacity-100" : "opacity-0"
+          )}
+          style={{ 
+            backgroundColor: onSwipeRight.color,
+            opacity: showAction === 'right' ? getActionOpacity() : 0
+          }}
+        >
+          <div className="text-white font-bold text-xl flex items-center gap-3">
+            <span>{onSwipeRight.label}</span>
+            {onSwipeRight.icon && <span className="text-2xl">{onSwipeRight.icon}</span>}
+          </div>
+        </div>
+      )}
+
+      {/* Up Action Background */}
+      {onSwipeUp && (
+        <div 
+          className={cn(
+            "absolute inset-0 flex items-center justify-center transition-all duration-200",
+            showAction === 'up' ? "opacity-100" : "opacity-0"
+          )}
+          style={{ 
+            backgroundColor: onSwipeUp.color,
+            opacity: showAction === 'up' ? getActionOpacity() : 0
+          }}
+        >
+          <div className="text-white font-bold text-xl flex items-center gap-3">
+            {onSwipeUp.icon && <span className="text-2xl">{onSwipeUp.icon}</span>}
+            <span>{onSwipeUp.label}</span>
+          </div>
+        </div>
+      )}
       
       {/* Card */}
       <div
         ref={cardRef}
         className={cn(
-          "bg-white rounded-xl shadow-lg border border-gray-100 transition-transform duration-200 cursor-pointer",
-          isDragging ? "shadow-2xl scale-105" : "hover:shadow-xl",
+          "bg-white rounded-xl shadow-lg border border-gray-100 transition-all duration-200 cursor-pointer relative z-10",
+          isDragging ? "shadow-2xl" : "hover:shadow-xl",
           className
         )}
         style={{
-          transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) ${isDragging ? 'rotate(' + (dragOffset.x * 0.1) + 'deg)' : ''}`
+          transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) ${isDragging ? 'rotate(' + (dragOffset.x * 0.05) + 'deg)' : ''}`,
+          transition: isDragging ? 'none' : 'transform 0.3s ease-out, box-shadow 0.2s ease-out'
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}

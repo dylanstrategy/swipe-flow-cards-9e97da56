@@ -72,16 +72,18 @@ const ScheduleTab = () => {
   }
 
   return (
-    <div className="px-4 py-6 pb-24">
+    <div className="px-4 py-6 pb-24 relative">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Schedule</h1>
-        <button 
-          onClick={() => setShowScheduleMenu(true)}
-          className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center shadow-lg"
-        >
-          <Plus className="text-white" size={24} />
-        </button>
       </div>
+      
+      {/* Floating Plus Button */}
+      <button 
+        onClick={() => setShowScheduleMenu(true)}
+        className="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-700 transition-all duration-200 hover:scale-110 z-50"
+      >
+        <Plus className="text-white" size={28} />
+      </button>
       
       {/* Calendar */}
       <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-100">
