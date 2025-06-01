@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ interface MoveInStepModalProps {
 
 const MoveInStepModal = ({ stepId, onComplete, onClose }: MoveInStepModalProps) => {
   const [isCompleting, setIsCompleting] = useState(false);
+  const [hasPet, setHasPet] = useState(false);
 
   const getStepContent = (stepId: string) => {
     switch (stepId) {
@@ -90,48 +90,81 @@ const MoveInStepModal = ({ stepId, onComplete, onClose }: MoveInStepModalProps) 
                 <li>• Valid for your move-in date</li>
               </ul>
               
-              {/* Pet Information Section */}
-              <div className="bg-purple-50 rounded-lg p-4">
-                <h4 className="font-semibold text-purple-800 mb-2">Pet Information</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-purple-700 mb-1">Pet Type</label>
-                    <select className="w-full p-2 border border-purple-200 rounded-md text-sm">
-                      <option value="">Select pet type</option>
-                      <option value="dog">Dog</option>
-                      <option value="cat">Cat</option>
-                      <option value="bird">Bird</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-purple-700 mb-1">Pet Name</label>
-                    <input type="text" placeholder="Pet's name" className="w-full p-2 border border-purple-200 rounded-md text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-purple-700 mb-1">Breed</label>
-                    <input type="text" placeholder="Breed" className="w-full p-2 border border-purple-200 rounded-md text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-purple-700 mb-1">Weight (lbs)</label>
-                    <input type="number" placeholder="Weight" className="w-full p-2 border border-purple-200 rounded-md text-sm" />
-                  </div>
-                </div>
-                <div className="mt-3">
-                  <label className="flex items-center space-x-2">
-                    <input type="checkbox" className="rounded" />
-                    <span className="text-sm text-purple-700">Pet is spayed/neutered</span>
-                  </label>
-                </div>
-              </div>
-
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                 <p className="text-gray-500">Drop your insurance document here or click to browse</p>
+              </div>
+
+              {/* Pet Selection */}
+              <div className="bg-purple-50 rounded-lg p-4">
+                <h4 className="font-semibold text-purple-800 mb-3">Pet Information</h4>
+                <div className="flex items-center space-x-3 mb-4">
+                  <span className="text-sm font-medium text-purple-700">Do you have any pets?</span>
+                  <div className="flex space-x-4">
+                    <label className="flex items-center space-x-2">
+                      <input 
+                        type="radio" 
+                        name="hasPet" 
+                        value="yes"
+                        checked={hasPet}
+                        onChange={() => setHasPet(true)}
+                        className="text-purple-600"
+                      />
+                      <span className="text-sm text-purple-700">Yes</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input 
+                        type="radio" 
+                        name="hasPet" 
+                        value="no"
+                        checked={!hasPet}
+                        onChange={() => setHasPet(false)}
+                        className="text-purple-600"
+                      />
+                      <span className="text-sm text-purple-700">No</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Pet Information Form - Only show if user has pets */}
+                {hasPet && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-purple-700 mb-1">Pet Type</label>
+                        <select className="w-full p-2 border border-purple-200 rounded-md text-sm">
+                          <option value="">Select pet type</option>
+                          <option value="dog">Dog</option>
+                          <option value="cat">Cat</option>
+                          <option value="bird">Bird</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-purple-700 mb-1">Pet Name</label>
+                        <input type="text" placeholder="Pet's name" className="w-full p-2 border border-purple-200 rounded-md text-sm" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-purple-700 mb-1">Breed</label>
+                        <input type="text" placeholder="Breed" className="w-full p-2 border border-purple-200 rounded-md text-sm" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-purple-700 mb-1">Weight (lbs)</label>
+                        <input type="number" placeholder="Weight" className="w-full p-2 border border-purple-200 rounded-md text-sm" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="flex items-center space-x-2">
+                        <input type="checkbox" className="rounded" />
+                        <span className="text-sm text-purple-700">Pet is spayed/neutered</span>
+                      </label>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ),
           actionText: 'Upload Document',
-          context: 'pet-service' as const
+          context: hasPet ? 'pet-service' as const : 'document' as const
         };
 
       case 'book-movers':
