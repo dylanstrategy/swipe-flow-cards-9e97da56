@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -8,17 +8,23 @@ interface MessageComposerProps {
   initialSubject: string;
   onSend: (subject: string, message: string) => void;
   recipientType: 'management' | 'maintenance' | 'leasing';
+  messageData: {
+    subject: string;
+    message: string;
+    recipientType: string;
+  };
+  setMessageData: (data: any) => void;
 }
 
-const MessageComposer = ({ initialSubject, onSend, recipientType }: MessageComposerProps) => {
-  const [subject, setSubject] = useState(initialSubject);
-  const [message, setMessage] = useState('');
+const MessageComposer = ({ initialSubject, onSend, recipientType, messageData, setMessageData }: MessageComposerProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleSend = () => {
-    if (subject.trim() && message.trim()) {
-      onSend(subject.trim(), message.trim());
-    }
+  const handleSubjectChange = (value: string) => {
+    setMessageData({ ...messageData, subject: value });
+  };
+
+  const handleMessageChange = (value: string) => {
+    setMessageData({ ...messageData, message: value });
   };
 
   const getPlaceholderText = () => {
@@ -32,7 +38,7 @@ const MessageComposer = ({ initialSubject, onSend, recipientType }: MessageCompo
     }
   };
 
-  const isFormValid = subject.trim() !== '' && message.trim() !== '';
+  const isFormValid = messageData.subject.trim() !== '' && messageData.message.trim() !== '';
 
   return (
     <div className="flex-1 flex flex-col">
@@ -45,8 +51,8 @@ const MessageComposer = ({ initialSubject, onSend, recipientType }: MessageCompo
           <Input
             id="subject"
             type="text"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
+            value={messageData.subject}
+            onChange={(e) => handleSubjectChange(e.target.value)}
             placeholder="Enter subject"
             className="text-base p-4 h-12"
           />
@@ -59,8 +65,8 @@ const MessageComposer = ({ initialSubject, onSend, recipientType }: MessageCompo
           <Textarea
             ref={textareaRef}
             id="message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            value={messageData.message}
+            onChange={(e) => handleMessageChange(e.target.value)}
             placeholder={getPlaceholderText()}
             className="flex-1 min-h-[200px] text-base p-4 resize-none"
           />

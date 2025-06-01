@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
 import MessageComposer from './MessageComposer';
 import MessageConfirmation from './MessageConfirmation';
@@ -30,6 +30,49 @@ const MessageModule = ({
   const [showAction, setShowAction] = useState<'up' | 'left' | null>(null);
   const startPos = useRef({ x: 0, y: 0 });
   const startTime = useRef(0);
+
+  useEffect(() => {
+    // Prevent zoom on mount and add input focus handling
+    const viewport = document.querySelector('meta[name=viewport]');
+    const originalContent = viewport?.getAttribute('content');
+    
+    if (viewport) {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    }
+
+    // Prevent pinch zoom
+    const preventZoom = (e: TouchEvent) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+
+    // Prevent zoom on input focus
+    const preventInputZoom = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        if (viewport) {
+          viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+        }
+      }
+    };
+
+    document.addEventListener('touchstart', preventZoom, { passive: false });
+    document.addEventListener('touchmove', preventZoom, { passive: false });
+    document.addEventListener('focusin', preventInputZoom);
+    document.addEventListener('focusout', preventInputZoom);
+
+    return () => {
+      // Restore original viewport on unmount
+      if (viewport && originalContent) {
+        viewport.setAttribute('content', originalContent);
+      }
+      document.removeEventListener('touchstart', preventZoom);
+      document.removeEventListener('touchmove', preventZoom);
+      document.removeEventListener('focusin', preventInputZoom);
+      document.removeEventListener('focusout', preventInputZoom);
+    };
+  }, []);
 
   const handleSendMessage = (subject: string, message: string) => {
     setMessageData({ subject, message, recipientType });
@@ -165,6 +208,8 @@ const MessageModule = ({
             initialSubject={messageData.subject}
             onSend={handleSendMessage}
             recipientType={recipientType}
+            messageData={messageData}
+            setMessageData={setMessageData}
           />
         );
       case 2:
@@ -205,7 +250,7 @@ const MessageModule = ({
         >
           <div className="text-white font-bold text-2xl flex flex-col items-center gap-3">
             <div className="text-3xl">↑</div>
-            <span>Continue</span>
+            <span>Send Message</span>
           </div>
         </div>
       )}

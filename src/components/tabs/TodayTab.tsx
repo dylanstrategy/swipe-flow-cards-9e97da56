@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import MessageModule from '../message/MessageModule';
 import { useToast } from '@/hooks/use-toast';
-import { format, addDays, isSameDay } from 'date-fns';
+import { format, addDays, isSameDay, differenceInDays, isPast, isToday } from 'date-fns';
 import ResidentTimeline from '../ResidentTimeline';
 import TodayHeader from './today/TodayHeader';
 import QuickActionsGrid from './today/QuickActionsGrid';
