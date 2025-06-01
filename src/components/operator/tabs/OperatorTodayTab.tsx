@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronRight, BarChart3, Grid3X3 } from 'lucide-react';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import MoveInTracker from '../MoveInTracker';
 import MoveOutTracker from '../MoveOutTracker';
+import CRMTracker from '../CRMTracker';
 
 const OperatorTodayTab = () => {
   const [viewMode, setViewMode] = useState<'cards' | 'dashboard'>('cards');
   const [showMoveInTracker, setShowMoveInTracker] = useState(false);
   const [showMoveOutTracker, setShowMoveOutTracker] = useState(false);
+  const [showCRMTracker, setShowCRMTracker] = useState(false);
+  const [crmFilter, setCrmFilter] = useState<'leases' | 'shows' | 'outreach'>('leases');
   const [moveInFilter, setMoveInFilter] = useState<'unapproved' | 'incomplete' | 'all'>('all');
   const [moveOutFilter, setMoveOutFilter] = useState<'unapproved' | 'incomplete' | 'all'>('all');
+  const [leasingTimeframe, setLeasingTimeframe] = useState<'week' | '30' | '60' | '90'>('30');
 
   const communityManagementData = [
     { title: 'Unsupported Move In\'s', count: 18, status: 'urgent', module: 'move-in-unapproved' },
@@ -42,17 +47,54 @@ const OperatorTodayTab = () => {
     { title: 'Move Out\'s Next 7 Days', count: 4, status: 'normal' }
   ];
 
-  const leasingData = [
-    { title: 'Current Occupancy', count: '97.06%', status: 'good' },
-    { title: 'Total Available', count: 10.00, status: 'normal' },
-    { title: 'Vacant', count: 0.00, status: 'normal' },
-    { title: 'Avg. Vacancy Loss', count: 6.20, status: 'normal' },
-    { title: 'Required Leases', count: 3.02, status: 'normal' },
-    { title: 'Required Shows', count: 8.51, status: 'normal' },
-    { title: 'Required Prospect Outreach', count: 42.55, status: 'normal' },
-    { title: '30 Day Occupancy', count: '97.06%', status: 'good' },
-    { title: '60 Day Occupancy', count: '5', status: 'normal' }
-  ];
+  // Dynamic leasing data based on timeframe
+  const getLeasingData = (timeframe: string) => {
+    const baseData = {
+      week: {
+        occupancy: '97.06%',
+        available: 10.00,
+        vacant: 2.00,
+        leases: 1.5,
+        shows: 4.2,
+        outreach: 15.8
+      },
+      '30': {
+        occupancy: '97.06%',
+        available: 10.00,
+        vacant: 0.00,
+        leases: 3.02,
+        shows: 8.51,
+        outreach: 42.55
+      },
+      '60': {
+        occupancy: '96.8%',
+        available: 12.00,
+        vacant: 1.00,
+        leases: 5.8,
+        shows: 16.2,
+        outreach: 78.4
+      },
+      '90': {
+        occupancy: '96.5%',
+        available: 15.00,
+        vacant: 2.00,
+        leases: 8.7,
+        shows: 24.8,
+        outreach: 115.2
+      }
+    };
+
+    const data = baseData[timeframe as keyof typeof baseData];
+    return [
+      { title: 'Current Occupancy', count: data.occupancy, status: 'good' },
+      { title: 'Total Available', count: data.available, status: 'normal' },
+      { title: 'Vacant', count: data.vacant, status: 'normal' },
+      { title: 'Avg. Vacancy Loss', count: 6.20, status: 'normal' },
+      { title: 'Required Leases', count: data.leases, status: 'normal', module: 'crm-leases' },
+      { title: 'Required Shows', count: data.shows, status: 'normal', module: 'crm-shows' },
+      { title: 'Required Prospect Outreach', count: data.outreach, status: 'normal', module: 'crm-outreach' }
+    ];
+  };
 
   const renewalsData = [
     { title: 'Expirations 60 Days', count: 14, status: 'normal' },
@@ -137,13 +179,37 @@ const OperatorTodayTab = () => {
     } else if (item.module === 'move-out-incomplete') {
       setMoveOutFilter('incomplete');
       setShowMoveOutTracker(true);
+    } else if (item.module === 'crm-leases') {
+      setCrmFilter('leases');
+      setShowCRMTracker(true);
+    } else if (item.module === 'crm-shows') {
+      setCrmFilter('shows');
+      setShowCRMTracker(true);
+    } else if (item.module === 'crm-outreach') {
+      setCrmFilter('outreach');
+      setShowCRMTracker(true);
     }
   };
 
-  const renderSection = (title: string, data: any[], bgColor: string = 'bg-blue-100') => (
+  const renderSection = (title: string, data: any[], bgColor: string = 'bg-blue-100', showToggle: boolean = false) => (
     <div className="mb-8">
       <div className={`${bgColor} p-4 rounded-t-lg`}>
-        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          {showToggle && (
+            <ToggleGroup 
+              type="single" 
+              value={leasingTimeframe} 
+              onValueChange={(value) => value && setLeasingTimeframe(value as any)}
+              className="bg-white rounded-md p-1"
+            >
+              <ToggleGroupItem value="week" className="text-xs px-2 py-1">End of Week</ToggleGroupItem>
+              <ToggleGroupItem value="30" className="text-xs px-2 py-1">30 Days</ToggleGroupItem>
+              <ToggleGroupItem value="60" className="text-xs px-2 py-1">60 Days</ToggleGroupItem>
+              <ToggleGroupItem value="90" className="text-xs px-2 py-1">90 Days</ToggleGroupItem>
+            </ToggleGroup>
+          )}
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-4 p-4 bg-white rounded-b-lg border border-t-0 border-gray-200">
         {data.map((item, index) => (
@@ -281,6 +347,15 @@ const OperatorTodayTab = () => {
     );
   }
 
+  if (showCRMTracker) {
+    return (
+      <CRMTracker 
+        onClose={() => setShowCRMTracker(false)}
+        initialFilter={crmFilter}
+      />
+    );
+  }
+
   return (
     <div className="px-4 py-6 pb-24">
       <div className="mb-6">
@@ -318,7 +393,7 @@ const OperatorTodayTab = () => {
         <>
           {renderSection('COMMUNITY MANAGEMENT', communityManagementData, 'bg-blue-100')}
           {renderSection('PROPERTY SERVICES', propertyServicesData, 'bg-green-100')}
-          {renderSection('LEASING', leasingData, 'bg-purple-100')}
+          {renderSection('LEASING', getLeasingData(leasingTimeframe), 'bg-purple-100', true)}
           {renderSection('RENEWALS', renewalsData, 'bg-orange-100')}
           {renderSection('DELINQUENCY', delinquencyData, 'bg-red-100')}
         </>
