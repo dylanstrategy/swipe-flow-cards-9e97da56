@@ -4,7 +4,7 @@ import TabNavigation from '@/components/TabNavigation';
 import OperatorTodayTab from '@/components/operator/tabs/OperatorTodayTab';
 import OperatorScheduleTab from '@/components/operator/tabs/OperatorScheduleTab';
 import OperatorMessagesTab from '@/components/operator/tabs/OperatorMessagesTab';
-import OperatorDashboardTab from '@/components/operator/tabs/OperatorDashboardTab';
+import OperatorResidentsTab from '@/components/operator/tabs/OperatorResidentsTab';
 
 const Operator = () => {
   const [activeTab, setActiveTab] = useState('today');
@@ -13,7 +13,7 @@ const Operator = () => {
     { id: 'today', label: 'Today', icon: '📊' },
     { id: 'schedule', label: 'Schedule', icon: '📅' },
     { id: 'messages', label: 'Messages', icon: '💬' },
-    { id: 'dashboard', label: 'Dashboard', icon: '📈' }
+    { id: 'residents', label: 'Residents', icon: '👥' }
   ];
 
   const renderActiveTab = () => {
@@ -24,8 +24,8 @@ const Operator = () => {
         return <OperatorScheduleTab />;
       case 'messages':
         return <OperatorMessagesTab />;
-      case 'dashboard':
-        return <OperatorDashboardTab />;
+      case 'residents':
+        return <OperatorResidentsTab />;
       default:
         return <OperatorTodayTab />;
     }
