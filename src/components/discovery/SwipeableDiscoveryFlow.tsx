@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SwipeableScreen from '@/components/schedule/SwipeableScreen';
 import PriceAndTimeStep from './steps/PriceAndTimeStep';
+import PriorityIntroStep from './steps/PriorityIntroStep';
 import PrioritiesStep from './steps/PrioritiesStep';
 import LifestyleStep from './steps/LifestyleStep';
 import OptionsStep from './steps/OptionsStep';
@@ -59,11 +61,12 @@ const SwipeableDiscoveryFlow = () => {
       case 1:
         return discoveryData.moveInTimeframe !== '' && discoveryData.location.trim() !== '';
       case 2:
-        return discoveryData.priorities.filter(p => p.rank).length >= 5;
+        return true; // Intro step - always can proceed
       case 3:
-        return discoveryData.lifestyleTags.length > 0;
+        return discoveryData.priorities.filter(p => p.rank).length >= 5;
       case 4:
-        // Allow proceeding even with 0 features (skip option)
+        return discoveryData.lifestyleTags.length > 0;
+      case 5:
         return true;
       default:
         return false;
@@ -71,7 +74,7 @@ const SwipeableDiscoveryFlow = () => {
   };
 
   const handleNextStep = () => {
-    if (currentStep < 4) {
+    if (currentStep < 5) {
       setCurrentStep(currentStep + 1);
     } else {
       // Final step - save preferences and navigate to matches
@@ -111,19 +114,25 @@ const SwipeableDiscoveryFlow = () => {
         );
       case 2:
         return (
+          <PriorityIntroStep
+            onContinue={handleNextStep}
+          />
+        );
+      case 3:
+        return (
           <PrioritiesStep
             priorities={discoveryData.priorities}
             onUpdate={(priorities) => updateDiscoveryData({ priorities })}
           />
         );
-      case 3:
+      case 4:
         return (
           <LifestyleStep
             lifestyleTags={discoveryData.lifestyleTags}
             onUpdate={(lifestyleTags) => updateDiscoveryData({ lifestyleTags })}
           />
         );
-      case 4:
+      case 5:
         return (
           <OptionsStep
             features={discoveryData.features}
@@ -142,8 +151,10 @@ const SwipeableDiscoveryFlow = () => {
       case 2:
         return 'Your Priorities';
       case 3:
-        return 'What Makes Home';
+        return 'Priority Selection';
       case 4:
+        return 'What Makes Home';
+      case 5:
         return 'Desired Features';
       default:
         return 'Discovery';
@@ -160,7 +171,7 @@ const SwipeableDiscoveryFlow = () => {
     <SwipeableScreen
       title={getStepTitle()}
       currentStep={currentStep}
-      totalSteps={4}
+      totalSteps={5}
       onClose={handleClose}
       onSwipeUp={canProceedFromCurrentStep() ? handleNextStep : undefined}
       onSwipeLeft={currentStep > 1 ? handlePrevStep : undefined}

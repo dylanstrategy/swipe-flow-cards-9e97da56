@@ -1,8 +1,7 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Home, Lightbulb, Wifi, House, Car, Shield, Star, Bell, Users, CircleCheck, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Priority {
   id: string;
@@ -16,10 +15,6 @@ interface PrioritiesStepProps {
 }
 
 const PrioritiesStep = ({ priorities, onUpdate }: PrioritiesStepProps) => {
-  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-
   const priorityOptions = [
     {
       id: 'price',
@@ -110,31 +105,6 @@ const PrioritiesStep = ({ priorities, onUpdate }: PrioritiesStepProps) => {
   const selectedPriorities = priorities.filter(p => p.rank).sort((a, b) => (a.rank || 0) - (b.rank || 0));
   const selectedCount = selectedPriorities.length;
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollArea = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
-      if (!scrollArea) return;
-
-      const currentScrollY = scrollArea.scrollTop;
-      
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        // Scrolling down
-        setIsHeaderVisible(false);
-      } else if (currentScrollY < lastScrollY || currentScrollY <= 50) {
-        // Scrolling up or near top
-        setIsHeaderVisible(true);
-      }
-      
-      setLastScrollY(currentScrollY);
-    };
-
-    const scrollArea = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
-    if (scrollArea) {
-      scrollArea.addEventListener('scroll', handleScroll, { passive: true });
-      return () => scrollArea.removeEventListener('scroll', handleScroll);
-    }
-  }, [lastScrollY]);
-
   const handlePriorityToggle = (priorityId: string) => {
     const currentPriority = priorities.find(p => p.id === priorityId);
     
@@ -173,46 +143,40 @@ const PrioritiesStep = ({ priorities, onUpdate }: PrioritiesStepProps) => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-white">
-      {/* Collapsible Header */}
-      <div className={`flex-shrink-0 px-6 transition-all duration-300 ease-in-out ${
-        isHeaderVisible ? 'pt-6 pb-3' : 'pt-2 pb-1'
-      }`}>
-        <div className={`text-center transition-opacity duration-300 ${
-          isHeaderVisible ? 'opacity-100' : 'opacity-0'
-        }`}>
-          <h1 className="text-xl font-bold text-gray-900 mb-1">
-            What matters most to you?
+    <div className="h-screen flex flex-col bg-white overflow-hidden">
+      {/* Fixed Header */}
+      <div className="flex-shrink-0 px-6 pt-6 pb-4 bg-white">
+        <div className="text-center mb-4">
+          <h1 className="text-lg font-bold text-gray-900 mb-1">
+            Select Your Top 5 Priorities
           </h1>
-          <p className="text-gray-600 text-sm mb-3">
-            Select up to 5 priorities in order of importance
+          <p className="text-gray-600 text-sm">
+            Tap to rank in order of importance
           </p>
         </div>
         
-        {/* Progress indicator - always visible but smaller when collapsed */}
+        {/* Progress indicator */}
         <div className="flex justify-center">
           <div className="flex items-center space-x-2">
             {[1, 2, 3, 4, 5].map((num) => (
               <div 
                 key={num}
-                className={`rounded-full flex items-center justify-center text-xs font-medium transition-all duration-300 ${
-                  isHeaderVisible ? 'w-6 h-6' : 'w-4 h-4'
-                } ${
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
                   num <= selectedCount 
                     ? 'bg-blue-500 text-white' 
                     : 'bg-gray-200 text-gray-500'
                 }`}
               >
-                {isHeaderVisible && num}
+                {num}
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Scrollable Priority Cards */}
-      <ScrollArea ref={scrollAreaRef} className="flex-1 px-6">
-        <div className="space-y-2 pb-4">
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto px-6">
+        <div className="space-y-2 pb-24">
           {priorityOptions.map((option) => {
             const rank = getPriorityRank(option.id);
             const isSelected = rank !== undefined;
@@ -221,16 +185,16 @@ const PrioritiesStep = ({ priorities, onUpdate }: PrioritiesStepProps) => {
             return (
               <div
                 key={option.id}
-                className={`relative rounded-lg border-2 p-2.5 cursor-pointer transition-all duration-200 ${
+                className={`relative rounded-lg border-2 p-3 cursor-pointer transition-all duration-200 select-none ${
                   isSelected 
                     ? 'border-blue-500 bg-blue-50' 
-                    : `${option.color} hover:shadow-md`
+                    : `${option.color} hover:shadow-sm active:scale-95`
                 }`}
                 onClick={() => handlePriorityToggle(option.id)}
               >
                 <div className="flex items-center space-x-3">
                   {/* Icon */}
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
                     isSelected ? 'bg-blue-100' : 'bg-white'
                   }`}>
                     <IconComponent 
@@ -240,7 +204,7 @@ const PrioritiesStep = ({ priorities, onUpdate }: PrioritiesStepProps) => {
                   </div>
                   
                   {/* Content */}
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <h3 className={`font-medium text-sm ${
                       isSelected ? 'text-blue-900' : 'text-gray-900'
                     }`}>
@@ -263,20 +227,15 @@ const PrioritiesStep = ({ priorities, onUpdate }: PrioritiesStepProps) => {
             );
           })}
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Fixed Bottom section */}
-      <div className="flex-shrink-0 px-6 py-4">
+      <div className="flex-shrink-0 px-6 py-4 bg-white border-t border-gray-100">
         {selectedCount > 0 && (
-          <div className="text-center p-2 bg-blue-50 rounded-lg border border-blue-200 mb-3">
+          <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200 mb-3">
             <p className="text-blue-700 font-medium text-sm">
-              Great! You've selected {selectedCount} priorit{selectedCount === 1 ? 'y' : 'ies'}.
+              {selectedCount === 5 ? "Perfect! Swipe up to continue 🎉" : `${selectedCount}/5 priorities selected`}
             </p>
-            {selectedCount === 5 && (
-              <p className="text-xs text-blue-600 mt-1">
-                Swipe up when ready to continue! 🎉
-              </p>
-            )}
           </div>
         )}
         
