@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -28,18 +27,17 @@ const SwipeableDiscoveryFlow = () => {
     location: '',
     proximityRadius: 5,
     priorities: [
-      { id: 'price', label: 'Affordable rent within budget' },
-      { id: 'location', label: 'Safe neighborhood' },
-      { id: 'layout', label: 'Spacious layout and storage' },
-      { id: 'moveInDate', label: 'Available move-in date' },
-      { id: 'amenities', label: 'Modern amenities (gym, laundry, etc.)' },
-      { id: 'transit', label: 'Close to public transportation' },
-      { id: 'quietness', label: 'Quiet environment' },
-      { id: 'petPolicy', label: 'Pet-friendly policy' },
-      { id: 'parking', label: 'Parking availability' },
-      { id: 'naturalLight', label: 'Natural light and views' },
-      { id: 'maintenance', label: 'Responsive maintenance' },
-      { id: 'leaseTerms', label: 'Flexible lease terms' }
+      { id: 'naturalLightQuiet', label: 'Natural Light & Quiet', description: 'A calm, well-lit space that\'s peaceful and relaxing.' },
+      { id: 'modernFunctional', label: 'Modern & Functional Unit', description: 'Updated appliances, smart layout, and in-unit washer/dryer.' },
+      { id: 'reliableWifiTech', label: 'Reliable Wi-Fi & Tech', description: 'Fast internet, smart features, and digital access built in.' },
+      { id: 'walkabilityTransit', label: 'Walkability & Transit Access', description: 'Steps from groceries, restaurants, and public transit.' },
+      { id: 'amenitiesLife', label: 'Amenities That Fit My Life', description: 'Gym, rooftop, coworking, pet perks — the extras that matter.' },
+      { id: 'securityServices', label: 'Security & Services', description: 'Controlled entry, concierge, package room, well-lit access.' },
+      { id: 'cleanMaintained', label: 'Clean & Well-Maintained', description: 'Fast response to issues and clean common spaces.' },
+      { id: 'petFriendly', label: 'Pet-Friendly Living', description: 'A place where pets feel just as welcome as people.' },
+      { id: 'communityVibe', label: 'Community Vibe', description: 'Friendly neighbors, shared spaces, or resident events.' },
+      { id: 'parkingConvenience', label: 'Parking & Convenience', description: 'Easy access to on-site or nearby parking (including EV options).' },
+      { id: 'affordabilityValue', label: 'Affordability & Value', description: 'Feels worth it — transparent pricing and quality for the cost.' }
     ],
     lifestyleTags: []
   });
