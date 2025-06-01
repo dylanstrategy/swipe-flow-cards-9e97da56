@@ -115,8 +115,8 @@ const PointOfSale = ({ context, onOfferClick }: PointOfSaleProps) => {
   const IconComponent = selectedOffer.icon;
 
   return (
-    <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
-      <div className="text-center mb-3">
+    <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+      <div className="text-center mb-2">
         <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
           Exclusive Resident Offer
         </p>
@@ -124,25 +124,25 @@ const PointOfSale = ({ context, onOfferClick }: PointOfSaleProps) => {
       
       <button
         onClick={() => onOfferClick(selectedOffer)}
-        className="w-full bg-white rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-all hover:shadow-md group"
+        className="w-full bg-white rounded-lg p-3 border border-gray-200 hover:border-gray-300 transition-all hover:shadow-md group"
       >
         <div className="flex items-center gap-3">
-          <div className={`w-12 h-12 ${selectedOffer.color} rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
-            <IconComponent className="text-white" size={20} />
+          <div className={`w-10 h-10 ${selectedOffer.color} rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
+            <IconComponent className="text-white" size={18} />
           </div>
           
-          <div className="flex-1 text-left">
+          <div className="flex-1 text-left min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h4 className="font-semibold text-gray-900 text-sm">{selectedOffer.title}</h4>
-              <span className={`px-2 py-0.5 ${selectedOffer.color} text-white text-xs font-bold rounded-full`}>
+              <h4 className="font-semibold text-gray-900 text-sm truncate">{selectedOffer.title}</h4>
+              <span className={`px-1.5 py-0.5 ${selectedOffer.color} text-white text-xs font-bold rounded-full flex-shrink-0`}>
                 {selectedOffer.discount}
               </span>
             </div>
-            <p className="text-gray-600 text-xs mb-1">{selectedOffer.description}</p>
-            <p className="text-gray-500 text-xs">{selectedOffer.business}</p>
+            <p className="text-gray-600 text-xs mb-1 line-clamp-1">{selectedOffer.description}</p>
+            <p className="text-gray-500 text-xs truncate">{selectedOffer.business}</p>
           </div>
           
-          <div className="text-right">
+          <div className="text-right flex-shrink-0">
             <span className="text-blue-600 text-xs font-medium group-hover:text-blue-700">
               {selectedOffer.cta} →
             </span>
