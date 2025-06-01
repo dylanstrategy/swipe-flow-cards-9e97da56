@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import SwipeCard from '../SwipeCard';
 import { Calendar } from '@/components/ui/calendar';
@@ -44,7 +45,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   };
 
   return (
-    <div className="fixed inset-0 bg-white z-50 flex flex-col">
+    <div className="fixed inset-0 bg-white z-[9999] flex flex-col">
       {/* Header with X button */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <div>
