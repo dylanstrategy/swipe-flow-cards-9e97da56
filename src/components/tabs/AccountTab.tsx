@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { ChevronRight, User } from 'lucide-react';
@@ -31,6 +32,12 @@ const AccountTab = () => {
           action: () => handleAction("Started transfer request", "Lease"),
           color: "#EF4444",
           icon: "🔄"
+        },
+        onSwipeUp: {
+          label: "Lease Docs",
+          action: () => handleAction("Viewed lease documents", "Lease"),
+          color: "#8B5CF6",
+          icon: "📄"
         }
       }
     },
@@ -51,6 +58,12 @@ const AccountTab = () => {
           action: () => handleAction("Viewed vendor contact", "Maintenance"),
           color: "#F59E0B",
           icon: "📞"
+        },
+        onSwipeUp: {
+          label: "Rate Service",
+          action: () => handleAction("Opened service rating", "Maintenance"),
+          color: "#8B5CF6",
+          icon: "⭐"
         }
       }
     },
@@ -71,6 +84,12 @@ const AccountTab = () => {
           action: () => handleAction("Setup autopay", "Payments"),
           color: "#3B82F6",
           icon: "🔄"
+        },
+        onSwipeUp: {
+          label: "Payment History",
+          action: () => handleAction("Viewed payment history", "Payments"),
+          color: "#8B5CF6",
+          icon: "📊"
         }
       }
     },
@@ -91,6 +110,12 @@ const AccountTab = () => {
           action: () => handleAction("Shared rewards", "Loyalty Program"),
           color: "#3B82F6",
           icon: "👥"
+        },
+        onSwipeUp: {
+          label: "View Tags",
+          action: () => handleAction("Viewed earned tags", "Lifestyle"),
+          color: "#8B5CF6",
+          icon: "🏷️"
         }
       }
     }
@@ -143,6 +168,7 @@ const AccountTab = () => {
             key={card.id}
             onSwipeRight={card.swipeActions.onSwipeRight}
             onSwipeLeft={card.swipeActions.onSwipeLeft}
+            onSwipeUp={card.swipeActions.onSwipeUp}
             onTap={() => handleAction("Viewed", card.title)}
           >
             <div className="bg-white rounded-xl p-6 shadow-sm">
