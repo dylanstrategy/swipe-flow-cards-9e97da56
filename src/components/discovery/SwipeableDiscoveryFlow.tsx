@@ -9,7 +9,6 @@ import PriorityIntroStep from './steps/PriorityIntroStep';
 import PrioritiesStep from './steps/PrioritiesStep';
 import LifestyleIntroStep from './steps/LifestyleIntroStep';
 import LifestyleStep from './steps/LifestyleStep';
-import OptionsStep from './steps/OptionsStep';
 
 interface DiscoveryData {
   priceRange: [number, number];
@@ -18,7 +17,6 @@ interface DiscoveryData {
   proximityRadius: number;
   priorities: Array<{ id: string; label: string; rank?: number }>;
   lifestyleTags: string[];
-  features: Array<{ id: string; label: string; selected: boolean; importance?: number }>;
 }
 
 const SwipeableDiscoveryFlow = () => {
@@ -43,19 +41,7 @@ const SwipeableDiscoveryFlow = () => {
       { id: 'maintenance', label: 'Responsive maintenance' },
       { id: 'leaseTerms', label: 'Flexible lease terms' }
     ],
-    lifestyleTags: [],
-    features: [
-      { id: 'naturalLightQuiet', label: 'Natural Light & Quiet', selected: false },
-      { id: 'modernFunctional', label: 'Modern & Functional Unit', selected: false },
-      { id: 'reliableWifiTech', label: 'Reliable Wi-Fi & Tech', selected: false },
-      { id: 'walkabilityTransit', label: 'Walkability & Transit Access', selected: false },
-      { id: 'amenitiesLife', label: 'Amenities that Fit My Life', selected: false },
-      { id: 'safetySecurity', label: 'Safety & Security', selected: false },
-      { id: 'cleanlinessMainten', label: 'Cleanliness & Maintenance', selected: false },
-      { id: 'petFriendlyLiving', label: 'Pet-Friendly Living', selected: false },
-      { id: 'communityVibe', label: 'Community Vibe', selected: false },
-      { id: 'affordabilityValue', label: 'Affordability & Value', selected: false }
-    ]
+    lifestyleTags: []
   });
 
   const canProceedFromCurrentStep = (): boolean => {
@@ -70,15 +56,13 @@ const SwipeableDiscoveryFlow = () => {
         return true; // Lifestyle intro step - always can proceed
       case 5:
         return discoveryData.lifestyleTags.length > 0;
-      case 6:
-        return true;
       default:
         return false;
     }
   };
 
   const handleNextStep = () => {
-    if (currentStep < 6) {
+    if (currentStep < 5) {
       setCurrentStep(currentStep + 1);
     } else {
       localStorage.setItem('userPreferences', JSON.stringify(discoveryData));
@@ -145,13 +129,6 @@ const SwipeableDiscoveryFlow = () => {
             onUpdate={(lifestyleTags) => updateDiscoveryData({ lifestyleTags })}
           />
         );
-      case 6:
-        return (
-          <OptionsStep
-            features={discoveryData.features}
-            onUpdate={(features) => updateDiscoveryData({ features })}
-          />
-        );
       default:
         return null;
     }
@@ -169,8 +146,6 @@ const SwipeableDiscoveryFlow = () => {
         return 'What Makes Home';
       case 5:
         return 'Lifestyle Selection';
-      case 6:
-        return 'Desired Features';
       default:
         return 'Discovery';
     }
@@ -224,9 +199,9 @@ const SwipeableDiscoveryFlow = () => {
         <div className="space-y-2">
           <div className="flex justify-between text-sm text-gray-600">
             <span>{getStepTitle()}</span>
-            <span>Step {currentStep} of 6</span>
+            <span>Step {currentStep} of 5</span>
           </div>
-          <Progress value={(currentStep / 6) * 100} className="h-2" />
+          <Progress value={(currentStep / 5) * 100} className="h-2" />
         </div>
       </div>
 
@@ -235,7 +210,7 @@ const SwipeableDiscoveryFlow = () => {
         {renderCurrentStep()}
       </div>
 
-      {/* Continue Button for steps 2-6 */}
+      {/* Continue Button for steps 2-5 */}
       <div className="flex-shrink-0 p-4 bg-white border-t border-gray-200">
         <Button
           onClick={handleNextStep}
@@ -243,7 +218,7 @@ const SwipeableDiscoveryFlow = () => {
           className="w-full py-3"
           size="lg"
         >
-          {currentStep === 6 ? 'Complete Discovery' : 'Continue'}
+          {currentStep === 5 ? 'Complete Discovery' : 'Continue'}
         </Button>
       </div>
     </div>
