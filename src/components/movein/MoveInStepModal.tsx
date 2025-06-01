@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Check, FileText, CreditCard, Shield, Truck, Zap, Calendar, BookOpen, ExternalLink, Phone } from 'lucide-react';
+import { Check, FileText, CreditCard, Shield, Truck, Zap, Calendar, BookOpen, ExternalLink, Phone, Home } from 'lucide-react';
 import PointOfSale from '@/components/PointOfSale';
+import InspectionCamera from './InspectionCamera';
 
 interface MoveInStepModalProps {
   stepId: string;
@@ -17,6 +17,8 @@ const MoveInStepModal = ({ stepId, onComplete, onClose }: MoveInStepModalProps) 
   const [needsParking, setNeedsParking] = useState(false);
   const [parkingType, setParkingType] = useState('');
   const [needsStorage, setNeedsStorage] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+  const [readyForInspection, setReadyForInspection] = useState<boolean | null>(null);
 
   const getStepContent = (stepId: string) => {
     switch (stepId) {
@@ -433,6 +435,59 @@ const MoveInStepModal = ({ stepId, onComplete, onClose }: MoveInStepModalProps) 
           context: 'document' as const
         };
 
+      case 'move-in':
+        return {
+          icon: <Home className="text-emerald-600" size={48} />,
+          title: 'Move In',
+          content: (
+            <div className="space-y-4">
+              {readyForInspection === null && (
+                <div className="text-center space-y-4">
+                  <p className="text-gray-600">
+                    Are you ready to perform your move-in inspection?
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    The inspection involves recording a video walkthrough of your apartment to document its condition.
+                  </p>
+                  <div className="flex flex-col space-y-3">
+                    <Button
+                      onClick={() => setReadyForInspection(true)}
+                      className="bg-emerald-600 hover:bg-emerald-700"
+                    >
+                      Yes, I'm ready
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setReadyForInspection(false)}
+                    >
+                      Perform later
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {readyForInspection === false && (
+                <div className="text-center space-y-4">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h4 className="font-semibold text-yellow-800 mb-2">Inspection Scheduled for Later</h4>
+                    <p className="text-sm text-yellow-700">
+                      You can complete your move-in inspection from the resident portal after you've settled in.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={onComplete}
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    Continue to Resident Portal
+                  </Button>
+                </div>
+              )}
+            </div>
+          ),
+          actionText: readyForInspection === true ? 'Start Inspection' : 'Complete Move-In',
+          context: 'document' as const
+        };
+
       default:
         return {
           icon: <Check className="text-gray-600" size={48} />,
@@ -447,6 +502,11 @@ const MoveInStepModal = ({ stepId, onComplete, onClose }: MoveInStepModalProps) 
   const stepContent = getStepContent(stepId);
 
   const handleComplete = async () => {
+    if (stepId === 'move-in' && readyForInspection === true) {
+      setShowCamera(true);
+      return;
+    }
+
     setIsCompleting(true);
     // Simulate API call or processing
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -454,9 +514,24 @@ const MoveInStepModal = ({ stepId, onComplete, onClose }: MoveInStepModalProps) 
     setIsCompleting(false);
   };
 
+  const handleInspectionComplete = () => {
+    setShowCamera(false);
+    onComplete();
+  };
+
   const handleOfferClick = (offer: any) => {
     console.log('Offer clicked:', offer);
   };
+
+  // Show camera if inspection is ready
+  if (showCamera) {
+    return (
+      <InspectionCamera
+        onComplete={handleInspectionComplete}
+        onCancel={() => setShowCamera(false)}
+      />
+    );
+  }
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -471,28 +546,33 @@ const MoveInStepModal = ({ stepId, onComplete, onClose }: MoveInStepModalProps) 
         <div className="space-y-6">
           {stepContent.content}
 
-          {/* Point of Sale Integration */}
-          <PointOfSale 
-            context={stepContent.context}
-            onOfferClick={handleOfferClick}
-          />
+          {/* Point of Sale Integration - only show for non-move-in steps */}
+          {stepId !== 'move-in' && (
+            <PointOfSale 
+              context={stepContent.context}
+              onOfferClick={handleOfferClick}
+            />
+          )}
 
-          <div className="flex space-x-3 pt-4">
-            <Button 
-              variant="outline" 
-              onClick={onClose}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleComplete}
-              disabled={isCompleting}
-              className="flex-1"
-            >
-              {isCompleting ? 'Processing...' : stepContent.actionText}
-            </Button>
-          </div>
+          {/* Only show action buttons for move-in step when user made a choice */}
+          {stepId !== 'move-in' || readyForInspection !== null ? (
+            <div className="flex space-x-3 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={onClose}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleComplete}
+                disabled={isCompleting}
+                className="flex-1"
+              >
+                {isCompleting ? 'Processing...' : stepContent.actionText}
+              </Button>
+            </div>
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>

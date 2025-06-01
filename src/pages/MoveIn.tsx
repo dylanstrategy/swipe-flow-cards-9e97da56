@@ -70,6 +70,13 @@ const MoveIn = () => {
       description: 'Read and acknowledge community rules',
       completed: false,
       locked: true
+    },
+    {
+      id: 'move-in',
+      title: 'Move In',
+      description: 'Complete your move-in inspection and start your residency',
+      completed: false,
+      locked: true
     }
   ]);
 
@@ -94,6 +101,11 @@ const MoveIn = () => {
       return newSteps;
     });
     setCurrentModal(null);
+
+    // If move-in step is completed, navigate to main app
+    if (stepId === 'move-in') {
+      navigate('/');
+    }
   };
 
   const handleOfferClick = (offer: any) => {
