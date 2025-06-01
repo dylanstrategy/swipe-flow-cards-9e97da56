@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Heart, MapPin } from 'lucide-react';
@@ -21,11 +22,18 @@ interface HomeCardProps {
 }
 
 const HomeCard = ({ home }: HomeCardProps) => {
+  const navigate = useNavigate();
+  
   const getMatchColor = (score: number) => {
     if (score >= 90) return 'bg-green-500';
     if (score >= 80) return 'bg-blue-500';
     if (score >= 70) return 'bg-yellow-500';
     return 'bg-gray-500';
+  };
+
+  const handleApplyNow = () => {
+    // Navigate to move-in process with home details
+    navigate(`/move-in/${home.id}`, { state: { home } });
   };
 
   return (
@@ -108,7 +116,12 @@ const HomeCard = ({ home }: HomeCardProps) => {
           <Button className="flex-1 text-sm" size="sm">
             Book a Tour
           </Button>
-          <Button variant="outline" className="flex-1 text-sm" size="sm">
+          <Button 
+            variant="outline" 
+            className="flex-1 text-sm" 
+            size="sm"
+            onClick={handleApplyNow}
+          >
             Apply Now
           </Button>
         </div>
