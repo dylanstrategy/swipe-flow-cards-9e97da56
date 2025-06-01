@@ -59,7 +59,20 @@ const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent }:
   return (
     <div className="space-y-4">
       {events.map((event) => {
-        const swipeActions = getSwipeActionsForEvent(event);
+        // Get base swipe actions
+        const baseSwipeActions = getSwipeActionsForEvent(event);
+        
+        // Override the Management category swipe left action to use the passed onQuickReply
+        const swipeActions = event.category === 'Management' ? {
+          ...baseSwipeActions,
+          onSwipeLeft: {
+            label: "Quick Reply",
+            action: () => onQuickReply(event.title, 'management'),
+            color: "#3B82F6",
+            icon: "💬"
+          }
+        } : baseSwipeActions;
+        
         const urgencyClass = getUrgencyClass(event);
         return (
           <div key={event.id} className="flex items-start gap-4">
