@@ -44,7 +44,7 @@ const MessageConfirmation = ({ subject, message, recipientType, onDone }: Messag
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center p-4">
+    <div className="min-h-screen p-4 pt-8">
       <div className="max-w-sm mx-auto w-full space-y-6">
         {/* Success Message */}
         <div className="text-center space-y-3">
