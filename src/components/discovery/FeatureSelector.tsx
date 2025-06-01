@@ -1,8 +1,14 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Feature } from '@/pages/Discovery';
 import { Slider } from '@/components/ui/slider';
+
+interface Feature {
+  id: string;
+  label: string;
+  selected: boolean;
+  importance?: number;
+}
 
 interface FeatureSelectorProps {
   features: Feature[];

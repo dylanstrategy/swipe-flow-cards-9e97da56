@@ -1,7 +1,12 @@
 
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Priority } from '@/pages/Discovery';
+
+interface Priority {
+  id: string;
+  label: string;
+  rank?: number;
+}
 
 interface PriorityRankerProps {
   priorities: Priority[];
