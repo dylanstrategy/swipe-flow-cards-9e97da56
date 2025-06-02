@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeft, Search, Calendar, DollarSign, Home, Phone, Mail, Eye, Play, FileText, ChevronRight, MessageCircle, Plus, Edit, Upload, Video, Image } from 'lucide-react';
+import { ArrowLeft, Search, Calendar, DollarSign, Home, Phone, Mail, Eye, Play, FileText, ChevronRight, MessageCircle, Plus, Edit, Upload, Video, Image, X } from 'lucide-react';
 
 interface CRMTrackerProps {
   onClose: () => void;
@@ -184,19 +183,34 @@ const CRMTracker: React.FC<CRMTrackerProps> = ({ onClose, initialFilter }) => {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0 && selectedProspect) {
-      const file = files[0];
-      const fileName = file.name;
-      
-      if (uploadType === 'video') {
-        const updatedVideos = [...selectedProspect.tourVideos, `https://example.com/${fileName}`];
-        setSelectedProspect({ ...selectedProspect, tourVideos: updatedVideos });
-      } else {
-        const updatedPhotos = [...(selectedProspect.tourPhotos || []), `/placeholder.svg`];
-        setSelectedProspect({ ...selectedProspect, tourPhotos: updatedPhotos });
-      }
+      Array.from(files).forEach((file) => {
+        const fileName = file.name;
+        const fileUrl = URL.createObjectURL(file);
+        
+        if (uploadType === 'video') {
+          const updatedVideos = [...(selectedProspect.tourVideos || []), fileUrl];
+          setSelectedProspect({ ...selectedProspect, tourVideos: updatedVideos });
+        } else {
+          const updatedPhotos = [...(selectedProspect.tourPhotos || []), fileUrl];
+          setSelectedProspect({ ...selectedProspect, tourPhotos: updatedPhotos });
+        }
+        
+        console.log(`Uploaded ${uploadType}:`, fileName);
+      });
       
       setShowUploadDialog(false);
-      console.log(`Uploaded ${uploadType}:`, fileName);
+    }
+  };
+
+  const removeMedia = (index: number, type: 'video' | 'photo') => {
+    if (!selectedProspect) return;
+    
+    if (type === 'video') {
+      const updatedVideos = selectedProspect.tourVideos.filter((_: any, i: number) => i !== index);
+      setSelectedProspect({ ...selectedProspect, tourVideos: updatedVideos });
+    } else {
+      const updatedPhotos = (selectedProspect.tourPhotos || []).filter((_: any, i: number) => i !== index);
+      setSelectedProspect({ ...selectedProspect, tourPhotos: updatedPhotos });
     }
   };
 
@@ -281,106 +295,148 @@ const CRMTracker: React.FC<CRMTrackerProps> = ({ onClose, initialFilter }) => {
               </div>
             </div>
 
-            {selectedProspect.toured && (
-              <>
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-semibold">Tour Media</h3>
-                    <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-                      <DialogTrigger asChild>
-                        <Button size="sm" variant="outline">
-                          <Upload size={16} className="mr-2" />
-                          Upload Media
+            {/* Tour Media Section - Enhanced */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Tour Media</h3>
+                <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                      <Upload size={16} className="mr-2" />
+                      Upload Media
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Upload Tour Media</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="flex gap-2">
+                        <Button
+                          variant={uploadType === 'video' ? 'default' : 'outline'}
+                          onClick={() => setUploadType('video')}
+                          className="flex-1"
+                        >
+                          <Video size={16} className="mr-2" />
+                          Video Tour
                         </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Upload Tour Media</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div className="flex gap-2">
-                            <Button
-                              variant={uploadType === 'video' ? 'default' : 'outline'}
-                              onClick={() => setUploadType('video')}
-                              className="flex-1"
-                            >
-                              <Video size={16} className="mr-2" />
-                              Video
-                            </Button>
-                            <Button
-                              variant={uploadType === 'photo' ? 'default' : 'outline'}
-                              onClick={() => setUploadType('photo')}
-                              className="flex-1"
-                            >
-                              <Image size={16} className="mr-2" />
-                              Photo
-                            </Button>
-                          </div>
-                          <Input
-                            type="file"
-                            accept={uploadType === 'video' ? 'video/*' : 'image/*'}
-                            onChange={handleFileUpload}
-                          />
-                          <div className="flex gap-2">
-                            <Button variant="outline" onClick={() => setShowUploadDialog(false)}>Cancel</Button>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <p className="text-sm text-gray-600 mb-2">Apartments Viewed</p>
-                    <div className="flex gap-2">
-                      {selectedProspect.apartmentsSeen.map((unit: string) => (
-                        <Badge key={unit} variant="outline">{unit}</Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  {selectedProspect.tourVideos.length > 0 && (
-                    <div className="mb-4">
-                      <p className="text-sm text-gray-600 mb-2">Tour Videos</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {selectedProspect.tourVideos.map((video: string, index: number) => (
-                          <Button key={index} variant="outline" size="sm" className="justify-start">
-                            <Play size={16} className="mr-2" />
-                            Tour Video {index + 1}
-                          </Button>
-                        ))}
+                        <Button
+                          variant={uploadType === 'photo' ? 'default' : 'outline'}
+                          onClick={() => setUploadType('photo')}
+                          className="flex-1"
+                        >
+                          <Image size={16} className="mr-2" />
+                          Photos
+                        </Button>
+                      </div>
+                      
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                        <Input
+                          type="file"
+                          accept={uploadType === 'video' ? 'video/*' : 'image/*'}
+                          multiple={uploadType === 'photo'}
+                          onChange={handleFileUpload}
+                          className="w-full"
+                        />
+                        <p className="text-sm text-gray-500 mt-2">
+                          {uploadType === 'video' 
+                            ? 'Select video files (MP4, MOV, etc.)'
+                            : 'Select image files (JPG, PNG, etc.)'
+                          }
+                        </p>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => setShowUploadDialog(false)} className="flex-1">
+                          Cancel
+                        </Button>
                       </div>
                     </div>
-                  )}
-
-                  {selectedProspect.tourPhotos && selectedProspect.tourPhotos.length > 0 && (
-                    <div className="mb-4">
-                      <p className="text-sm text-gray-600 mb-2">Tour Photos</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {selectedProspect.tourPhotos.map((photo: string, index: number) => (
-                          <div key={index} className="relative">
-                            <img
-                              src={photo}
-                              alt={`Tour photo ${index + 1}`}
-                              className="w-full h-20 object-cover rounded border"
-                            />
-                            <div className="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded">
-                              {index + 1}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedProspect.feedback && (
-                    <div>
-                      <p className="text-sm text-gray-600 mb-2">Feedback</p>
-                      <p className="bg-blue-50 p-3 rounded-md">{selectedProspect.feedback}</p>
-                    </div>
-                  )}
+                  </DialogContent>
+                </Dialog>
+              </div>
+              
+              {/* Apartments Viewed */}
+              {selectedProspect.apartmentsSeen && selectedProspect.apartmentsSeen.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">Apartments Viewed</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {selectedProspect.apartmentsSeen.map((unit: string) => (
+                      <Badge key={unit} variant="outline">{unit}</Badge>
+                    ))}
+                  </div>
                 </div>
-              </>
-            )}
+              )}
+
+              {/* Tour Videos */}
+              {selectedProspect.tourVideos && selectedProspect.tourVideos.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">Tour Videos</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {selectedProspect.tourVideos.map((video: string, index: number) => (
+                      <div key={index} className="relative">
+                        <Button variant="outline" size="sm" className="w-full justify-start">
+                          <Play size={16} className="mr-2" />
+                          Tour Video {index + 1}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeMedia(index, 'video')}
+                          className="absolute -top-2 -right-2 h-6 w-6 p-0 bg-red-100 hover:bg-red-200 rounded-full"
+                        >
+                          <X size={12} className="text-red-600" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tour Photos */}
+              {selectedProspect.tourPhotos && selectedProspect.tourPhotos.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">Tour Photos</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {selectedProspect.tourPhotos.map((photo: string, index: number) => (
+                      <div key={index} className="relative">
+                        <img
+                          src={photo}
+                          alt={`Tour photo ${index + 1}`}
+                          className="w-full h-20 object-cover rounded border"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeMedia(index, 'photo')}
+                          className="absolute -top-2 -right-2 h-6 w-6 p-0 bg-red-100 hover:bg-red-200 rounded-full"
+                        >
+                          <X size={12} className="text-red-600" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Feedback */}
+              {selectedProspect.feedback && (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">Tour Feedback</p>
+                  <p className="bg-blue-50 p-3 rounded-md text-sm">{selectedProspect.feedback}</p>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {(!selectedProspect.tourVideos || selectedProspect.tourVideos.length === 0) && 
+               (!selectedProspect.tourPhotos || selectedProspect.tourPhotos.length === 0) && (
+                <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
+                  <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-500">No tour media uploaded yet</p>
+                  <p className="text-xs text-gray-400">Upload videos and photos from tours</p>
+                </div>
+              )}
+            </div>
 
             {/* Action Buttons - Stacked */}
             <div className="space-y-3">
