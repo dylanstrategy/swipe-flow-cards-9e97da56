@@ -26,6 +26,7 @@ const LocationStep = ({ location, proximityRadius, onUpdate }: LocationStepProps
     const viewport = document.querySelector('meta[name=viewport]');
     const originalContent = viewport?.getAttribute('content');
     
+    // Set viewport to prevent zoom
     if (viewport) {
       viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
     }
@@ -34,22 +35,26 @@ const LocationStep = ({ location, proximityRadius, onUpdate }: LocationStepProps
     const preventInputZoom = (e: Event) => {
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-        if (viewport) {
-          viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-        }
+        e.preventDefault();
+        target.focus();
       }
     };
 
-    document.addEventListener('focusin', preventInputZoom);
-    document.addEventListener('focusout', preventInputZoom);
+    const inputs = document.querySelectorAll('input[type="text"]');
+    inputs.forEach(input => {
+      input.addEventListener('touchstart', preventInputZoom);
+      input.addEventListener('focus', preventInputZoom);
+    });
 
     return () => {
       // Restore original viewport on unmount
       if (viewport && originalContent) {
         viewport.setAttribute('content', originalContent);
       }
-      document.removeEventListener('focusin', preventInputZoom);
-      document.removeEventListener('focusout', preventInputZoom);
+      inputs.forEach(input => {
+        input.removeEventListener('touchstart', preventInputZoom);
+        input.removeEventListener('focus', preventInputZoom);
+      });
     };
   }, []);
 
@@ -76,7 +81,13 @@ const LocationStep = ({ location, proximityRadius, onUpdate }: LocationStepProps
           onChange={(e) => onUpdate({ location: e.target.value })}
           placeholder="e.g., Financial District, My Office, etc."
           className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          style={{ fontSize: '16px' }} // Prevents zoom on iOS Safari
+          style={{ 
+            fontSize: '16px',
+            touchAction: 'manipulation',
+            WebkitUserSelect: 'text',
+            WebkitTouchCallout: 'none',
+            WebkitTapHighlightColor: 'transparent'
+          }}
         />
         
         {/* Quick Location Options */}
