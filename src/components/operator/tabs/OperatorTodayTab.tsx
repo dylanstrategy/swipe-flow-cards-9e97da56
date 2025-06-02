@@ -12,6 +12,7 @@ const OperatorTodayTab = () => {
   const [showMoveInTracker, setShowMoveInTracker] = useState(false);
   const [showMoveOutTracker, setShowMoveOutTracker] = useState(false);
   const [showPricingModule, setShowPricingModule] = useState(false);
+  const [pricingFilter, setPricingFilter] = useState<'all' | 'available' | 'vacant' | 'occupied'>('all');
   const [crmFilter, setCrmFilter] = useState<'leases' | 'shows' | 'outreach'>('leases');
   const [showGraphs, setShowGraphs] = useState(false);
 
@@ -117,8 +118,9 @@ const OperatorTodayTab = () => {
     setShowMoveOutTracker(true);
   };
 
-  const handlePricingClick = () => {
-    console.log('Pricing Module Click - Opening PricingModule');
+  const handlePricingClick = (filter: 'all' | 'available' | 'vacant' | 'occupied' = 'all') => {
+    console.log('Pricing Module Click - Opening PricingModule with filter:', filter);
+    setPricingFilter(filter);
     setShowPricingModule(true);
   };
 
@@ -135,14 +137,16 @@ const OperatorTodayTab = () => {
   }
 
   if (showPricingModule) {
-    return <PricingModule onClose={() => setShowPricingModule(false)} />;
+    return <PricingModule onClose={() => setShowPricingModule(false)} initialFilter={pricingFilter} />;
   }
 
   const overview = [
     {
       title: 'Total Units',
       count: '150',
-      status: 'total'
+      status: 'total',
+      module: 'pricing',
+      filter: 'all' as const
     },
     {
       title: 'Current Residents',
@@ -173,13 +177,15 @@ const OperatorTodayTab = () => {
       title: 'Vacant Units',
       count: currentCounts.vacant,
       status: 'available',
-      module: 'units'
+      module: 'pricing',
+      filter: 'vacant' as const
     },
     {
       title: 'Available Units',
       count: currentCounts.available,
       status: 'ready',
-      module: 'units'
+      module: 'pricing',
+      filter: 'available' as const
     },
     {
       title: 'Required Leases',
@@ -219,7 +225,7 @@ const OperatorTodayTab = () => {
     }
   ];
 
-  const handleModuleClick = (module: string, filter?: 'leases' | 'shows' | 'outreach') => {
+  const handleModuleClick = (module: string, filter?: any) => {
     console.log('Module click:', module, filter);
     if (module === 'crm' && filter) {
       handleCRMClick(filter);
@@ -228,8 +234,8 @@ const OperatorTodayTab = () => {
     } else if (module === 'moveout') {
       handleMoveOutClick();
     } else if (module === 'pricing') {
-      console.log('Calling handlePricingClick for pricing module');
-      handlePricingClick();
+      console.log('Calling handlePricingClick for pricing module with filter:', filter);
+      handlePricingClick(filter);
     }
   };
 

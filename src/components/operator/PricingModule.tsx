@@ -1,19 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Home, Calendar, DollarSign, TrendingUp, Building, Search, Grid, List, Users, MapPin } from 'lucide-react';
+import { ArrowLeft, Home, Calendar, DollarSign, TrendingUp, Building, Search, Grid, List, Users, MapPin, Send } from 'lucide-react';
 
 interface PricingModuleProps {
   onClose: () => void;
+  initialFilter?: 'all' | 'available' | 'vacant' | 'occupied';
 }
 
-const PricingModule = ({ onClose }: PricingModuleProps) => {
+const PricingModule = ({ onClose, initialFilter = 'all' }: PricingModuleProps) => {
   const [selectedView, setSelectedView] = useState<'units' | 'ppf' | 'comps'>('units');
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'available' | 'vacant' | 'occupied'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'available' | 'vacant' | 'occupied'>(initialFilter);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [selectedProspectUnit, setSelectedProspectUnit] = useState<any>(null);
+
+  // Set initial filter when component mounts
+  useEffect(() => {
+    setFilterStatus(initialFilter);
+    // Auto-switch to cards view for available/vacant filters
+    if (initialFilter === 'available' || initialFilter === 'vacant') {
+      setViewMode('cards');
+    }
+  }, [initialFilter]);
 
   // Generate all 150 units (15 floors, 10 units per floor)
   const generateAllUnits = () => {
@@ -179,6 +190,91 @@ const PricingModule = ({ onClose }: PricingModuleProps) => {
   // Determine if we should show cards (when filtering by available/vacant)
   const shouldShowCards = filterStatus === 'available' || filterStatus === 'vacant';
 
+  const handleSendApplication = (unit: any, term: number, moveDate: string) => {
+    console.log('Sending application for:', { unit: unit.unit, term, moveDate, price: unit.pricing[term] });
+    // Close the prospect modal
+    setSelectedProspectUnit(null);
+    // Here you would typically integrate with your CRM system
+  };
+
+  const ProspectModal = ({ unit, onClose }: { unit: any; onClose: () => void }) => {
+    const [selectedTerm, setSelectedTerm] = useState(12);
+    const [moveDate, setMoveDate] = useState('');
+    const [prospectName, setProspectName] = useState('');
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Send Application - Unit {unit.unit}</h3>
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">×</button>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Prospect Name</label>
+              <input
+                type="text"
+                value={prospectName}
+                onChange={(e) => setProspectName(e.target.value)}
+                placeholder="Enter prospect name"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Lease Term</label>
+              <select
+                value={selectedTerm}
+                onChange={(e) => setSelectedTerm(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {Object.entries(unit.pricing).map(([term, price]) => (
+                  <option key={term} value={term}>
+                    {term} months - ${price.toLocaleString()}/mo
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Desired Move Date</label>
+              <input
+                type="date"
+                value={moveDate}
+                onChange={(e) => setMoveDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <div className="text-sm text-gray-600">Monthly Rent: <span className="font-semibold">${unit.pricing[selectedTerm]?.toLocaleString()}</span></div>
+              <div className="text-sm text-gray-600">Unit Type: <span className="font-semibold">{unit.type}</span></div>
+              <div className="text-sm text-gray-600">Square Feet: <span className="font-semibold">{unit.sqft}</span></div>
+            </div>
+            
+            <div className="flex space-x-3 pt-4">
+              <button
+                onClick={onClose}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleSendApplication(unit, selectedTerm, moveDate)}
+                disabled={!prospectName || !moveDate}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              >
+                <Send size={16} />
+                <span>Send Application</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="p-6 space-y-6 pb-24">
       {/* Header */}
@@ -316,7 +412,7 @@ const PricingModule = ({ onClose }: PricingModuleProps) => {
           </CardHeader>
           <CardContent>
             {shouldShowCards && viewMode === 'cards' ? (
-              // Card View for Available/Vacant Units
+              // Enhanced Card View for Available/Vacant Units
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredUnits.map((unit) => (
                   <div key={unit.unit} className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
@@ -341,7 +437,7 @@ const PricingModule = ({ onClose }: PricingModuleProps) => {
                         <span className="text-2xl font-bold text-blue-600">${unit.marketRent.toLocaleString()}</span>
                       </div>
                       {unit.discounts && (
-                        <div className="bg-green-50 p-3 rounded-lg">
+                        <div className="bg-green-50 p-3 rounded-lg mb-3">
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-green-800">{unit.discounts.type} Free</span>
                             <span className="text-sm font-bold text-green-600">-${unit.discounts.amount}</span>
@@ -351,32 +447,48 @@ const PricingModule = ({ onClose }: PricingModuleProps) => {
                       )}
                     </div>
 
-                    {/* Pricing Terms */}
+                    {/* Enhanced Pricing Terms */}
                     <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Lease Terms</h4>
-                      <div className="grid grid-cols-4 gap-2">
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">Available Lease Terms</h4>
+                      <div className="space-y-2">
                         {Object.entries(unit.pricing).slice(0, 4).map(([term, price]) => (
-                          <div key={term} className="text-center p-2 bg-gray-50 rounded">
-                            <div className="text-xs text-gray-600">{term}mo</div>
-                            <div className="text-sm font-semibold">${price.toLocaleString()}</div>
+                          <div key={term} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                            <div className="text-sm">
+                              <span className="font-medium">{term} months</span>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-bold text-gray-900">${price.toLocaleString()}/mo</div>
+                              <div className="text-xs text-gray-500">${(price * Number(term)).toLocaleString()} total</div>
+                            </div>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    {/* Availability */}
+                    {/* Availability & Actions */}
                     <div className="border-t pt-3">
-                      {unit.availableDate ? (
-                        <p className="text-sm text-gray-600">
-                          <Calendar size={14} className="inline mr-1" />
-                          Available: {unit.availableDate}
-                        </p>
-                      ) : (
-                        <p className="text-sm text-green-600">
-                          <Calendar size={14} className="inline mr-1" />
-                          Available Now
-                        </p>
-                      )}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          {unit.availableDate ? (
+                            <p className="text-sm text-gray-600">
+                              <Calendar size={14} className="inline mr-1" />
+                              Available: {unit.availableDate}
+                            </p>
+                          ) : (
+                            <p className="text-sm text-green-600">
+                              <Calendar size={14} className="inline mr-1" />
+                              Available Now
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => setSelectedProspectUnit(unit)}
+                          className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors flex items-center space-x-1"
+                        >
+                          <Send size={14} />
+                          <span>Send App</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -571,6 +683,14 @@ const PricingModule = ({ onClose }: PricingModuleProps) => {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Prospect Modal */}
+      {selectedProspectUnit && (
+        <ProspectModal 
+          unit={selectedProspectUnit} 
+          onClose={() => setSelectedProspectUnit(null)} 
+        />
       )}
     </div>
   );
