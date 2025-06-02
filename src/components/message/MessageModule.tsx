@@ -1,9 +1,8 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
 import MessageComposer from './MessageComposer';
 import MessageConfirmation from './MessageConfirmation';
-import SwipeableScreen from '../schedule/SwipeableScreen';
+import SwipeableScreen, { SwipeableScreenRef } from '../schedule/SwipeableScreen';
 import SwipeUpPrompt from '@/components/ui/swipe-up-prompt';
 
 interface Attachment {
@@ -35,7 +34,7 @@ const MessageModule = ({
     recipientType,
     attachments: [] as Attachment[]
   });
-  const swipeableRef = useRef<HTMLDivElement>(null);
+  const swipeableRef = useRef<SwipeableScreenRef>(null);
 
   useEffect(() => {
     // Prevent zoom on mount and add input focus handling
@@ -211,34 +210,18 @@ const MessageModule = ({
           <div 
             className="absolute inset-0 pointer-events-auto"
             onTouchStart={(e) => {
-              // Forward touch events to the SwipeableScreen element directly
-              const swipeableScreen = swipeableRef.current;
-              if (swipeableScreen) {
-                const event = new Event('touchstart', { bubbles: true });
-                Object.defineProperty(event, 'touches', { value: e.touches });
-                Object.defineProperty(event, 'targetTouches', { value: e.targetTouches });
-                Object.defineProperty(event, 'changedTouches', { value: e.changedTouches });
-                swipeableScreen.dispatchEvent(event);
+              if (swipeableRef.current) {
+                swipeableRef.current.handleTouchStart(e);
               }
             }}
             onTouchMove={(e) => {
-              const swipeableScreen = swipeableRef.current;
-              if (swipeableScreen) {
-                const event = new Event('touchmove', { bubbles: true });
-                Object.defineProperty(event, 'touches', { value: e.touches });
-                Object.defineProperty(event, 'targetTouches', { value: e.targetTouches });
-                Object.defineProperty(event, 'changedTouches', { value: e.changedTouches });
-                swipeableScreen.dispatchEvent(event);
+              if (swipeableRef.current) {
+                swipeableRef.current.handleTouchMove(e);
               }
             }}
             onTouchEnd={(e) => {
-              const swipeableScreen = swipeableRef.current;
-              if (swipeableScreen) {
-                const event = new Event('touchend', { bubbles: true });
-                Object.defineProperty(event, 'touches', { value: e.touches });
-                Object.defineProperty(event, 'targetTouches', { value: e.targetTouches });
-                Object.defineProperty(event, 'changedTouches', { value: e.changedTouches });
-                swipeableScreen.dispatchEvent(event);
+              if (swipeableRef.current) {
+                swipeableRef.current.handleTouchEnd(e);
               }
             }}
           />
