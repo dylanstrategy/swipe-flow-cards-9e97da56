@@ -32,8 +32,10 @@ const HomeCard = ({ home }: HomeCardProps) => {
   };
 
   const handleApplyNow = () => {
+    console.log('Apply Now clicked for home:', home);
+    console.log('Navigating to:', `/movein/${home.id}`);
     // Navigate to move-in process with home details
-    navigate(`/move-in/${home.id}`, { state: { home } });
+    navigate(`/movein/${home.id}`, { state: { home } });
   };
 
   return (

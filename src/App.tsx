@@ -25,6 +25,7 @@ const App = () => (
             <Route path="/discovery" element={<Discovery />} />
             <Route path="/matches" element={<Matches />} />
             <Route path="/movein" element={<MoveIn />} />
+            <Route path="/movein/:homeId" element={<MoveIn />} />
             <Route path="/maintenance" element={<Maintenance />} />
             <Route path="/operator" element={<Operator />} />
             <Route path="*" element={<NotFound />} />

@@ -17,7 +17,7 @@ interface ProfileContextType {
   profile: ProfileData;
   updateLifestyleTags: (tags: string[]) => void;
   updatePets: (pets: Array<{ name: string; type: string; breed: string }>) => void;
-  getPersonalizedContext: () => string;
+  getPersonalizedContext: () => 'pet-service' | 'message' | 'appointment' | 'event' | 'work-order' | 'service' | 'document' | 'moving-service' | 'home-setup';
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -93,7 +93,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
   };
 
-  const getPersonalizedContext = (): string => {
+  const getPersonalizedContext = (): 'pet-service' | 'message' | 'appointment' | 'event' | 'work-order' | 'service' | 'document' | 'moving-service' | 'home-setup' => {
     const { lifestyleTags, pets } = profile;
     
     if (pets.length > 0) return 'pet-service';
