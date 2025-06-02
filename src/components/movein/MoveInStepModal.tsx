@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -137,7 +138,7 @@ const MoveInStepModal = ({ stepId, onComplete, onClose }: MoveInStepModalProps) 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="block text-sm font-medium text-purple-700 mb-1">Pet Type</label>
-                        <select className="w-full p-2 border border-purple-200 rounded-md text-sm">
+                        <select className="w-full p-2 border border-purple-200 rounded-md text-sm text-base">
                           <option value="">Select pet type</option>
                           <option value="dog">Dog</option>
                           <option value="cat">Cat</option>
@@ -147,15 +148,27 @@ const MoveInStepModal = ({ stepId, onComplete, onClose }: MoveInStepModalProps) 
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-purple-700 mb-1">Pet Name</label>
-                        <input type="text" placeholder="Pet's name" className="w-full p-2 border border-purple-200 rounded-md text-sm" />
+                        <input 
+                          type="text" 
+                          placeholder="Pet's name" 
+                          className="w-full p-2 border border-purple-200 rounded-md text-sm text-base" 
+                        />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-purple-700 mb-1">Breed</label>
-                        <input type="text" placeholder="Breed" className="w-full p-2 border border-purple-200 rounded-md text-sm" />
+                        <input 
+                          type="text" 
+                          placeholder="Breed" 
+                          className="w-full p-2 border border-purple-200 rounded-md text-sm text-base" 
+                        />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-purple-700 mb-1">Weight (lbs)</label>
-                        <input type="number" placeholder="Weight" className="w-full p-2 border border-purple-200 rounded-md text-sm" />
+                        <input 
+                          type="number" 
+                          placeholder="Weight" 
+                          className="w-full p-2 border border-purple-200 rounded-md text-sm text-base" 
+                        />
                       </div>
                     </div>
                     <div>
