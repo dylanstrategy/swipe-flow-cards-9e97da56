@@ -1,5 +1,4 @@
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import SwipeableScreen from './SwipeableScreen';
 import PhotoCaptureStep from './steps/PhotoCaptureStep';
 import DetailsStep from './steps/DetailsStep';
@@ -30,6 +29,25 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
     location: ''
   });
   const [photoCaptured, setPhotoCaptured] = useState(false);
+
+  // Prevent viewport zooming and ensure prompt stays visible
+  useEffect(() => {
+    const viewport = document.querySelector('meta[name=viewport]');
+    const originalContent = viewport?.getAttribute('content');
+    
+    if (viewport) {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+    }
+
+    // Add safe area styles
+    document.documentElement.style.setProperty('--safe-area-inset-bottom', 'env(safe-area-inset-bottom, 0px)');
+
+    return () => {
+      if (viewport && originalContent) {
+        viewport.setAttribute('content', originalContent);
+      }
+    };
+  }, []);
 
   const canProceedFromCurrentStep = (): boolean => {
     switch (currentStep) {
@@ -167,49 +185,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen overflow-hidden select-none"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      style={{
-        transform: isSwipeEnabled ? `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${getRotation()}deg)` : 'none',
-        transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.2, 0, 0, 1)',
-        transformOrigin: 'center center',
-        touchAction: isSwipeEnabled ? 'pan-x pan-y' : 'auto'
-      }}
-    >
-      {/* Swipe Action Overlays - Only show when swipe is enabled */}
-      {isSwipeEnabled && showAction === 'up' && canProceedFromCurrentStep() && (
-        <div 
-          className="absolute inset-0 flex items-start justify-center pt-16 transition-all duration-200 pointer-events-none z-50"
-          style={{ 
-            backgroundColor: '#22C55E',
-            opacity: getActionOpacity()
-          }}
-        >
-          <div className="text-white font-bold text-2xl flex flex-col items-center gap-3">
-            <div className="text-3xl">↑</div>
-            <span>Continue</span>
-          </div>
-        </div>
-      )}
-
-      {isSwipeEnabled && showAction === 'left' && currentStep > 1 && (
-        <div 
-          className="absolute inset-0 flex items-center justify-start pl-12 transition-all duration-200 pointer-events-none z-50"
-          style={{ 
-            backgroundColor: '#EF4444',
-            opacity: getActionOpacity()
-          }}
-        >
-          <div className="text-white font-bold text-2xl flex items-center gap-4">
-            <span className="text-3xl">←</span>
-            <span>Back</span>
-          </div>
-        </div>
-      )}
-
+    <>
       <SwipeableScreen
         title="Create Work Order"
         currentStep={currentStep}
@@ -224,22 +200,22 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
           <div className={currentStep < 4 ? "pb-32" : ""}>
             {renderCurrentStep()}
           </div>
-          
-          {/* Show SwipeUpPrompt for steps 1-3 when ready */}
-          {currentStep < 4 && canProceedFromCurrentStep() && (
-            <SwipeUpPrompt 
-              onContinue={onNextStep}
-              onBack={currentStep > 1 ? onPrevStep : undefined}
-              onClose={onClose}
-              message="Ready to continue!"
-              buttonText="Continue"
-              backButtonText="Back"
-              showBack={currentStep > 1}
-            />
-          )}
         </div>
       </SwipeableScreen>
-    </div>
+
+      {/* Show SwipeUpPrompt for steps 1-3 when ready - positioned absolutely above everything */}
+      {currentStep < 4 && canProceedFromCurrentStep() && (
+        <SwipeUpPrompt 
+          onContinue={onNextStep}
+          onBack={currentStep > 1 ? onPrevStep : undefined}
+          onClose={onClose}
+          message="Ready to continue!"
+          buttonText="Continue"
+          backButtonText="Back"
+          showBack={currentStep > 1}
+        />
+      )}
+    </>
   );
 };
 
