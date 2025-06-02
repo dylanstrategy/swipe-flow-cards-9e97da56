@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,7 +56,7 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
   };
 
   const handleTouchEnd = () => {
-    const threshold = 50;
+    const threshold = 30; // Reduced threshold for easier swiping
     
     if (Math.abs(dragOffset.y) > threshold && dragOffset.y < -threshold && canProceedToNextStep()) {
       handleNextStep();
@@ -81,6 +80,7 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
   const handleNextStep = () => {
     if (canProceedToNextStep()) {
       if (currentStep < 3) {
+        console.log(`Moving from step ${currentStep} to step ${currentStep + 1}`);
         setCurrentStep(currentStep + 1);
       } else {
         // Submit work order
@@ -93,7 +93,7 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
   const getActionOpacity = () => {
     if (!showAction) return 0;
     const distance = Math.abs(dragOffset.y);
-    const progress = Math.min(distance / 50, 1);
+    const progress = Math.min(distance / 30, 1); // Adjusted for new threshold
     return Math.max(0.5, progress * 0.9);
   };
 
@@ -157,6 +157,7 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
                 value={diagnosisNotes}
                 onChange={(e) => setDiagnosisNotes(e.target.value)}
                 className="min-h-32"
+                autoFocus
               />
             </div>
 
