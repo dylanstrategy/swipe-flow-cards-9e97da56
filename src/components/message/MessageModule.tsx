@@ -174,34 +174,57 @@ const MessageModule = ({
   };
 
   return (
-    <SwipeableScreen
-      title={getRecipientTitle()}
-      currentStep={currentStep}
-      totalSteps={2}
-      onClose={onClose}
-      onSwipeUp={currentStep < 2 && canProceedFromCurrentStep() ? handleNextStep : undefined}
-      onSwipeLeft={currentStep > 1 ? handlePrevStep : undefined}
-      canSwipeUp={canProceedFromCurrentStep()}
-      hideSwipeHandling={currentStep === 2}
-    >
-      <div className="h-full overflow-hidden relative">
-        <div className={currentStep < 2 ? "pb-32" : ""}>
-          {renderCurrentStep()}
+    <>
+      <SwipeableScreen
+        title={getRecipientTitle()}
+        currentStep={currentStep}
+        totalSteps={2}
+        onClose={onClose}
+        onSwipeUp={currentStep < 2 && canProceedFromCurrentStep() ? handleNextStep : undefined}
+        onSwipeLeft={currentStep > 1 ? handlePrevStep : undefined}
+        canSwipeUp={canProceedFromCurrentStep()}
+        hideSwipeHandling={currentStep === 2}
+      >
+        <div className="h-full overflow-hidden relative">
+          <div className={currentStep < 2 ? "pb-32" : ""}>
+            {renderCurrentStep()}
+          </div>
         </div>
-        
-        {/* Conditional SwipeUpPrompt - Only show on step 1 when ALL fields are filled and prompt is shown */}
-        {currentStep < 2 && showPrompt && canProceedFromCurrentStep() && (
-          <SwipeUpPrompt 
-            onContinue={handleNextStep}
-            onBack={currentStep > 1 ? handlePrevStep : undefined}
-            onClose={handleClosePrompt}
-            message="Ready to send!"
-            buttonText="Send Message"
-            showBack={currentStep > 1}
-          />
-        )}
-      </div>
-    </SwipeableScreen>
+      </SwipeableScreen>
+      
+      {/* Portal the SwipeUpPrompt outside to ensure proper stacking */}
+      {currentStep < 2 && showPrompt && canProceedFromCurrentStep() && (
+        <div 
+          className="fixed inset-0 pointer-events-none z-[99999]"
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 99999,
+            pointerEvents: 'none'
+          }}
+        >
+          <div 
+            className="absolute bottom-0 left-0 right-0 pointer-events-auto"
+            style={{
+              paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 20px)',
+              transform: 'translateZ(0)',
+              backfaceVisibility: 'hidden'
+            }}
+          >
+            <SwipeUpPrompt 
+              onContinue={handleNextStep}
+              onBack={currentStep > 1 ? handlePrevStep : undefined}
+              onClose={handleClosePrompt}
+              message="Ready to send!"
+              buttonText="Send Message"
+              showBack={currentStep > 1}
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
