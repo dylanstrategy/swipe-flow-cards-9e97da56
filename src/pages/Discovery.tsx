@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SwipeableDiscoveryFlow from '@/components/discovery/SwipeableDiscoveryFlow';
 import {
@@ -15,6 +15,33 @@ import { User, Settings, LogOut } from 'lucide-react';
 
 const Discovery = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Force viewport to prevent zoom
+    const viewport = document.querySelector('meta[name=viewport]');
+    if (viewport) {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    }
+
+    // Add CSS to prevent zoom
+    const style = document.createElement('style');
+    style.textContent = `
+      input, textarea, select {
+        font-size: 16px !important;
+        transform: translateZ(0);
+      }
+      body {
+        -webkit-text-size-adjust: 100% !important;
+        -ms-text-size-adjust: 100% !important;
+        text-size-adjust: 100% !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   const handleRoleSwitch = (role: string) => {
     switch (role) {

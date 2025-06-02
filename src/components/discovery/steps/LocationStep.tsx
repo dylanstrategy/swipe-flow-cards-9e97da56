@@ -21,57 +21,6 @@ const LocationStep = ({ location, proximityRadius, onUpdate }: LocationStepProps
     'Upper West Side'
   ];
 
-  useEffect(() => {
-    // Aggressively prevent zoom on mobile devices
-    const viewport = document.querySelector('meta[name=viewport]');
-    if (viewport) {
-      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no');
-    }
-
-    // Prevent all forms of zoom
-    const preventZoom = (e: any) => {
-      if (e.touches && e.touches.length > 1) {
-        e.preventDefault();
-      }
-    };
-
-    const preventGestures = (e: any) => {
-      e.preventDefault();
-    };
-
-    // Prevent input zoom specifically
-    const preventInputZoom = (e: any) => {
-      const target = e.target;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
-        if (viewport) {
-          viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-        }
-        // Additional zoom prevention
-        document.body.style.transform = 'scale(1)';
-        document.documentElement.style.transform = 'scale(1)';
-      }
-    };
-
-    // Add all event listeners
-    document.addEventListener('touchstart', preventZoom, { passive: false });
-    document.addEventListener('touchmove', preventZoom, { passive: false });
-    document.addEventListener('gesturestart', preventGestures, { passive: false });
-    document.addEventListener('gesturechange', preventGestures, { passive: false });
-    document.addEventListener('gestureend', preventGestures, { passive: false });
-    document.addEventListener('focusin', preventInputZoom, { passive: false });
-    document.addEventListener('focus', preventInputZoom, { passive: false, capture: true });
-
-    return () => {
-      document.removeEventListener('touchstart', preventZoom);
-      document.removeEventListener('touchmove', preventZoom);
-      document.removeEventListener('gesturestart', preventGestures);
-      document.removeEventListener('gesturechange', preventGestures);
-      document.removeEventListener('gestureend', preventGestures);
-      document.removeEventListener('focusin', preventInputZoom);
-      document.removeEventListener('focus', preventInputZoom, true);
-    };
-  }, []);
-
   return (
     <div className="space-y-8">
       <div className="text-center space-y-2">
@@ -96,32 +45,21 @@ const LocationStep = ({ location, proximityRadius, onUpdate }: LocationStepProps
           placeholder="e.g., Financial District, My Office, etc."
           className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           style={{ 
-            fontSize: '16px !important',
+            fontSize: '16px',
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-            transform: 'translateZ(0)',
             touchAction: 'manipulation',
             WebkitUserSelect: 'text',
             WebkitTouchCallout: 'none',
             WebkitTapHighlightColor: 'transparent',
             WebkitAppearance: 'none',
             borderRadius: '8px',
-            zoom: '1 !important',
-            maxWidth: '100%',
-            width: '100%'
+            transform: 'translateZ(0)'
           }}
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck="false"
           inputMode="text"
-          onFocus={(e) => {
-            // Force viewport again on focus
-            const viewport = document.querySelector('meta[name=viewport]');
-            if (viewport) {
-              viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-            }
-            e.target.style.fontSize = '16px';
-          }}
         />
         
         {/* Quick Location Options */}
