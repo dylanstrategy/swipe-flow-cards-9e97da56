@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import SwipeableScreen from '@/components/schedule/SwipeableScreen';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,12 +14,6 @@ interface WorkOrderFlowProps {
 
 const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [showAction, setShowAction] = useState<'up' | 'left' | null>(null);
-  const startPos = useRef({ x: 0, y: 0 });
-  const startTime = useRef(0);
-  
   const [diagnosisNotes, setDiagnosisNotes] = useState('');
   const [completionPhoto, setCompletionPhoto] = useState<string>('');
   const [selectedVendor, setSelectedVendor] = useState('');
@@ -49,6 +43,7 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
   };
 
   const onNextStep = () => {
+    console.log(`Current step: ${currentStep}, can proceed: ${canProceedFromCurrentStep()}`);
     if (canProceedFromCurrentStep()) {
       if (currentStep < 3) {
         console.log(`Moving from step ${currentStep} to step ${currentStep + 1}`);
@@ -57,93 +52,16 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
         console.log('Work order completed');
         onClose();
       }
+    } else {
+      console.log('Cannot proceed from current step');
     }
   };
 
   const onPrevStep = () => {
     if (currentStep > 1) {
+      console.log(`Moving back from step ${currentStep} to step ${currentStep - 1}`);
       setCurrentStep(currentStep - 1);
     }
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    startPos.current = { x: touch.clientX, y: touch.clientY };
-    startTime.current = Date.now();
-    setIsDragging(true);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
-    
-    const touch = e.touches[0];
-    const deltaX = touch.clientX - startPos.current.x;
-    const deltaY = touch.clientY - startPos.current.y;
-    
-    if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
-      const dampedX = deltaX * 0.8;
-      const dampedY = deltaY * 0.8;
-      
-      setDragOffset({ x: dampedX, y: dampedY });
-      
-      if (Math.abs(deltaY) > Math.abs(deltaX)) {
-        if (deltaY < -15 && canProceedFromCurrentStep()) {
-          setShowAction('up');
-        } else {
-          setShowAction(null);
-        }
-      } else {
-        if (deltaX < -20 && currentStep > 1) {
-          setShowAction('left');
-        } else {
-          setShowAction(null);
-        }
-      }
-    }
-  };
-
-  const handleTouchEnd = () => {
-    const deltaX = dragOffset.x;
-    const deltaY = dragOffset.y;
-    const deltaTime = Date.now() - startTime.current;
-    
-    const velocityY = Math.abs(deltaY) / Math.max(deltaTime, 1);
-    const velocityX = Math.abs(deltaX) / Math.max(deltaTime, 1);
-    
-    const upThreshold = 20;
-    const leftThreshold = 30;
-    const velocityThreshold = 0.1;
-    
-    const shouldCompleteUp = (Math.abs(deltaY) > upThreshold || velocityY > velocityThreshold) && 
-                            deltaY < -10 && canProceedFromCurrentStep();
-    const shouldCompleteLeft = (Math.abs(deltaX) > leftThreshold || velocityX > velocityThreshold) && 
-                              deltaX < -leftThreshold && currentStep > 1;
-    
-    if (shouldCompleteUp) {
-      console.log('Swipe up detected - going to next step');
-      onNextStep();
-    } else if (shouldCompleteLeft) {
-      console.log('Swipe left detected - going to previous step');
-      onPrevStep();
-    } else {
-      console.log('No valid swipe detected', { deltaX, deltaY, velocityX, velocityY });
-    }
-    
-    setIsDragging(false);
-    setDragOffset({ x: 0, y: 0 });
-    setShowAction(null);
-  };
-
-  const getActionOpacity = () => {
-    if (!showAction) return 0;
-    const distance = showAction === 'up' ? Math.abs(dragOffset.y) : Math.abs(dragOffset.x);
-    const progress = Math.min(distance / 25, 1);
-    return Math.max(0.5, progress * 0.9);
-  };
-
-  const getRotation = () => {
-    if (!isDragging) return 0;
-    return (dragOffset.x * 0.01);
   };
 
   const getPriorityColor = (priority: string) => {
@@ -407,61 +325,17 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen overflow-hidden select-none"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      style={{
-        transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${getRotation()}deg)`,
-        transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.2, 0, 0, 1)',
-        transformOrigin: 'center center',
-        touchAction: 'pan-x pan-y'
-      }}
+    <SwipeableScreen
+      title={`${getStepTitle()} - WO #${workOrder.id}`}
+      currentStep={currentStep}
+      totalSteps={3}
+      onClose={onClose}
+      onSwipeUp={canProceedFromCurrentStep() ? onNextStep : undefined}
+      onSwipeLeft={currentStep > 1 ? onPrevStep : undefined}
+      canSwipeUp={canProceedFromCurrentStep()}
     >
-      {showAction === 'up' && canProceedFromCurrentStep() && (
-        <div 
-          className="absolute inset-0 flex items-start justify-center pt-16 transition-all duration-200 pointer-events-none z-50"
-          style={{ 
-            backgroundColor: '#22C55E',
-            opacity: getActionOpacity()
-          }}
-        >
-          <div className="text-white font-bold text-2xl flex flex-col items-center gap-3">
-            <div className="text-3xl">↑</div>
-            <span>Continue</span>
-          </div>
-        </div>
-      )}
-
-      {showAction === 'left' && currentStep > 1 && (
-        <div 
-          className="absolute inset-0 flex items-center justify-start pl-12 transition-all duration-200 pointer-events-none z-50"
-          style={{ 
-            backgroundColor: '#EF4444',
-            opacity: getActionOpacity()
-          }}
-        >
-          <div className="text-white font-bold text-2xl flex items-center gap-4">
-            <span className="text-3xl">←</span>
-            <span>Back</span>
-          </div>
-        </div>
-      )}
-
-      <SwipeableScreen
-        title={`${getStepTitle()} - WO #${workOrder.id}`}
-        currentStep={currentStep}
-        totalSteps={3}
-        onClose={onClose}
-        onSwipeUp={canProceedFromCurrentStep() ? onNextStep : undefined}
-        onSwipeLeft={currentStep > 1 ? onPrevStep : undefined}
-        canSwipeUp={canProceedFromCurrentStep()}
-        hideSwipeHandling={true}
-      >
-        {renderStepContent()}
-      </SwipeableScreen>
-    </div>
+      {renderStepContent()}
+    </SwipeableScreen>
   );
 };
 
