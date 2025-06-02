@@ -6,8 +6,7 @@ import WorkOrderTracker from '../WorkOrderTracker';
 import UnitTurnDetailTracker from '../UnitTurnDetailTracker';
 import WorkOrderDetailTracker from '../WorkOrderDetailTracker';
 import WorkOrderFlow from '../WorkOrderFlow';
-import MaintenanceInventoryTab from './MaintenanceInventoryTab';
-import { Calendar, Home, Wrench, BarChart3, Package } from 'lucide-react';
+import { Calendar, Home, Wrench, BarChart3 } from 'lucide-react';
 
 const MaintenanceScheduleTab = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -66,7 +65,7 @@ const MaintenanceScheduleTab = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <BarChart3 className="w-4 h-4" />
             Overview
@@ -78,10 +77,6 @@ const MaintenanceScheduleTab = () => {
           <TabsTrigger value="unitturns" className="flex items-center gap-2">
             <Home className="w-4 h-4" />
             Unit Turns
-          </TabsTrigger>
-          <TabsTrigger value="inventory" className="flex items-center gap-2">
-            <Package className="w-4 h-4" />
-            Inventory
           </TabsTrigger>
         </TabsList>
 
@@ -104,10 +99,6 @@ const MaintenanceScheduleTab = () => {
 
         <TabsContent value="unitturns">
           <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
-        </TabsContent>
-
-        <TabsContent value="inventory">
-          <MaintenanceInventoryTab />
         </TabsContent>
       </Tabs>
     </div>

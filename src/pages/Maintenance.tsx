@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TabNavigation from '@/components/TabNavigation';
 import MaintenanceTodayTab from '@/components/maintenance/tabs/MaintenanceTodayTab';
 import MaintenanceScheduleTab from '@/components/maintenance/tabs/MaintenanceScheduleTab';
+import MaintenanceInventoryTab from '@/components/maintenance/tabs/MaintenanceInventoryTab';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +52,8 @@ const Maintenance = () => {
         return <MaintenanceTodayTab />;
       case 'dashboard':
         return <MaintenanceScheduleTab />;
+      case 'inventory':
+        return <MaintenanceInventoryTab />;
       default:
         return <MaintenanceTodayTab />;
     }
