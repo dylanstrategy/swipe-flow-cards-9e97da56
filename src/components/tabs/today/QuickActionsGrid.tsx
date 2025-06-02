@@ -1,14 +1,15 @@
 
 import React from 'react';
-import { Package, Wrench, CreditCard, MessageSquare, Calendar, Truck } from 'lucide-react';
+import { Package, Wrench, CreditCard } from 'lucide-react';
 
 interface QuickActionsGridProps {
   onAction: (action: string, item: string) => void;
   onServiceClick: () => void;
+  onMaintenanceClick: () => void;
   getRentUrgencyClass: () => string;
 }
 
-const QuickActionsGrid = ({ onAction, onServiceClick, getRentUrgencyClass }: QuickActionsGridProps) => {
+const QuickActionsGrid = ({ onAction, onServiceClick, onMaintenanceClick, getRentUrgencyClass }: QuickActionsGridProps) => {
   const quickActions = [
     { 
       icon: Package, 
@@ -20,7 +21,7 @@ const QuickActionsGrid = ({ onAction, onServiceClick, getRentUrgencyClass }: Qui
       icon: Wrench, 
       label: 'Maintenance', 
       action: 'maintenance',
-      onClick: () => onAction('Requested', 'Maintenance')
+      onClick: onMaintenanceClick
     },
     { 
       icon: CreditCard, 
@@ -28,24 +29,6 @@ const QuickActionsGrid = ({ onAction, onServiceClick, getRentUrgencyClass }: Qui
       action: 'pay-rent',
       className: getRentUrgencyClass(),
       onClick: () => onAction('Opened', 'Rent Payment')
-    },
-    { 
-      icon: MessageSquare, 
-      label: 'Messages', 
-      action: 'messages',
-      onClick: () => onAction('Opened', 'Messages')
-    },
-    { 
-      icon: Calendar, 
-      label: 'Schedule', 
-      action: 'schedule',
-      onClick: () => onAction('Opened', 'Schedule')
-    },
-    { 
-      icon: Truck, 
-      label: 'Move Out', 
-      action: 'move-out',
-      onClick: () => onAction('Started', 'Move Out Process')
     }
   ];
 

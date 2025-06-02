@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
+import WorkOrderFlow from '../schedule/WorkOrderFlow';
 import { useToast } from '@/hooks/use-toast';
 import { format, addDays, isSameDay, differenceInDays, isPast, isToday } from 'date-fns';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -18,6 +19,7 @@ const TodayTab = () => {
   const [showTimeline, setShowTimeline] = useState(false);
   const [showMessageModule, setShowMessageModule] = useState(false);
   const [showServiceModule, setShowServiceModule] = useState(false);
+  const [showWorkOrderFlow, setShowWorkOrderFlow] = useState(false);
   const [messageConfig, setMessageConfig] = useState({
     subject: '',
     recipientType: 'management' as 'management' | 'maintenance' | 'leasing',
@@ -329,6 +331,18 @@ const TodayTab = () => {
     return null;
   };
 
+  if (showWorkOrderFlow) {
+    return (
+      <WorkOrderFlow
+        selectedScheduleType="Work Order"
+        currentStep={1}
+        onNextStep={() => {}}
+        onPrevStep={() => {}}
+        onClose={() => setShowWorkOrderFlow(false)}
+      />
+    );
+  }
+
   if (showServiceModule) {
     return <ServiceModule onClose={() => setShowServiceModule(false)} />;
   }
@@ -361,6 +375,7 @@ const TodayTab = () => {
       <QuickActionsGrid 
         onAction={handleAction}
         onServiceClick={() => setShowServiceModule(true)}
+        onMaintenanceClick={() => setShowWorkOrderFlow(true)}
         getRentUrgencyClass={getRentUrgencyClass}
       />
 
