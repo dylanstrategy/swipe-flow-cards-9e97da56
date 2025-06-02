@@ -9,6 +9,7 @@ import WorkOrderFlow from '../schedule/WorkOrderFlow';
 import SuggestionsSection from '../schedule/SuggestionsSection';
 import ScheduledItemsTimeline from '../schedule/ScheduledItemsTimeline';
 import MessageModule from '../message/MessageModule';
+import ServiceModule from '../service/ServiceModule';
 
 const ScheduleTab = () => {
   const { toast } = useToast();
@@ -18,6 +19,7 @@ const ScheduleTab = () => {
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [selectedScheduleType, setSelectedScheduleType] = useState<string>('');
   const [showMessageModule, setShowMessageModule] = useState(false);
+  const [showServiceModule, setShowServiceModule] = useState(false);
   const [messageConfig, setMessageConfig] = useState({
     subject: '',
     recipientType: 'management' as 'management' | 'maintenance' | 'leasing',
@@ -69,6 +71,9 @@ const ScheduleTab = () => {
       });
       setShowMessageModule(true);
       setShowScheduleMenu(false);
+    } else if (type === 'Service') {
+      setShowServiceModule(true);
+      setShowScheduleMenu(false);
     } else {
       // For other types, you can implement different flows
       toast({
@@ -89,6 +94,15 @@ const ScheduleTab = () => {
     setShowMessageModule(false);
     setShowScheduleMenu(false);
   };
+
+  const handleCloseService = () => {
+    setShowServiceModule(false);
+    setShowScheduleMenu(false);
+  };
+
+  if (showServiceModule) {
+    return <ServiceModule onClose={handleCloseService} />;
+  }
 
   if (showMessageModule) {
     return (
