@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Plus, X, BarChart3, Users, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -275,7 +276,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 
       case 3:
         return (
-          <div className="space-y-6 pb-32">
+          <div className="space-y-6 pb-40">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Poll Settings</CardTitle>
@@ -392,8 +393,8 @@ const PollModule = ({ onClose }: PollModuleProps) => {
               </CardContent>
             </Card>
 
-            {/* Swipeable Submit Button */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
+            {/* Swipeable Submit Button - Positioned above nav bar */}
+            <div className="fixed bottom-20 left-4 right-4 z-50">
               <SwipeCard
                 onSwipeUp={{
                   label: "Create Poll",
@@ -402,9 +403,9 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                   icon: "↑"
                 }}
                 enableSwipeUp={true}
-                className="shadow-none border-0"
+                className="shadow-lg border-0"
               >
-                <div className="bg-green-600 hover:bg-green-700 text-white p-4 rounded-lg flex items-center justify-center gap-2">
+                <div className="bg-green-600 hover:bg-green-700 text-white p-4 rounded-xl flex items-center justify-center gap-2 shadow-lg">
                   <span className="font-medium">Swipe up to create poll</span>
                   <ArrowRight size={16} />
                 </div>
