@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Home, Calendar, DollarSign, TrendingUp, Building, Search } from 'lucide-react';
+import { ArrowLeft, Home, Calendar, DollarSign, TrendingUp, Building, Search, Grid, List, Users, MapPin } from 'lucide-react';
 
 interface PricingModuleProps {
   onClose: () => void;
@@ -14,6 +13,7 @@ const PricingModule = ({ onClose }: PricingModuleProps) => {
   const [selectedView, setSelectedView] = useState<'units' | 'ppf' | 'comps'>('units');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'available' | 'vacant' | 'occupied'>('all');
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
 
   // Generate all 150 units (15 floors, 10 units per floor)
   const generateAllUnits = () => {
@@ -27,20 +27,18 @@ const PricingModule = ({ onClose }: PricingModuleProps) => {
         const unitNumber = `${floor.toString().padStart(2, '0')}${unitNum.toString().padStart(2, '0')}`;
         const typeIndex = (floor + unitNum) % 4;
         const type = unitTypes[typeIndex];
-        const sqft = baseSqft[type] + Math.floor(Math.random() * 100) - 50; // Some variance
+        const sqft = baseSqft[type] + Math.floor(Math.random() * 100) - 50;
         const baseRent = baseRents[type];
         const marketRent = baseRent + Math.floor(Math.random() * 200) - 100;
         
-        // Determine status - most occupied, some available/vacant
         let status = 'occupied';
         const rand = Math.random();
-        if (rand < 0.04) status = 'vacant'; // 4% vacant
-        else if (rand < 0.08) status = 'available'; // 4% available
+        if (rand < 0.04) status = 'vacant';
+        else if (rand < 0.08) status = 'available';
         
         const currentRent = status === 'occupied' ? marketRent - Math.floor(Math.random() * 100) : 0;
         const suggestedRent = status !== 'occupied' ? marketRent - 50 : 0;
         
-        // Generate move out dates for available units
         const moveOutDate = status === 'available' ? 
           new Date(Date.now() + Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : '';
         const availableDate = moveOutDate ? 
@@ -65,11 +63,27 @@ const PricingModule = ({ onClose }: PricingModuleProps) => {
             amount: Math.random() > 0.5 ? Math.floor(marketRent / 2) : marketRent,
             daysOut: Math.floor(Math.random() * 60) + 15
           } : null,
-          premiums: Math.floor(Math.random() * 150)
+          premiums: Math.floor(Math.random() * 150),
+          pricing: generatePricingTerms(marketRent)
         });
       }
     }
     return units;
+  };
+
+  const generatePricingTerms = (baseRent: number) => {
+    const terms = [3, 6, 9, 12, 15, 18, 21, 24];
+    const pricing: { [key: number]: number } = {};
+    
+    terms.forEach(term => {
+      let adjustment = 0;
+      if (term <= 6) adjustment = 100; // Short term premium
+      else if (term >= 18) adjustment = -50; // Long term discount
+      
+      pricing[term] = baseRent + adjustment;
+    });
+    
+    return pricing;
   };
 
   const allUnits = generateAllUnits();
@@ -145,21 +159,6 @@ const PricingModule = ({ onClose }: PricingModuleProps) => {
     }
   ];
 
-  const generatePricingGrid = (baseRent: number, unitType: string) => {
-    const terms = [3, 6, 9, 12, 15, 18, 21, 24];
-    const pricing: { [key: number]: number } = {};
-    
-    terms.forEach(term => {
-      let adjustment = 0;
-      if (term <= 6) adjustment = 100; // Short term premium
-      else if (term >= 18) adjustment = -50; // Long term discount
-      
-      pricing[term] = baseRent + adjustment;
-    });
-    
-    return pricing;
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'available': return 'bg-green-100 text-green-800';
@@ -177,6 +176,9 @@ const PricingModule = ({ onClose }: PricingModuleProps) => {
     vacant: allUnits.filter(u => u.status === 'vacant').length
   };
 
+  // Determine if we should show cards (when filtering by available/vacant)
+  const shouldShowCards = filterStatus === 'available' || filterStatus === 'vacant';
+
   return (
     <div className="p-6 space-y-6 pb-24">
       {/* Header */}
@@ -192,7 +194,10 @@ const PricingModule = ({ onClose }: PricingModuleProps) => {
 
       {/* Summary Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-blue-50 p-4 rounded-lg text-center">
+        <div 
+          className="bg-blue-50 p-4 rounded-lg text-center cursor-pointer hover:bg-blue-100 transition-colors"
+          onClick={() => setFilterStatus('all')}
+        >
           <div className="text-2xl font-bold text-blue-600">{statusCounts.total}</div>
           <div className="text-sm text-blue-800">Total Units</div>
         </div>
@@ -200,11 +205,17 @@ const PricingModule = ({ onClose }: PricingModuleProps) => {
           <div className="text-2xl font-bold text-green-600">{statusCounts.occupied}</div>
           <div className="text-sm text-green-800">Occupied</div>
         </div>
-        <div className="bg-yellow-50 p-4 rounded-lg text-center">
+        <div 
+          className="bg-yellow-50 p-4 rounded-lg text-center cursor-pointer hover:bg-yellow-100 transition-colors"
+          onClick={() => setFilterStatus('available')}
+        >
           <div className="text-2xl font-bold text-yellow-600">{statusCounts.available}</div>
           <div className="text-sm text-yellow-800">Available</div>
         </div>
-        <div className="bg-red-50 p-4 rounded-lg text-center">
+        <div 
+          className="bg-red-50 p-4 rounded-lg text-center cursor-pointer hover:bg-red-100 transition-colors"
+          onClick={() => setFilterStatus('vacant')}
+        >
           <div className="text-2xl font-bold text-red-600">{statusCounts.vacant}</div>
           <div className="text-sm text-red-800">Vacant</div>
         </div>
@@ -256,6 +267,22 @@ const PricingModule = ({ onClose }: PricingModuleProps) => {
                 <Building className="w-5 h-5" />
                 <span>Complete Unit Directory ({filteredUnits.length} units)</span>
               </span>
+              {shouldShowCards && (
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setViewMode('table')}
+                    className={`p-2 rounded-md ${viewMode === 'table' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                  >
+                    <List size={18} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('cards')}
+                    className={`p-2 rounded-md ${viewMode === 'cards' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                  >
+                    <Grid size={18} />
+                  </button>
+                </div>
+              )}
             </CardTitle>
             
             {/* Search and Filter */}
@@ -288,52 +315,121 @@ const PricingModule = ({ onClose }: PricingModuleProps) => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Unit</TableHead>
-                    <TableHead>Floor</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Sq Ft</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Current Rent</TableHead>
-                    <TableHead>Market Rent</TableHead>
-                    <TableHead>Resident/Next Available</TableHead>
-                    <TableHead>Lease End/Move Out</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUnits.map((unit) => (
-                    <TableRow key={unit.unit} className="hover:bg-gray-50">
-                      <TableCell className="font-medium">{unit.unit}</TableCell>
-                      <TableCell>{unit.floor}</TableCell>
-                      <TableCell>{unit.type}</TableCell>
-                      <TableCell>{unit.sqft}</TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(unit.status)}>
-                          {unit.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {unit.currentRent > 0 ? `$${unit.currentRent.toLocaleString()}` : '-'}
-                      </TableCell>
-                      <TableCell className="font-semibold">
-                        ${unit.marketRent.toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        {unit.status === 'occupied' ? unit.resident : 
-                         unit.availableDate ? unit.availableDate : 'Available Now'}
-                      </TableCell>
-                      <TableCell>
-                        {unit.status === 'occupied' ? unit.leaseEnd : 
-                         unit.moveOutDate ? unit.moveOutDate : '-'}
-                      </TableCell>
+            {shouldShowCards && viewMode === 'cards' ? (
+              // Card View for Available/Vacant Units
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredUnits.map((unit) => (
+                  <div key={unit.unit} className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+                    {/* Unit Header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900">Unit {unit.unit}</h3>
+                        <p className="text-sm text-gray-600 flex items-center">
+                          <MapPin size={14} className="mr-1" />
+                          Floor {unit.floor} • {unit.sqft} sq ft
+                        </p>
+                      </div>
+                      <Badge className={getStatusColor(unit.status)}>
+                        {unit.status}
+                      </Badge>
+                    </div>
+
+                    {/* Unit Type & Size */}
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-lg font-semibold text-gray-900">{unit.type}</span>
+                        <span className="text-2xl font-bold text-blue-600">${unit.marketRent.toLocaleString()}</span>
+                      </div>
+                      {unit.discounts && (
+                        <div className="bg-green-50 p-3 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-green-800">{unit.discounts.type} Free</span>
+                            <span className="text-sm font-bold text-green-600">-${unit.discounts.amount}</span>
+                          </div>
+                          <p className="text-xs text-green-700 mt-1">{unit.discounts.daysOut} days out special</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Pricing Terms */}
+                    <div className="mb-4">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Lease Terms</h4>
+                      <div className="grid grid-cols-4 gap-2">
+                        {Object.entries(unit.pricing).slice(0, 4).map(([term, price]) => (
+                          <div key={term} className="text-center p-2 bg-gray-50 rounded">
+                            <div className="text-xs text-gray-600">{term}mo</div>
+                            <div className="text-sm font-semibold">${price.toLocaleString()}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Availability */}
+                    <div className="border-t pt-3">
+                      {unit.availableDate ? (
+                        <p className="text-sm text-gray-600">
+                          <Calendar size={14} className="inline mr-1" />
+                          Available: {unit.availableDate}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-green-600">
+                          <Calendar size={14} className="inline mr-1" />
+                          Available Now
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              // Table View
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Unit</TableHead>
+                      <TableHead>Floor</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Sq Ft</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Current Rent</TableHead>
+                      <TableHead>Market Rent</TableHead>
+                      <TableHead>Resident/Next Available</TableHead>
+                      <TableHead>Lease End/Move Out</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUnits.map((unit) => (
+                      <TableRow key={unit.unit} className="hover:bg-gray-50">
+                        <TableCell className="font-medium">{unit.unit}</TableCell>
+                        <TableCell>{unit.floor}</TableCell>
+                        <TableCell>{unit.type}</TableCell>
+                        <TableCell>{unit.sqft}</TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(unit.status)}>
+                            {unit.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {unit.currentRent > 0 ? `$${unit.currentRent.toLocaleString()}` : '-'}
+                        </TableCell>
+                        <TableCell className="font-semibold">
+                          ${unit.marketRent.toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          {unit.status === 'occupied' ? unit.resident : 
+                           unit.availableDate ? unit.availableDate : 'Available Now'}
+                        </TableCell>
+                        <TableCell>
+                          {unit.status === 'occupied' ? unit.leaseEnd : 
+                           unit.moveOutDate ? unit.moveOutDate : '-'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -455,7 +551,6 @@ const PricingModule = ({ onClose }: PricingModuleProps) => {
               </Table>
             </div>
 
-            {/* Summary Stats */}
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg">
                 <h3 className="font-semibold text-blue-900">Average Blended Rate</h3>
