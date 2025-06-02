@@ -14,6 +14,8 @@ interface ReviewSection {
   items: ReviewItem[];
 }
 
+type PointOfSaleContext = "message" | "work-order" | "appointment" | "service" | "document" | "event" | "pet-service" | "moving-service" | "home-setup";
+
 interface ReviewSlideProps {
   title: string;
   subtitle?: string;
@@ -21,7 +23,7 @@ interface ReviewSlideProps {
   onSubmit: () => void;
   submitButtonText?: string;
   showPointOfSale?: boolean;
-  pointOfSaleContext?: string;
+  pointOfSaleContext?: PointOfSaleContext;
 }
 
 const ReviewSlide = ({ 
@@ -31,7 +33,7 @@ const ReviewSlide = ({
   onSubmit, 
   submitButtonText = 'Submit',
   showPointOfSale = true,
-  pointOfSaleContext = 'review'
+  pointOfSaleContext = 'work-order'
 }: ReviewSlideProps) => {
   const handleOfferClick = (offer: any) => {
     console.log('Review offer clicked:', offer);

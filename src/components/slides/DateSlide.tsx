@@ -33,7 +33,7 @@ const DateSlide = ({
 
   const defaultTimeSlots = ['9:00 AM', '11:00 AM', '1:00 PM', '3:00 PM'];
   const availableTimes = selectedDate && getTimeSlots ? getTimeSlots(selectedDate) : defaultTimeSlots;
-  const canProceed = selectedDate && (!showTimeSelection || selectedTime);
+  const canProceed = Boolean(selectedDate && (!showTimeSelection || selectedTime));
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
