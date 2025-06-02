@@ -528,28 +528,27 @@ const OperatorTodayTab = () => {
             ) : (
               <>
                 <TrendingUp className="text-purple-600" size={24} />
-                LIVE ACTIVITY FEED
+                LIVE FEED
               </>
             )}
           </h2>
           
-          <Button
-            variant="outline"
+          <button
             onClick={() => setShowCalendarView(!showCalendarView)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
           >
             {showCalendarView ? (
               <>
-                <Activity size={16} />
-                Show Live Feed
+                <Activity size={14} />
+                <span className="text-xs">Feed</span>
               </>
             ) : (
               <>
-                <CalendarDays size={16} />
-                Show Calendar
+                <CalendarDays size={14} />
+                <span className="text-xs">Calendar</span>
               </>
             )}
-          </Button>
+          </button>
         </div>
 
         {showCalendarView ? (
