@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
 import MessageComposer from './MessageComposer';
@@ -122,10 +123,15 @@ const MessageModule = ({
     if (currentStep === 1) {
       return messageData.subject.trim() !== '' && messageData.message.trim() !== '';
     }
-    return true;
+    return false; // Step 2 (confirmation) should not be swipeable
   };
 
+  // Only enable swipe handling for step 1 (compose), not step 2 (confirmation)
+  const isSwipeEnabled = currentStep === 1;
+
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isSwipeEnabled) return;
+    
     const touch = e.touches[0];
     startPos.current = { x: touch.clientX, y: touch.clientY };
     startTime.current = Date.now();
@@ -133,7 +139,7 @@ const MessageModule = ({
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
+    if (!isDragging || !isSwipeEnabled) return;
     
     const touch = e.touches[0];
     const deltaX = touch.clientX - startPos.current.x;
@@ -167,6 +173,8 @@ const MessageModule = ({
   };
 
   const handleTouchEnd = () => {
+    if (!isSwipeEnabled) return;
+    
     const deltaX = dragOffset.x;
     const deltaY = dragOffset.y;
     const deltaTime = Date.now() - startTime.current;
@@ -241,14 +249,14 @@ const MessageModule = ({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       style={{
-        transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${getRotation()}deg)`,
+        transform: isSwipeEnabled ? `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${getRotation()}deg)` : 'none',
         transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.2, 0, 0, 1)',
         transformOrigin: 'center center',
-        touchAction: 'pan-x pan-y'
+        touchAction: isSwipeEnabled ? 'pan-x pan-y' : 'auto'
       }}
     >
-      {/* Swipe Action Overlays */}
-      {showAction === 'up' && canProceedFromCurrentStep() && (
+      {/* Swipe Action Overlays - Only show when swipe is enabled */}
+      {isSwipeEnabled && showAction === 'up' && canProceedFromCurrentStep() && (
         <div 
           className="absolute inset-0 flex items-start justify-center pt-16 transition-all duration-200 pointer-events-none z-50"
           style={{ 
@@ -263,7 +271,7 @@ const MessageModule = ({
         </div>
       )}
 
-      {showAction === 'left' && currentStep > 1 && (
+      {isSwipeEnabled && showAction === 'left' && currentStep > 1 && (
         <div 
           className="absolute inset-0 flex items-center justify-start pl-12 transition-all duration-200 pointer-events-none z-50"
           style={{ 
