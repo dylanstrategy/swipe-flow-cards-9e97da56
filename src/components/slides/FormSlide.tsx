@@ -26,12 +26,12 @@ const FormSlide = ({
         {children}
       </BaseSlide>
 
-      {/* Swipe Up Prompt - Fixed at bottom */}
+      {/* Compact Swipe Up Prompt */}
       {canProceed && showSwipePrompt && (
-        <div className="flex-shrink-0 text-center py-4 px-4 bg-white border-t border-gray-100">
-          <p className="text-green-600 font-medium text-sm mb-2">Ready to continue!</p>
-          <ArrowUp className="text-green-600 animate-bounce mx-auto mb-2" size={20} />
-          <p className="text-xs text-gray-500">Swipe up to continue</p>
+        <div className="flex-shrink-0 text-center py-2 px-4 bg-white border-t border-gray-100">
+          <p className="text-green-600 font-medium text-xs mb-1">Ready to continue!</p>
+          <ArrowUp className="text-green-600 animate-bounce mx-auto mb-1" size={16} />
+          <p className="text-[10px] text-gray-500">Swipe up to continue</p>
         </div>
       )}
     </div>

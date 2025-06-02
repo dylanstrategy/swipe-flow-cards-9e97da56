@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, ReactNode, useEffect } from 'react';
 import { ArrowUp, X } from 'lucide-react';
 
@@ -34,45 +33,68 @@ const SwipeableScreen = ({
   const startTime = useRef(0);
 
   useEffect(() => {
-    // Prevent zoom on mount and add input focus handling
+    // Prevent zoom completely - more aggressive approach
     const viewport = document.querySelector('meta[name=viewport]');
-    const originalContent = viewport?.getAttribute('content');
     
+    // Set strict no-zoom viewport
     if (viewport) {
-      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+    } else {
+      // Create viewport meta tag if it doesn't exist
+      const newViewport = document.createElement('meta');
+      newViewport.name = 'viewport';
+      newViewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+      document.head.appendChild(newViewport);
     }
 
-    // Prevent pinch zoom
+    // Prevent all zoom gestures
     const preventZoom = (e: TouchEvent) => {
       if (e.touches.length > 1) {
         e.preventDefault();
+        e.stopPropagation();
       }
     };
 
-    // Prevent zoom on input focus
+    // Prevent double-tap zoom
+    const preventDoubleTapZoom = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+
+    // Prevent zoom on input focus with more aggressive handling
     const preventInputZoom = (e: Event) => {
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-        if (viewport) {
-          viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-        }
+        // Force viewport to stay at scale 1
+        setTimeout(() => {
+          if (viewport) {
+            viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+          }
+          window.scrollTo(0, 0);
+        }, 100);
       }
     };
 
+    // Add all event listeners
     document.addEventListener('touchstart', preventZoom, { passive: false });
     document.addEventListener('touchmove', preventZoom, { passive: false });
+    document.addEventListener('touchend', preventDoubleTapZoom, { passive: false });
     document.addEventListener('focusin', preventInputZoom);
     document.addEventListener('focusout', preventInputZoom);
 
+    // Prevent gesturestart for older iOS devices
+    document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+    document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
+    document.addEventListener('gestureend', (e) => e.preventDefault(), { passive: false });
+
     return () => {
-      // Restore original viewport on unmount
-      if (viewport && originalContent) {
-        viewport.setAttribute('content', originalContent);
-      }
       document.removeEventListener('touchstart', preventZoom);
       document.removeEventListener('touchmove', preventZoom);
+      document.removeEventListener('touchend', preventDoubleTapZoom);
       document.removeEventListener('focusin', preventInputZoom);
       document.removeEventListener('focusout', preventInputZoom);
+      document.removeEventListener('gesturestart', (e) => e.preventDefault());
+      document.removeEventListener('gesturechange', (e) => e.preventDefault());
+      document.removeEventListener('gestureend', (e) => e.preventDefault());
     };
   }, []);
 
@@ -151,35 +173,35 @@ const SwipeableScreen = ({
   if (hideSwipeHandling) {
     return (
       <div className="flex flex-col h-full">
-        {/* Header with X button and optional right button */}
-        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200 relative z-10">
+        {/* Compact Header */}
+        <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-gray-200 relative z-10">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">{title}</h1>
+            <h1 className="text-lg font-semibold text-gray-900 leading-tight">{title}</h1>
             <span className="text-xs text-gray-500">Step {currentStep} of {totalSteps}</span>
           </div>
           <div className="flex items-center gap-2">
             {rightButton}
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
             >
-              <X className="text-gray-600" size={20} />
+              <X className="text-gray-600" size={18} />
             </button>
           </div>
         </div>
         
-        {/* Progress Bar */}
-        <div className="flex-shrink-0 px-4 py-2 relative z-10">
-          <div className="w-full bg-gray-200 rounded-full h-1.5">
+        {/* Compact Progress Bar */}
+        <div className="flex-shrink-0 px-4 py-1.5 relative z-10">
+          <div className="w-full bg-gray-200 rounded-full h-1">
             <div 
-              className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
+              className="bg-blue-600 h-1 rounded-full transition-all duration-300"
               style={{ width: `${(currentStep / totalSteps) * 100}%` }}
             ></div>
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 p-4 overflow-hidden relative z-10">
+        <div className="flex-1 overflow-hidden relative z-10">
           {children}
         </div>
       </div>
@@ -230,35 +252,35 @@ const SwipeableScreen = ({
         </div>
       )}
 
-      {/* Header with X button and optional right button */}
-      <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200 relative z-10">
+      {/* Compact Header */}
+      <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-gray-200 relative z-10">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">{title}</h1>
+          <h1 className="text-lg font-semibold text-gray-900 leading-tight">{title}</h1>
           <span className="text-xs text-gray-500">Step {currentStep} of {totalSteps}</span>
         </div>
         <div className="flex items-center gap-2">
           {rightButton}
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
           >
-            <X className="text-gray-600" size={20} />
+            <X className="text-gray-600" size={18} />
           </button>
         </div>
       </div>
       
-      {/* Progress Bar */}
-      <div className="flex-shrink-0 px-4 py-2 relative z-10">
-        <div className="w-full bg-gray-200 rounded-full h-1.5">
+      {/* Compact Progress Bar */}
+      <div className="flex-shrink-0 px-4 py-1.5 relative z-10">
+        <div className="w-full bg-gray-200 rounded-full h-1">
           <div 
-            className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
+            className="bg-blue-600 h-1 rounded-full transition-all duration-300"
             style={{ width: `${(currentStep / totalSteps) * 100}%` }}
           ></div>
         </div>
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 p-4 overflow-hidden relative z-10">
+      <div className="flex-1 overflow-hidden relative z-10">
         {children}
       </div>
     </div>
