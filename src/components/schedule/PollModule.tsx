@@ -274,7 +274,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 
       case 3:
         return (
-          <div className="space-y-6 pb-20">
+          <div className="space-y-6 pb-24">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Poll Settings</CardTitle>
@@ -390,6 +390,17 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Fixed Submit Button for Step 3 */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
+              <Button 
+                onClick={handleSubmit}
+                className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2 py-3"
+              >
+                Create Poll
+                <ArrowRight size={16} />
+              </Button>
+            </div>
           </div>
         );
 
@@ -404,19 +415,10 @@ const PollModule = ({ onClose }: PollModuleProps) => {
       currentStep={step}
       totalSteps={3}
       onClose={onClose}
-      onSwipeUp={step < 3 && canProceed() ? nextStep : (step === 3 ? handleSubmit : undefined)}
+      onSwipeUp={step < 3 && canProceed() ? nextStep : undefined}
       onSwipeLeft={step > 1 ? prevStep : undefined}
-      canSwipeUp={canProceed()}
-      hideSwipeHandling={false}
-      submitButton={step === 3 ? (
-        <Button 
-          onClick={handleSubmit}
-          className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2 py-3"
-        >
-          Create Poll
-          <ArrowRight size={16} />
-        </Button>
-      ) : undefined}
+      canSwipeUp={step < 3 && canProceed()}
+      hideSwipeHandling={step === 3}
     >
       <div className={step === 3 ? "h-full overflow-y-auto" : "h-full overflow-hidden"}>
         {renderCurrentStep()}
