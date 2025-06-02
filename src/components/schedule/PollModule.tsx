@@ -275,7 +275,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 
       case 3:
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 h-full overflow-y-auto pb-6">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Poll Settings</CardTitle>
@@ -286,10 +286,10 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                     Poll Duration
                   </label>
                   <Select value={pollData.duration} onValueChange={(value) => setPollData({ ...pollData, duration: value })}>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
                       {durationOptions.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
@@ -304,10 +304,10 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                     Target Audience
                   </label>
                   <Select value={pollData.targetAudience} onValueChange={(value: any) => setPollData({ ...pollData, targetAudience: value })}>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
                       {targetOptions.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
@@ -323,10 +323,10 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                       Building
                     </label>
                     <Select value={pollData.building} onValueChange={(value) => setPollData({ ...pollData, building: value })}>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white">
                         <SelectValue placeholder="Select building" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
                         <SelectItem value="building-a">Building A</SelectItem>
                         <SelectItem value="building-b">Building B</SelectItem>
                         <SelectItem value="building-c">Building C</SelectItem>
@@ -409,8 +409,10 @@ const PollModule = ({ onClose }: PollModuleProps) => {
       onSwipeLeft={step > 1 ? prevStep : undefined}
       canSwipeUp={canProceed()}
     >
-      <div className="h-full overflow-y-auto pb-8">
-        {renderCurrentStep()}
+      <div className="h-full flex flex-col">
+        <div className="flex-1 overflow-y-auto px-4 py-2">
+          {renderCurrentStep()}
+        </div>
       </div>
     </SwipeableScreen>
   );
