@@ -1,69 +1,72 @@
 
 import React from 'react';
-import SwipeCard from '../../SwipeCard';
+import { Package, Wrench, CreditCard, MessageSquare, Calendar, Truck } from 'lucide-react';
 
 interface QuickActionsGridProps {
   onAction: (action: string, item: string) => void;
+  onServiceClick: () => void;
   getRentUrgencyClass: () => string;
 }
 
-const QuickActionsGrid = ({ onAction, getRentUrgencyClass }: QuickActionsGridProps) => {
-  return (
-    <div className="grid grid-cols-2 gap-4 mb-6">
-      <SwipeCard
-        onSwipeRight={{
-          label: "Pay Now",
-          action: () => onAction("Paid", "Rent"),
-          color: "#10B981",
-          icon: "💳"
-        }}
-        onSwipeLeft={{
-          label: "Schedule",
-          action: () => onAction("Scheduled", "Rent Payment"),
-          color: "#F59E0B",
-          icon: "📅"
-        }}
-        onTap={() => onAction("Viewed", "Rent Payment")}
-        className={getRentUrgencyClass()}
-        enableSwipeUp={false}
-      >
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-lg text-white">
-          <h3 className="font-semibold mb-1">Rent Due</h3>
-          <p className="text-blue-100 text-sm">$1,550 • Due in 3 days</p>
-        </div>
-      </SwipeCard>
+const QuickActionsGrid = ({ onAction, onServiceClick, getRentUrgencyClass }: QuickActionsGridProps) => {
+  const quickActions = [
+    { 
+      icon: Package, 
+      label: 'Services', 
+      action: 'services',
+      onClick: onServiceClick
+    },
+    { 
+      icon: Wrench, 
+      label: 'Maintenance', 
+      action: 'maintenance',
+      onClick: () => onAction('Requested', 'Maintenance')
+    },
+    { 
+      icon: CreditCard, 
+      label: 'Pay Rent', 
+      action: 'pay-rent',
+      className: getRentUrgencyClass(),
+      onClick: () => onAction('Opened', 'Rent Payment')
+    },
+    { 
+      icon: MessageSquare, 
+      label: 'Messages', 
+      action: 'messages',
+      onClick: () => onAction('Opened', 'Messages')
+    },
+    { 
+      icon: Calendar, 
+      label: 'Schedule', 
+      action: 'schedule',
+      onClick: () => onAction('Opened', 'Schedule')
+    },
+    { 
+      icon: Truck, 
+      label: 'Move Out', 
+      action: 'move-out',
+      onClick: () => onAction('Started', 'Move Out Process')
+    }
+  ];
 
-      <SwipeCard
-        onSwipeRight={{
-          label: "Create",
-          action: () => onAction("Created", "Work Order"),
-          color: "#6366F1",
-          icon: "🔧"
-        }}
-        onSwipeLeft={{
-          label: "View All",
-          action: () => onAction("Viewed", "Work Orders"),
-          color: "#8B5CF6",
-          icon: "📋"
-        }}
-        onTap={() => onAction("Opened", "Work Orders")}
-        enableSwipeUp={false}
-      >
-        <div 
-          className="relative p-4 rounded-lg text-white overflow-hidden"
-          style={{
-            backgroundImage: 'url(https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }}
-        >
-          <div className="absolute inset-0 bg-purple-600/80 backdrop-blur-[2px] rounded-lg"></div>
-          <div className="relative z-10">
-            <h3 className="font-semibold mb-1">Work Orders</h3>
-            <p className="text-purple-100 text-sm">1 active • 2 pending</p>
-          </div>
-        </div>
-      </SwipeCard>
+  return (
+    <div className="mb-6">
+      <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
+      <div className="grid grid-cols-3 gap-4">
+        {quickActions.map((action) => {
+          const IconComponent = action.icon;
+          return (
+            <button
+              key={action.action}
+              onClick={action.onClick}
+              className={`bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-all text-center ${action.className || ''}`}
+            >
+              <IconComponent size={24} className="mx-auto mb-2 text-blue-600" />
+              <span className="text-sm font-medium text-gray-700">{action.label}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };
