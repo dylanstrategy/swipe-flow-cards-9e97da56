@@ -1,6 +1,5 @@
 
 import React from 'react';
-import SwipeUpPrompt from '@/components/ui/swipe-up-prompt';
 
 interface DetailsStepProps {
   onNext: () => void;
@@ -13,21 +12,6 @@ interface DetailsStepProps {
 }
 
 const DetailsStep = ({ onNext, workOrderDetails, setWorkOrderDetails }: DetailsStepProps) => {
-  // Updated validation - ALL required fields including location
-  const canProceed = () => {
-    return workOrderDetails.title.trim() !== '' && 
-           workOrderDetails.description.trim() !== '' && 
-           workOrderDetails.location.trim() !== '';
-  };
-
-  const handleClearData = () => {
-    setWorkOrderDetails({
-      title: '',
-      description: '',
-      location: ''
-    });
-  };
-
   return (
     <div className="h-full flex flex-col">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Add Details</h3>
@@ -66,22 +50,6 @@ const DetailsStep = ({ onNext, workOrderDetails, setWorkOrderDetails }: DetailsS
           />
         </div>
       </div>
-      
-      {canProceed() && (
-        <div className="mt-4">
-          <SwipeUpPrompt 
-            onContinue={onNext}
-            onClose={handleClearData}
-            message="Ready to continue!"
-            buttonText="Continue"
-          />
-        </div>
-      )}
-      {!canProceed() && (
-        <div className="text-center mt-4">
-          <p className="text-gray-500 text-sm">Please fill in all required fields</p>
-        </div>
-      )}
     </div>
   );
 };

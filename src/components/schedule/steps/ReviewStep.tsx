@@ -21,7 +21,7 @@ const ReviewStep = ({ onSubmit, workOrderDetails, selectedDate, selectedTime }: 
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col overflow-hidden">
       <div className="text-center mb-4 flex-shrink-0">
         <CheckCircle className="mx-auto text-green-600 mb-2" size={32} />
         <h3 className="text-lg font-semibold text-gray-900 mb-1">Review & Submit</h3>
@@ -29,7 +29,7 @@ const ReviewStep = ({ onSubmit, workOrderDetails, selectedDate, selectedTime }: 
       </div>
       
       <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="space-y-4 pb-6">
+        <div className="space-y-4 pb-24">
           <div className="bg-gray-50 p-4 rounded-lg">
             <h4 className="font-medium text-gray-900 mb-3 text-base">Work Order Details</h4>
             <div className="space-y-2">
@@ -56,8 +56,8 @@ const ReviewStep = ({ onSubmit, workOrderDetails, selectedDate, selectedTime }: 
         </div>
       </div>
 
-      {/* Fixed Submit Button */}
-      <div className="flex-shrink-0 pt-4 border-t border-gray-200">
+      {/* Fixed Complete Button */}
+      <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-white">
         <Button
           onClick={onSubmit}
           className="w-full bg-blue-600 text-white py-3 text-base font-semibold hover:bg-blue-700 transition-colors"

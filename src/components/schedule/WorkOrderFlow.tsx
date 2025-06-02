@@ -221,15 +221,19 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
         hideSwipeHandling={currentStep === 4}
       >
         <div className="relative h-full">
-          {renderCurrentStep()}
+          <div className={currentStep < 4 ? "pb-32" : ""}>
+            {renderCurrentStep()}
+          </div>
           
           {/* Show SwipeUpPrompt for steps 1-3 when ready */}
           {currentStep < 4 && canProceedFromCurrentStep() && (
             <SwipeUpPrompt 
               onContinue={onNextStep}
               onBack={currentStep > 1 ? onPrevStep : undefined}
+              onClose={onClose}
               message="Ready to continue!"
               buttonText="Continue"
+              backButtonText="Back"
               showBack={currentStep > 1}
             />
           )}

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Clock, CalendarIcon, ArrowUp } from 'lucide-react';
+import { Clock, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -41,7 +41,6 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
   };
 
   const availableTimes = selectedDate ? getAvailableTimeSlots(selectedDate) : [];
-  const canProceed = selectedDate && selectedTime;
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
@@ -56,7 +55,7 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
         <h3 className="text-lg font-semibold text-gray-900 mb-1">Schedule Repair</h3>
       </div>
       
-      <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pb-4">
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
         {/* Date Selection */}
         <div>
           <h4 className="font-medium text-gray-900 mb-2 text-sm">Select Date</h4>
@@ -108,15 +107,6 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
           </div>
         )}
       </div>
-
-      {/* Swipe Up Prompt */}
-      {canProceed && (
-        <div className="text-center pt-4 flex-shrink-0">
-          <p className="text-green-600 font-medium text-sm mb-2">Ready to continue!</p>
-          <ArrowUp className="text-green-600 animate-bounce mx-auto mb-2" size={20} />
-          <p className="text-xs text-gray-500">Swipe up to continue</p>
-        </div>
-      )}
     </div>
   );
 };
