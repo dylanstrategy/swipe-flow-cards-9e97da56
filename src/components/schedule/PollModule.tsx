@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, X, BarChart3, Users, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -171,7 +170,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                     </SelectTrigger>
                     <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
                       {pollTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value} className="cursor-pointer">
+                        <SelectItem key={type.value} value={type.value} className="cursor-pointer hover:bg-gray-50">
                           <div>
                             <div className="font-medium">{type.label}</div>
                             <div className="text-xs text-gray-500">{type.description}</div>
@@ -391,17 +390,6 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Fixed Submit Button */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
-              <Button 
-                onClick={handleSubmit}
-                className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2 py-3"
-              >
-                Create Poll
-                <ArrowRight size={16} />
-              </Button>
-            </div>
           </div>
         );
 
@@ -416,10 +404,19 @@ const PollModule = ({ onClose }: PollModuleProps) => {
       currentStep={step}
       totalSteps={3}
       onClose={onClose}
-      onSwipeUp={step < 3 && canProceed() ? nextStep : undefined}
+      onSwipeUp={step < 3 && canProceed() ? nextStep : (step === 3 ? handleSubmit : undefined)}
       onSwipeLeft={step > 1 ? prevStep : undefined}
-      canSwipeUp={step < 3 && canProceed()}
-      hideSwipeHandling={step === 3}
+      canSwipeUp={canProceed()}
+      hideSwipeHandling={false}
+      submitButton={step === 3 ? (
+        <Button 
+          onClick={handleSubmit}
+          className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2 py-3"
+        >
+          Create Poll
+          <ArrowRight size={16} />
+        </Button>
+      ) : undefined}
     >
       <div className={step === 3 ? "h-full overflow-y-auto" : "h-full overflow-hidden"}>
         {renderCurrentStep()}
