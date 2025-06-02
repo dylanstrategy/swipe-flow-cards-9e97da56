@@ -127,7 +127,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
     switch (step) {
       case 1:
         return (
-          <div className="space-y-6 h-full overflow-y-auto">
+          <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -144,6 +144,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                     placeholder="What would you like to ask residents?"
                     value={pollData.title}
                     onChange={(e) => setPollData({ ...pollData, title: e.target.value })}
+                    style={{ fontSize: '16px' }}
                   />
                 </div>
                 
@@ -156,6 +157,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                     value={pollData.description}
                     onChange={(e) => setPollData({ ...pollData, description: e.target.value })}
                     rows={3}
+                    style={{ fontSize: '16px' }}
                   />
                 </div>
 
@@ -186,7 +188,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 
       case 2:
         return (
-          <div className="space-y-6 h-full overflow-y-auto">
+          <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Poll Configuration</CardTitle>
@@ -206,6 +208,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                             value={option.text}
                             onChange={(e) => updateOption(option.id, e.target.value)}
                             className="flex-1"
+                            style={{ fontSize: '16px' }}
                           />
                           {pollData.options.length > 2 && (
                             <button
@@ -273,7 +276,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 
       case 3:
         return (
-          <div className="space-y-6 h-full overflow-y-auto">
+          <div className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Poll Settings</CardTitle>
@@ -342,6 +345,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                       placeholder="e.g., 101, 102, 205-210"
                       value={pollData.units}
                       onChange={(e) => setPollData({ ...pollData, units: e.target.value })}
+                      style={{ fontSize: '16px' }}
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       Separate multiple units with commas. Use hyphens for ranges.
@@ -406,7 +410,9 @@ const PollModule = ({ onClose }: PollModuleProps) => {
       onSwipeLeft={step > 1 ? prevStep : undefined}
       canSwipeUp={canProceed()}
     >
-      {renderCurrentStep()}
+      <div className="h-full overflow-y-auto pb-8">
+        {renderCurrentStep()}
+      </div>
     </SwipeableScreen>
   );
 };
