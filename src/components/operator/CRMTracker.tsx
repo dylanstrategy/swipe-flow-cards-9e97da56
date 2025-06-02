@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeft, Search, Calendar, DollarSign, Home, Phone, Mail, Eye, Play, FileText, ChevronRight, MessageCircle, Plus, Edit } from 'lucide-react';
+import { ArrowLeft, Search, Calendar, DollarSign, Home, Phone, Mail, Eye, Play, FileText, ChevronRight, MessageCircle, Plus, Edit, Upload, Video, Image } from 'lucide-react';
 
 interface CRMTrackerProps {
   onClose: () => void;
@@ -18,6 +18,8 @@ const CRMTracker: React.FC<CRMTrackerProps> = ({ onClose, initialFilter }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProspect, setSelectedProspect] = useState<any>(null);
   const [showNotesDialog, setShowNotesDialog] = useState(false);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [uploadType, setUploadType] = useState<'video' | 'photo'>('video');
   const [newNote, setNewNote] = useState('');
 
   const prospects = [
@@ -179,6 +181,25 @@ const CRMTracker: React.FC<CRMTrackerProps> = ({ onClose, initialFilter }) => {
     }
   };
 
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0 && selectedProspect) {
+      const file = files[0];
+      const fileName = file.name;
+      
+      if (uploadType === 'video') {
+        const updatedVideos = [...selectedProspect.tourVideos, `https://example.com/${fileName}`];
+        setSelectedProspect({ ...selectedProspect, tourVideos: updatedVideos });
+      } else {
+        const updatedPhotos = [...(selectedProspect.tourPhotos || []), `/placeholder.svg`];
+        setSelectedProspect({ ...selectedProspect, tourPhotos: updatedPhotos });
+      }
+      
+      setShowUploadDialog(false);
+      console.log(`Uploaded ${uploadType}:`, fileName);
+    }
+  };
+
   if (selectedProspect) {
     return (
       <div className="px-4 py-6 pb-24">
@@ -263,7 +284,50 @@ const CRMTracker: React.FC<CRMTrackerProps> = ({ onClose, initialFilter }) => {
             {selectedProspect.toured && (
               <>
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-3">Tour Details</h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold">Tour Media</h3>
+                    <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+                      <DialogTrigger asChild>
+                        <Button size="sm" variant="outline">
+                          <Upload size={16} className="mr-2" />
+                          Upload Media
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Upload Tour Media</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div className="flex gap-2">
+                            <Button
+                              variant={uploadType === 'video' ? 'default' : 'outline'}
+                              onClick={() => setUploadType('video')}
+                              className="flex-1"
+                            >
+                              <Video size={16} className="mr-2" />
+                              Video
+                            </Button>
+                            <Button
+                              variant={uploadType === 'photo' ? 'default' : 'outline'}
+                              onClick={() => setUploadType('photo')}
+                              className="flex-1"
+                            >
+                              <Image size={16} className="mr-2" />
+                              Photo
+                            </Button>
+                          </div>
+                          <Input
+                            type="file"
+                            accept={uploadType === 'video' ? 'video/*' : 'image/*'}
+                            onChange={handleFileUpload}
+                          />
+                          <div className="flex gap-2">
+                            <Button variant="outline" onClick={() => setShowUploadDialog(false)}>Cancel</Button>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                   
                   <div className="mb-4">
                     <p className="text-sm text-gray-600 mb-2">Apartments Viewed</p>
@@ -277,12 +341,32 @@ const CRMTracker: React.FC<CRMTrackerProps> = ({ onClose, initialFilter }) => {
                   {selectedProspect.tourVideos.length > 0 && (
                     <div className="mb-4">
                       <p className="text-sm text-gray-600 mb-2">Tour Videos</p>
-                      <div className="flex gap-2">
+                      <div className="grid grid-cols-2 gap-2">
                         {selectedProspect.tourVideos.map((video: string, index: number) => (
-                          <Button key={index} variant="outline" size="sm">
+                          <Button key={index} variant="outline" size="sm" className="justify-start">
                             <Play size={16} className="mr-2" />
                             Tour Video {index + 1}
                           </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedProspect.tourPhotos && selectedProspect.tourPhotos.length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-600 mb-2">Tour Photos</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {selectedProspect.tourPhotos.map((photo: string, index: number) => (
+                          <div key={index} className="relative">
+                            <img
+                              src={photo}
+                              alt={`Tour photo ${index + 1}`}
+                              className="w-full h-20 object-cover rounded border"
+                            />
+                            <div className="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded">
+                              {index + 1}
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </div>
