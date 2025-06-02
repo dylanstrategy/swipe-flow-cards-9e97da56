@@ -30,11 +30,10 @@ const TextSlide = ({ title, subtitle, icon, fields, canProceed }: TextSlideProps
       icon={icon}
       canProceed={canProceed}
     >
-      {/* Content wrapper with controlled spacing and max height */}
-      <div className="space-y-4 max-h-[400px] overflow-y-auto">
+      <div className="space-y-6">
         {fields.map((field, index) => (
-          <div key={index}>
-            <Label htmlFor={`field-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+          <div key={index} className="space-y-2">
+            <Label htmlFor={`field-${index}`} className="block text-sm font-medium text-gray-700">
               {field.label}
               {field.required && <span className="text-red-500 ml-1">*</span>}
             </Label>
@@ -44,8 +43,8 @@ const TextSlide = ({ title, subtitle, icon, fields, canProceed }: TextSlideProps
                 value={field.value}
                 onChange={(e) => field.onChange(e.target.value)}
                 placeholder={field.placeholder}
-                className="w-full min-h-[80px] max-h-[120px]"
-                rows={3}
+                className="w-full min-h-[100px] resize-none"
+                rows={4}
               />
             ) : (
               <Input

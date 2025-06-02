@@ -48,22 +48,21 @@ const DateSlide = ({
       icon={<Clock className="text-blue-600" size={28} />}
       canProceed={canProceed}
     >
-      {/* Content wrapper with controlled spacing */}
-      <div className="space-y-6 max-h-[400px] overflow-y-auto">
+      <div className="space-y-8">
         {/* Date Selection */}
-        <div>
-          <h4 className="font-medium text-gray-900 mb-3 text-sm">Select Date</h4>
+        <div className="space-y-3">
+          <h4 className="font-semibold text-gray-900">Select Date</h4>
           <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 className={cn(
-                  "w-full justify-start text-left font-normal h-12",
+                  "w-full justify-start text-left font-normal h-14 text-base",
                   !selectedDate && "text-muted-foreground"
                 )}
                 onClick={() => setCalendarOpen(true)}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
+                <CalendarIcon className="mr-3 h-5 w-5" />
                 {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
               </Button>
             </PopoverTrigger>
@@ -74,7 +73,7 @@ const DateSlide = ({
                 onSelect={handleDateSelect}
                 disabled={(date) => date < new Date()}
                 initialFocus
-                className="p-3 pointer-events-auto"
+                className="p-4 pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
@@ -82,8 +81,8 @@ const DateSlide = ({
 
         {/* Time Selection */}
         {showTimeSelection && selectedDate && (
-          <div>
-            <h4 className="font-medium text-gray-900 mb-3 text-sm">
+          <div className="space-y-4">
+            <h4 className="font-semibold text-gray-900">
               Available Times for {format(selectedDate, 'EEEE, MMM do')}
             </h4>
             <div className="grid grid-cols-2 gap-3">
@@ -92,7 +91,7 @@ const DateSlide = ({
                   key={time}
                   variant={selectedTime === time ? "default" : "outline"}
                   onClick={() => setSelectedTime(time)}
-                  className="h-12 text-sm font-medium"
+                  className="h-14 text-base font-medium"
                 >
                   {time}
                 </Button>

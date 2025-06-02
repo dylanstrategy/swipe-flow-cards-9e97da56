@@ -21,19 +21,23 @@ const FormSlide = ({
   showSwipePrompt = true 
 }: FormSlideProps) => {
   return (
-    <div className="h-full flex flex-col max-h-screen">
-      <BaseSlide title={title} subtitle={subtitle} icon={icon}>
-        {children}
-      </BaseSlide>
-
-      {/* Swipe Up Prompt - Fixed at bottom */}
-      {canProceed && showSwipePrompt && (
-        <div className="flex-shrink-0 text-center py-4 px-4 bg-white border-t border-gray-100">
-          <p className="text-green-600 font-medium text-sm mb-2">Ready to continue!</p>
-          <ArrowUp className="text-green-600 animate-bounce mx-auto mb-2" size={20} />
-          <p className="text-xs text-gray-500">Swipe up to continue</p>
+    <div className="h-full flex flex-col">
+      <BaseSlide title={title} subtitle={subtitle} icon={icon} className="pb-0">
+        <div className="h-full flex flex-col">
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {children}
+          </div>
+          
+          {/* Swipe Up Prompt - Fixed at bottom of content area */}
+          {canProceed && showSwipePrompt && (
+            <div className="flex-shrink-0 text-center py-6 mt-4">
+              <p className="text-green-600 font-medium text-sm mb-2">Ready to continue!</p>
+              <ArrowUp className="text-green-600 animate-bounce mx-auto mb-2" size={20} />
+              <p className="text-xs text-gray-500">Swipe up to continue</p>
+            </div>
+          )}
         </div>
-      )}
+      </BaseSlide>
     </div>
   );
 };

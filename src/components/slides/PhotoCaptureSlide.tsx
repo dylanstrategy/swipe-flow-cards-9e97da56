@@ -49,51 +49,64 @@ const PhotoCaptureSlide = ({
       icon={<Camera className="text-blue-600" size={28} />}
       canProceed={canProceed}
     >
-      <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-        {canProceed ? (
-          <div className="space-y-4">
-            {allowMultiple ? (
-              <>
-                {capturedPhotos.map((_, index) => (
-                  <div key={index} className="w-full h-32 bg-green-100 rounded flex items-center justify-center">
-                    <span className="text-green-600">📸 Photo {index + 1} Captured</span>
-                  </div>
-                ))}
-                <div className="flex gap-2">
-                  <Button onClick={handleCapture} className="flex-1">
-                    Add Another Photo
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleRetake(capturedPhotos.length - 1)}
-                  >
-                    Remove Last
-                  </Button>
-                </div>
-              </>
+      <div className="flex items-center justify-center min-h-[300px]">
+        <div className="w-full max-w-md">
+          <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50">
+            {canProceed ? (
+              <div className="space-y-4">
+                {allowMultiple ? (
+                  <>
+                    {capturedPhotos.map((_, index) => (
+                      <div key={index} className="w-full h-32 bg-green-100 rounded-lg flex items-center justify-center border-2 border-green-200">
+                        <span className="text-green-600 font-medium">📸 Photo {index + 1} Captured</span>
+                      </div>
+                    ))}
+                    <div className="flex gap-3 pt-2">
+                      <Button onClick={handleCapture} className="flex-1 h-12">
+                        Add Another Photo
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleRetake(capturedPhotos.length - 1)}
+                        className="h-12"
+                      >
+                        Remove Last
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-full h-40 bg-green-100 rounded-lg flex items-center justify-center border-2 border-green-200 mb-4">
+                      <span className="text-green-600 font-medium text-lg">📸 Photo Captured</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleRetake()}
+                      className="w-full h-12"
+                    >
+                      Retake Photo
+                    </Button>
+                  </>
+                )}
+              </div>
             ) : (
-              <>
-                <div className="w-full h-32 bg-green-100 rounded flex items-center justify-center">
-                  <span className="text-green-600">📸 Photo Captured</span>
+              <div className="space-y-6">
+                <Camera className="w-16 h-16 text-gray-400 mx-auto" />
+                <div className="space-y-2">
+                  <p className="text-gray-600 font-medium">
+                    {allowMultiple ? 'Capture Photos' : 'Capture Photo'}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Take a clear photo of the issue
+                  </p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleRetake()}
-                >
-                  Retake Photo
+                <Button onClick={handleCapture} className="w-full h-12 text-base">
+                  {allowMultiple ? 'Capture Photos' : 'Capture Photo'}
                 </Button>
-              </>
+              </div>
             )}
           </div>
-        ) : (
-          <div className="space-y-4">
-            <Camera className="w-12 h-12 text-gray-400 mx-auto" />
-            <Button onClick={handleCapture} className="w-full">
-              {allowMultiple ? 'Capture Photos' : 'Capture Photo'}
-            </Button>
-          </div>
-        )}
+        </div>
       </div>
     </FormSlide>
   );

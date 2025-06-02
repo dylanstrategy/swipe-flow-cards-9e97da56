@@ -40,25 +40,25 @@ const ReviewSlide = ({
   };
 
   return (
-    <div className="h-full flex flex-col max-h-screen">
+    <div className="h-full flex flex-col">
       {/* Header Section - Fixed */}
-      <div className="text-center mb-4 flex-shrink-0 px-4 pt-4">
-        <CheckCircle className="mx-auto text-green-600 mb-2" size={32} />
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">{title}</h3>
+      <div className="text-center mb-6 flex-shrink-0 px-6 pt-6">
+        <CheckCircle className="mx-auto text-green-600 mb-3" size={32} />
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">{title}</h3>
         {subtitle && <p className="text-sm text-gray-600">{subtitle}</p>}
       </div>
       
       {/* Scrollable Content Area */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-4 mb-4">
-        <div className="space-y-4 max-h-[calc(100vh-280px)]">
+      <div className="flex-1 min-h-0 overflow-y-auto px-6">
+        <div className="space-y-6 pb-6">
           {sections.map((section, sectionIndex) => (
-            <div key={sectionIndex} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <h4 className="font-medium text-gray-900 mb-3 text-base">{section.title}</h4>
-              <div className="space-y-2">
+            <div key={sectionIndex} className="bg-gray-50 p-5 rounded-lg border border-gray-200">
+              <h4 className="font-semibold text-gray-900 mb-4 text-base">{section.title}</h4>
+              <div className="space-y-3">
                 {section.items.map((item, itemIndex) => (
-                  <div key={itemIndex} className="flex justify-between items-start">
-                    <span className="text-sm text-gray-600 font-medium">{item.label}:</span>
-                    <span className="text-sm text-gray-900 ml-2 text-right flex-1">
+                  <div key={itemIndex} className="flex justify-between items-start gap-4">
+                    <span className="text-sm text-gray-600 font-medium min-w-0 flex-shrink-0">{item.label}:</span>
+                    <span className="text-sm text-gray-900 text-right min-w-0 flex-1">
                       {item.value}
                     </span>
                   </div>
@@ -80,10 +80,10 @@ const ReviewSlide = ({
       </div>
 
       {/* Fixed Submit Button */}
-      <div className="flex-shrink-0 p-4 bg-white border-t border-gray-200">
+      <div className="flex-shrink-0 p-6 bg-white border-t border-gray-200">
         <Button
           onClick={onSubmit}
-          className="w-full bg-blue-600 text-white py-3 text-base font-semibold hover:bg-blue-700 transition-colors"
+          className="w-full bg-blue-600 text-white py-4 text-lg font-semibold hover:bg-blue-700 transition-colors h-14"
         >
           {submitButtonText}
         </Button>
