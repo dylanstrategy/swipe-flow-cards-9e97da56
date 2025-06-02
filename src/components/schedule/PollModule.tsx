@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, X, BarChart3, Users, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,6 +23,7 @@ interface PollOption {
 const PollModule = ({ onClose }: PollModuleProps) => {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
+  const [showPrompt, setShowPrompt] = useState(false);
   const [pollData, setPollData] = useState({
     title: '',
     description: '',
@@ -115,14 +115,29 @@ const PollModule = ({ onClose }: PollModuleProps) => {
   const nextStep = () => {
     if (step < 3) {
       setStep(step + 1);
+      setShowPrompt(false);
     }
   };
 
   const prevStep = () => {
     if (step > 1) {
       setStep(step - 1);
+      setShowPrompt(false);
     }
   };
+
+  const handleClosePrompt = () => {
+    setShowPrompt(false);
+  };
+
+  // Auto-show prompt when content is ready and not already showing
+  React.useEffect(() => {
+    if (step < 3 && canProceed() && !showPrompt) {
+      setShowPrompt(true);
+    } else if (!canProceed() && showPrompt) {
+      setShowPrompt(false);
+    }
+  }, [step, pollData, showPrompt]);
 
   const renderCurrentStep = () => {
     switch (step) {
@@ -430,11 +445,12 @@ const PollModule = ({ onClose }: PollModuleProps) => {
       <div className="h-full overflow-hidden relative">
         {renderCurrentStep()}
         
-        {/* Fixed Continue/Back Prompt - Only show on steps 1 and 2 when ready */}
-        {step < 3 && canProceed() && (
+        {/* Conditional SwipeUpPrompt - Only show when ready and prompt is shown */}
+        {step < 3 && showPrompt && canProceed() && (
           <SwipeUpPrompt 
             onContinue={nextStep}
             onBack={step > 1 ? prevStep : undefined}
+            onClose={handleClosePrompt}
             message="Ready to continue!"
             buttonText="Continue"
             showBack={step > 1}
