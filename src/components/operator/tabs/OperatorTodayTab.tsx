@@ -1,18 +1,17 @@
-
 import React, { useState } from 'react';
 import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench, ChevronDown, BarChart3, PieChart } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 import CRMTracker from '../CRMTracker';
 import MoveInTracker from '../MoveInTracker';
 import MoveOutTracker from '../MoveOutTracker';
-import UnitTracker from '../UnitTracker';
+import PricingModule from '../PricingModule';
 
 const OperatorTodayTab = () => {
   const [selectedTimeframe, setSelectedTimeframe] = useState('30');
   const [showCRMTracker, setShowCRMTracker] = useState(false);
   const [showMoveInTracker, setShowMoveInTracker] = useState(false);
   const [showMoveOutTracker, setShowMoveOutTracker] = useState(false);
-  const [showUnitTracker, setShowUnitTracker] = useState(false);
+  const [showPricingModule, setShowPricingModule] = useState(false);
   const [crmFilter, setCrmFilter] = useState<'leases' | 'shows' | 'outreach'>('leases');
   const [showGraphs, setShowGraphs] = useState(false);
 
@@ -118,9 +117,9 @@ const OperatorTodayTab = () => {
     setShowMoveOutTracker(true);
   };
 
-  const handleUnitTrackerClick = () => {
-    console.log('Unit Tracker Click - Opening UnitTracker');
-    setShowUnitTracker(true);
+  const handlePricingClick = () => {
+    console.log('Pricing Module Click - Opening PricingModule');
+    setShowPricingModule(true);
   };
 
   if (showCRMTracker) {
@@ -135,8 +134,8 @@ const OperatorTodayTab = () => {
     return <MoveOutTracker onClose={() => setShowMoveOutTracker(false)} />;
   }
 
-  if (showUnitTracker) {
-    return <UnitTracker onClose={() => setShowUnitTracker(false)} />;
+  if (showPricingModule) {
+    return <PricingModule onClose={() => setShowPricingModule(false)} />;
   }
 
   const overview = [
@@ -228,9 +227,9 @@ const OperatorTodayTab = () => {
       handleMoveInClick();
     } else if (module === 'moveout') {
       handleMoveOutClick();
-    } else if (module === 'units') {
-      console.log('Calling handleUnitTrackerClick for units module');
-      handleUnitTrackerClick();
+    } else if (module === 'pricing') {
+      console.log('Calling handlePricingClick for pricing module');
+      handlePricingClick();
     }
   };
 
@@ -397,7 +396,9 @@ const OperatorTodayTab = () => {
               }`}
               onClick={() => {
                 console.log('Leasing item clicked:', item.title, item.module, item.filter);
-                if (item.module && item.filter) {
+                if (item.title === 'Vacant Units' || item.title === 'Available Units') {
+                  handleModuleClick('pricing');
+                } else if (item.module && item.filter) {
                   handleModuleClick(item.module, item.filter);
                 } else if (item.module) {
                   handleModuleClick(item.module);
