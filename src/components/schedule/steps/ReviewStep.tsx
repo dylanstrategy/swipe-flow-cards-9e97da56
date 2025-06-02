@@ -29,7 +29,7 @@ const ReviewStep = ({ onSubmit, workOrderDetails, selectedDate, selectedTime }: 
       </div>
       
       <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="space-y-4 pb-24">
+        <div className="space-y-4 pb-32">
           <div className="bg-gray-50 p-4 rounded-lg">
             <h4 className="font-medium text-gray-900 mb-3 text-base">Work Order Details</h4>
             <div className="space-y-2">
@@ -56,8 +56,8 @@ const ReviewStep = ({ onSubmit, workOrderDetails, selectedDate, selectedTime }: 
         </div>
       </div>
 
-      {/* Fixed Complete Button */}
-      <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-white">
+      {/* Fixed Complete Button with proper bottom spacing for tab navigation */}
+      <div className="flex-shrink-0 p-4 pb-24 border-t border-gray-200 bg-white">
         <Button
           onClick={onSubmit}
           className="w-full bg-blue-600 text-white py-3 text-base font-semibold hover:bg-blue-700 transition-colors"
