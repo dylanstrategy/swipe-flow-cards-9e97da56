@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarIcon, Clock, ArrowUp, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface WorkOrderRescheduleStepProps {
   workOrder: any;
@@ -22,24 +24,18 @@ const WorkOrderRescheduleStep = ({
   selectedTime,
   setSelectedTime 
 }: WorkOrderRescheduleStepProps) => {
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   
   const timeSlots = [
     '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
     '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM'
   ];
 
-  const currentDate = new Date();
-
   const isComplete = selectedDate && selectedTime;
-
-  const handleDateClick = () => {
-    setShowCalendar(!showCalendar);
-  };
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
-    setShowCalendar(false);
+    setCalendarOpen(false);
   };
 
   return (
@@ -63,47 +59,46 @@ const WorkOrderRescheduleStep = ({
         </div>
       </div>
 
-      {/* Current Schedule - Clickable Date Only */}
+      {/* Date Selection */}
       <Card className="flex-shrink-0">
         <CardContent className="p-3">
           <div className="space-y-2">
             <div className="text-xs text-gray-600 mb-2">Select Date:</div>
             
-            {/* Clickable Date Display */}
-            <button
-              onClick={handleDateClick}
-              className="w-full flex items-center justify-between p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <CalendarIcon className="w-4 h-4 text-gray-600" />
-                <span className="text-sm font-medium">
-                  {selectedDate ? format(selectedDate, 'EEEE, MMMM do') : 'Select a date'}
-                </span>
-              </div>
-              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showCalendar ? 'rotate-180' : ''}`} />
-            </button>
+            {/* Date Picker with Popover */}
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-between text-left font-normal",
+                    !selectedDate && "text-muted-foreground"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="w-4 h-4" />
+                    {selectedDate ? format(selectedDate, 'EEEE, MMMM do') : 'Select a date'}
+                  </div>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${calendarOpen ? 'rotate-180' : ''}`} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="center">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={handleDateSelect}
+                  disabled={(date) => date < new Date()}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </CardContent>
       </Card>
 
       {/* Main Content Area - Scrollable */}
       <div className="flex-1 min-h-0 overflow-y-auto space-y-3">
-        {/* Calendar Section - Conditional */}
-        {showCalendar && (
-          <div>
-            <h3 className="font-medium text-gray-900 mb-2 text-sm">Select Date</h3>
-            <div className="bg-white rounded-lg border border-gray-200">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={handleDateSelect}
-                className="w-full p-2 [&_.rdp-month]:text-sm [&_.rdp-day]:h-8 [&_.rdp-day]:w-8"
-                disabled={(date) => date < new Date()}
-              />
-            </div>
-          </div>
-        )}
-
         {/* Time Selection - Shows when date is selected */}
         {selectedDate && (
           <div>
