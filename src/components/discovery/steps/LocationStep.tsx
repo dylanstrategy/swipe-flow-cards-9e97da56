@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { MapPin } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 
@@ -20,6 +20,38 @@ const LocationStep = ({ location, proximityRadius, onUpdate }: LocationStepProps
     'Upper East Side',
     'Upper West Side'
   ];
+
+  useEffect(() => {
+    // Prevent zoom on input focus for mobile devices
+    const viewport = document.querySelector('meta[name=viewport]');
+    const originalContent = viewport?.getAttribute('content');
+    
+    if (viewport) {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    }
+
+    // Prevent zoom on input focus
+    const preventInputZoom = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        if (viewport) {
+          viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+        }
+      }
+    };
+
+    document.addEventListener('focusin', preventInputZoom);
+    document.addEventListener('focusout', preventInputZoom);
+
+    return () => {
+      // Restore original viewport on unmount
+      if (viewport && originalContent) {
+        viewport.setAttribute('content', originalContent);
+      }
+      document.removeEventListener('focusin', preventInputZoom);
+      document.removeEventListener('focusout', preventInputZoom);
+    };
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -44,6 +76,7 @@ const LocationStep = ({ location, proximityRadius, onUpdate }: LocationStepProps
           onChange={(e) => onUpdate({ location: e.target.value })}
           placeholder="e.g., Financial District, My Office, etc."
           className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          style={{ fontSize: '16px' }} // Prevents zoom on iOS Safari
         />
         
         {/* Quick Location Options */}
