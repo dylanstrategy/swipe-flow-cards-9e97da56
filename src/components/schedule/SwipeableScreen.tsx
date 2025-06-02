@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, ReactNode, useEffect } from 'react';
 import { ArrowUp, X } from 'lucide-react';
 
@@ -36,30 +37,43 @@ const SwipeableScreen = ({
     const originalContent = viewport?.getAttribute('content');
     
     if (viewport) {
-      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
     }
 
-    // Prevent pinch zoom
+    // Prevent pinch zoom and double tap zoom
     const preventZoom = (e: TouchEvent) => {
       if (e.touches.length > 1) {
         e.preventDefault();
       }
     };
 
-    // Prevent zoom on input focus
+    const preventDoubleTapZoom = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+
+    // Prevent zoom on input focus by temporarily adjusting viewport
     const preventInputZoom = (e: Event) => {
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
         if (viewport) {
-          viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+          viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
         }
       }
     };
 
+    // Add event listeners with proper options
     document.addEventListener('touchstart', preventZoom, { passive: false });
     document.addEventListener('touchmove', preventZoom, { passive: false });
+    document.addEventListener('touchend', preventDoubleTapZoom, { passive: false });
+    document.addEventListener('gesturestart', preventDoubleTapZoom, { passive: false });
+    document.addEventListener('gesturechange', preventDoubleTapZoom, { passive: false });
+    document.addEventListener('gestureend', preventDoubleTapZoom, { passive: false });
     document.addEventListener('focusin', preventInputZoom);
     document.addEventListener('focusout', preventInputZoom);
+
+    // Set CSS to prevent zoom
+    document.body.style.touchAction = 'pan-x pan-y';
+    document.documentElement.style.touchAction = 'pan-x pan-y';
 
     return () => {
       // Restore original viewport on unmount
@@ -68,12 +82,26 @@ const SwipeableScreen = ({
       }
       document.removeEventListener('touchstart', preventZoom);
       document.removeEventListener('touchmove', preventZoom);
+      document.removeEventListener('touchend', preventDoubleTapZoom);
+      document.removeEventListener('gesturestart', preventDoubleTapZoom);
+      document.removeEventListener('gesturechange', preventDoubleTapZoom);
+      document.removeEventListener('gestureend', preventDoubleTapZoom);
       document.removeEventListener('focusin', preventInputZoom);
       document.removeEventListener('focusout', preventInputZoom);
+      
+      // Reset touch action
+      document.body.style.touchAction = '';
+      document.documentElement.style.touchAction = '';
     };
   }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    // Prevent any zoom behavior
+    if (e.touches.length > 1) {
+      e.preventDefault();
+      return;
+    }
+    
     const touch = e.touches[0];
     startPos.current = { x: touch.clientX, y: touch.clientY };
     startTime.current = Date.now();
@@ -81,7 +109,10 @@ const SwipeableScreen = ({
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
+    if (!isDragging || e.touches.length > 1) {
+      e.preventDefault();
+      return;
+    }
     
     const touch = e.touches[0];
     const deltaX = touch.clientX - startPos.current.x;
@@ -104,8 +135,11 @@ const SwipeableScreen = ({
     }
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
     if (!isDragging) return;
+
+    // Prevent any zoom behavior
+    e.preventDefault();
 
     const deltaX = dragOffset.x;
     const deltaY = dragOffset.y;
@@ -147,7 +181,10 @@ const SwipeableScreen = ({
 
   if (hideSwipeHandling) {
     return (
-      <div className="flex flex-col h-full">
+      <div 
+        className="flex flex-col h-full"
+        style={{ touchAction: 'pan-x pan-y' }}
+      >
         {/* Header with X button */}
         <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200 relative z-10">
           <div>
