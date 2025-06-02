@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Camera } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface WorkOrderFlowProps {
   workOrder: any;
@@ -13,7 +14,7 @@ interface WorkOrderFlowProps {
 }
 
 const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
-  const [currentStep, setCurrentStep] = useState(1); // 1: Details, 2: Diagnosis, 3: Resolution
+  const [currentStep, setCurrentStep] = useState(1);
   const [diagnosisNotes, setDiagnosisNotes] = useState('');
   const [completionPhoto, setCompletionPhoto] = useState<string>('');
   const [selectedVendor, setSelectedVendor] = useState('');
@@ -30,7 +31,7 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
 
   const canProceedToNextStep = () => {
     switch (currentStep) {
-      case 1: return true; // Always can proceed from details
+      case 1: return true;
       case 2: return diagnosisNotes.trim() !== '';
       case 3: return resolutionType === 'complete' ? completionPhoto !== '' : 
                      (selectedVendor !== '' && vendorCost !== '');
@@ -44,7 +45,6 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
         console.log(`Moving from step ${currentStep} to step ${currentStep + 1}`);
         setCurrentStep(currentStep + 1);
       } else {
-        // Submit work order
         console.log('Work order completed');
         onClose();
       }
@@ -70,58 +70,60 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-6">
-            {/* Original Issue Photo */}
-            <div>
-              <h3 className="font-medium text-gray-900 mb-3">Issue Reported</h3>
-              <div className="w-full h-64 rounded-lg overflow-hidden bg-gray-100 mb-3">
-                <img 
-                  src={workOrder.photo} 
-                  alt="Reported issue"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <p className="text-gray-700">{workOrder.description}</p>
-            </div>
-
-            {/* Work Order Details */}
-            <Card>
-              <CardContent className="p-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-600">Unit:</span>
-                    <span className="font-medium ml-2">{workOrder.unit}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Resident:</span>
-                    <span className="font-medium ml-2">{workOrder.resident}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Category:</span>
-                    <span className="font-medium ml-2">{workOrder.category}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Priority:</span>
-                    <Badge className={`ml-2 ${getPriorityColor(workOrder.priority)}`}>
-                      {workOrder.priority}
-                    </Badge>
-                  </div>
+          <ScrollArea className="h-full">
+            <div className="space-y-4 pb-6">
+              {/* Original Issue Photo */}
+              <div>
+                <h3 className="font-medium text-gray-900 mb-3">Issue Reported</h3>
+                <div className="w-full h-48 rounded-lg overflow-hidden bg-gray-100 mb-3">
+                  <img 
+                    src={workOrder.photo} 
+                    alt="Reported issue"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                <p className="text-gray-700 text-sm leading-relaxed">{workOrder.description}</p>
+              </div>
+
+              {/* Work Order Details */}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-600">Unit:</span>
+                      <span className="font-medium ml-2">{workOrder.unit}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Resident:</span>
+                      <span className="font-medium ml-2">{workOrder.resident}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Category:</span>
+                      <span className="font-medium ml-2">{workOrder.category}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Priority:</span>
+                      <Badge className={`ml-2 ${getPriorityColor(workOrder.priority)}`}>
+                        {workOrder.priority}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </ScrollArea>
         );
 
       case 2:
         return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="font-medium text-gray-900 mb-3">Diagnosis & Tech Notes</h3>
+          <div className="h-full flex flex-col">
+            <div className="flex-1">
+              <h3 className="font-medium text-gray-900 mb-4">Diagnosis & Tech Notes</h3>
               <Textarea
                 placeholder="Enter your diagnosis and technical notes..."
                 value={diagnosisNotes}
                 onChange={(e) => setDiagnosisNotes(e.target.value)}
-                className="min-h-40"
+                className="min-h-40 resize-none"
                 autoFocus
               />
             </div>
@@ -130,116 +132,118 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
 
       case 3:
         return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="font-medium text-gray-900 mb-4">Resolution</h3>
-              
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <Button
-                  variant={resolutionType === 'complete' ? 'default' : 'outline'}
-                  onClick={() => setResolutionType('complete')}
-                  className="h-20 flex flex-col"
-                >
-                  <span className="text-2xl mb-1">✅</span>
-                  <span>Complete</span>
-                </Button>
-                <Button
-                  variant={resolutionType === 'vendor' ? 'default' : 'outline'}
-                  onClick={() => setResolutionType('vendor')}
-                  className="h-20 flex flex-col"
-                >
-                  <span className="text-2xl mb-1">🏢</span>
-                  <span>Additional Support</span>
-                </Button>
-              </div>
+          <ScrollArea className="h-full">
+            <div className="space-y-6 pb-6">
+              <div>
+                <h3 className="font-medium text-gray-900 mb-4">Resolution</h3>
+                
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <Button
+                    variant={resolutionType === 'complete' ? 'default' : 'outline'}
+                    onClick={() => setResolutionType('complete')}
+                    className="h-20 flex flex-col"
+                  >
+                    <span className="text-2xl mb-1">✅</span>
+                    <span>Complete</span>
+                  </Button>
+                  <Button
+                    variant={resolutionType === 'vendor' ? 'default' : 'outline'}
+                    onClick={() => setResolutionType('vendor')}
+                    className="h-20 flex flex-col"
+                  >
+                    <span className="text-2xl mb-1">🏢</span>
+                    <span>Additional Support</span>
+                  </Button>
+                </div>
 
-              {resolutionType === 'complete' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Take Completion Photo/Video
-                    </label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                      {completionPhoto ? (
-                        <div className="space-y-2">
-                          <div className="w-full h-32 bg-green-100 rounded flex items-center justify-center">
-                            <span className="text-green-600">📸 Photo Captured</span>
+                {resolutionType === 'complete' && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Take Completion Photo/Video
+                      </label>
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                        {completionPhoto ? (
+                          <div className="space-y-2">
+                            <div className="w-full h-24 bg-green-100 rounded flex items-center justify-center">
+                              <span className="text-green-600">📸 Photo Captured</span>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCompletionPhoto('captured')}
+                            >
+                              Retake Photo
+                            </Button>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setCompletionPhoto('captured')}
-                          >
-                            Retake Photo
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <Camera className="w-12 h-12 text-gray-400 mx-auto" />
-                          <Button
-                            onClick={() => setCompletionPhoto('captured')}
-                            className="w-full"
-                          >
-                            Capture Photo
-                          </Button>
-                        </div>
-                      )}
+                        ) : (
+                          <div className="space-y-2">
+                            <Camera className="w-10 h-10 text-gray-400 mx-auto" />
+                            <Button
+                              onClick={() => setCompletionPhoto('captured')}
+                              className="w-full"
+                            >
+                              Capture Photo
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {resolutionType === 'vendor' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Vendor
-                    </label>
-                    <select
-                      value={selectedVendor}
-                      onChange={(e) => setSelectedVendor(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-lg"
-                    >
-                      <option value="">Choose a vendor...</option>
-                      {vendors.map((vendor) => (
-                        <option key={vendor} value={vendor}>{vendor}</option>
-                      ))}
-                    </select>
-                  </div>
+                {resolutionType === 'vendor' && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Select Vendor
+                      </label>
+                      <select
+                        value={selectedVendor}
+                        onChange={(e) => setSelectedVendor(e.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded-lg"
+                      >
+                        <option value="">Choose a vendor...</option>
+                        {vendors.map((vendor) => (
+                          <option key={vendor} value={vendor}>{vendor}</option>
+                        ))}
+                      </select>
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cost to Resident
-                    </label>
-                    <div className="space-y-2">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="cost"
-                          value="no-cost"
-                          checked={vendorCost === 'no-cost'}
-                          onChange={(e) => setVendorCost(e.target.value)}
-                          className="mr-2"
-                        />
-                        No additional cost
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Cost to Resident
                       </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="cost"
-                          value="with-cost"
-                          checked={vendorCost === 'with-cost'}
-                          onChange={(e) => setVendorCost(e.target.value)}
-                          className="mr-2"
-                        />
-                        Resident responsible for cost
-                      </label>
+                      <div className="space-y-2">
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            name="cost"
+                            value="no-cost"
+                            checked={vendorCost === 'no-cost'}
+                            onChange={(e) => setVendorCost(e.target.value)}
+                            className="mr-2"
+                          />
+                          No additional cost
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            name="cost"
+                            value="with-cost"
+                            checked={vendorCost === 'with-cost'}
+                            onChange={(e) => setVendorCost(e.target.value)}
+                            className="mr-2"
+                          />
+                          Resident responsible for cost
+                        </label>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
+          </ScrollArea>
         );
 
       default:
