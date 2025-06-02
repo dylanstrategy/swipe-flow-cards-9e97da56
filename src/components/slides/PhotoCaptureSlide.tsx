@@ -27,11 +27,12 @@ const PhotoCaptureSlide = ({
   const canProceed = allowMultiple ? capturedPhotos.length > 0 : capturedPhoto !== '';
 
   const handleCapture = () => {
-    console.log('Capture button clicked'); // Debug log
+    console.log('Capture button clicked - starting animation'); // Debug log
     setIsCapturing(true);
     
     // Simulate photo capture with animation
     setTimeout(() => {
+      console.log('Animation finished - setting photo captured'); // Debug log
       setIsCapturing(false);
       if (allowMultiple && setCapturedPhotos) {
         const newPhotos = [...capturedPhotos, 'captured'];
@@ -63,31 +64,39 @@ const PhotoCaptureSlide = ({
       icon={<Camera className="text-blue-600" size={28} />}
       canProceed={canProceed}
     >
-      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center min-h-[300px] flex flex-col justify-center">
         {isCapturing ? (
-          <div className="space-y-3">
-            <div className="w-full h-32 bg-gray-900 rounded-lg flex items-center justify-center relative overflow-hidden">
+          <div className="space-y-4">
+            <div className="w-full h-40 bg-gray-900 rounded-lg flex items-center justify-center relative overflow-hidden mx-auto max-w-sm">
               <div className="absolute inset-0 bg-gradient-to-b from-gray-800 to-gray-900"></div>
+              
+              {/* Camera viewfinder corners */}
+              <div className="absolute top-3 left-3 w-6 h-6 border-l-2 border-t-2 border-white"></div>
+              <div className="absolute top-3 right-3 w-6 h-6 border-r-2 border-t-2 border-white"></div>
+              <div className="absolute bottom-3 left-3 w-6 h-6 border-l-2 border-b-2 border-white"></div>
+              <div className="absolute bottom-3 right-3 w-6 h-6 border-r-2 border-b-2 border-white"></div>
+              
+              {/* Phone/device being captured */}
               <div className="relative z-10">
-                <div className="w-16 h-20 bg-amber-100 rounded-lg border-2 border-amber-200 flex flex-col items-center justify-center">
-                  <div className="w-12 h-12 bg-amber-200 rounded border border-amber-300 flex items-center justify-center mb-1">
+                <div className="w-20 h-24 bg-amber-100 rounded-lg border-2 border-amber-200 flex flex-col items-center justify-center shadow-lg">
+                  {/* Screen */}
+                  <div className="w-16 h-16 bg-amber-200 rounded border border-amber-300 flex items-center justify-center mb-1">
                     <div className="flex flex-col space-y-1">
+                      {/* Two dots for eyes */}
                       <div className="flex space-x-1">
-                        <div className="w-1.5 h-1.5 bg-gray-800 rounded-full"></div>
-                        <div className="w-1.5 h-1.5 bg-gray-800 rounded-full"></div>
+                        <div className="w-2 h-2 bg-gray-800 rounded-full"></div>
+                        <div className="w-2 h-2 bg-gray-800 rounded-full"></div>
                       </div>
-                      <div className="w-3 h-0.5 bg-gray-800 rounded"></div>
+                      {/* Smile line */}
+                      <div className="w-4 h-0.5 bg-gray-800 rounded"></div>
                     </div>
                   </div>
-                  <div className="w-12 h-5 bg-amber-200 rounded border border-amber-300"></div>
+                  {/* Home button */}
+                  <div className="w-16 h-6 bg-amber-200 rounded border border-amber-300"></div>
                 </div>
               </div>
-              <div className="absolute top-2 left-2 w-4 h-4 border-l-2 border-t-2 border-white"></div>
-              <div className="absolute top-2 right-2 w-4 h-4 border-r-2 border-t-2 border-white"></div>
-              <div className="absolute bottom-2 left-2 w-4 h-4 border-l-2 border-b-2 border-white"></div>
-              <div className="absolute bottom-2 right-2 w-4 h-4 border-r-2 border-b-2 border-white"></div>
             </div>
-            <p className="text-gray-600 text-sm font-medium">Capturing photo...</p>
+            <p className="text-gray-600 text-base font-medium animate-pulse">📸 Capturing photo...</p>
           </div>
         ) : canProceed ? (
           <div className="space-y-3">
@@ -128,9 +137,9 @@ const PhotoCaptureSlide = ({
             )}
           </div>
         ) : (
-          <div className="space-y-3">
-            <Camera className="w-10 h-10 text-gray-400 mx-auto" />
-            <Button onClick={handleCapture} className="w-full text-sm py-2">
+          <div className="space-y-4">
+            <Camera className="w-12 h-12 text-gray-400 mx-auto" />
+            <Button onClick={handleCapture} className="w-full text-base py-3">
               {allowMultiple ? 'Capture Photos' : 'Capture Photo'}
             </Button>
           </div>
