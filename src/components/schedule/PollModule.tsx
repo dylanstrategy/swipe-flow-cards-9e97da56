@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, X, BarChart3, Users, Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -96,9 +95,9 @@ const PollModule = ({ onClose }: PollModuleProps) => {
     onClose();
   };
 
-  const canProceed = () => {
+  const canProceed = (): boolean => {
     if (step === 1) {
-      return pollData.title.trim() && pollData.description.trim();
+      return !!(pollData.title.trim() && pollData.description.trim());
     }
     if (step === 2) {
       if (pollData.type === 'multiple-choice') {
