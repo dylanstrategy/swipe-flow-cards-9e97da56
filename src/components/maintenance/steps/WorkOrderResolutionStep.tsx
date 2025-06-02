@@ -53,7 +53,7 @@ const WorkOrderResolutionStep = ({
         <p className="text-sm text-gray-600">Choose how to resolve this work order</p>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto pb-4">
+      <div className="flex-1 min-h-0 overflow-y-auto pb-20">
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <Button
@@ -161,13 +161,13 @@ const WorkOrderResolutionStep = ({
           )}
 
           {/* Additional spacing for better scrolling */}
-          <div className="h-4"></div>
+          <div className="h-8"></div>
         </div>
       </div>
 
       {/* Fixed Submit Button */}
       {resolutionType && (
-        <div className="flex-shrink-0 pt-4 border-t border-gray-200 bg-white">
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
           <Button
             onClick={handleSubmit}
             disabled={!canProceed}

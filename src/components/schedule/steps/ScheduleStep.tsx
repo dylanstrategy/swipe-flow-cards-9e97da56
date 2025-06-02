@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Clock, CalendarIcon } from 'lucide-react';
+import { Clock, CalendarIcon, ArrowUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -18,15 +18,34 @@ interface ScheduleStepProps {
 const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, setSelectedTime }: ScheduleStepProps) => {
   const [calendarOpen, setCalendarOpen] = useState(false);
   
-  const availableTimes = [
-    '9:00 AM', '10:00 AM', '11:00 AM',
-    '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM'
-  ];
+  // Dynamic time slots based on day of week
+  const getAvailableTimeSlots = (date: Date) => {
+    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    
+    switch (dayOfWeek) {
+      case 1: // Monday - Limited availability
+        return ['9:00 AM', '2:00 PM', '4:00 PM'];
+      case 2: // Tuesday - Morning heavy
+        return ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM'];
+      case 3: // Wednesday - Afternoon focus
+        return ['12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM'];
+      case 4: // Thursday - Mixed availability
+        return ['9:00 AM', '11:00 AM', '1:00 PM', '3:00 PM'];
+      case 5: // Friday - Early slots
+        return ['8:00 AM', '9:00 AM', '10:00 AM'];
+      case 6: // Saturday - Weekend slots
+        return ['10:00 AM', '12:00 PM', '2:00 PM'];
+      default: // Sunday - Limited emergency slots
+        return ['11:00 AM', '3:00 PM'];
+    }
+  };
 
+  const availableTimes = selectedDate ? getAvailableTimeSlots(selectedDate) : [];
   const canProceed = selectedDate && selectedTime;
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
+    setSelectedTime(''); // Reset time when date changes
     setCalendarOpen(false);
   };
 
@@ -68,10 +87,12 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
           </Popover>
         </div>
 
-        {/* Time Selection - Only show when date is selected */}
+        {/* Time Selection - Shows when date is selected */}
         {selectedDate && (
           <div>
-            <h4 className="font-medium text-gray-900 mb-2 text-sm">Available Times</h4>
+            <h4 className="font-medium text-gray-900 mb-2 text-sm">
+              Available Times for {format(selectedDate, 'EEEE, MMM do')}
+            </h4>
             <div className="grid grid-cols-2 gap-2">
               {availableTimes.map((time) => (
                 <Button
@@ -88,15 +109,12 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
         )}
       </div>
 
-      {/* Continue Button - Fixed at bottom */}
+      {/* Swipe Up Prompt */}
       {canProceed && (
-        <div className="mt-4 flex-shrink-0 pt-4 border-t border-gray-200 bg-white">
-          <Button
-            onClick={onNext}
-            className="w-full bg-blue-600 text-white py-3 text-base font-semibold hover:bg-blue-700 transition-colors"
-          >
-            Continue to Review
-          </Button>
+        <div className="text-center pt-4 flex-shrink-0">
+          <p className="text-green-600 font-medium text-sm mb-2">Ready to continue!</p>
+          <ArrowUp className="text-green-600 animate-bounce mx-auto mb-2" size={20} />
+          <p className="text-xs text-gray-500">Swipe up to continue</p>
         </div>
       )}
     </div>
