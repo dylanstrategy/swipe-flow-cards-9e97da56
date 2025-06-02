@@ -79,7 +79,11 @@ const Index = () => {
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-white border shadow-lg">
+            <DropdownMenuContent 
+              align="end" 
+              className="w-56 bg-white border shadow-lg z-[100] max-h-[calc(100vh-160px)] overflow-y-auto mb-20"
+              sideOffset={8}
+            >
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">John Doe</p>
