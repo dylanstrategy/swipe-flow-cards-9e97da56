@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -16,6 +16,8 @@ interface ScheduleStepProps {
 }
 
 const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, setSelectedTime }: ScheduleStepProps) => {
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  
   const availableTimes = [
     '9:00 AM', '10:00 AM', '11:00 AM',
     '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM'
@@ -23,18 +25,23 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
 
   const canProceed = selectedDate && selectedTime;
 
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    setCalendarOpen(false);
+  };
+
   return (
     <div className="h-full flex flex-col">
-      <div className="text-center mb-3">
+      <div className="text-center mb-3 flex-shrink-0">
         <Clock className="mx-auto text-blue-600 mb-2" size={28} />
         <h3 className="text-lg font-semibold text-gray-900 mb-1">Schedule Repair</h3>
       </div>
       
-      <div className="flex-1 space-y-4">
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pb-4">
         {/* Date Selection */}
         <div>
           <h4 className="font-medium text-gray-900 mb-2 text-sm">Select Date</h4>
-          <Popover>
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -42,16 +49,17 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
                   "w-full justify-start text-left font-normal h-10",
                   !selectedDate && "text-muted-foreground"
                 )}
+                onClick={() => setCalendarOpen(true)}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent className="w-auto p-0 z-[10000]" align="start" side="bottom" sideOffset={5}>
               <Calendar
                 mode="single"
                 selected={selectedDate}
-                onSelect={setSelectedDate}
+                onSelect={handleDateSelect}
                 disabled={(date) => date < new Date()}
                 initialFocus
                 className="p-3 pointer-events-auto"
@@ -82,7 +90,7 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
 
       {/* Continue Button - Fixed at bottom */}
       {canProceed && (
-        <div className="mt-4 flex-shrink-0 pt-4 border-t border-gray-200">
+        <div className="mt-4 flex-shrink-0 pt-4 border-t border-gray-200 bg-white">
           <Button
             onClick={onNext}
             className="w-full bg-blue-600 text-white py-3 text-base font-semibold hover:bg-blue-700 transition-colors"
