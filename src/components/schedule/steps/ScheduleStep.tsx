@@ -6,7 +6,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Clock, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import SwipeUpPrompt from '@/components/ui/swipe-up-prompt';
 
 interface ScheduleStepProps {
   onNext: () => void;
@@ -81,14 +80,15 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
         )}
       </div>
 
-      {/* Swipe Up Prompt - Fixed at bottom */}
+      {/* Continue Button - Fixed at bottom */}
       {canProceed && (
-        <div className="mt-4 flex-shrink-0">
-          <SwipeUpPrompt 
-            onContinue={onNext}
-            message="Schedule confirmed!"
-            buttonText="Continue"
-          />
+        <div className="mt-4 flex-shrink-0 pt-4 border-t border-gray-200">
+          <Button
+            onClick={onNext}
+            className="w-full bg-blue-600 text-white py-3 text-base font-semibold hover:bg-blue-700 transition-colors"
+          >
+            Continue to Review
+          </Button>
         </div>
       )}
     </div>
