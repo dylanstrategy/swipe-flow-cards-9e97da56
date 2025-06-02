@@ -1,8 +1,17 @@
 
-import React, { useState } from 'react';
-import { TextSlide, ReviewSlide } from '../slides';
+import React, { useState, useRef, useEffect } from 'react';
+import { ArrowLeft, X } from 'lucide-react';
+import MessageComposer from './MessageComposer';
+import MessageConfirmation from './MessageConfirmation';
 import SwipeableScreen from '../schedule/SwipeableScreen';
-import { MessageCircle } from 'lucide-react';
+
+interface Attachment {
+  id: string;
+  name: string;
+  type: 'file' | 'photo';
+  url: string;
+  size?: number;
+}
 
 interface MessageModuleProps {
   onClose: () => void;
@@ -18,30 +27,68 @@ const MessageModule = ({
   mode = 'compose'
 }: MessageModuleProps) => {
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [subject, setSubject] = useState<string>(initialSubject);
-  const [message, setMessage] = useState<string>('');
+  const [messageData, setMessageData] = useState({
+    subject: initialSubject,
+    message: '',
+    recipientType,
+    attachments: [] as Attachment[]
+  });
 
-  const canProceedFromCurrentStep = (): boolean => {
-    if (currentStep === 1) {
-      return subject.trim() !== '' && message.trim() !== '';
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [showAction, setShowAction] = useState<'up' | 'left' | null>(null);
+  const startPos = useRef({ x: 0, y: 0 });
+  const startTime = useRef(0);
+
+  useEffect(() => {
+    // Prevent zoom on mount and add input focus handling
+    const viewport = document.querySelector('meta[name=viewport]');
+    const originalContent = viewport?.getAttribute('content');
+    
+    if (viewport) {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
     }
-    return false; // Review step should not be swipeable
+
+    // Prevent pinch zoom
+    const preventZoom = (e: TouchEvent) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+
+    // Prevent zoom on input focus
+    const preventInputZoom = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        if (viewport) {
+          viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+        }
+      }
+    };
+
+    document.addEventListener('touchstart', preventZoom, { passive: false });
+    document.addEventListener('touchmove', preventZoom, { passive: false });
+    document.addEventListener('focusin', preventInputZoom);
+    document.addEventListener('focusout', preventInputZoom);
+
+    return () => {
+      // Restore original viewport on unmount
+      if (viewport && originalContent) {
+        viewport.setAttribute('content', originalContent);
+      }
+      document.removeEventListener('touchstart', preventZoom);
+      document.removeEventListener('touchmove', preventZoom);
+      document.removeEventListener('focusin', preventInputZoom);
+      document.removeEventListener('focusout', preventInputZoom);
+    };
+  }, []);
+
+  const handleSendMessage = (subject: string, message: string, attachments: Attachment[]) => {
+    setMessageData({ subject, message, recipientType, attachments });
+    setCurrentStep(2);
   };
 
-  const handleNextStep = () => {
-    if (currentStep < 2) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const handlePrevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const handleSubmit = () => {
-    console.log('Message sent:', { subject, message, recipientType });
+  const handleDone = () => {
     onClose();
   };
 
@@ -58,65 +105,136 @@ const MessageModule = ({
     }
   };
 
-  const getRecipientLabel = () => {
-    switch (recipientType) {
-      case 'management':
-        return 'Property Management';
-      case 'maintenance':
-        return 'Maintenance Team';
-      case 'leasing':
-        return 'Leasing Office';
-      default:
-        return 'Recipient';
+  const handleNextStep = () => {
+    if (currentStep < 2) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      onClose();
     }
+  };
+
+  const handlePrevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const canProceedFromCurrentStep = (): boolean => {
+    if (currentStep === 1) {
+      return messageData.subject.trim() !== '' && messageData.message.trim() !== '';
+    }
+    return false; // Step 2 (confirmation) should not be swipeable
+  };
+
+  // Only enable swipe handling for step 1 (compose), not step 2 (confirmation)
+  const isSwipeEnabled = currentStep === 1;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isSwipeEnabled) return;
+    
+    const touch = e.touches[0];
+    startPos.current = { x: touch.clientX, y: touch.clientY };
+    startTime.current = Date.now();
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || !isSwipeEnabled) return;
+    
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - startPos.current.x;
+    const deltaY = touch.clientY - startPos.current.y;
+    
+    // Much more sensitive detection - any movement triggers evaluation
+    if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+      // Simple damping for visual feedback
+      const dampedX = deltaX * 0.8;
+      const dampedY = deltaY * 0.8;
+      
+      setDragOffset({ x: dampedX, y: dampedY });
+      
+      // Show action based on primary direction with very low thresholds
+      if (Math.abs(deltaY) > Math.abs(deltaX)) {
+        // Vertical movement - check for swipe up
+        if (deltaY < -15 && canProceedFromCurrentStep()) {
+          setShowAction('up');
+        } else {
+          setShowAction(null);
+        }
+      } else {
+        // Horizontal movement - check for swipe left (made easier)
+        if (deltaX < -20 && currentStep > 1) { // Reduced from -30 to -20
+          setShowAction('left');
+        } else {
+          setShowAction(null);
+        }
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isSwipeEnabled) return;
+    
+    const deltaX = dragOffset.x;
+    const deltaY = dragOffset.y;
+    const deltaTime = Date.now() - startTime.current;
+    
+    // Calculate velocity for quick swipes
+    const velocityY = Math.abs(deltaY) / Math.max(deltaTime, 1);
+    const velocityX = Math.abs(deltaX) / Math.max(deltaTime, 1);
+    
+    // Lower thresholds for easier swiping
+    const upThreshold = 20;
+    const leftThreshold = 30;
+    const velocityThreshold = 0.1;
+    
+    const shouldCompleteUp = (Math.abs(deltaY) > upThreshold || velocityY > velocityThreshold) && 
+                            deltaY < -10 && canProceedFromCurrentStep();
+    const shouldCompleteLeft = (Math.abs(deltaX) > leftThreshold || velocityX > velocityThreshold) && 
+                              deltaX < -leftThreshold && currentStep > 1;
+    
+    if (shouldCompleteUp) {
+      handleNextStep();
+    } else if (shouldCompleteLeft) {
+      handlePrevStep();
+    }
+    
+    setIsDragging(false);
+    setDragOffset({ x: 0, y: 0 });
+    setShowAction(null);
+  };
+
+  const getActionOpacity = () => {
+    if (!showAction) return 0;
+    const distance = showAction === 'up' ? Math.abs(dragOffset.y) : Math.abs(dragOffset.x);
+    const progress = Math.min(distance / 25, 1);
+    return Math.max(0.5, progress * 0.9);
+  };
+
+  const getRotation = () => {
+    if (!isDragging) return 0;
+    return (dragOffset.x * 0.01);
   };
 
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
         return (
-          <TextSlide
-            title={getRecipientTitle()}
-            subtitle={`Send a message to ${getRecipientLabel()}`}
-            icon={<MessageCircle className="text-blue-600" size={28} />}
-            fields={[
-              {
-                label: "Subject",
-                value: subject,
-                onChange: setSubject,
-                placeholder: "What is this message about?",
-                required: true
-              },
-              {
-                label: "Message",
-                value: message,
-                onChange: setMessage,
-                placeholder: "Type your message here...",
-                type: "textarea",
-                required: true
-              }
-            ]}
-            canProceed={canProceedFromCurrentStep()}
+          <MessageComposer
+            initialSubject={messageData.subject}
+            onSend={handleSendMessage}
+            recipientType={recipientType}
+            messageData={messageData}
+            setMessageData={setMessageData}
           />
         );
       case 2:
         return (
-          <ReviewSlide
-            title="Review Message"
-            subtitle="Please review your message before sending"
-            sections={[
-              {
-                title: "Message Details",
-                items: [
-                  { label: "To", value: getRecipientLabel() },
-                  { label: "Subject", value: subject },
-                  { label: "Message", value: message }
-                ]
-              }
-            ]}
-            onSubmit={handleSubmit}
-            submitButtonText="Send Message"
-            showPointOfSale={false}
+          <MessageConfirmation
+            subject={messageData.subject}
+            message={messageData.message}
+            recipientType={recipientType}
+            onDone={handleDone}
           />
         );
       default:
@@ -125,17 +243,62 @@ const MessageModule = ({
   };
 
   return (
-    <SwipeableScreen
-      title={getRecipientTitle()}
-      currentStep={currentStep}
-      totalSteps={2}
-      onClose={onClose}
-      onSwipeUp={canProceedFromCurrentStep() ? handleNextStep : undefined}
-      onSwipeLeft={currentStep > 1 ? handlePrevStep : undefined}
-      canSwipeUp={canProceedFromCurrentStep()}
+    <div
+      className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen overflow-hidden select-none"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{
+        transform: isSwipeEnabled ? `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${getRotation()}deg)` : 'none',
+        transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.2, 0, 0, 1)',
+        transformOrigin: 'center center',
+        touchAction: isSwipeEnabled ? 'pan-x pan-y' : 'auto'
+      }}
     >
-      {renderCurrentStep()}
-    </SwipeableScreen>
+      {/* Swipe Action Overlays - Only show when swipe is enabled */}
+      {isSwipeEnabled && showAction === 'up' && canProceedFromCurrentStep() && (
+        <div 
+          className="absolute inset-0 flex items-start justify-center pt-16 transition-all duration-200 pointer-events-none z-50"
+          style={{ 
+            backgroundColor: '#22C55E',
+            opacity: getActionOpacity()
+          }}
+        >
+          <div className="text-white font-bold text-2xl flex flex-col items-center gap-3">
+            <div className="text-3xl">↑</div>
+            <span>Send Message</span>
+          </div>
+        </div>
+      )}
+
+      {isSwipeEnabled && showAction === 'left' && currentStep > 1 && (
+        <div 
+          className="absolute inset-0 flex items-center justify-start pl-12 transition-all duration-200 pointer-events-none z-50"
+          style={{ 
+            backgroundColor: '#EF4444',
+            opacity: getActionOpacity()
+          }}
+        >
+          <div className="text-white font-bold text-2xl flex items-center gap-4">
+            <span className="text-3xl">←</span>
+            <span>Back</span>
+          </div>
+        </div>
+      )}
+
+      <SwipeableScreen
+        title={getRecipientTitle()}
+        currentStep={currentStep}
+        totalSteps={2}
+        onClose={onClose}
+        onSwipeUp={canProceedFromCurrentStep() ? handleNextStep : undefined}
+        onSwipeLeft={currentStep > 1 ? handlePrevStep : undefined}
+        canSwipeUp={canProceedFromCurrentStep()}
+        hideSwipeHandling={true}
+      >
+        {renderCurrentStep()}
+      </SwipeableScreen>
+    </div>
   );
 };
 
