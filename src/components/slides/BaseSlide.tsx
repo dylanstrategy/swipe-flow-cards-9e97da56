@@ -13,33 +13,33 @@ interface BaseSlideProps {
 const BaseSlide = ({ children, className, title, subtitle, icon }: BaseSlideProps) => {
   return (
     <div className="h-full flex flex-col max-h-screen">
-      {/* Compact Header Section */}
+      {/* Header Section - Fixed height */}
       {(title || subtitle || icon) && (
-        <div className="text-center mb-3 flex-shrink-0 px-4 pt-2">
+        <div className="text-center mb-4 flex-shrink-0 px-4 pt-4">
           {icon && (
-            <div className="mb-1">
+            <div className="mb-2">
               {icon}
             </div>
           )}
           {title && (
-            <h3 className="text-base font-semibold text-gray-900 mb-1 leading-tight">{title}</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">{title}</h3>
           )}
           {subtitle && (
-            <p className="text-xs text-gray-600 leading-tight">{subtitle}</p>
+            <p className="text-sm text-gray-600">{subtitle}</p>
           )}
         </div>
       )}
 
-      {/* Content Section - Maximum available space */}
+      {/* Content Section - Scrollable with max height */}
       <div className={cn(
         "flex-1 min-h-0",
-        "mx-4 mb-3",
+        "mx-4 mb-4",
         "border border-gray-200 rounded-lg bg-white",
         "overflow-y-auto",
-        "max-h-[calc(100vh-180px)]", // Reduced from 240px to account for smaller header
+        "max-h-[calc(100vh-240px)]", // Reserve space for header, footer, and swipe prompt
         className
       )}>
-        <div className="p-3 space-y-3">
+        <div className="p-4 space-y-4">
           {children}
         </div>
       </div>

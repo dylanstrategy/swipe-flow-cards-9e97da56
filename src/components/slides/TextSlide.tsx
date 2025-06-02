@@ -30,11 +30,11 @@ const TextSlide = ({ title, subtitle, icon, fields, canProceed }: TextSlideProps
       icon={icon}
       canProceed={canProceed}
     >
-      {/* Compact content wrapper */}
-      <div className="space-y-3 max-h-[350px] overflow-y-auto">
+      {/* Content wrapper with controlled spacing and max height */}
+      <div className="space-y-4 max-h-[400px] overflow-y-auto">
         {fields.map((field, index) => (
           <div key={index}>
-            <Label htmlFor={`field-${index}`} className="block text-xs font-medium text-gray-700 mb-1">
+            <Label htmlFor={`field-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
               {field.label}
               {field.required && <span className="text-red-500 ml-1">*</span>}
             </Label>
@@ -44,9 +44,8 @@ const TextSlide = ({ title, subtitle, icon, fields, canProceed }: TextSlideProps
                 value={field.value}
                 onChange={(e) => field.onChange(e.target.value)}
                 placeholder={field.placeholder}
-                className="w-full min-h-[60px] max-h-[100px] text-sm"
-                rows={2}
-                style={{ fontSize: '16px' }} // Prevent zoom on iOS
+                className="w-full min-h-[80px] max-h-[120px]"
+                rows={3}
               />
             ) : (
               <Input
@@ -55,8 +54,7 @@ const TextSlide = ({ title, subtitle, icon, fields, canProceed }: TextSlideProps
                 value={field.value}
                 onChange={(e) => field.onChange(e.target.value)}
                 placeholder={field.placeholder}
-                className="w-full h-10 text-sm"
-                style={{ fontSize: '16px' }} // Prevent zoom on iOS
+                className="w-full h-12"
               />
             )}
           </div>
