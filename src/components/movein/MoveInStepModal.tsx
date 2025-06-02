@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -535,44 +536,54 @@ const MoveInStepModal = ({ stepId, onComplete, onClose }: MoveInStepModalProps) 
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center space-x-3 mb-4">
-            {stepContent.icon}
-            <DialogTitle className="text-xl">{stepContent.title}</DialogTitle>
+      <DialogContent className="max-w-lg max-h-[90vh] w-full mx-4 overflow-hidden">
+        <div className="flex flex-col h-full max-h-[85vh] overflow-hidden">
+          <DialogHeader className="flex-shrink-0 pb-4">
+            <div className="flex items-center space-x-3">
+              {stepContent.icon}
+              <DialogTitle className="text-xl break-words">{stepContent.title}</DialogTitle>
+            </div>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto overflow-x-hidden pr-2 -mr-2">
+            <div className="space-y-6 min-w-0">
+              <div className="overflow-x-hidden">
+                {stepContent.content}
+              </div>
+
+              {/* Point of Sale Integration - only show for non-move-in steps */}
+              {stepId !== 'move-in' && (
+                <div className="overflow-x-hidden">
+                  <PointOfSale 
+                    context={stepContent.context}
+                    onOfferClick={handleOfferClick}
+                  />
+                </div>
+              )}
+            </div>
           </div>
-        </DialogHeader>
-
-        <div className="space-y-6">
-          {stepContent.content}
-
-          {/* Point of Sale Integration - only show for non-move-in steps */}
-          {stepId !== 'move-in' && (
-            <PointOfSale 
-              context={stepContent.context}
-              onOfferClick={handleOfferClick}
-            />
-          )}
 
           {/* Only show action buttons for move-in step when user made a choice */}
-          {stepId !== 'move-in' || readyForInspection !== null ? (
-            <div className="flex space-x-3 pt-4">
-              <Button 
-                variant="outline" 
-                onClick={onClose}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleComplete}
-                disabled={isCompleting}
-                className="flex-1"
-              >
-                {isCompleting ? 'Processing...' : stepContent.actionText}
-              </Button>
+          {(stepId !== 'move-in' || readyForInspection !== null) && (
+            <div className="flex-shrink-0 pt-4 border-t">
+              <div className="flex space-x-3">
+                <Button 
+                  variant="outline" 
+                  onClick={onClose}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleComplete}
+                  disabled={isCompleting}
+                  className="flex-1"
+                >
+                  {isCompleting ? 'Processing...' : stepContent.actionText}
+                </Button>
+              </div>
             </div>
-          ) : null}
+          )}
         </div>
       </DialogContent>
     </Dialog>
