@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import SwipeableScreen from './SwipeableScreen';
 import { TextSlide, PhotoCaptureSlide, DateSlide, ReviewSlide } from '../slides';
-import { Camera, FileText, Calendar } from 'lucide-react';
 
 interface WorkOrderFlowProps {
   selectedScheduleType: string;
@@ -63,7 +62,6 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
           <TextSlide
             title="Work Order Details"
             subtitle="Describe the maintenance issue"
-            icon={<FileText className="text-blue-600" size={28} />}
             fields={[
               {
                 label: "Issue Title",
@@ -88,7 +86,6 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
                 required: true
               }
             ]}
-            canProceed={canProceedFromCurrentStep()}
           />
         );
       case 3:
@@ -96,7 +93,6 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
           <DateSlide
             title="Schedule Service"
             subtitle="When would you like this addressed?"
-            icon={<Calendar className="text-blue-600" size={28} />}
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
             selectedTime={selectedTime}

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import SwipeableScreen from '@/components/schedule/SwipeableScreen';
 import { TextSlide, PhotoCaptureSlide, SelectionSlide, DateSlide, ReviewSlide } from '../slides';
-import { Wrench, Camera, Users, Calendar } from 'lucide-react';
+import { Wrench, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface WorkOrderFlowProps {
@@ -96,7 +96,6 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
         <DateSlide
           title="Reschedule Work Order"
           subtitle="Select a new date and time"
-          icon={<Calendar className="text-blue-600" size={28} />}
           selectedDate={rescheduleDate}
           setSelectedDate={setRescheduleDate}
           selectedTime={rescheduleTime}
@@ -144,7 +143,6 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
                 required: true
               }
             ]}
-            canProceed={canProceedFromCurrentStep()}
           />
         );
       case 3:
@@ -190,7 +188,6 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
                   required: true
                 }
               ]}
-              canProceed={canProceedFromCurrentStep()}
             />
           );
         }
