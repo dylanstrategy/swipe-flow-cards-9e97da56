@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -5,9 +6,10 @@ import { Clock, Wrench, AlertTriangle, CheckCircle2, User } from 'lucide-react';
 
 interface WorkOrderTrackerProps {
   onSelectWorkOrder?: (workOrder: any) => void;
+  onViewDetails?: (workOrder: any) => void;
 }
 
-const WorkOrderTracker = ({ onSelectWorkOrder }: WorkOrderTrackerProps) => {
+const WorkOrderTracker = ({ onSelectWorkOrder, onViewDetails }: WorkOrderTrackerProps) => {
   const workOrderStats = {
     total: 24,
     urgent: 3,
@@ -92,14 +94,14 @@ const WorkOrderTracker = ({ onSelectWorkOrder }: WorkOrderTrackerProps) => {
           <Wrench className="w-5 h-5 text-orange-600" />
           Work Orders Dashboard
         </h2>
-        <Badge variant="outline" className="bg-orange-50">
+        <Badge variant="outline" className="bg-orange-50" onClick={() => onViewDetails?.(recentWorkOrders[0])}>
           {workOrderStats.total} Total Orders
         </Badge>
       </div>
 
       {/* Summary Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onSelectWorkOrder?.(recentWorkOrders[0])}>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onViewDetails?.(recentWorkOrders[0])}>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-red-600 flex items-center justify-center gap-1">
               <AlertTriangle className="w-5 h-5" />
@@ -108,7 +110,7 @@ const WorkOrderTracker = ({ onSelectWorkOrder }: WorkOrderTrackerProps) => {
             <div className="text-sm text-gray-600">Urgent</div>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onSelectWorkOrder?.(recentWorkOrders[0])}>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onViewDetails?.(recentWorkOrders[0])}>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-orange-600 flex items-center justify-center gap-1">
               <Clock className="w-5 h-5" />
@@ -117,7 +119,7 @@ const WorkOrderTracker = ({ onSelectWorkOrder }: WorkOrderTrackerProps) => {
             <div className="text-sm text-gray-600">Overdue</div>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onSelectWorkOrder?.(recentWorkOrders[0])}>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onViewDetails?.(recentWorkOrders[0])}>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-green-600 flex items-center justify-center gap-1">
               <CheckCircle2 className="w-5 h-5" />
@@ -193,9 +195,20 @@ const WorkOrderTracker = ({ onSelectWorkOrder }: WorkOrderTrackerProps) => {
                 <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded text-xs">
                   {order.category}
                 </span>
-                <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                  View Details
-                </button>
+                <div className="flex gap-2">
+                  <button 
+                    className="text-sm text-gray-600 hover:text-gray-800 font-medium"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onViewDetails?.(order);
+                    }}
+                  >
+                    View Details
+                  </button>
+                  <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                    Start Work
+                  </button>
+                </div>
               </div>
             </CardContent>
           </Card>

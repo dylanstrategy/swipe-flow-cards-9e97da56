@@ -5,12 +5,26 @@ import UnitTurnTracker from '../UnitTurnTracker';
 import WorkOrderTracker from '../WorkOrderTracker';
 import UnitTurnDetailTracker from '../UnitTurnDetailTracker';
 import WorkOrderDetailTracker from '../WorkOrderDetailTracker';
+import WorkOrderFlow from '../WorkOrderFlow';
 import { Calendar, Home, Wrench, BarChart3 } from 'lucide-react';
 
 const MaintenanceScheduleTab = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedUnitTurn, setSelectedUnitTurn] = useState<any>(null);
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
+  const [showWorkOrderFlow, setShowWorkOrderFlow] = useState(false);
+
+  if (showWorkOrderFlow) {
+    return (
+      <WorkOrderFlow
+        workOrder={selectedWorkOrder}
+        onClose={() => {
+          setShowWorkOrderFlow(false);
+          setSelectedWorkOrder(null);
+        }}
+      />
+    );
+  }
 
   if (selectedUnitTurn) {
     return (
@@ -21,7 +35,7 @@ const MaintenanceScheduleTab = () => {
     );
   }
 
-  if (selectedWorkOrder) {
+  if (selectedWorkOrder && !showWorkOrderFlow) {
     return (
       <WorkOrderDetailTracker 
         workOrder={selectedWorkOrder}
@@ -29,6 +43,16 @@ const MaintenanceScheduleTab = () => {
       />
     );
   }
+
+  const handleWorkOrderSelect = (workOrder: any) => {
+    setSelectedWorkOrder(workOrder);
+    setShowWorkOrderFlow(true);
+  };
+
+  const handleWorkOrderDetailsView = (workOrder: any) => {
+    setSelectedWorkOrder(workOrder);
+    // Don't set showWorkOrderFlow to true, just show the detail tracker
+  };
 
   return (
     <div className="px-4 py-6 pb-24">
@@ -58,13 +82,19 @@ const MaintenanceScheduleTab = () => {
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid gap-6">
-            <WorkOrderTracker onSelectWorkOrder={setSelectedWorkOrder} />
+            <WorkOrderTracker 
+              onSelectWorkOrder={handleWorkOrderSelect}
+              onViewDetails={handleWorkOrderDetailsView}
+            />
             <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
           </div>
         </TabsContent>
 
         <TabsContent value="workorders">
-          <WorkOrderTracker onSelectWorkOrder={setSelectedWorkOrder} />
+          <WorkOrderTracker 
+            onSelectWorkOrder={handleWorkOrderSelect}
+            onViewDetails={handleWorkOrderDetailsView}
+          />
         </TabsContent>
 
         <TabsContent value="unitturns">
