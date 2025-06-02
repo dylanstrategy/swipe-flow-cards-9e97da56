@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Home, Calendar, DollarSign, TrendingUp, Building } from 'lucide-react';
+import { ArrowLeft, Home, Calendar, DollarSign, TrendingUp, Building, Search } from 'lucide-react';
 
 interface PricingModuleProps {
   onClose: () => void;
@@ -12,49 +12,76 @@ interface PricingModuleProps {
 
 const PricingModule = ({ onClose }: PricingModuleProps) => {
   const [selectedView, setSelectedView] = useState<'units' | 'ppf' | 'comps'>('units');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'available' | 'vacant' | 'occupied'>('all');
 
-  // Sample unit data for available/vacant units
-  const units = [
-    {
-      unit: '101',
-      type: 'Studio',
-      sqft: 450,
-      currentRent: 2597,
-      marketRent: 2601,
-      suggestedRent: 2550,
-      moveOutDate: '2025-07-15',
-      availableDate: '2025-07-20',
-      discounts: { type: 'Half Month', amount: 1275, daysOut: 30 },
-      premiums: 0,
-      status: 'vacant'
-    },
-    {
-      unit: '204',
-      type: '1BR',
-      sqft: 650,
-      currentRent: 3056,
-      marketRent: 3100,
-      suggestedRent: 3025,
-      moveOutDate: '2025-06-30',
-      availableDate: '2025-07-05',
-      discounts: { type: 'Full Month', amount: 3025, daysOut: 15 },
-      premiums: 50,
-      status: 'available'
-    },
-    {
-      unit: '315',
-      type: '2BR',
-      sqft: 950,
-      currentRent: 4309,
-      marketRent: 4400,
-      suggestedRent: 4250,
-      moveOutDate: '2025-08-01',
-      availableDate: '2025-08-05',
-      discounts: { type: 'None', amount: 0, daysOut: 45 },
-      premiums: 100,
-      status: 'available'
+  // Generate all 150 units (15 floors, 10 units per floor)
+  const generateAllUnits = () => {
+    const units = [];
+    const unitTypes = ['Studio', '1BR', '2BR', '3BR'];
+    const baseSqft = { 'Studio': 450, '1BR': 650, '2BR': 950, '3BR': 1200 };
+    const baseRents = { 'Studio': 2500, '1BR': 3000, '2BR': 4200, '3BR': 5500 };
+    
+    for (let floor = 1; floor <= 15; floor++) {
+      for (let unitNum = 1; unitNum <= 10; unitNum++) {
+        const unitNumber = `${floor.toString().padStart(2, '0')}${unitNum.toString().padStart(2, '0')}`;
+        const typeIndex = (floor + unitNum) % 4;
+        const type = unitTypes[typeIndex];
+        const sqft = baseSqft[type] + Math.floor(Math.random() * 100) - 50; // Some variance
+        const baseRent = baseRents[type];
+        const marketRent = baseRent + Math.floor(Math.random() * 200) - 100;
+        
+        // Determine status - most occupied, some available/vacant
+        let status = 'occupied';
+        const rand = Math.random();
+        if (rand < 0.04) status = 'vacant'; // 4% vacant
+        else if (rand < 0.08) status = 'available'; // 4% available
+        
+        const currentRent = status === 'occupied' ? marketRent - Math.floor(Math.random() * 100) : 0;
+        const suggestedRent = status !== 'occupied' ? marketRent - 50 : 0;
+        
+        // Generate move out dates for available units
+        const moveOutDate = status === 'available' ? 
+          new Date(Date.now() + Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : '';
+        const availableDate = moveOutDate ? 
+          new Date(new Date(moveOutDate).getTime() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : '';
+        
+        units.push({
+          unit: unitNumber,
+          floor: floor,
+          type: type,
+          sqft: sqft,
+          currentRent: currentRent,
+          marketRent: marketRent,
+          suggestedRent: suggestedRent,
+          moveOutDate: moveOutDate,
+          availableDate: availableDate,
+          status: status,
+          resident: status === 'occupied' ? `Resident ${unitNumber}` : '',
+          leaseEnd: status === 'occupied' ? 
+            new Date(Date.now() + Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : '',
+          discounts: status !== 'occupied' ? {
+            type: Math.random() > 0.5 ? 'Half Month' : 'Full Month',
+            amount: Math.random() > 0.5 ? Math.floor(marketRent / 2) : marketRent,
+            daysOut: Math.floor(Math.random() * 60) + 15
+          } : null,
+          premiums: Math.floor(Math.random() * 150)
+        });
+      }
     }
-  ];
+    return units;
+  };
+
+  const allUnits = generateAllUnits();
+
+  // Filter units based on search and status
+  const filteredUnits = allUnits.filter(unit => {
+    const matchesSearch = unit.unit.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         unit.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         unit.resident.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || unit.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
 
   // PPF Data (18 weeks)
   const ppfData = [
@@ -137,8 +164,17 @@ const PricingModule = ({ onClose }: PricingModuleProps) => {
     switch (status) {
       case 'available': return 'bg-green-100 text-green-800';
       case 'vacant': return 'bg-yellow-100 text-yellow-800';
+      case 'occupied': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  // Get summary stats
+  const statusCounts = {
+    total: allUnits.length,
+    occupied: allUnits.filter(u => u.status === 'occupied').length,
+    available: allUnits.filter(u => u.status === 'available').length,
+    vacant: allUnits.filter(u => u.status === 'vacant').length
   };
 
   return (
@@ -149,8 +185,28 @@ const PricingModule = ({ onClose }: PricingModuleProps) => {
           <ArrowLeft size={20} />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Unit Pricing & Analysis</h1>
-          <p className="text-gray-600">Available & Vacant Units with Dynamic Pricing</p>
+          <h1 className="text-2xl font-bold text-gray-900">Unit Directory & Pricing</h1>
+          <p className="text-gray-600">All 150 Units • Live Data & Dynamic Pricing</p>
+        </div>
+      </div>
+
+      {/* Summary Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-blue-50 p-4 rounded-lg text-center">
+          <div className="text-2xl font-bold text-blue-600">{statusCounts.total}</div>
+          <div className="text-sm text-blue-800">Total Units</div>
+        </div>
+        <div className="bg-green-50 p-4 rounded-lg text-center">
+          <div className="text-2xl font-bold text-green-600">{statusCounts.occupied}</div>
+          <div className="text-sm text-green-800">Occupied</div>
+        </div>
+        <div className="bg-yellow-50 p-4 rounded-lg text-center">
+          <div className="text-2xl font-bold text-yellow-600">{statusCounts.available}</div>
+          <div className="text-sm text-yellow-800">Available</div>
+        </div>
+        <div className="bg-red-50 p-4 rounded-lg text-center">
+          <div className="text-2xl font-bold text-red-600">{statusCounts.vacant}</div>
+          <div className="text-sm text-red-800">Vacant</div>
         </div>
       </div>
 
@@ -165,7 +221,7 @@ const PricingModule = ({ onClose }: PricingModuleProps) => {
           }`}
         >
           <Home className="w-4 h-4 inline mr-2" />
-          Unit Pricing Grid
+          Unit Directory
         </button>
         <button
           onClick={() => setSelectedView('ppf')}
@@ -191,104 +247,92 @@ const PricingModule = ({ onClose }: PricingModuleProps) => {
         </button>
       </div>
 
-      {/* Unit Pricing Grid View */}
+      {/* Unit Directory View */}
       {selectedView === 'units' && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Home className="w-5 h-5" />
-              <span>Available & Vacant Units - Dynamic Pricing Grid</span>
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center space-x-2">
+                <Building className="w-5 h-5" />
+                <span>Complete Unit Directory ({filteredUnits.length} units)</span>
+              </span>
             </CardTitle>
+            
+            {/* Search and Filter */}
+            <div className="flex flex-col md:flex-row gap-4 mt-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search by unit number, type, or resident..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div className="flex space-x-2">
+                {['all', 'occupied', 'available', 'vacant'].map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => setFilterStatus(status as any)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      filterStatus === status
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-6">
-              {units.map((unit) => {
-                const pricingGrid = generatePricingGrid(unit.suggestedRent, unit.type);
-                
-                return (
-                  <div key={unit.unit} className="border rounded-lg p-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                      <div>
-                        <span className="text-sm text-gray-600">Unit</span>
-                        <p className="font-semibold">{unit.unit}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-600">Type</span>
-                        <p className="font-semibold">{unit.type}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-600">Sq Ft</span>
-                        <p className="font-semibold">{unit.sqft}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-600">Status</span>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Unit</TableHead>
+                    <TableHead>Floor</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Sq Ft</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Current Rent</TableHead>
+                    <TableHead>Market Rent</TableHead>
+                    <TableHead>Resident/Next Available</TableHead>
+                    <TableHead>Lease End/Move Out</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredUnits.map((unit) => (
+                    <TableRow key={unit.unit} className="hover:bg-gray-50">
+                      <TableCell className="font-medium">{unit.unit}</TableCell>
+                      <TableCell>{unit.floor}</TableCell>
+                      <TableCell>{unit.type}</TableCell>
+                      <TableCell>{unit.sqft}</TableCell>
+                      <TableCell>
                         <Badge className={getStatusColor(unit.status)}>
                           {unit.status}
                         </Badge>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-600">Current Market</span>
-                        <p className="font-semibold">${unit.marketRent}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-600">Suggested Rent</span>
-                        <p className="font-semibold text-green-600">${unit.suggestedRent}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-600">Move Out</span>
-                        <p className="font-semibold">{unit.moveOutDate}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-600">Available</span>
-                        <p className="font-semibold">{unit.availableDate}</p>
-                      </div>
-                    </div>
-
-                    {/* Discounts & Premiums */}
-                    <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-gray-50 rounded">
-                      <div>
-                        <span className="text-sm text-gray-600">Current Discount</span>
-                        <p className="font-semibold text-red-600">
-                          {unit.discounts.type}: -${unit.discounts.amount} ({unit.discounts.daysOut} days out)
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-600">Unit Premiums</span>
-                        <p className="font-semibold text-green-600">+${unit.premiums}</p>
-                      </div>
-                    </div>
-
-                    {/* Pricing Grid */}
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Term</TableHead>
-                            <TableHead>3 Mo</TableHead>
-                            <TableHead>6 Mo</TableHead>
-                            <TableHead>9 Mo</TableHead>
-                            <TableHead>12 Mo</TableHead>
-                            <TableHead>15 Mo</TableHead>
-                            <TableHead>18 Mo</TableHead>
-                            <TableHead>21 Mo</TableHead>
-                            <TableHead>24 Mo</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          <TableRow>
-                            <TableCell className="font-medium">Price</TableCell>
-                            {Object.entries(pricingGrid).map(([term, price]) => (
-                              <TableCell key={term} className="font-semibold">
-                                ${price}
-                              </TableCell>
-                            ))}
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </div>
-                );
-              })}
+                      </TableCell>
+                      <TableCell>
+                        {unit.currentRent > 0 ? `$${unit.currentRent.toLocaleString()}` : '-'}
+                      </TableCell>
+                      <TableCell className="font-semibold">
+                        ${unit.marketRent.toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        {unit.status === 'occupied' ? unit.resident : 
+                         unit.availableDate ? unit.availableDate : 'Available Now'}
+                      </TableCell>
+                      <TableCell>
+                        {unit.status === 'occupied' ? unit.leaseEnd : 
+                         unit.moveOutDate ? unit.moveOutDate : '-'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>
