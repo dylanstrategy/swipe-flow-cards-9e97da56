@@ -27,32 +27,32 @@ const PhotoCaptureSlide = ({
   const canProceed = allowMultiple ? capturedPhotos.length > 0 : capturedPhoto !== '';
 
   const handleCapture = () => {
-    console.log('Capture button clicked - starting animation'); // Debug log
+    console.log('🎬 Starting photo capture animation'); 
     setIsCapturing(true);
     
     // Simulate photo capture with animation
     setTimeout(() => {
-      console.log('Animation finished - setting photo captured'); // Debug log
+      console.log('📸 Photo captured, setting state'); 
       setIsCapturing(false);
       if (allowMultiple && setCapturedPhotos) {
         const newPhotos = [...capturedPhotos, 'captured'];
-        console.log('Setting multiple photos:', newPhotos); // Debug log
+        console.log('📝 Setting multiple photos:', newPhotos); 
         setCapturedPhotos(newPhotos);
       } else {
-        console.log('Setting single photo: captured'); // Debug log
+        console.log('📝 Setting single photo: captured'); 
         setCapturedPhoto('captured');
       }
-    }, 2000);
+    }, 2500); // Longer animation time
   };
 
   const handleRetake = (index?: number) => {
-    console.log('Retake button clicked', { index }); // Debug log
+    console.log('🔄 Retake button clicked', { index }); 
     if (allowMultiple && setCapturedPhotos && index !== undefined) {
       const newPhotos = capturedPhotos.filter((_, i) => i !== index);
-      console.log('Removing photo at index:', index, 'New photos:', newPhotos); // Debug log
+      console.log('🗑️ Removing photo at index:', index, 'New photos:', newPhotos); 
       setCapturedPhotos(newPhotos);
     } else {
-      console.log('Clearing single photo'); // Debug log
+      console.log('🗑️ Clearing single photo'); 
       setCapturedPhoto('');
     }
   };
@@ -64,57 +64,70 @@ const PhotoCaptureSlide = ({
       icon={<Camera className="text-blue-600" size={28} />}
       canProceed={canProceed}
     >
-      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center min-h-[300px] flex flex-col justify-center">
+      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center min-h-[320px] flex flex-col justify-center">
         {isCapturing ? (
-          <div className="space-y-4">
-            <div className="w-full h-40 bg-gray-900 rounded-lg flex items-center justify-center relative overflow-hidden mx-auto max-w-sm">
+          <div className="space-y-6">
+            {/* Camera Viewfinder Animation */}
+            <div className="w-full h-48 bg-gray-900 rounded-xl flex items-center justify-center relative overflow-hidden mx-auto max-w-sm">
               <div className="absolute inset-0 bg-gradient-to-b from-gray-800 to-gray-900"></div>
               
-              {/* Camera viewfinder corners */}
-              <div className="absolute top-3 left-3 w-6 h-6 border-l-2 border-t-2 border-white"></div>
-              <div className="absolute top-3 right-3 w-6 h-6 border-r-2 border-t-2 border-white"></div>
-              <div className="absolute bottom-3 left-3 w-6 h-6 border-l-2 border-b-2 border-white"></div>
-              <div className="absolute bottom-3 right-3 w-6 h-6 border-r-2 border-b-2 border-white"></div>
+              {/* Animated Viewfinder Corners */}
+              <div className="absolute top-4 left-4 w-8 h-8 border-l-3 border-t-3 border-white animate-pulse"></div>
+              <div className="absolute top-4 right-4 w-8 h-8 border-r-3 border-t-3 border-white animate-pulse"></div>
+              <div className="absolute bottom-4 left-4 w-8 h-8 border-l-3 border-b-3 border-white animate-pulse"></div>
+              <div className="absolute bottom-4 right-4 w-8 h-8 border-r-3 border-b-3 border-white animate-pulse"></div>
               
-              {/* Phone/device being captured */}
-              <div className="relative z-10">
-                <div className="w-20 h-24 bg-amber-100 rounded-lg border-2 border-amber-200 flex flex-col items-center justify-center shadow-lg">
-                  {/* Screen */}
-                  <div className="w-16 h-16 bg-amber-200 rounded border border-amber-300 flex items-center justify-center mb-1">
-                    <div className="flex flex-col space-y-1">
-                      {/* Two dots for eyes */}
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-800 rounded-full"></div>
-                        <div className="w-2 h-2 bg-gray-800 rounded-full"></div>
+              {/* Device Being Captured - Enhanced Animation */}
+              <div className="relative z-10 transform transition-all duration-1000 animate-pulse">
+                <div className="w-24 h-32 bg-amber-100 rounded-xl border-3 border-amber-200 flex flex-col items-center justify-center shadow-2xl transform rotate-2">
+                  {/* Screen with face */}
+                  <div className="w-20 h-20 bg-amber-200 rounded-lg border-2 border-amber-300 flex items-center justify-center mb-2">
+                    <div className="flex flex-col space-y-2">
+                      {/* Animated eyes */}
+                      <div className="flex space-x-2">
+                        <div className="w-3 h-3 bg-gray-800 rounded-full animate-bounce"></div>
+                        <div className="w-3 h-3 bg-gray-800 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                       </div>
-                      {/* Smile line */}
-                      <div className="w-4 h-0.5 bg-gray-800 rounded"></div>
+                      {/* Animated smile */}
+                      <div className="w-6 h-1 bg-gray-800 rounded-full animate-pulse"></div>
                     </div>
                   </div>
-                  {/* Home button */}
-                  <div className="w-16 h-6 bg-amber-200 rounded border border-amber-300"></div>
+                  {/* Bottom section */}
+                  <div className="w-20 h-8 bg-amber-200 rounded-lg border-2 border-amber-300"></div>
                 </div>
               </div>
+
+              {/* Flash Effect */}
+              <div className="absolute inset-0 bg-white opacity-0 animate-ping"></div>
             </div>
-            <p className="text-gray-600 text-base font-medium animate-pulse">📸 Capturing photo...</p>
+            
+            {/* Capturing Text with Animation */}
+            <div className="space-y-2">
+              <p className="text-blue-600 text-lg font-semibold animate-pulse">📸 Capturing Photo...</p>
+              <div className="flex justify-center space-x-1">
+                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              </div>
+            </div>
           </div>
         ) : canProceed ? (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {allowMultiple ? (
               <>
                 {capturedPhotos.map((_, index) => (
-                  <div key={index} className="w-full h-24 bg-green-100 rounded flex items-center justify-center">
-                    <span className="text-green-600 text-sm">📸 Photo {index + 1} Captured</span>
+                  <div key={index} className="w-full h-28 bg-green-100 rounded-lg flex items-center justify-center border-2 border-green-200">
+                    <span className="text-green-700 text-base font-medium">📸 Photo {index + 1} Captured Successfully</span>
                   </div>
                 ))}
-                <div className="flex gap-2">
-                  <Button onClick={handleCapture} className="flex-1 text-sm py-2">
+                <div className="flex gap-3">
+                  <Button onClick={handleCapture} className="flex-1 text-base py-3">
                     Add Another Photo
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => handleRetake(capturedPhotos.length - 1)}
-                    className="text-sm py-2"
+                    className="text-base py-3"
                   >
                     Remove Last
                   </Button>
@@ -122,14 +135,14 @@ const PhotoCaptureSlide = ({
               </>
             ) : (
               <>
-                <div className="w-full h-24 bg-green-100 rounded flex items-center justify-center">
-                  <span className="text-green-600 text-sm">📸 Photo Captured</span>
+                <div className="w-full h-28 bg-green-100 rounded-lg flex items-center justify-center border-2 border-green-200">
+                  <span className="text-green-700 text-base font-medium">📸 Photo Captured Successfully</span>
                 </div>
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="lg"
                   onClick={() => handleRetake()}
-                  className="text-sm"
+                  className="text-base py-3"
                 >
                   Retake Photo
                 </Button>
@@ -137,9 +150,17 @@ const PhotoCaptureSlide = ({
             )}
           </div>
         ) : (
-          <div className="space-y-4">
-            <Camera className="w-12 h-12 text-gray-400 mx-auto" />
-            <Button onClick={handleCapture} className="w-full text-base py-3">
+          <div className="space-y-6">
+            <Camera className="w-16 h-16 text-gray-400 mx-auto" />
+            <div className="space-y-3">
+              <h4 className="text-lg font-medium text-gray-700">Ready to Capture</h4>
+              <p className="text-sm text-gray-500">Take a photo of the maintenance issue</p>
+            </div>
+            <Button 
+              onClick={handleCapture} 
+              className="w-full text-lg py-4 bg-blue-600 hover:bg-blue-700"
+              disabled={isCapturing}
+            >
               {allowMultiple ? 'Capture Photos' : 'Capture Photo'}
             </Button>
           </div>
