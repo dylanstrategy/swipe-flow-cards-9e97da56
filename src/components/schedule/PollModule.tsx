@@ -275,7 +275,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 
       case 3:
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 pb-8">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Poll Settings</CardTitle>
@@ -392,11 +392,11 @@ const PollModule = ({ onClose }: PollModuleProps) => {
               </CardContent>
             </Card>
 
-            {/* Submit Button for Step 3 */}
-            <div className="pt-4">
+            {/* Submit Button - Fixed positioning */}
+            <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t border-gray-100">
               <Button 
                 onClick={handleSubmit}
-                className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2 py-3"
                 disabled={!canProceed()}
               >
                 Create Poll
@@ -420,7 +420,6 @@ const PollModule = ({ onClose }: PollModuleProps) => {
       onSwipeUp={step < 3 && canProceed() ? nextStep : undefined}
       onSwipeLeft={step > 1 ? prevStep : undefined}
       canSwipeUp={step < 3 && canProceed()}
-      hideSwipeHandling={step === 3}
     >
       <div className="h-full overflow-y-auto">
         {renderCurrentStep()}
