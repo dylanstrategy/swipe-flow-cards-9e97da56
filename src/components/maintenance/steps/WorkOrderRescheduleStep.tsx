@@ -30,7 +30,6 @@ const WorkOrderRescheduleStep = ({
   ];
 
   const currentDate = new Date();
-  const currentTime = '2:00 PM';
 
   const isComplete = selectedDate && selectedTime;
 
@@ -64,11 +63,11 @@ const WorkOrderRescheduleStep = ({
         </div>
       </div>
 
-      {/* Current Schedule - Clickable */}
+      {/* Current Schedule - Clickable Date Only */}
       <Card className="flex-shrink-0">
         <CardContent className="p-3">
           <div className="space-y-2">
-            <div className="text-xs text-gray-600 mb-2">Current Schedule:</div>
+            <div className="text-xs text-gray-600 mb-2">Select Date:</div>
             
             {/* Clickable Date Display */}
             <button
@@ -78,19 +77,11 @@ const WorkOrderRescheduleStep = ({
               <div className="flex items-center gap-2">
                 <CalendarIcon className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium">
-                  {selectedDate ? format(selectedDate, 'EEEE, MMMM do') : format(currentDate, 'EEEE, MMMM do')}
+                  {selectedDate ? format(selectedDate, 'EEEE, MMMM do') : 'Select a date'}
                 </span>
               </div>
               <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showCalendar ? 'rotate-180' : ''}`} />
             </button>
-
-            {/* Time Display */}
-            <div className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg">
-              <Clock className="w-4 h-4 text-gray-600" />
-              <span className="text-sm font-medium">
-                {selectedTime || currentTime}
-              </span>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -100,7 +91,7 @@ const WorkOrderRescheduleStep = ({
         {/* Calendar Section - Conditional */}
         {showCalendar && (
           <div>
-            <h3 className="font-medium text-gray-900 mb-2 text-sm">Select New Date</h3>
+            <h3 className="font-medium text-gray-900 mb-2 text-sm">Select Date</h3>
             <div className="bg-white rounded-lg border border-gray-200">
               <Calendar
                 mode="single"
@@ -114,10 +105,10 @@ const WorkOrderRescheduleStep = ({
         )}
 
         {/* Time Selection - Shows when date is selected */}
-        {(selectedDate || !showCalendar) && (
+        {selectedDate && (
           <div>
             <h3 className="font-medium text-gray-900 mb-2 text-sm">
-              Available Times {selectedDate && `for ${format(selectedDate, 'MMM do')}`}
+              Available Times for {format(selectedDate, 'MMM do')}
             </h3>
             <div className="grid grid-cols-3 gap-2">
               {timeSlots.map((time) => (
