@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, X, BarChart3, Users, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,7 +27,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
   const [pollData, setPollData] = useState({
     title: '',
     description: '',
-    type: 'multiple-choice' as 'multiple-choice' | 'yes-no' | 'rating' | 'text',
+    type: '' as 'multiple-choice' | 'yes-no' | 'rating' | 'text' | '',
     options: [
       { id: '1', text: '' },
       { id: '2', text: '' }
@@ -144,7 +143,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
         ...pollData,
         title: '',
         description: '',
-        type: 'multiple-choice'
+        type: ''
       });
     } else if (step === 2) {
       if (pollData.type === 'multiple-choice') {
@@ -217,11 +216,11 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Poll Type
+                      Poll Type *
                     </label>
                     <Select value={pollData.type} onValueChange={(value: any) => setPollData({ ...pollData, type: value })}>
                       <SelectTrigger className="bg-white border border-gray-300">
-                        <SelectValue />
+                        <SelectValue placeholder="Select poll type" />
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
                         {pollTypes.map((type) => (
