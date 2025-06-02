@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ArrowLeft, MessageCircle, Wrench, Calendar, Users, Clock, FileText, BarChart3, Home, DollarSign, Clipboard } from 'lucide-react';
 
@@ -122,7 +121,7 @@ const OperatorScheduleMenu = ({ onSelectType, onClose }: OperatorScheduleMenuPro
       </div>
 
       {/* Scrollable Menu Options */}
-      <div className="flex-1 overflow-y-auto p-4 pb-8">
+      <div className="flex-1 overflow-y-auto p-4 pb-32">
         <div className="max-w-2xl mx-auto space-y-6">
           {categories.map((category) => {
             const categoryItems = scheduleTypes.filter(type => type.category === category);
