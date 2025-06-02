@@ -150,7 +150,7 @@ const SwipeableScreen = ({
 
   if (hideSwipeHandling) {
     return (
-      <div className="flex flex-col h-full">
+      <div className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen">
         {/* Header with X button and optional right button */}
         <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200 relative z-10">
           <div>
@@ -178,9 +178,11 @@ const SwipeableScreen = ({
           </div>
         </div>
 
-        {/* Content Area */}
-        <div className="flex-1 p-4 overflow-hidden relative z-10">
-          {children}
+        {/* Content Area - Fixed for scrolling */}
+        <div className="flex-1 overflow-y-auto relative z-10">
+          <div className="p-4">
+            {children}
+          </div>
         </div>
       </div>
     );
