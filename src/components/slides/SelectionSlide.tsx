@@ -58,21 +58,24 @@ const SelectionSlide = ({
       icon={icon}
       canProceed={canProceed}
     >
-      <div className="grid grid-cols-1 gap-3">
-        {options.map((option) => (
-          <Button
-            key={option.value}
-            variant={isSelected(option.value) ? 'default' : 'outline'}
-            onClick={() => handleSelection(option.value)}
-            className="h-auto p-4 flex flex-col items-center text-center"
-          >
-            {option.icon && <span className="text-2xl mb-2">{option.icon}</span>}
-            <span className="font-medium">{option.label}</span>
-            {option.description && (
-              <span className="text-sm text-gray-500 mt-1">{option.description}</span>
-            )}
-          </Button>
-        ))}
+      {/* Content wrapper with controlled spacing and max height */}
+      <div className="max-h-[400px] overflow-y-auto">
+        <div className="grid grid-cols-1 gap-3">
+          {options.map((option) => (
+            <Button
+              key={option.value}
+              variant={isSelected(option.value) ? 'default' : 'outline'}
+              onClick={() => handleSelection(option.value)}
+              className="h-auto p-4 flex flex-col items-center text-center min-h-[60px]"
+            >
+              {option.icon && <span className="text-2xl mb-2">{option.icon}</span>}
+              <span className="font-medium">{option.label}</span>
+              {option.description && (
+                <span className="text-sm text-gray-500 mt-1">{option.description}</span>
+              )}
+            </Button>
+          ))}
+        </div>
       </div>
     </FormSlide>
   );

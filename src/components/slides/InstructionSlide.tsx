@@ -20,9 +20,10 @@ const InstructionSlide = ({
   showContinuePrompt = true 
 }: InstructionSlideProps) => {
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col max-h-screen">
       <BaseSlide title={title} subtitle={subtitle} icon={icon}>
-        <div className="text-center space-y-4">
+        {/* Content wrapper with controlled spacing */}
+        <div className="text-center space-y-4 max-h-[400px] overflow-y-auto">
           {typeof content === 'string' ? (
             <p className="text-gray-700 text-base leading-relaxed">{content}</p>
           ) : (
@@ -43,7 +44,7 @@ const InstructionSlide = ({
       </BaseSlide>
 
       {showContinuePrompt && (
-        <div className="text-center pt-4 flex-shrink-0">
+        <div className="flex-shrink-0 text-center py-4 px-4 bg-white border-t border-gray-100">
           <p className="text-blue-600 font-medium text-sm mb-2">Ready to continue!</p>
           <p className="text-xs text-gray-500">Swipe up to continue</p>
         </div>

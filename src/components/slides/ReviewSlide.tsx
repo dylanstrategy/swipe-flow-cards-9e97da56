@@ -40,15 +40,17 @@ const ReviewSlide = ({
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="text-center mb-4 flex-shrink-0">
+    <div className="h-full flex flex-col max-h-screen">
+      {/* Header Section - Fixed */}
+      <div className="text-center mb-4 flex-shrink-0 px-4 pt-4">
         <CheckCircle className="mx-auto text-green-600 mb-2" size={32} />
         <h3 className="text-lg font-semibold text-gray-900 mb-1">{title}</h3>
         {subtitle && <p className="text-sm text-gray-600">{subtitle}</p>}
       </div>
       
-      <div className="flex-1 min-h-0 overflow-y-auto pb-20">
-        <div className="space-y-4">
+      {/* Scrollable Content Area */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 mb-4">
+        <div className="space-y-4 max-h-[calc(100vh-280px)]">
           {sections.map((section, sectionIndex) => (
             <div key={sectionIndex} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
               <h4 className="font-medium text-gray-900 mb-3 text-base">{section.title}</h4>
@@ -74,14 +76,11 @@ const ReviewSlide = ({
               />
             </div>
           )}
-
-          {/* Additional spacing for better scrolling */}
-          <div className="h-8"></div>
         </div>
       </div>
 
       {/* Fixed Submit Button */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
+      <div className="flex-shrink-0 p-4 bg-white border-t border-gray-200">
         <Button
           onClick={onSubmit}
           className="w-full bg-blue-600 text-white py-3 text-base font-semibold hover:bg-blue-700 transition-colors"

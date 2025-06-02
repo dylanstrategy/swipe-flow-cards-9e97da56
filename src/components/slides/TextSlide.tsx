@@ -30,33 +30,36 @@ const TextSlide = ({ title, subtitle, icon, fields, canProceed }: TextSlideProps
       icon={icon}
       canProceed={canProceed}
     >
-      {fields.map((field, index) => (
-        <div key={index}>
-          <Label htmlFor={`field-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
-            {field.label}
-            {field.required && <span className="text-red-500 ml-1">*</span>}
-          </Label>
-          {field.type === 'textarea' ? (
-            <Textarea
-              id={`field-${index}`}
-              value={field.value}
-              onChange={(e) => field.onChange(e.target.value)}
-              placeholder={field.placeholder}
-              className="w-full"
-              rows={4}
-            />
-          ) : (
-            <Input
-              id={`field-${index}`}
-              type={field.type || 'text'}
-              value={field.value}
-              onChange={(e) => field.onChange(e.target.value)}
-              placeholder={field.placeholder}
-              className="w-full"
-            />
-          )}
-        </div>
-      ))}
+      {/* Content wrapper with controlled spacing and max height */}
+      <div className="space-y-4 max-h-[400px] overflow-y-auto">
+        {fields.map((field, index) => (
+          <div key={index}>
+            <Label htmlFor={`field-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+              {field.label}
+              {field.required && <span className="text-red-500 ml-1">*</span>}
+            </Label>
+            {field.type === 'textarea' ? (
+              <Textarea
+                id={`field-${index}`}
+                value={field.value}
+                onChange={(e) => field.onChange(e.target.value)}
+                placeholder={field.placeholder}
+                className="w-full min-h-[80px] max-h-[120px]"
+                rows={3}
+              />
+            ) : (
+              <Input
+                id={`field-${index}`}
+                type={field.type || 'text'}
+                value={field.value}
+                onChange={(e) => field.onChange(e.target.value)}
+                placeholder={field.placeholder}
+                className="w-full h-12"
+              />
+            )}
+          </div>
+        ))}
+      </div>
     </FormSlide>
   );
 };

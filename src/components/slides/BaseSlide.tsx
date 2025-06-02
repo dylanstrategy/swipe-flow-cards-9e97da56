@@ -12,10 +12,10 @@ interface BaseSlideProps {
 
 const BaseSlide = ({ children, className, title, subtitle, icon }: BaseSlideProps) => {
   return (
-    <div className="h-full flex flex-col">
-      {/* Header Section */}
+    <div className="h-full flex flex-col max-h-screen">
+      {/* Header Section - Fixed height */}
       {(title || subtitle || icon) && (
-        <div className="text-center mb-4 flex-shrink-0">
+        <div className="text-center mb-4 flex-shrink-0 px-4 pt-4">
           {icon && (
             <div className="mb-2">
               {icon}
@@ -30,14 +30,18 @@ const BaseSlide = ({ children, className, title, subtitle, icon }: BaseSlideProp
         </div>
       )}
 
-      {/* Content Section */}
+      {/* Content Section - Scrollable with max height */}
       <div className={cn(
-        "flex-1 min-h-0 overflow-y-auto",
+        "flex-1 min-h-0",
+        "mx-4 mb-4",
         "border border-gray-200 rounded-lg bg-white",
-        "p-4 space-y-4",
+        "overflow-y-auto",
+        "max-h-[calc(100vh-240px)]", // Reserve space for header, footer, and swipe prompt
         className
       )}>
-        {children}
+        <div className="p-4 space-y-4">
+          {children}
+        </div>
       </div>
     </div>
   );
