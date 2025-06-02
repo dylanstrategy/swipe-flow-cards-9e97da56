@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TabNavigation from '@/components/TabNavigation';
 import MaintenanceTodayTab from '@/components/maintenance/tabs/MaintenanceTodayTab';
+import MaintenanceScheduleTab from '@/components/maintenance/tabs/MaintenanceScheduleTab';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +20,7 @@ const Maintenance = () => {
 
   const tabs = [
     { id: 'today', label: 'Today', icon: '🔧' },
-    { id: 'schedule', label: 'Schedule', icon: '📅' },
+    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
     { id: 'inventory', label: 'Inventory', icon: '📦' },
     { id: 'vendors', label: 'Vendors', icon: '🏢' }
   ];
@@ -48,6 +48,8 @@ const Maintenance = () => {
     switch (activeTab) {
       case 'today':
         return <MaintenanceTodayTab />;
+      case 'dashboard':
+        return <MaintenanceScheduleTab />;
       default:
         return <MaintenanceTodayTab />;
     }
