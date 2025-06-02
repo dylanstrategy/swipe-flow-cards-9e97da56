@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -171,6 +172,49 @@ const OperatorResidentsTab = () => {
       documents: [
         { id: 16, name: 'Application.pdf', type: 'application', uploadDate: '2025-03-01', size: '900 KB' }
       ]
+    },
+    {
+      id: 8,
+      name: 'Robert Martinez',
+      unit: 'D401',
+      phone: '(555) 890-1234',
+      email: 'robert.martinez@email.com',
+      birthdate: '1979-01-17',
+      leaseStatus: 'expired',
+      status: 'past',
+      moveInDate: '2021-09-01',
+      moveOutDate: '2024-08-31',
+      balance: 0,
+      workOrders: 0,
+      renewalStatus: 'not_due',
+      hasMoveInProgress: false,
+      hasMoveOutProgress: false,
+      currentRent: 0,
+      documents: [
+        { id: 17, name: 'Final Statement.pdf', type: 'legal', uploadDate: '2024-09-01', size: '420 KB' },
+        { id: 18, name: 'Security Deposit Return.pdf', type: 'legal', uploadDate: '2024-09-05', size: '180 KB' }
+      ]
+    },
+    {
+      id: 9,
+      name: 'Lisa Wang',
+      unit: 'E205',
+      phone: '(555) 901-2345',
+      email: 'lisa.wang@email.com',
+      birthdate: '1993-05-30',
+      leaseStatus: 'expired',
+      status: 'past',
+      moveInDate: '2022-04-15',
+      moveOutDate: '2024-12-15',
+      balance: 0,
+      workOrders: 0,
+      renewalStatus: 'not_due',
+      hasMoveInProgress: false,
+      hasMoveOutProgress: false,
+      currentRent: 0,
+      documents: [
+        { id: 19, name: 'Move Out Inspection.pdf', type: 'legal', uploadDate: '2024-12-16', size: '650 KB' }
+      ]
     }
   ];
 
@@ -217,7 +261,7 @@ const OperatorResidentsTab = () => {
   const filteredResidents = residents.filter(resident => {
     const matchesSearch = resident.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          resident.unit.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || resident.leaseStatus === filterStatus;
+    const matchesFilter = filterStatus === 'all' || resident.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
 
@@ -536,11 +580,49 @@ const OperatorResidentsTab = () => {
     );
   }
 
+  // Get summary stats by resident status
+  const statusCounts = {
+    total: residents.length,
+    current: residents.filter(r => r.status === 'current').length,
+    notice: residents.filter(r => r.status === 'notice').length,
+    future: residents.filter(r => r.status === 'future').length,
+    prospect: residents.filter(r => r.status === 'prospect').length,
+    past: residents.filter(r => r.status === 'past').length
+  };
+
   return (
     <div className="px-4 py-6 pb-24">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Residents</h1>
-        <p className="text-gray-600">Manage resident profiles and information</p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Complete Resident Directory</h1>
+        <p className="text-gray-600">All residents across all statuses ({residents.length} total)</p>
+      </div>
+
+      {/* Summary Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+        <div className="bg-blue-50 p-3 rounded-lg text-center">
+          <div className="text-xl font-bold text-blue-600">{statusCounts.total}</div>
+          <div className="text-xs text-blue-800">Total</div>
+        </div>
+        <div className="bg-green-50 p-3 rounded-lg text-center">
+          <div className="text-xl font-bold text-green-600">{statusCounts.current}</div>
+          <div className="text-xs text-green-800">Current</div>
+        </div>
+        <div className="bg-orange-50 p-3 rounded-lg text-center">
+          <div className="text-xl font-bold text-orange-600">{statusCounts.notice}</div>
+          <div className="text-xs text-orange-800">Notice</div>
+        </div>
+        <div className="bg-blue-50 p-3 rounded-lg text-center">
+          <div className="text-xl font-bold text-blue-600">{statusCounts.future}</div>
+          <div className="text-xs text-blue-800">Future</div>
+        </div>
+        <div className="bg-purple-50 p-3 rounded-lg text-center">
+          <div className="text-xl font-bold text-purple-600">{statusCounts.prospect}</div>
+          <div className="text-xs text-purple-800">Prospect</div>
+        </div>
+        <div className="bg-gray-50 p-3 rounded-lg text-center">
+          <div className="text-xl font-bold text-gray-600">{statusCounts.past}</div>
+          <div className="text-xs text-gray-800">Past</div>
+        </div>
       </div>
 
       {/* Search and Filter */}
@@ -560,11 +642,11 @@ const OperatorResidentsTab = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="expiring">Expiring</SelectItem>
-            <SelectItem value="delinquent">Delinquent</SelectItem>
-            <SelectItem value="move_in_progress">Move-In Progress</SelectItem>
+            <SelectItem value="current">Current</SelectItem>
+            <SelectItem value="notice">Notice</SelectItem>
+            <SelectItem value="future">Future</SelectItem>
             <SelectItem value="prospect">Prospect</SelectItem>
+            <SelectItem value="past">Past</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -587,7 +669,9 @@ const OperatorResidentsTab = () => {
                       </div>
                       <div>
                         <h3 className="font-semibold text-gray-900">{resident.name}</h3>
-                        <p className="text-sm text-gray-600">Unit {resident.unit}</p>
+                        <p className="text-sm text-gray-600">
+                          {resident.unit !== 'N/A' ? `Unit ${resident.unit}` : 'No Unit Assigned'}
+                        </p>
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-gray-400" />
