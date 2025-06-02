@@ -1,16 +1,17 @@
-
 import React, { useState } from 'react';
 import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench, ChevronDown, BarChart3, PieChart } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 import CRMTracker from '../CRMTracker';
 import MoveInTracker from '../MoveInTracker';
 import MoveOutTracker from '../MoveOutTracker';
+import UnitTracker from '../UnitTracker';
 
 const OperatorTodayTab = () => {
   const [selectedTimeframe, setSelectedTimeframe] = useState('30');
   const [showCRMTracker, setShowCRMTracker] = useState(false);
   const [showMoveInTracker, setShowMoveInTracker] = useState(false);
   const [showMoveOutTracker, setShowMoveOutTracker] = useState(false);
+  const [showUnitTracker, setShowUnitTracker] = useState(false);
   const [crmFilter, setCrmFilter] = useState<'leases' | 'shows' | 'outreach'>('leases');
   const [showGraphs, setShowGraphs] = useState(false);
 
@@ -113,6 +114,10 @@ const OperatorTodayTab = () => {
     setShowMoveOutTracker(true);
   };
 
+  const handleUnitTrackerClick = () => {
+    setShowUnitTracker(true);
+  };
+
   if (showCRMTracker) {
     return <CRMTracker onClose={() => setShowCRMTracker(false)} initialFilter={crmFilter} />;
   }
@@ -123,6 +128,10 @@ const OperatorTodayTab = () => {
 
   if (showMoveOutTracker) {
     return <MoveOutTracker onClose={() => setShowMoveOutTracker(false)} />;
+  }
+
+  if (showUnitTracker) {
+    return <UnitTracker onClose={() => setShowUnitTracker(false)} />;
   }
 
   const overview = [
@@ -159,12 +168,14 @@ const OperatorTodayTab = () => {
     {
       title: 'Vacant Units',
       count: currentCounts.vacant,
-      status: 'available'
+      status: 'available',
+      module: 'units'
     },
     {
       title: 'Available Units',
       count: currentCounts.available,
-      status: 'ready'
+      status: 'ready',
+      module: 'units'
     },
     {
       title: 'Required Leases',
@@ -211,6 +222,8 @@ const OperatorTodayTab = () => {
       handleMoveInClick();
     } else if (module === 'moveout') {
       handleMoveOutClick();
+    } else if (module === 'units') {
+      handleUnitTrackerClick();
     }
   };
 
@@ -375,7 +388,7 @@ const OperatorTodayTab = () => {
               className={`bg-gray-50 rounded-lg p-4 text-center ${
                 item.module ? 'cursor-pointer hover:bg-gray-100 transition-colors' : ''
               }`}
-              onClick={() => item.module && item.filter && handleModuleClick(item.module, item.filter)}
+              onClick={() => item.module && item.filter ? handleModuleClick(item.module, item.filter) : item.module && handleModuleClick(item.module)}
             >
               <div className="text-2xl font-bold text-gray-900">{item.count}</div>
               <div className="text-sm text-gray-600">{item.title}</div>
