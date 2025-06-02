@@ -29,81 +29,83 @@ const WorkOrderRescheduleStep = ({
   const isComplete = selectedDate && selectedTime;
 
   return (
-    <div className="space-y-6 pb-20">
-      {/* Prominent Reschedule Header */}
-      <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-white/20 rounded-lg flex items-center justify-center">
+    <div className="h-full flex flex-col space-y-3 overflow-hidden">
+      {/* Compact Reschedule Header */}
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
             <img 
               src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=64&h=64&fit=crop&crop=center" 
               alt="Reschedule work order"
-              className="w-12 h-12 rounded object-cover"
+              className="w-8 h-8 rounded object-cover"
             />
           </div>
           <div className="flex-1">
-            <h2 className="text-xl font-bold mb-1">Reschedule Work Order</h2>
-            <p className="text-blue-100 text-sm">
-              Select a new date and time that works better for your schedule
+            <h2 className="text-lg font-bold">Reschedule Work Order</h2>
+            <p className="text-blue-100 text-xs">
+              Select a new date and time
             </p>
           </div>
         </div>
       </div>
 
-      {/* Current Schedule */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Current Schedule</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4 text-sm text-gray-600">
+      {/* Current Schedule - Compact */}
+      <Card className="flex-shrink-0">
+        <CardContent className="p-3">
+          <div className="flex items-center gap-4 text-xs text-gray-600">
             <div className="flex items-center gap-1">
-              <CalendarIcon className="w-4 h-4" />
-              <span>Today, June 2nd</span>
+              <CalendarIcon className="w-3 h-3" />
+              <span>Current: Today, June 2nd</span>
             </div>
             <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
+              <Clock className="w-3 h-3" />
               <span>2:00 PM</span>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Reschedule Options */}
-      <div>
-        <h3 className="font-medium text-gray-900 mb-3">Select New Date</h3>
-        <div className="bg-white rounded-lg border border-gray-200">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            className="w-full p-4"
-            disabled={(date) => date < new Date()}
-          />
-        </div>
-      </div>
-
-      {selectedDate && (
+      {/* Main Content Area - Scrollable */}
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-3">
+        {/* Calendar Section */}
         <div>
-          <h3 className="font-medium text-gray-900 mb-3">Available Times</h3>
-          <div className="grid grid-cols-3 gap-3">
-            {timeSlots.map((time) => (
-              <Button
-                key={time}
-                variant={selectedTime === time ? "default" : "outline"}
-                className="h-12 text-sm font-medium"
-                onClick={() => setSelectedTime(time)}
-              >
-                {time}
-              </Button>
-            ))}
+          <h3 className="font-medium text-gray-900 mb-2 text-sm">Select New Date</h3>
+          <div className="bg-white rounded-lg border border-gray-200">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              className="w-full p-2 [&_.rdp-month]:text-sm [&_.rdp-day]:h-8 [&_.rdp-day]:w-8"
+              disabled={(date) => date < new Date()}
+            />
           </div>
         </div>
-      )}
 
+        {/* Time Selection */}
+        {selectedDate && (
+          <div>
+            <h3 className="font-medium text-gray-900 mb-2 text-sm">Available Times</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {timeSlots.map((time) => (
+                <Button
+                  key={time}
+                  variant={selectedTime === time ? "default" : "outline"}
+                  className="h-10 text-xs font-medium"
+                  onClick={() => setSelectedTime(time)}
+                >
+                  {time}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Fixed Bottom Action */}
       {isComplete && (
-        <div className="text-center pt-4">
-          <p className="text-sm text-gray-600 mb-2">Swipe up to confirm reschedule</p>
-          <ArrowUp className="w-6 h-6 text-gray-400 mx-auto animate-bounce" />
+        <div className="text-center pt-2 flex-shrink-0">
+          <p className="text-xs text-gray-600 mb-1">Swipe up to confirm reschedule</p>
+          <ArrowUp className="w-5 h-5 text-gray-400 mx-auto animate-bounce" />
         </div>
       )}
     </div>
