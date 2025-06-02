@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { Calendar } from '@/components/ui/calendar';
+import { Button } from '@/components/ui/button';
+import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import SwipeUpPrompt from '@/components/ui/swipe-up-prompt';
 
@@ -13,79 +15,65 @@ interface ScheduleStepProps {
 }
 
 const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, setSelectedTime }: ScheduleStepProps) => {
-  const availableTimeSlots = [
-    '9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM'
+  const availableTimes = [
+    '9:00 AM', '10:00 AM', '11:00 AM',
+    '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM'
   ];
 
-  const canProceed = () => {
-    return selectedDate && selectedTime;
-  };
+  const canProceed = selectedDate && selectedTime;
 
   return (
     <div className="h-full flex flex-col">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Schedule Repair</h3>
+      <div className="text-center mb-4">
+        <Clock className="mx-auto text-blue-600 mb-2" size={32} />
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">Schedule Repair</h3>
+      </div>
       
-      <div className="flex-1 flex flex-col">
-        <div className="mb-4">
-          <h4 className="font-medium text-gray-700 mb-2 text-sm">Select Date</h4>
-          <div className="bg-white rounded-lg border border-gray-200">
+      <div className="flex-1 space-y-4 overflow-y-auto">
+        <div>
+          <h4 className="font-medium text-gray-900 mb-3">Select Date</h4>
+          <div className="bg-white border border-gray-200 rounded-lg">
             <Calendar
               mode="single"
               selected={selectedDate}
               onSelect={setSelectedDate}
-              className={cn("p-2 pointer-events-auto")}
               disabled={(date) => date < new Date()}
+              className={cn("p-3")}
               classNames={{
-                months: "flex flex-col sm:flex-row space-y-2 sm:space-x-2 sm:space-y-0",
-                month: "space-y-2",
-                caption: "flex justify-center pt-1 relative items-center",
-                caption_label: "text-xs font-medium",
-                table: "w-full border-collapse space-y-1",
-                head_row: "flex",
-                head_cell: "text-muted-foreground rounded-md w-7 font-normal text-[0.7rem]",
-                row: "flex w-full mt-1",
-                cell: "h-7 w-7 text-center text-xs p-0 relative",
-                day: "h-7 w-7 p-0 font-normal aria-selected:opacity-100 text-xs",
+                day_today: "bg-blue-600 text-white hover:bg-blue-700",
+                day_selected: "bg-blue-600 text-white hover:bg-blue-700"
               }}
             />
           </div>
         </div>
 
         {selectedDate && (
-          <div className="mb-4">
-            <h4 className="font-medium text-gray-700 mb-2 text-sm">Available Times</h4>
-            <div className="grid grid-cols-3 gap-1">
-              {availableTimeSlots.map((time) => (
-                <button
+          <div>
+            <h4 className="font-medium text-gray-900 mb-3">Available Times</h4>
+            <div className="grid grid-cols-3 gap-2">
+              {availableTimes.map((time) => (
+                <Button
                   key={time}
+                  variant={selectedTime === time ? "default" : "outline"}
+                  size="sm"
                   onClick={() => setSelectedTime(time)}
-                  className={cn(
-                    "p-2 border rounded-lg text-xs font-medium transition-colors",
-                    selectedTime === time
-                      ? "border-blue-500 bg-blue-50 text-blue-700"
-                      : "border-gray-200 text-gray-700 hover:border-gray-300"
-                  )}
+                  className="text-xs py-2 px-3"
                 >
                   {time}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
         )}
-      </div>
 
-      {canProceed() && (
-        <SwipeUpPrompt 
-          onContinue={onNext}
-          message="Schedule selected!"
-          buttonText="Continue"
-        />
-      )}
-      {!canProceed() && (
-        <div className="text-center">
-          <p className="text-gray-500 text-sm">Please select a date and time</p>
-        </div>
-      )}
+        {canProceed && (
+          <SwipeUpPrompt 
+            onContinue={onNext}
+            message="Schedule confirmed!"
+            buttonText="Continue"
+          />
+        )}
+      </div>
     </div>
   );
 };
