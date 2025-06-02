@@ -26,21 +26,21 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
 
   return (
     <div className="h-full flex flex-col">
-      <div className="text-center mb-4">
-        <Clock className="mx-auto text-blue-600 mb-2" size={32} />
+      <div className="text-center mb-3">
+        <Clock className="mx-auto text-blue-600 mb-2" size={28} />
         <h3 className="text-lg font-semibold text-gray-900 mb-1">Schedule Repair</h3>
       </div>
       
-      <div className="flex-1 space-y-6">
+      <div className="flex-1 space-y-4">
         {/* Date Selection */}
         <div>
-          <h4 className="font-medium text-gray-900 mb-3 text-base">Select Date</h4>
+          <h4 className="font-medium text-gray-900 mb-2 text-sm">Select Date</h4>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 className={cn(
-                  "w-full justify-start text-left font-normal h-12",
+                  "w-full justify-start text-left font-normal h-10",
                   !selectedDate && "text-muted-foreground"
                 )}
               >
@@ -64,14 +64,14 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
         {/* Time Selection - Only show when date is selected */}
         {selectedDate && (
           <div>
-            <h4 className="font-medium text-gray-900 mb-3 text-base">Available Times</h4>
-            <div className="grid grid-cols-2 gap-3">
+            <h4 className="font-medium text-gray-900 mb-2 text-sm">Available Times</h4>
+            <div className="grid grid-cols-2 gap-2">
               {availableTimes.map((time) => (
                 <Button
                   key={time}
                   variant={selectedTime === time ? "default" : "outline"}
                   onClick={() => setSelectedTime(time)}
-                  className="h-11 text-sm font-medium"
+                  className="h-9 text-xs font-medium"
                 >
                   {time}
                 </Button>
@@ -79,18 +79,18 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
             </div>
           </div>
         )}
-
-        {/* Swipe Up Prompt - Only show when both date and time are selected */}
-        {canProceed && (
-          <div className="pt-4">
-            <SwipeUpPrompt 
-              onContinue={onNext}
-              message="Schedule confirmed!"
-              buttonText="Continue"
-            />
-          </div>
-        )}
       </div>
+
+      {/* Swipe Up Prompt - Fixed at bottom */}
+      {canProceed && (
+        <div className="mt-4 flex-shrink-0">
+          <SwipeUpPrompt 
+            onContinue={onNext}
+            message="Schedule confirmed!"
+            buttonText="Continue"
+          />
+        </div>
+      )}
     </div>
   );
 };
