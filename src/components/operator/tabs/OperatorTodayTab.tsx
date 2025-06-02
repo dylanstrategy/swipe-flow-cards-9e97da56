@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench, ChevronDown, BarChart3, PieChart } from 'lucide-react';
+import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench, ChevronDown, BarChart3, PieChart, CalendarDays, Activity } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import CRMTracker from '../CRMTracker';
 import MoveInTracker from '../MoveInTracker';
 import MoveOutTracker from '../MoveOutTracker';
@@ -15,12 +17,71 @@ const OperatorTodayTab = () => {
   const [pricingFilter, setPricingFilter] = useState<'all' | 'available' | 'vacant' | 'occupied'>('all');
   const [crmFilter, setCrmFilter] = useState<'leases' | 'shows' | 'outreach'>('leases');
   const [showGraphs, setShowGraphs] = useState(false);
+  const [showCalendarView, setShowCalendarView] = useState(false);
 
   const timeframeOptions = [
     { value: 'week', label: 'End of Week' },
     { value: '30', label: '30 Days' },
     { value: '60', label: '60 Days' },
     { value: '90', label: '90 Days' }
+  ];
+
+  // Daily scheduled events for calendar view
+  const dailyEvents = [
+    {
+      id: 1,
+      time: '09:00 AM',
+      title: 'Move-In Inspection',
+      description: 'Unit 4B - Sarah Johnson',
+      type: 'move-in',
+      priority: 'high',
+      status: 'scheduled'
+    },
+    {
+      id: 2,
+      time: '10:30 AM',
+      title: 'Lease Signing',
+      description: 'Unit 2C - Mike Chen renewal',
+      type: 'lease',
+      priority: 'medium',
+      status: 'confirmed'
+    },
+    {
+      id: 3,
+      time: '11:15 AM',
+      title: 'Resident Message',
+      description: 'Unit 5A - HVAC repair follow-up',
+      type: 'message',
+      priority: 'normal',
+      status: 'pending'
+    },
+    {
+      id: 4,
+      time: '02:00 PM',
+      title: 'Tour Scheduled',
+      description: 'Studio unit - Alex Rodriguez',
+      type: 'tour',
+      priority: 'normal',
+      status: 'confirmed'
+    },
+    {
+      id: 5,
+      time: '03:30 PM',
+      title: 'Move-Out Notice',
+      description: 'Unit 1A - Notice processing',
+      type: 'move-out',
+      priority: 'medium',
+      status: 'processing'
+    },
+    {
+      id: 6,
+      time: '04:15 PM',
+      title: 'Payment Follow-up',
+      description: 'Unit 3D - Late rent discussion',
+      type: 'payment',
+      priority: 'high',
+      status: 'urgent'
+    }
   ];
 
   const getCountsForTimeframe = (timeframe: string) => {
@@ -101,6 +162,28 @@ const OperatorTodayTab = () => {
     { name: 'Applications', value: 15, color: '#F59E0B' },
     { name: 'Leases', value: 8, color: '#EF4444' }
   ];
+
+  const getEventTypeIcon = (type: string) => {
+    switch (type) {
+      case 'move-in': return <Home size={16} className="text-green-600" />;
+      case 'move-out': return <Home size={16} className="text-red-600" />;
+      case 'lease': return <Users size={16} className="text-blue-600" />;
+      case 'message': return <MessageSquare size={16} className="text-purple-600" />;
+      case 'tour': return <Calendar size={16} className="text-orange-600" />;
+      case 'payment': return <Target size={16} className="text-red-600" />;
+      default: return <Calendar size={16} className="text-gray-600" />;
+    }
+  };
+
+  const getEventPriorityColor = (priority: string, status: string) => {
+    if (status === 'urgent') return 'bg-red-100 text-red-800 border-red-200';
+    switch (priority) {
+      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'medium': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'normal': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
 
   const handleCRMClick = (filter: 'leases' | 'shows' | 'outreach') => {
     console.log('CRM Click:', filter);
@@ -433,29 +516,106 @@ const OperatorTodayTab = () => {
         </div>
       </div>
 
-      {/* Live Activity Feed */}
+      {/* Live Activity Feed / Daily Calendar Toggle */}
       <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-          <TrendingUp className="text-purple-600" size={24} />
-          LIVE ACTIVITY FEED
-        </h2>
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-            <span className="text-sm text-gray-700">New lead: Sarah Johnson - 2BR inquiry</span>
-            <span className="text-xs text-gray-500 ml-auto">2 min ago</span>
-          </div>
-          <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-            <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-            <span className="text-sm text-gray-700">Tour completed: Unit 5C - Mike Chen</span>
-            <span className="text-xs text-gray-500 ml-auto">15 min ago</span>
-          </div>
-          <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg">
-            <div className="w-2 h-2 bg-yellow-600 rounded-full"></div>
-            <span className="text-sm text-gray-700">Maintenance request: Unit 3A - Leaky faucet</span>
-            <span className="text-xs text-gray-500 ml-auto">32 min ago</span>
-          </div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            {showCalendarView ? (
+              <>
+                <CalendarDays className="text-blue-600" size={24} />
+                TODAY'S SCHEDULE
+              </>
+            ) : (
+              <>
+                <TrendingUp className="text-purple-600" size={24} />
+                LIVE ACTIVITY FEED
+              </>
+            )}
+          </h2>
+          
+          <Button
+            variant="outline"
+            onClick={() => setShowCalendarView(!showCalendarView)}
+            className="flex items-center gap-2"
+          >
+            {showCalendarView ? (
+              <>
+                <Activity size={16} />
+                Show Live Feed
+              </>
+            ) : (
+              <>
+                <CalendarDays size={16} />
+                Show Calendar
+              </>
+            )}
+          </Button>
         </div>
+
+        {showCalendarView ? (
+          /* Daily Calendar View */
+          <div className="space-y-4">
+            <div className="text-center mb-4">
+              <p className="text-gray-600">
+                {new Date().toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </p>
+              <p className="text-sm text-gray-500">{dailyEvents.length} events scheduled</p>
+            </div>
+            
+            {dailyEvents.map((event) => (
+              <div key={event.id} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+                <div className="flex-shrink-0 w-16 text-center">
+                  <div className="text-sm font-medium text-gray-900">{event.time}</div>
+                </div>
+                
+                <div className="flex-shrink-0 mt-1">
+                  {getEventTypeIcon(event.type)}
+                </div>
+                
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-medium text-gray-900">{event.title}</h3>
+                    <Badge className={getEventPriorityColor(event.priority, event.status)}>
+                      {event.status === 'urgent' ? 'URGENT' : event.priority.toUpperCase()}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-600">{event.description}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant="outline" className="text-xs">
+                      {event.type.replace('-', ' ')}
+                    </Badge>
+                    <span className="text-xs text-gray-500">•</span>
+                    <span className="text-xs text-gray-500 capitalize">{event.status}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* Live Activity Feed */
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+              <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+              <span className="text-sm text-gray-700">New lead: Sarah Johnson - 2BR inquiry</span>
+              <span className="text-xs text-gray-500 ml-auto">2 min ago</span>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+              <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+              <span className="text-sm text-gray-700">Tour completed: Unit 5C - Mike Chen</span>
+              <span className="text-xs text-gray-500 ml-auto">15 min ago</span>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg">
+              <div className="w-2 h-2 bg-yellow-600 rounded-full"></div>
+              <span className="text-sm text-gray-700">Maintenance request: Unit 3A - Leaky faucet</span>
+              <span className="text-xs text-gray-500 ml-auto">32 min ago</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
