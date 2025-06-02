@@ -221,39 +221,6 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose }: WorkOrdersReviewProps)
       </div>
     </div>
   );
-
-  function getPriorityColor(priority: string) {
-    switch (priority.toLowerCase()) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  }
-
-  function getStatusColor(status: string) {
-    switch (status.toLowerCase()) {
-      case 'in progress': return 'bg-orange-100 text-orange-800';
-      case 'scheduled': return 'bg-blue-100 text-blue-800';
-      case 'assigned': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  }
-
-  function formatDate(dateString: string) {
-    const date = new Date(dateString);
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return 'Today';
-    } else if (date.toDateString() === tomorrow.toDateString()) {
-      return 'Tomorrow';
-    } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }
-  }
 };
 
 export default WorkOrdersReview;
