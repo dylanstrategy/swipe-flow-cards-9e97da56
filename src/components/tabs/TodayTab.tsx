@@ -7,6 +7,7 @@ import TodayHeader from './today/TodayHeader';
 import QuickActionsGrid from './today/QuickActionsGrid';
 import MiniCalendar from './today/MiniCalendar';
 import EventsList from './today/EventsList';
+import PointOfSale from '../PointOfSale';
 
 const TodayTab = () => {
   const { toast } = useToast();
@@ -19,6 +20,13 @@ const TodayTab = () => {
   });
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [weather, setWeather] = useState({ temp: 72, condition: 'Sunny' });
+
+  // Pet information - in real app this would come from user profile/database
+  const userPets = [
+    { name: 'Luna', type: 'dog', breed: 'Golden Retriever' },
+    { name: 'Whiskers', type: 'cat', breed: 'Maine Coon' }
+  ];
+  const hasPets = userPets.length > 0;
 
   // Simulate live weather updates
   useEffect(() => {
@@ -99,6 +107,30 @@ const TodayTab = () => {
     }
   ];
 
+  // Add pet-specific events if user has pets
+  const petEvents = hasPets ? [
+    {
+      id: 101,
+      date: new Date(),
+      time: '16:00',
+      title: `${userPets[0].name}'s Special Offer`,
+      description: `Exclusive pet grooming discount for ${userPets[0].name}!`,
+      category: 'Pet Service',
+      priority: 'low'
+    },
+    {
+      id: 102,
+      date: addDays(new Date(), 1),
+      time: '18:00',
+      title: 'Pet-Friendly Community Event',
+      description: `Bring ${userPets.map(pet => pet.name).join(' and ')} to the pet meetup!`,
+      category: 'Community Event',
+      priority: 'low'
+    }
+  ] : [];
+
+  const allEvents = [...calendarEvents, ...petEvents];
+
   // Add special event for rent due
   const rentDueEvent = {
     id: 999,
@@ -127,8 +159,15 @@ const TodayTab = () => {
     setShowMessageModule(true);
   };
 
+  const handleOfferClick = (offer: any) => {
+    toast({
+      title: "Offer Activated",
+      description: `${offer.title} from ${offer.business}`,
+    });
+  };
+
   const getEventsForDate = (date: Date) => {
-    return calendarEvents.filter(event => isSameDay(event.date, date))
+    return allEvents.filter(event => isSameDay(event.date, date))
       .sort((a, b) => a.time.localeCompare(b.time));
   };
 
@@ -231,6 +270,16 @@ const TodayTab = () => {
             icon: "💳"
           }
         };
+
+      case 'Pet Service':
+        return {
+          onSwipeRight: {
+            label: "Book Service",
+            action: () => handleAction("Booked pet service", event.title),
+            color: "#10B981",
+            icon: "🐾"
+          }
+        };
       
       default:
         return {
@@ -273,6 +322,19 @@ const TodayTab = () => {
         onAction={handleAction}
         getRentUrgencyClass={getRentUrgencyClass}
       />
+
+      {/* Pet-specific Point of Sale */}
+      {hasPets && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            🐾 Special Offers for {userPets.map(pet => pet.name).join(' & ')}
+          </h2>
+          <PointOfSale 
+            context="pet-service" 
+            onOfferClick={handleOfferClick}
+          />
+        </div>
+      )}
 
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">

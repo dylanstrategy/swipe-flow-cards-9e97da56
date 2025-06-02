@@ -16,9 +16,13 @@ interface OfferData {
 interface PointOfSaleProps {
   context: 'message' | 'work-order' | 'appointment' | 'service' | 'document' | 'event' | 'pet-service' | 'moving-service' | 'home-setup';
   onOfferClick: (offer: OfferData) => void;
+  petName?: string;
 }
 
-const PointOfSale = ({ context, onOfferClick }: PointOfSaleProps) => {
+const PointOfSale = ({ context, onOfferClick, petName }: PointOfSaleProps) => {
+  // Get pet name from context or use default
+  const displayPetName = petName || 'Luna'; // Default pet name for demo
+
   const getContextualOffers = (context: string): OfferData[] => {
     const baseOffers = {
       message: [
@@ -107,22 +111,40 @@ const PointOfSale = ({ context, onOfferClick }: PointOfSaleProps) => {
       ],
       'pet-service': [
         {
-          title: "Dog Walking Service",
-          description: "Professional pet care for your furry friend",
+          title: `${displayPetName}'s Spa Day`,
+          description: `Pamper ${displayPetName} with professional grooming`,
           discount: "30% OFF",
-          business: "Happy Paws Walking",
+          business: "Happy Paws Spa",
           icon: Heart,
           color: "bg-pink-500",
-          cta: "Book Walker"
+          cta: "Book Grooming"
         },
         {
-          title: "Pet Grooming",
-          description: "Keep your pet looking their best",
+          title: `Walking Service for ${displayPetName}`,
+          description: `Professional dog walking tailored for ${displayPetName}`,
           discount: "$15 OFF",
-          business: "Pampered Pets Spa",
+          business: "Pawsome Walkers",
+          icon: Heart,
+          color: "bg-blue-500",
+          cta: "Schedule Walk"
+        },
+        {
+          title: `${displayPetName}'s Vet Checkup`,
+          description: `Book ${displayPetName}'s annual wellness exam`,
+          discount: "25% OFF",
+          business: "CityVet Clinic",
+          icon: Heart,
+          color: "bg-green-500",
+          cta: "Book Appointment"
+        },
+        {
+          title: `Premium Food for ${displayPetName}`,
+          description: `Healthy, organic pet food delivered for ${displayPetName}`,
+          discount: "$20 OFF",
+          business: "PetNutrition Plus",
           icon: Scissors,
-          color: "bg-purple-500",
-          cta: "Book Grooming"
+          color: "bg-orange-500",
+          cta: "Order Food"
         }
       ],
       'moving-service': [
@@ -178,7 +200,7 @@ const PointOfSale = ({ context, onOfferClick }: PointOfSaleProps) => {
     <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
       <div className="text-center mb-2">
         <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
-          Exclusive Resident Offer
+          {context === 'pet-service' ? `Exclusive Offer for ${displayPetName}` : 'Exclusive Resident Offer'}
         </p>
       </div>
       
