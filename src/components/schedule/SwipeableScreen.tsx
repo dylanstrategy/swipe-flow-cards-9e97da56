@@ -1,5 +1,3 @@
-
-
 import React, { useState, useRef, ReactNode, useEffect } from 'react';
 import { ArrowUp, X } from 'lucide-react';
 
@@ -33,103 +31,49 @@ const SwipeableScreen = ({
   const startTime = useRef(0);
 
   useEffect(() => {
-    // More aggressive zoom prevention
+    // Prevent zoom on mount and add input focus handling
     const viewport = document.querySelector('meta[name=viewport]');
     const originalContent = viewport?.getAttribute('content');
     
     if (viewport) {
-      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover');
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
     }
 
-    // Prevent all forms of zoom
+    // Prevent pinch zoom
     const preventZoom = (e: TouchEvent) => {
       if (e.touches.length > 1) {
         e.preventDefault();
-        e.stopPropagation();
       }
     };
 
-    const preventDoubleTapZoom = (e: TouchEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    const preventGestureZoom = (e: Event) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    // More aggressive input zoom prevention
+    // Prevent zoom on input focus
     const preventInputZoom = (e: Event) => {
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-        // Force viewport to stay fixed when focusing inputs
         if (viewport) {
-          viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover');
+          viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
         }
-        
-        // Add inline styles to prevent zoom
-        target.style.fontSize = '16px';
-        target.style.transformOrigin = 'center';
-        target.style.transform = 'scale(1)';
-        
-        // Prevent the browser from adjusting the viewport
-        setTimeout(() => {
-          if (viewport) {
-            viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover');
-          }
-        }, 0);
       }
     };
 
-    // Set CSS to prevent zoom and scrolling issues
-    document.body.style.touchAction = 'manipulation';
-    document.documentElement.style.touchAction = 'manipulation';
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-    
-    // Add comprehensive event listeners
-    document.addEventListener('touchstart', preventZoom, { passive: false, capture: true });
-    document.addEventListener('touchmove', preventZoom, { passive: false, capture: true });
-    document.addEventListener('touchend', preventDoubleTapZoom, { passive: false, capture: true });
-    document.addEventListener('gesturestart', preventGestureZoom, { passive: false, capture: true });
-    document.addEventListener('gesturechange', preventGestureZoom, { passive: false, capture: true });
-    document.addEventListener('gestureend', preventGestureZoom, { passive: false, capture: true });
-    document.addEventListener('focusin', preventInputZoom, { capture: true });
-    document.addEventListener('focusout', preventInputZoom, { capture: true });
-    document.addEventListener('wheel', preventGestureZoom, { passive: false, capture: true });
+    document.addEventListener('touchstart', preventZoom, { passive: false });
+    document.addEventListener('touchmove', preventZoom, { passive: false });
+    document.addEventListener('focusin', preventInputZoom);
+    document.addEventListener('focusout', preventInputZoom);
 
     return () => {
       // Restore original viewport on unmount
       if (viewport && originalContent) {
         viewport.setAttribute('content', originalContent);
       }
-      document.removeEventListener('touchstart', preventZoom, { capture: true });
-      document.removeEventListener('touchmove', preventZoom, { capture: true });
-      document.removeEventListener('touchend', preventDoubleTapZoom, { capture: true });
-      document.removeEventListener('gesturestart', preventGestureZoom, { capture: true });
-      document.removeEventListener('gesturechange', preventGestureZoom, { capture: true });
-      document.removeEventListener('gestureend', preventGestureZoom, { capture: true });
-      document.removeEventListener('focusin', preventInputZoom, { capture: true });
-      document.removeEventListener('focusout', preventInputZoom, { capture: true });
-      document.removeEventListener('wheel', preventGestureZoom, { capture: true });
-      
-      // Reset styles
-      document.body.style.touchAction = '';
-      document.documentElement.style.touchAction = '';
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
+      document.removeEventListener('touchstart', preventZoom);
+      document.removeEventListener('touchmove', preventZoom);
+      document.removeEventListener('focusin', preventInputZoom);
+      document.removeEventListener('focusout', preventInputZoom);
     };
   }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    // Prevent any zoom behavior
-    if (e.touches.length > 1) {
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
-    
     const touch = e.touches[0];
     startPos.current = { x: touch.clientX, y: touch.clientY };
     startTime.current = Date.now();
@@ -137,11 +81,7 @@ const SwipeableScreen = ({
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || e.touches.length > 1) {
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
+    if (!isDragging) return;
     
     const touch = e.touches[0];
     const deltaX = touch.clientX - startPos.current.x;
@@ -164,12 +104,8 @@ const SwipeableScreen = ({
     }
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handleTouchEnd = () => {
     if (!isDragging) return;
-
-    // Prevent any zoom behavior
-    e.preventDefault();
-    e.stopPropagation();
 
     const deltaX = dragOffset.x;
     const deltaY = dragOffset.y;
@@ -211,15 +147,7 @@ const SwipeableScreen = ({
 
   if (hideSwipeHandling) {
     return (
-      <div 
-        className="flex flex-col h-full"
-        style={{ 
-          touchAction: 'manipulation',
-          userSelect: 'none',
-          WebkitUserSelect: 'none',
-          WebkitTouchCallout: 'none'
-        }}
-      >
+      <div className="flex flex-col h-full">
         {/* Header with X button */}
         <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200 relative z-10">
           <div>
@@ -262,10 +190,7 @@ const SwipeableScreen = ({
         transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${getRotation()}deg)`,
         transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.2, 0, 0, 1)',
         transformOrigin: 'center center',
-        touchAction: 'manipulation',
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-        WebkitTouchCallout: 'none'
+        touchAction: 'pan-x pan-y'
       }}
     >
       {/* Swipe Action Overlays */}
@@ -332,4 +257,3 @@ const SwipeableScreen = ({
 };
 
 export default SwipeableScreen;
-

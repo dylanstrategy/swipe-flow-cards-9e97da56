@@ -1,15 +1,12 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import SwipeCard from '@/components/SwipeCard';
 import WorkOrderFlow from '@/components/maintenance/WorkOrderFlow';
-import UnitTurnTracker from '@/components/maintenance/UnitTurnTracker';
-import WorkOrderTracker from '@/components/maintenance/WorkOrderTracker';
 
 const MaintenanceTodayTab = () => {
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
-  const [showUnitTurnTracker, setShowUnitTurnTracker] = useState(false);
-  const [showWorkOrderTracker, setShowWorkOrderTracker] = useState(false);
 
   // Sample work orders data
   const workOrders = [
@@ -106,23 +103,6 @@ const MaintenanceTodayTab = () => {
     }
   };
 
-  // Show trackers when requested
-  if (showUnitTurnTracker) {
-    return <UnitTurnTracker onClose={() => setShowUnitTurnTracker(false)} />;
-  }
-
-  if (showWorkOrderTracker) {
-    return (
-      <WorkOrderTracker 
-        onClose={() => setShowWorkOrderTracker(false)} 
-        onSelectWorkOrder={(workOrder) => {
-          setShowWorkOrderTracker(false);
-          setSelectedWorkOrder(workOrder);
-        }}
-      />
-    );
-  }
-
   if (selectedWorkOrder) {
     return (
       <WorkOrderFlow 
@@ -136,13 +116,13 @@ const MaintenanceTodayTab = () => {
     <div className="px-4 py-6 pb-24">
       {/* Header Stats */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <Card className="cursor-pointer" onClick={() => setShowWorkOrderTracker(true)}>
+        <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-orange-600">{workOrders.length}</div>
             <div className="text-sm text-gray-600">Active Work Orders</div>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer" onClick={() => setShowUnitTurnTracker(true)}>
+        <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-blue-600">{unitTurns.length}</div>
             <div className="text-sm text-gray-600">Unit Turns</div>
@@ -216,7 +196,7 @@ const MaintenanceTodayTab = () => {
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Unit Turns</h2>
         {unitTurns.map((unitTurn) => (
-          <Card key={unitTurn.id} className="mb-4 cursor-pointer" onClick={() => setShowUnitTurnTracker(true)}>
+          <Card key={unitTurn.id} className="mb-4">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-lg">Unit {unitTurn.unit}</h3>
