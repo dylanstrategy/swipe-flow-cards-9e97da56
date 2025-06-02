@@ -1,5 +1,5 @@
 
-import React, { ReactNode, forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { ReactNode, forwardRef, useImperativeHandle } from 'react';
 import { useSwipeGestures } from '@/hooks/useSwipeGestures';
 import { useViewportZoomPrevention } from '@/hooks/useViewportZoomPrevention';
 import SwipeableScreenHeader from './SwipeableScreenHeader';
@@ -36,8 +36,6 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
   hideSwipeHandling = false,
   rightButton
 }, ref) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  
   // Use custom hooks
   useViewportZoomPrevention();
   
@@ -57,11 +55,11 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd
-  }));
+  }), [handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   if (hideSwipeHandling) {
     return (
-      <div ref={containerRef} className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen" data-swipeable-screen>
+      <div className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen" data-swipeable-screen>
         <SwipeableScreenHeader
           title={title}
           currentStep={currentStep}
@@ -82,7 +80,6 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
 
   return (
     <div 
-      ref={containerRef}
       className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen overflow-hidden select-none"
       data-swipeable-screen
       onTouchStart={handleTouchStart}
