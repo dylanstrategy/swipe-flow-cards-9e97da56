@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Plus, X, BarChart3, Users, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -293,7 +294,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 
       case 3:
         return (
-          <div className="space-y-6 pb-48">
+          <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Poll Settings</CardTitle>
@@ -409,6 +410,12 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                 </div>
               </CardContent>
             </Card>
+
+            <SwipeUpPrompt 
+              onContinue={handleSubmit}
+              message="Ready to create poll!"
+              buttonText="Create Poll"
+            />
           </div>
         );
 
@@ -418,43 +425,19 @@ const PollModule = ({ onClose }: PollModuleProps) => {
   };
 
   return (
-    <>
-      <SwipeableScreen
-        title="Create Poll"
-        currentStep={step}
-        totalSteps={3}
-        onClose={onClose}
-        onSwipeUp={step < 3 && canProceed() ? nextStep : undefined}
-        onSwipeLeft={step > 1 ? prevStep : undefined}
-        canSwipeUp={step < 3 && canProceed()}
-        hideSwipeHandling={step === 3}
-      >
-        <div className={step === 3 ? "h-full overflow-y-auto" : "h-full overflow-hidden"}>
-          {renderCurrentStep()}
-        </div>
-      </SwipeableScreen>
-
-      {/* Swipeable Submit Button - Only show on step 3 */}
-      {step === 3 && (
-        <div className="fixed bottom-28 left-4 right-4 z-[9998]">
-          <SwipeCard
-            onSwipeUp={{
-              label: "Create Poll",
-              action: handleSubmit,
-              color: "#22C55E",
-              icon: "↑"
-            }}
-            enableSwipeUp={true}
-            className="shadow-xl border-0"
-          >
-            <div className="bg-green-600 hover:bg-green-700 text-white p-5 rounded-xl flex items-center justify-center gap-2 shadow-lg">
-              <span className="font-semibold text-lg">Swipe up to create poll</span>
-              <ArrowRight size={20} />
-            </div>
-          </SwipeCard>
-        </div>
-      )}
-    </>
+    <SwipeableScreen
+      title="Create Poll"
+      currentStep={step}
+      totalSteps={3}
+      onClose={onClose}
+      onSwipeUp={step < 3 && canProceed() ? nextStep : step === 3 ? handleSubmit : undefined}
+      onSwipeLeft={step > 1 ? prevStep : undefined}
+      canSwipeUp={step < 3 ? canProceed() : true}
+    >
+      <div className="h-full overflow-y-auto">
+        {renderCurrentStep()}
+      </div>
+    </SwipeableScreen>
   );
 };
 
