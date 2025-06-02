@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Plus, X, BarChart3, Users, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -114,8 +115,8 @@ const PollModule = ({ onClose }: PollModuleProps) => {
       // All fields required for final step
       const hasRequiredFields = !!(pollData.title.trim() && pollData.description.trim() && pollData.duration);
       const hasTargetAudience = pollData.targetAudience === 'all' || 
-        (pollData.targetAudience === 'building' && pollData.building) ||
-        (pollData.targetAudience === 'specific-units' && pollData.units.trim());
+        (pollData.targetAudience === 'building' && pollData.building.trim() !== '') ||
+        (pollData.targetAudience === 'specific-units' && pollData.units.trim() !== '');
       return hasRequiredFields && hasTargetAudience;
     }
     return true;
@@ -472,3 +473,4 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 };
 
 export default PollModule;
+
