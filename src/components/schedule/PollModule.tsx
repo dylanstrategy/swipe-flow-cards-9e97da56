@@ -127,8 +127,8 @@ const PollModule = ({ onClose }: PollModuleProps) => {
     switch (step) {
       case 1:
         return (
-          <div className="h-full flex flex-col pb-32">
-            <div className="flex-1 space-y-4 overflow-y-auto">
+          <div className="h-full flex flex-col">
+            <div className="flex-1 space-y-4 overflow-y-auto pb-40">
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -190,8 +190,8 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 
       case 2:
         return (
-          <div className="h-full flex flex-col pb-32">
-            <div className="flex-1 space-y-4 overflow-y-auto">
+          <div className="h-full flex flex-col">
+            <div className="flex-1 space-y-4 overflow-y-auto pb-40">
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg">Poll Configuration</CardTitle>
@@ -280,7 +280,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
       case 3:
         return (
           <div className="h-full flex flex-col">
-            <div className="flex-1 overflow-y-auto space-y-4 pb-32">
+            <div className="flex-1 overflow-y-auto space-y-4 pb-6">
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg">Poll Settings</CardTitle>
@@ -396,16 +396,16 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                   </div>
                 </CardContent>
               </Card>
+            </div>
 
-              {/* Fixed Submit Button */}
-              <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
-                <Button
-                  onClick={handleSubmit}
-                  className="w-full bg-purple-600 text-white py-3 text-base font-semibold hover:bg-purple-700 transition-colors"
-                >
-                  Create Poll
-                </Button>
-              </div>
+            {/* Fixed Submit Button - only on last step */}
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
+              <Button
+                onClick={handleSubmit}
+                className="w-full bg-purple-600 text-white py-3 text-base font-semibold hover:bg-purple-700 transition-colors"
+              >
+                Create Poll
+              </Button>
             </div>
           </div>
         );
@@ -426,7 +426,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
       canSwipeUp={step < 3 ? canProceed() : false}
       hideSwipeHandling={step === 3}
     >
-      <div className="h-full overflow-hidden">
+      <div className="h-full overflow-hidden relative">
         {renderCurrentStep()}
         
         {/* Fixed Continue/Back Prompt - Only show on steps 1 and 2 when ready */}
