@@ -1,6 +1,6 @@
-
 import React from 'react';
 import { ShoppingBag, Store, Coffee, Car, Package, Utensils, Heart, Sofa, Flower, Scissors } from 'lucide-react';
+import { useProfile } from '@/contexts/ProfileContext';
 
 interface OfferData {
   title: string;
@@ -20,8 +20,13 @@ interface PointOfSaleProps {
 }
 
 const PointOfSale = ({ context, onOfferClick, petName }: PointOfSaleProps) => {
-  // Get pet name from context or use default
-  const displayPetName = petName || 'Luna'; // Default pet name for demo
+  const { profile, getPersonalizedContext } = useProfile();
+  
+  // Use personalized context if no specific context provided
+  const effectiveContext = context || getPersonalizedContext();
+  
+  // Get pet name from context, profile, or use default
+  const displayPetName = petName || (profile.pets.length > 0 ? profile.pets[0].name : 'Luna');
 
   const getContextualOffers = (context: string): OfferData[] => {
     const baseOffers = {
@@ -189,18 +194,93 @@ const PointOfSale = ({ context, onOfferClick, petName }: PointOfSaleProps) => {
       ]
     };
 
-    return baseOffers[context] || baseOffers.message;
+    // Add lifestyle-targeted offers based on profile
+    const lifestyleOffers = {
+      'wellness-focused': [
+        {
+          title: "Yoga Studio Pass",
+          description: "Find your zen with unlimited classes",
+          discount: "First Month FREE",
+          business: "Mindful Movements",
+          icon: Heart,
+          color: "bg-purple-500",
+          cta: "Start Practice"
+        }
+      ],
+      'foodie-focused': [
+        {
+          title: "Gourmet Delivery",
+          description: "Farm-to-table meals delivered fresh",
+          discount: "30% OFF",
+          business: "Local Harvest Kitchen",
+          icon: Utensils,
+          color: "bg-green-600",
+          cta: "Order Now"
+        }
+      ],
+      'creative-focused': [
+        {
+          title: "Art Supply Store",
+          description: "Premium supplies for your creative projects",
+          discount: "25% OFF",
+          business: "Creative Corner",
+          icon: Store,
+          color: "bg-indigo-500",
+          cta: "Shop Supplies"
+        }
+      ],
+      'hosting-focused': [
+        {
+          title: "Party Planning Service",
+          description: "Make your gatherings unforgettable",
+          discount: "$50 OFF",
+          business: "Perfect Party Co.",
+          icon: Utensils,
+          color: "bg-pink-600",
+          cta: "Plan Event"
+        }
+      ]
+    };
+
+    // Check lifestyle tags and add targeted offers
+    let offers = baseOffers[context] || baseOffers.message;
+    
+    if (profile.lifestyleTags.includes('wellness')) {
+      offers = [...offers, ...lifestyleOffers['wellness-focused']];
+    }
+    if (profile.lifestyleTags.includes('foodAndDrinks')) {
+      offers = [...offers, ...lifestyleOffers['foodie-focused']];
+    }
+    if (profile.lifestyleTags.includes('creativity')) {
+      offers = [...offers, ...lifestyleOffers['creative-focused']];
+    }
+    if (profile.lifestyleTags.includes('hosting')) {
+      offers = [...offers, ...lifestyleOffers['hosting-focused']];
+    }
+
+    return offers;
   };
 
-  const offers = getContextualOffers(context);
+  const offers = getContextualOffers(effectiveContext);
   const selectedOffer = offers[Math.floor(Math.random() * offers.length)];
   const IconComponent = selectedOffer.icon;
+
+  const getOfferHeader = () => {
+    if (effectiveContext === 'pet-service') {
+      return `Exclusive Offer for ${displayPetName}`;
+    }
+    if (profile.selectedLifestyleTags.length > 0) {
+      const tag = profile.selectedLifestyleTags[0];
+      return `${tag.emoji} Personalized for You`;
+    }
+    return 'Exclusive Resident Offer';
+  };
 
   return (
     <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
       <div className="text-center mb-2">
         <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
-          {context === 'pet-service' ? `Exclusive Offer for ${displayPetName}` : 'Exclusive Resident Offer'}
+          {getOfferHeader()}
         </p>
       </div>
       

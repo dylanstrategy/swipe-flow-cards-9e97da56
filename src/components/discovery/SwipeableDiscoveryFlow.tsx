@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ChevronLeft, X } from 'lucide-react';
+import { useProfile } from '@/contexts/ProfileContext';
 import PriceAndTimeStep from './steps/PriceAndTimeStep';
 import PriorityIntroStep from './steps/PriorityIntroStep';
 import PrioritiesStep from './steps/PrioritiesStep';
@@ -20,6 +21,7 @@ interface DiscoveryData {
 
 const SwipeableDiscoveryFlow = () => {
   const navigate = useNavigate();
+  const { updateLifestyleTags } = useProfile();
   const [currentStep, setCurrentStep] = useState(1);
   const [discoveryData, setDiscoveryData] = useState<DiscoveryData>({
     priceRange: [1500, 3500],
@@ -63,6 +65,10 @@ const SwipeableDiscoveryFlow = () => {
     if (currentStep < 5) {
       setCurrentStep(currentStep + 1);
     } else {
+      // Save to profile context
+      updateLifestyleTags(discoveryData.lifestyleTags);
+      
+      // Also save to localStorage for backwards compatibility
       localStorage.setItem('userPreferences', JSON.stringify(discoveryData));
       console.log('Discovery completed:', discoveryData);
       navigate('/matches');

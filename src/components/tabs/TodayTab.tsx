@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import MessageModule from '../message/MessageModule';
 import { useToast } from '@/hooks/use-toast';
 import { format, addDays, isSameDay, differenceInDays, isPast, isToday } from 'date-fns';
+import { useProfile } from '@/contexts/ProfileContext';
 import ResidentTimeline from '../ResidentTimeline';
 import TodayHeader from './today/TodayHeader';
 import QuickActionsGrid from './today/QuickActionsGrid';
@@ -11,6 +12,8 @@ import PointOfSale from '../PointOfSale';
 
 const TodayTab = () => {
   const { toast } = useToast();
+  const { profile, getPersonalizedContext } = useProfile();
+  
   const [showTimeline, setShowTimeline] = useState(false);
   const [showMessageModule, setShowMessageModule] = useState(false);
   const [messageConfig, setMessageConfig] = useState({
@@ -21,11 +24,8 @@ const TodayTab = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [weather, setWeather] = useState({ temp: 72, condition: 'Sunny' });
 
-  // Pet information - in real app this would come from user profile/database
-  const userPets = [
-    { name: 'Luna', type: 'dog', breed: 'Golden Retriever' },
-    { name: 'Whiskers', type: 'cat', breed: 'Maine Coon' }
-  ];
+  // Use profile pets instead of hardcoded ones
+  const userPets = profile.pets;
   const hasPets = userPets.length > 0;
 
   // Simulate live weather updates
@@ -293,6 +293,40 @@ const TodayTab = () => {
     }
   };
 
+  const renderPersonalizedOffers = () => {
+    if (hasPets) {
+      return (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            🐾 Special Offers for {userPets.map(pet => pet.name).join(' & ')}
+          </h2>
+          <PointOfSale 
+            context="pet-service" 
+            onOfferClick={handleOfferClick}
+            petName={userPets[0].name}
+          />
+        </div>
+      );
+    }
+
+    if (profile.selectedLifestyleTags.length > 0) {
+      const primaryTag = profile.selectedLifestyleTags[0];
+      return (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            {primaryTag.emoji} {primaryTag.label} Offers
+          </h2>
+          <PointOfSale 
+            context={getPersonalizedContext()} 
+            onOfferClick={handleOfferClick}
+          />
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   if (showMessageModule) {
     return (
       <MessageModule
@@ -323,18 +357,8 @@ const TodayTab = () => {
         getRentUrgencyClass={getRentUrgencyClass}
       />
 
-      {/* Pet-specific Point of Sale */}
-      {hasPets && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            🐾 Special Offers for {userPets.map(pet => pet.name).join(' & ')}
-          </h2>
-          <PointOfSale 
-            context="pet-service" 
-            onOfferClick={handleOfferClick}
-          />
-        </div>
-      )}
+      {/* Personalized offers based on lifestyle tags */}
+      {renderPersonalizedOffers()}
 
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
