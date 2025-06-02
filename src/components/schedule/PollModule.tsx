@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, X, BarChart3, Users, Calendar, Clock } from 'lucide-react';
+import { Plus, X, BarChart3, Users, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -275,7 +275,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 
       case 3:
         return (
-          <div className="space-y-4 h-full overflow-y-auto pb-6">
+          <div className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Poll Settings</CardTitle>
@@ -391,6 +391,18 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Submit Button for Step 3 */}
+            <div className="pt-4">
+              <Button 
+                onClick={handleSubmit}
+                className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                disabled={!canProceed()}
+              >
+                Create Poll
+                <ArrowRight size={16} />
+              </Button>
+            </div>
           </div>
         );
 
@@ -405,14 +417,13 @@ const PollModule = ({ onClose }: PollModuleProps) => {
       currentStep={step}
       totalSteps={3}
       onClose={onClose}
-      onSwipeUp={canProceed() ? nextStep : undefined}
+      onSwipeUp={step < 3 && canProceed() ? nextStep : undefined}
       onSwipeLeft={step > 1 ? prevStep : undefined}
-      canSwipeUp={canProceed()}
+      canSwipeUp={step < 3 && canProceed()}
+      hideSwipeHandling={step === 3}
     >
-      <div className="h-full flex flex-col">
-        <div className="flex-1 overflow-y-auto px-4 py-2">
-          {renderCurrentStep()}
-        </div>
+      <div className="h-full overflow-y-auto">
+        {renderCurrentStep()}
       </div>
     </SwipeableScreen>
   );
