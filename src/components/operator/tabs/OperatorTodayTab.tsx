@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench, ChevronDown, BarChart3, PieChart } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
@@ -37,7 +38,7 @@ const OperatorTodayTab = () => {
         };
       case '30':
         return {
-          occupancy: '96%',
+          occupancy: '97%',
           vacant: 6,
           available: 12,
           requiredLeases: 22,
@@ -48,7 +49,7 @@ const OperatorTodayTab = () => {
         };
       case '60':
         return {
-          occupancy: '95%',
+          occupancy: '96%',
           vacant: 8,
           available: 15,
           requiredLeases: 35,
@@ -59,7 +60,7 @@ const OperatorTodayTab = () => {
         };
       case '90':
         return {
-          occupancy: '97%',
+          occupancy: '95%',
           vacant: 5,
           available: 18,
           requiredLeases: 45,
@@ -70,7 +71,7 @@ const OperatorTodayTab = () => {
         };
       default:
         return {
-          occupancy: '96%',
+          occupancy: '97%',
           vacant: 6,
           available: 12,
           requiredLeases: 22,
@@ -86,10 +87,10 @@ const OperatorTodayTab = () => {
 
   // Chart data
   const occupancyTrendData = [
-    { month: 'Jan', rate: 95.2 },
-    { month: 'Feb', rate: 96.8 },
-    { month: 'Mar', rate: 97.1 },
-    { month: 'Apr', rate: 96.5 },
+    { month: 'Jan', rate: 96.2 },
+    { month: 'Feb', rate: 97.8 },
+    { month: 'Mar', rate: 98.1 },
+    { month: 'Apr', rate: 97.5 },
     { month: 'May', rate: 98.2 },
     { month: 'Jun', rate: parseFloat(currentCounts.occupancy) }
   ];
@@ -102,19 +103,23 @@ const OperatorTodayTab = () => {
   ];
 
   const handleCRMClick = (filter: 'leases' | 'shows' | 'outreach') => {
+    console.log('CRM Click:', filter);
     setCrmFilter(filter);
     setShowCRMTracker(true);
   };
 
   const handleMoveInClick = () => {
+    console.log('Move In Click');
     setShowMoveInTracker(true);
   };
 
   const handleMoveOutClick = () => {
+    console.log('Move Out Click');
     setShowMoveOutTracker(true);
   };
 
   const handleUnitTrackerClick = () => {
+    console.log('Unit Tracker Click - Opening UnitTracker');
     setShowUnitTracker(true);
   };
 
@@ -216,6 +221,7 @@ const OperatorTodayTab = () => {
   ];
 
   const handleModuleClick = (module: string, filter?: 'leases' | 'shows' | 'outreach') => {
+    console.log('Module click:', module, filter);
     if (module === 'crm' && filter) {
       handleCRMClick(filter);
     } else if (module === 'movein') {
@@ -223,6 +229,7 @@ const OperatorTodayTab = () => {
     } else if (module === 'moveout') {
       handleMoveOutClick();
     } else if (module === 'units') {
+      console.log('Calling handleUnitTrackerClick for units module');
       handleUnitTrackerClick();
     }
   };
@@ -388,7 +395,14 @@ const OperatorTodayTab = () => {
               className={`bg-gray-50 rounded-lg p-4 text-center ${
                 item.module ? 'cursor-pointer hover:bg-gray-100 transition-colors' : ''
               }`}
-              onClick={() => item.module && item.filter ? handleModuleClick(item.module, item.filter) : item.module && handleModuleClick(item.module)}
+              onClick={() => {
+                console.log('Leasing item clicked:', item.title, item.module, item.filter);
+                if (item.module && item.filter) {
+                  handleModuleClick(item.module, item.filter);
+                } else if (item.module) {
+                  handleModuleClick(item.module);
+                }
+              }}
             >
               <div className="text-2xl font-bold text-gray-900">{item.count}</div>
               <div className="text-sm text-gray-600">{item.title}</div>
