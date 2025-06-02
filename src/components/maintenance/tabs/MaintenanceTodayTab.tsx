@@ -1,12 +1,13 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import SwipeCard from '@/components/SwipeCard';
 import WorkOrderFlow from '@/components/maintenance/WorkOrderFlow';
+import UnitTurnDetailTracker from '@/components/maintenance/UnitTurnDetailTracker';
 
 const MaintenanceTodayTab = () => {
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
+  const [selectedUnitTurn, setSelectedUnitTurn] = useState<any>(null);
 
   // Sample work orders data
   const workOrders = [
@@ -64,7 +65,9 @@ const MaintenanceTodayTab = () => {
       status: 'In Progress',
       completedSteps: ['Punch', 'Upgrades/Repairs', 'Floors'],
       pendingSteps: ['Paint', 'Clean', 'Inspection'],
-      daysUntilMoveIn: 13
+      daysUntilMoveIn: 13,
+      priority: 'medium',
+      assignedTo: 'Mike Rodriguez'
     },
     {
       id: 'UT-420-3',
@@ -74,7 +77,9 @@ const MaintenanceTodayTab = () => {
       status: 'Scheduled',
       completedSteps: [],
       pendingSteps: ['Punch', 'Upgrades/Repairs', 'Floors', 'Paint', 'Clean', 'Inspection'],
-      daysUntilMoveIn: 18
+      daysUntilMoveIn: 18,
+      priority: 'low',
+      assignedTo: 'James Wilson'
     }
   ];
 
@@ -103,11 +108,24 @@ const MaintenanceTodayTab = () => {
     }
   };
 
+  const handleUnitTurnClick = (unitTurn: any) => {
+    setSelectedUnitTurn(unitTurn);
+  };
+
   if (selectedWorkOrder) {
     return (
       <WorkOrderFlow 
         workOrder={selectedWorkOrder}
         onClose={() => setSelectedWorkOrder(null)}
+      />
+    );
+  }
+
+  if (selectedUnitTurn) {
+    return (
+      <UnitTurnDetailTracker 
+        unitTurn={selectedUnitTurn}
+        onClose={() => setSelectedUnitTurn(null)}
       />
     );
   }
@@ -196,7 +214,11 @@ const MaintenanceTodayTab = () => {
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Unit Turns</h2>
         {unitTurns.map((unitTurn) => (
-          <Card key={unitTurn.id} className="mb-4">
+          <Card 
+            key={unitTurn.id} 
+            className="mb-4 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => handleUnitTurnClick(unitTurn)}
+          >
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-lg">Unit {unitTurn.unit}</h3>
