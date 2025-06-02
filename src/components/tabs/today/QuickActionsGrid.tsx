@@ -27,7 +27,7 @@ const QuickActionsGrid = ({ onAction, onServiceClick, onMaintenanceClick, getRen
       bgColor: 'bg-purple-600',
       textColor: 'text-white',
       backgroundImage: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400',
-      subtitle: '1 active • 2 pending'
+      subtitle: '3 pending • 1 in progress'
     },
     { 
       icon: CreditCard, 
