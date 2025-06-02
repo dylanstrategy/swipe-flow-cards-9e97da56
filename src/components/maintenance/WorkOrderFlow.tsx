@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import SwipeableScreen from '@/components/schedule/SwipeableScreen';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Camera } from 'lucide-react';
+import { Camera, CheckCircle, ArrowUp } from 'lucide-react';
 
 interface WorkOrderFlowProps {
   workOrder: any;
@@ -14,6 +14,12 @@ interface WorkOrderFlowProps {
 
 const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [showAction, setShowAction] = useState<'up' | 'left' | null>(null);
+  const startPos = useRef({ x: 0, y: 0 });
+  const startTime = useRef(0);
+  
   const [diagnosisNotes, setDiagnosisNotes] = useState('');
   const [completionPhoto, setCompletionPhoto] = useState<string>('');
   const [selectedVendor, setSelectedVendor] = useState('');
@@ -28,18 +34,22 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
     'Express Locksmith'
   ];
 
-  const canProceedToNextStep = () => {
+  const canProceedFromCurrentStep = (): boolean => {
     switch (currentStep) {
-      case 1: return true;
-      case 2: return diagnosisNotes.trim() !== '';
-      case 3: return resolutionType === 'complete' ? completionPhoto !== '' : 
-                     (selectedVendor !== '' && vendorCost !== '');
-      default: return false;
+      case 1:
+        return true;
+      case 2:
+        return diagnosisNotes.trim() !== '';
+      case 3:
+        return resolutionType === 'complete' ? completionPhoto !== '' : 
+               (selectedVendor !== '' && vendorCost !== '');
+      default:
+        return false;
     }
   };
 
-  const handleNextStep = () => {
-    if (canProceedToNextStep()) {
+  const onNextStep = () => {
+    if (canProceedFromCurrentStep()) {
       if (currentStep < 3) {
         console.log(`Moving from step ${currentStep} to step ${currentStep + 1}`);
         setCurrentStep(currentStep + 1);
@@ -50,10 +60,90 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
     }
   };
 
-  const handlePrevStep = () => {
+  const onPrevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    startPos.current = { x: touch.clientX, y: touch.clientY };
+    startTime.current = Date.now();
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - startPos.current.x;
+    const deltaY = touch.clientY - startPos.current.y;
+    
+    if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+      const dampedX = deltaX * 0.8;
+      const dampedY = deltaY * 0.8;
+      
+      setDragOffset({ x: dampedX, y: dampedY });
+      
+      if (Math.abs(deltaY) > Math.abs(deltaX)) {
+        if (deltaY < -15 && canProceedFromCurrentStep()) {
+          setShowAction('up');
+        } else {
+          setShowAction(null);
+        }
+      } else {
+        if (deltaX < -20 && currentStep > 1) {
+          setShowAction('left');
+        } else {
+          setShowAction(null);
+        }
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    const deltaX = dragOffset.x;
+    const deltaY = dragOffset.y;
+    const deltaTime = Date.now() - startTime.current;
+    
+    const velocityY = Math.abs(deltaY) / Math.max(deltaTime, 1);
+    const velocityX = Math.abs(deltaX) / Math.max(deltaTime, 1);
+    
+    const upThreshold = 20;
+    const leftThreshold = 30;
+    const velocityThreshold = 0.1;
+    
+    const shouldCompleteUp = (Math.abs(deltaY) > upThreshold || velocityY > velocityThreshold) && 
+                            deltaY < -10 && canProceedFromCurrentStep();
+    const shouldCompleteLeft = (Math.abs(deltaX) > leftThreshold || velocityX > velocityThreshold) && 
+                              deltaX < -leftThreshold && currentStep > 1;
+    
+    if (shouldCompleteUp) {
+      console.log('Swipe up detected - going to next step');
+      onNextStep();
+    } else if (shouldCompleteLeft) {
+      console.log('Swipe left detected - going to previous step');
+      onPrevStep();
+    } else {
+      console.log('No valid swipe detected', { deltaX, deltaY, velocityX, velocityY });
+    }
+    
+    setIsDragging(false);
+    setDragOffset({ x: 0, y: 0 });
+    setShowAction(null);
+  };
+
+  const getActionOpacity = () => {
+    if (!showAction) return 0;
+    const distance = showAction === 'up' ? Math.abs(dragOffset.y) : Math.abs(dragOffset.x);
+    const progress = Math.min(distance / 25, 1);
+    return Math.max(0.5, progress * 0.9);
+  };
+
+  const getRotation = () => {
+    if (!isDragging) return 0;
+    return (dragOffset.x * 0.01);
   };
 
   const getPriorityColor = (priority: string) => {
@@ -72,7 +162,6 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
           <div className="h-full flex flex-col overflow-hidden">
             <div className="flex-1 overflow-y-auto">
               <div className="space-y-4 pb-6">
-                {/* Original Issue Photo */}
                 <div>
                   <h3 className="font-medium text-gray-900 mb-3">Issue Reported</h3>
                   <div className="w-full h-48 rounded-lg overflow-hidden bg-gray-100 mb-3">
@@ -85,7 +174,6 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
                   <p className="text-gray-700 text-sm leading-relaxed">{workOrder.description}</p>
                 </div>
 
-                {/* Work Order Details */}
                 <Card>
                   <CardContent className="p-4">
                     <div className="grid grid-cols-2 gap-3 text-sm">
@@ -112,6 +200,18 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
                 </Card>
               </div>
             </div>
+            
+            <div className="text-center mt-4">
+              <p className="text-green-600 mb-2 text-sm">Ready to begin diagnosis</p>
+              <ArrowUp className="text-green-600 animate-bounce mx-auto mb-2" size={24} />
+              <p className="text-xs text-gray-500 mb-3">Swipe up anywhere to continue</p>
+              <button
+                onClick={onNextStep}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              >
+                Start Diagnosis
+              </button>
+            </div>
           </div>
         );
 
@@ -129,6 +229,25 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
                 autoFocus
               />
             </div>
+            
+            {canProceedFromCurrentStep() && (
+              <div className="text-center mt-4">
+                <p className="text-green-600 mb-2 text-sm">Notes added!</p>
+                <ArrowUp className="text-green-600 animate-bounce mx-auto mb-2" size={24} />
+                <p className="text-xs text-gray-500 mb-3">Swipe up anywhere to continue</p>
+                <button
+                  onClick={onNextStep}
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                >
+                  Continue to Resolution
+                </button>
+              </div>
+            )}
+            {!canProceedFromCurrentStep() && (
+              <div className="text-center mt-4">
+                <p className="text-gray-500 text-sm">Please add your diagnosis notes</p>
+              </div>
+            )}
           </div>
         );
 
@@ -248,6 +367,28 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
                 </div>
               </div>
             </div>
+            
+            {canProceedFromCurrentStep() && (
+              <div className="text-center">
+                <div className="bg-green-50 p-3 rounded-lg">
+                  <p className="text-green-800 font-medium text-sm">Work order ready to complete</p>
+                  <p className="text-green-600 text-xs mb-2">All required information collected</p>
+                  <ArrowUp className="text-green-600 animate-bounce mx-auto mb-2" size={24} />
+                  <p className="text-xs text-green-600 mb-3">Swipe up anywhere to finish</p>
+                  <button
+                    onClick={onNextStep}
+                    className="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                  >
+                    Complete Work Order
+                  </button>
+                </div>
+              </div>
+            )}
+            {!canProceedFromCurrentStep() && (
+              <div className="text-center">
+                <p className="text-gray-500 text-sm">Please complete the resolution details</p>
+              </div>
+            )}
           </div>
         );
 
@@ -266,17 +407,61 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
   };
 
   return (
-    <SwipeableScreen
-      title={`${getStepTitle()} - WO #${workOrder.id}`}
-      currentStep={currentStep}
-      totalSteps={3}
-      onClose={onClose}
-      onSwipeUp={canProceedToNextStep() ? handleNextStep : undefined}
-      onSwipeLeft={currentStep > 1 ? handlePrevStep : undefined}
-      canSwipeUp={canProceedToNextStep()}
+    <div
+      className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen overflow-hidden select-none"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{
+        transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${getRotation()}deg)`,
+        transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.2, 0, 0, 1)',
+        transformOrigin: 'center center',
+        touchAction: 'pan-x pan-y'
+      }}
     >
-      {renderStepContent()}
-    </SwipeableScreen>
+      {showAction === 'up' && canProceedFromCurrentStep() && (
+        <div 
+          className="absolute inset-0 flex items-start justify-center pt-16 transition-all duration-200 pointer-events-none z-50"
+          style={{ 
+            backgroundColor: '#22C55E',
+            opacity: getActionOpacity()
+          }}
+        >
+          <div className="text-white font-bold text-2xl flex flex-col items-center gap-3">
+            <div className="text-3xl">↑</div>
+            <span>Continue</span>
+          </div>
+        </div>
+      )}
+
+      {showAction === 'left' && currentStep > 1 && (
+        <div 
+          className="absolute inset-0 flex items-center justify-start pl-12 transition-all duration-200 pointer-events-none z-50"
+          style={{ 
+            backgroundColor: '#EF4444',
+            opacity: getActionOpacity()
+          }}
+        >
+          <div className="text-white font-bold text-2xl flex items-center gap-4">
+            <span className="text-3xl">←</span>
+            <span>Back</span>
+          </div>
+        </div>
+      )}
+
+      <SwipeableScreen
+        title={`${getStepTitle()} - WO #${workOrder.id}`}
+        currentStep={currentStep}
+        totalSteps={3}
+        onClose={onClose}
+        onSwipeUp={canProceedFromCurrentStep() ? onNextStep : undefined}
+        onSwipeLeft={currentStep > 1 ? onPrevStep : undefined}
+        canSwipeUp={canProceedFromCurrentStep()}
+        hideSwipeHandling={true}
+      >
+        {renderStepContent()}
+      </SwipeableScreen>
+    </div>
   );
 };
 
