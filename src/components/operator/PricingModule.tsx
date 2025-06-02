@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -55,6 +56,28 @@ const PricingModule = ({ onClose, initialFilter = 'all' }: PricingModuleProps) =
         const availableDate = moveOutDate ? 
           new Date(new Date(moveOutDate).getTime() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : '';
         
+        // Updated discount logic
+        let discounts = null;
+        if (status !== 'occupied') {
+          const daysOut = Math.floor(Math.random() * 60) + 15;
+          let discountType = 'Special';
+          let discountAmount = 0;
+          
+          if (daysOut >= 40) {
+            // Half month for 40+ days out
+            discountAmount = Math.floor(marketRent / 2);
+          } else if (daysOut >= 15) {
+            // Full month for 15+ days out
+            discountAmount = marketRent;
+          }
+          
+          discounts = {
+            type: discountType,
+            amount: discountAmount,
+            daysOut: daysOut
+          };
+        }
+        
         units.push({
           unit: unitNumber,
           floor: floor,
@@ -69,11 +92,7 @@ const PricingModule = ({ onClose, initialFilter = 'all' }: PricingModuleProps) =
           resident: status === 'occupied' ? `Resident ${unitNumber}` : '',
           leaseEnd: status === 'occupied' ? 
             new Date(Date.now() + Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : '',
-          discounts: status !== 'occupied' ? {
-            type: Math.random() > 0.5 ? 'Half Month' : 'Full Month',
-            amount: Math.random() > 0.5 ? Math.floor(marketRent / 2) : marketRent,
-            daysOut: Math.floor(Math.random() * 60) + 15
-          } : null,
+          discounts: discounts,
           premiums: Math.floor(Math.random() * 150),
           pricing: generatePricingTerms(marketRent)
         });
@@ -231,7 +250,7 @@ const PricingModule = ({ onClose, initialFilter = 'all' }: PricingModuleProps) =
               >
                 {Object.entries(unit.pricing).map(([term, price]) => (
                   <option key={term} value={term}>
-                    {term} months - ${price.toLocaleString()}/mo
+                    {term} months - ${(price as number).toLocaleString()}/mo
                   </option>
                 ))}
               </select>
@@ -248,7 +267,7 @@ const PricingModule = ({ onClose, initialFilter = 'all' }: PricingModuleProps) =
             </div>
             
             <div className="bg-gray-50 p-3 rounded-lg">
-              <div className="text-sm text-gray-600">Monthly Rent: <span className="font-semibold">${unit.pricing[selectedTerm]?.toLocaleString()}</span></div>
+              <div className="text-sm text-gray-600">Monthly Rent: <span className="font-semibold">${(unit.pricing[selectedTerm] as number)?.toLocaleString()}</span></div>
               <div className="text-sm text-gray-600">Unit Type: <span className="font-semibold">{unit.type}</span></div>
               <div className="text-sm text-gray-600">Square Feet: <span className="font-semibold">{unit.sqft}</span></div>
             </div>
@@ -439,10 +458,10 @@ const PricingModule = ({ onClose, initialFilter = 'all' }: PricingModuleProps) =
                       {unit.discounts && (
                         <div className="bg-green-50 p-3 rounded-lg mb-3">
                           <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-green-800">{unit.discounts.type} Free</span>
+                            <span className="text-sm font-medium text-green-800">{unit.discounts.type}</span>
                             <span className="text-sm font-bold text-green-600">-${unit.discounts.amount}</span>
                           </div>
-                          <p className="text-xs text-green-700 mt-1">{unit.discounts.daysOut} days out special</p>
+                          <p className="text-xs text-green-700 mt-1">{unit.discounts.daysOut} days out concession</p>
                         </div>
                       )}
                     </div>
@@ -457,8 +476,8 @@ const PricingModule = ({ onClose, initialFilter = 'all' }: PricingModuleProps) =
                               <span className="font-medium">{term} months</span>
                             </div>
                             <div className="text-right">
-                              <div className="text-sm font-bold text-gray-900">${price.toLocaleString()}/mo</div>
-                              <div className="text-xs text-gray-500">${(price * Number(term)).toLocaleString()} total</div>
+                              <div className="text-sm font-bold text-gray-900">${(price as number).toLocaleString()}/mo</div>
+                              <div className="text-xs text-gray-500">${((price as number) * Number(term)).toLocaleString()} total</div>
                             </div>
                           </div>
                         ))}
