@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
-import { Calendar as CalendarIcon, Clock, ArrowUp } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, ArrowUp, Image } from 'lucide-react';
 
 interface WorkOrderRescheduleStepProps {
   workOrder: any;
@@ -30,6 +30,25 @@ const WorkOrderRescheduleStep = ({
 
   return (
     <div className="space-y-6">
+      {/* Prominent Reschedule Header */}
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 bg-white/20 rounded-lg flex items-center justify-center">
+            <img 
+              src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=64&h=64&fit=crop&crop=center" 
+              alt="Reschedule work order"
+              className="w-12 h-12 rounded object-cover"
+            />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-xl font-bold mb-1">Reschedule Work Order</h2>
+            <p className="text-blue-100 text-sm">
+              Select a new date and time that works better for your schedule
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Current Schedule */}
       <Card>
         <CardHeader>
