@@ -22,28 +22,53 @@ const LocationStep = ({ location, proximityRadius, onUpdate }: LocationStepProps
   ];
 
   useEffect(() => {
-    // Force viewport to prevent zoom on ALL devices
+    // Aggressively prevent zoom on mobile devices
     const viewport = document.querySelector('meta[name=viewport]');
     if (viewport) {
       viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no');
     }
 
-    // Prevent zoom on touch devices
-    const preventZoom = (e: TouchEvent) => {
-      if (e.touches.length > 1) {
+    // Prevent all forms of zoom
+    const preventZoom = (e: any) => {
+      if (e.touches && e.touches.length > 1) {
         e.preventDefault();
       }
     };
 
-    // Add comprehensive zoom prevention
+    const preventGestures = (e: any) => {
+      e.preventDefault();
+    };
+
+    // Prevent input zoom specifically
+    const preventInputZoom = (e: any) => {
+      const target = e.target;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+        if (viewport) {
+          viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+        }
+        // Additional zoom prevention
+        document.body.style.transform = 'scale(1)';
+        document.documentElement.style.transform = 'scale(1)';
+      }
+    };
+
+    // Add all event listeners
     document.addEventListener('touchstart', preventZoom, { passive: false });
     document.addEventListener('touchmove', preventZoom, { passive: false });
-    document.addEventListener('gesturestart', (e: any) => e.preventDefault(), { passive: false });
+    document.addEventListener('gesturestart', preventGestures, { passive: false });
+    document.addEventListener('gesturechange', preventGestures, { passive: false });
+    document.addEventListener('gestureend', preventGestures, { passive: false });
+    document.addEventListener('focusin', preventInputZoom, { passive: false });
+    document.addEventListener('focus', preventInputZoom, { passive: false, capture: true });
 
     return () => {
       document.removeEventListener('touchstart', preventZoom);
       document.removeEventListener('touchmove', preventZoom);
-      document.removeEventListener('gesturestart', (e: any) => e.preventDefault());
+      document.removeEventListener('gesturestart', preventGestures);
+      document.removeEventListener('gesturechange', preventGestures);
+      document.removeEventListener('gestureend', preventGestures);
+      document.removeEventListener('focusin', preventInputZoom);
+      document.removeEventListener('focus', preventInputZoom, true);
     };
   }, []);
 
@@ -71,7 +96,7 @@ const LocationStep = ({ location, proximityRadius, onUpdate }: LocationStepProps
           placeholder="e.g., Financial District, My Office, etc."
           className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           style={{ 
-            fontSize: '16px',
+            fontSize: '16px !important',
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             transform: 'translateZ(0)',
             touchAction: 'manipulation',
@@ -79,12 +104,24 @@ const LocationStep = ({ location, proximityRadius, onUpdate }: LocationStepProps
             WebkitTouchCallout: 'none',
             WebkitTapHighlightColor: 'transparent',
             WebkitAppearance: 'none',
-            borderRadius: '8px'
+            borderRadius: '8px',
+            zoom: '1 !important',
+            maxWidth: '100%',
+            width: '100%'
           }}
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck="false"
+          inputMode="text"
+          onFocus={(e) => {
+            // Force viewport again on focus
+            const viewport = document.querySelector('meta[name=viewport]');
+            if (viewport) {
+              viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+            }
+            e.target.style.fontSize = '16px';
+          }}
         />
         
         {/* Quick Location Options */}
