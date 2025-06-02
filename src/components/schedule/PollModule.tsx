@@ -115,8 +115,6 @@ const PollModule = ({ onClose }: PollModuleProps) => {
   const nextStep = () => {
     if (step < 3) {
       setStep(step + 1);
-    } else {
-      handleSubmit();
     }
   };
 
@@ -294,128 +292,134 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 
       case 3:
         return (
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Poll Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Poll Duration
-                  </label>
-                  <Select value={pollData.duration} onValueChange={(value) => setPollData({ ...pollData, duration: value })}>
-                    <SelectTrigger className="bg-white border border-gray-300">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
-                      {durationOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Target Audience
-                  </label>
-                  <Select value={pollData.targetAudience} onValueChange={(value: any) => setPollData({ ...pollData, targetAudience: value })}>
-                    <SelectTrigger className="bg-white border border-gray-300">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
-                      {targetOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {pollData.targetAudience === 'building' && (
+          <div className="h-full flex flex-col">
+            <div className="flex-1 overflow-y-auto space-y-6 pb-20">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Poll Settings</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Building
+                      Poll Duration
                     </label>
-                    <Select value={pollData.building} onValueChange={(value) => setPollData({ ...pollData, building: value })}>
+                    <Select value={pollData.duration} onValueChange={(value) => setPollData({ ...pollData, duration: value })}>
                       <SelectTrigger className="bg-white border border-gray-300">
-                        <SelectValue placeholder="Select building" />
+                        <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
-                        <SelectItem value="building-a">Building A</SelectItem>
-                        <SelectItem value="building-b">Building B</SelectItem>
-                        <SelectItem value="building-c">Building C</SelectItem>
+                        {durationOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
-                )}
 
-                {pollData.targetAudience === 'specific-units' && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Unit Numbers
+                      Target Audience
                     </label>
-                    <Input
-                      placeholder="e.g., 101, 102, 205-210"
-                      value={pollData.units}
-                      onChange={(e) => setPollData({ ...pollData, units: e.target.value })}
-                      className="text-base"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Separate multiple units with commas. Use hyphens for ranges.
-                    </p>
+                    <Select value={pollData.targetAudience} onValueChange={(value: any) => setPollData({ ...pollData, targetAudience: value })}>
+                      <SelectTrigger className="bg-white border border-gray-300">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
+                        {targetOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                )}
 
-                <div className="space-y-3">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={pollData.anonymous}
-                      onChange={(e) => setPollData({ ...pollData, anonymous: e.target.checked })}
-                      className="rounded"
-                    />
-                    <span className="text-sm text-gray-700">Anonymous responses</span>
-                  </label>
-                </div>
-              </CardContent>
-            </Card>
+                  {pollData.targetAudience === 'building' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Building
+                      </label>
+                      <Select value={pollData.building} onValueChange={(value) => setPollData({ ...pollData, building: value })}>
+                        <SelectTrigger className="bg-white border border-gray-300">
+                          <SelectValue placeholder="Select building" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
+                          <SelectItem value="building-a">Building A</SelectItem>
+                          <SelectItem value="building-b">Building B</SelectItem>
+                          <SelectItem value="building-c">Building C</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Preview</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <BarChart3 className="text-purple-600" size={16} />
-                    <Badge variant="outline">Poll</Badge>
+                  {pollData.targetAudience === 'specific-units' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Unit Numbers
+                      </label>
+                      <Input
+                        placeholder="e.g., 101, 102, 205-210"
+                        value={pollData.units}
+                        onChange={(e) => setPollData({ ...pollData, units: e.target.value })}
+                        className="text-base"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Separate multiple units with commas. Use hyphens for ranges.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={pollData.anonymous}
+                        onChange={(e) => setPollData({ ...pollData, anonymous: e.target.checked })}
+                        className="rounded"
+                      />
+                      <span className="text-sm text-gray-700">Anonymous responses</span>
+                    </label>
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-2">{pollData.title || 'Poll Title'}</h3>
-                  <p className="text-sm text-gray-600 mb-3">{pollData.description || 'Poll description'}</p>
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <span className="flex items-center gap-1">
-                      <Clock size={12} />
-                      {durationOptions.find(d => d.value === pollData.duration)?.label}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users size={12} />
-                      {targetOptions.find(t => t.value === pollData.targetAudience)?.label}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            <SwipeUpPrompt 
-              onContinue={handleSubmit}
-              message="Ready to create poll!"
-              buttonText="Create Poll"
-            />
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Preview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <BarChart3 className="text-purple-600" size={16} />
+                      <Badge variant="outline">Poll</Badge>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 mb-2">{pollData.title || 'Poll Title'}</h3>
+                    <p className="text-sm text-gray-600 mb-3">{pollData.description || 'Poll description'}</p>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <Clock size={12} />
+                        {durationOptions.find(d => d.value === pollData.duration)?.label}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Users size={12} />
+                        {targetOptions.find(t => t.value === pollData.targetAudience)?.label}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Fixed Submit Button */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
+              <Button
+                onClick={handleSubmit}
+                className="w-full bg-purple-600 text-white py-3 text-base font-semibold hover:bg-purple-700 transition-colors"
+              >
+                Create Poll
+              </Button>
+            </div>
           </div>
         );
 
@@ -430,11 +434,11 @@ const PollModule = ({ onClose }: PollModuleProps) => {
       currentStep={step}
       totalSteps={3}
       onClose={onClose}
-      onSwipeUp={step < 3 && canProceed() ? nextStep : step === 3 ? handleSubmit : undefined}
+      onSwipeUp={step < 3 && canProceed() ? nextStep : undefined}
       onSwipeLeft={step > 1 ? prevStep : undefined}
-      canSwipeUp={step < 3 ? canProceed() : true}
+      canSwipeUp={step < 3 ? canProceed() : false}
     >
-      <div className="h-full overflow-y-auto">
+      <div className="h-full overflow-hidden">
         {renderCurrentStep()}
       </div>
     </SwipeableScreen>
