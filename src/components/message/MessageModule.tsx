@@ -192,17 +192,20 @@ const MessageModule = ({
         </div>
       </SwipeableScreen>
       
-      {/* Simplified SwipeUpPrompt - let SwipeableScreen handle gestures */}
+      {/* SwipeUpPrompt positioned to not interfere with touch events */}
       {currentStep < 2 && showPrompt && canProceedFromCurrentStep() && (
-        <SwipeUpPrompt 
-          onContinue={handleNextStep}
-          onBack={currentStep > 1 ? handlePrevStep : undefined}
-          onClose={handleClosePrompt}
-          message="Ready to send!"
-          buttonText="Send Message"
-          showBack={currentStep > 1}
-          className="z-[99999]"
-        />
+        <div className="fixed bottom-0 left-0 right-0 pointer-events-none z-[99999]">
+          <div className="pointer-events-auto">
+            <SwipeUpPrompt 
+              onContinue={handleNextStep}
+              onBack={currentStep > 1 ? handlePrevStep : undefined}
+              onClose={handleClosePrompt}
+              message="Ready to send!"
+              buttonText="Send Message"
+              showBack={currentStep > 1}
+            />
+          </div>
+        </div>
       )}
     </>
   );
