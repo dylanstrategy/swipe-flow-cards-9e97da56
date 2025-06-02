@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
 import MessageComposer from './MessageComposer';
 import MessageConfirmation from './MessageConfirmation';
-import SwipeableScreen, { SwipeableScreenRef } from '../schedule/SwipeableScreen';
+import SwipeableScreen from '../schedule/SwipeableScreen';
 import SwipeUpPrompt from '@/components/ui/swipe-up-prompt';
 
 interface Attachment {
@@ -34,7 +35,6 @@ const MessageModule = ({
     recipientType,
     attachments: [] as Attachment[]
   });
-  const swipeableRef = useRef<SwipeableScreenRef>(null);
 
   useEffect(() => {
     // Prevent zoom on mount and add input focus handling
@@ -176,7 +176,6 @@ const MessageModule = ({
   return (
     <>
       <SwipeableScreen
-        ref={swipeableRef}
         title={getRecipientTitle()}
         currentStep={currentStep}
         totalSteps={2}
@@ -193,58 +192,17 @@ const MessageModule = ({
         </div>
       </SwipeableScreen>
       
-      {/* Portal the SwipeUpPrompt outside to ensure proper stacking */}
+      {/* Simplified SwipeUpPrompt - let SwipeableScreen handle gestures */}
       {currentStep < 2 && showPrompt && canProceedFromCurrentStep() && (
-        <div 
-          className="fixed inset-0 pointer-events-none z-[99999]"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 99999
-          }}
-        >
-          {/* Full screen swipe capture area */}
-          <div 
-            className="absolute inset-0 pointer-events-auto"
-            onTouchStart={(e) => {
-              if (swipeableRef.current) {
-                swipeableRef.current.handleTouchStart(e);
-              }
-            }}
-            onTouchMove={(e) => {
-              if (swipeableRef.current) {
-                swipeableRef.current.handleTouchMove(e);
-              }
-            }}
-            onTouchEnd={(e) => {
-              if (swipeableRef.current) {
-                swipeableRef.current.handleTouchEnd(e);
-              }
-            }}
-          />
-          
-          {/* Prompt positioned at bottom */}
-          <div 
-            className="absolute bottom-0 left-0 right-0 pointer-events-auto"
-            style={{
-              paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 20px)',
-              transform: 'translateZ(0)',
-              backfaceVisibility: 'hidden'
-            }}
-          >
-            <SwipeUpPrompt 
-              onContinue={handleNextStep}
-              onBack={currentStep > 1 ? handlePrevStep : undefined}
-              onClose={handleClosePrompt}
-              message="Ready to send!"
-              buttonText="Send Message"
-              showBack={currentStep > 1}
-            />
-          </div>
-        </div>
+        <SwipeUpPrompt 
+          onContinue={handleNextStep}
+          onBack={currentStep > 1 ? handlePrevStep : undefined}
+          onClose={handleClosePrompt}
+          message="Ready to send!"
+          buttonText="Send Message"
+          showBack={currentStep > 1}
+          className="z-[99999]"
+        />
       )}
     </>
   );
