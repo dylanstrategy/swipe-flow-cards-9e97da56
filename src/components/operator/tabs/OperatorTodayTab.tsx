@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench, ChevronDown, BarChart3, PieChart } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 import CRMTracker from '../CRMTracker';
 import MoveInTracker from '../MoveInTracker';
 import MoveOutTracker from '../MoveOutTracker';
@@ -24,10 +25,10 @@ const OperatorTodayTab = () => {
     switch (timeframe) {
       case 'week':
         return {
-          occupancy: '92%',
-          vacant: 8,
-          available: 12,
-          requiredLeases: 15,
+          occupancy: '98%',
+          vacant: 3,
+          available: 8,
+          requiredLeases: 12,
           shows: 25,
           outreach: 18,
           moveIns: 5,
@@ -35,10 +36,10 @@ const OperatorTodayTab = () => {
         };
       case '30':
         return {
-          occupancy: '88%',
-          vacant: 12,
-          available: 18,
-          requiredLeases: 28,
+          occupancy: '96%',
+          vacant: 6,
+          available: 12,
+          requiredLeases: 22,
           shows: 42,
           outreach: 35,
           moveIns: 12,
@@ -46,10 +47,10 @@ const OperatorTodayTab = () => {
         };
       case '60':
         return {
-          occupancy: '85%',
-          vacant: 15,
-          available: 22,
-          requiredLeases: 45,
+          occupancy: '95%',
+          vacant: 8,
+          available: 15,
+          requiredLeases: 35,
           shows: 68,
           outreach: 52,
           moveIns: 22,
@@ -57,10 +58,10 @@ const OperatorTodayTab = () => {
         };
       case '90':
         return {
-          occupancy: '82%',
-          vacant: 18,
-          available: 28,
-          requiredLeases: 62,
+          occupancy: '97%',
+          vacant: 5,
+          available: 18,
+          requiredLeases: 45,
           shows: 89,
           outreach: 71,
           moveIns: 35,
@@ -68,10 +69,10 @@ const OperatorTodayTab = () => {
         };
       default:
         return {
-          occupancy: '88%',
-          vacant: 12,
-          available: 18,
-          requiredLeases: 28,
+          occupancy: '96%',
+          vacant: 6,
+          available: 12,
+          requiredLeases: 22,
           shows: 42,
           outreach: 35,
           moveIns: 12,
@@ -81,6 +82,23 @@ const OperatorTodayTab = () => {
   };
 
   const currentCounts = getCountsForTimeframe(selectedTimeframe);
+
+  // Chart data
+  const occupancyTrendData = [
+    { month: 'Jan', rate: 95.2 },
+    { month: 'Feb', rate: 96.8 },
+    { month: 'Mar', rate: 97.1 },
+    { month: 'Apr', rate: 96.5 },
+    { month: 'May', rate: 98.2 },
+    { month: 'Jun', rate: parseFloat(currentCounts.occupancy) }
+  ];
+
+  const leasingPipelineData = [
+    { name: 'Leads', value: 45, color: '#3B82F6' },
+    { name: 'Tours', value: 28, color: '#10B981' },
+    { name: 'Applications', value: 15, color: '#F59E0B' },
+    { name: 'Leases', value: 8, color: '#EF4444' }
+  ];
 
   const handleCRMClick = (filter: 'leases' | 'shows' | 'outreach') => {
     setCrmFilter(filter);
@@ -115,7 +133,7 @@ const OperatorTodayTab = () => {
     },
     {
       title: 'Current Residents',
-      count: '138',
+      count: '144',
       status: 'occupied'
     },
     {
@@ -217,17 +235,50 @@ const OperatorTodayTab = () => {
 
       {/* Graphs Section */}
       {showGraphs && (
-        <div className="bg-white rounded-xl shadow-sm border p-6">
+        <div className="bg-white rounded-xl shadow-sm border p-6 animate-fade-in">
           <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
             <BarChart3 className="text-purple-600" size={24} />
             ANALYTICS
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gray-50 rounded-lg p-4 h-64 flex items-center justify-center">
-              <p className="text-gray-500">Occupancy Trend Chart</p>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Occupancy Trend</h3>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={occupancyTrendData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis domain={[94, 100]} />
+                  <Tooltip />
+                  <Line 
+                    type="monotone" 
+                    dataKey="rate" 
+                    stroke="#3B82F6" 
+                    strokeWidth={3}
+                    dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, stroke: '#3B82F6', strokeWidth: 2 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4 h-64 flex items-center justify-center">
-              <p className="text-gray-500">Leasing Pipeline Chart</p>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Leasing Pipeline</h3>
+              <ResponsiveContainer width="100%" height={200}>
+                <RechartsPieChart>
+                  <Pie
+                    data={leasingPipelineData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    dataKey="value"
+                    label={({ name, value }) => `${name}: ${value}`}
+                  >
+                    {leasingPipelineData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </RechartsPieChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>
@@ -260,6 +311,31 @@ const OperatorTodayTab = () => {
                  item.status === 'occupied' ? 'Occupied' :
                  item.status === 'pending' ? 'Pending' :
                  'Due Soon'}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Movement Tracking */}
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+          <Home className="text-orange-600" size={24} />
+          MOVEMENT TRACKING
+        </h2>
+        <div className="grid grid-cols-2 gap-4">
+          {movement.map((item, index) => (
+            <div 
+              key={index} 
+              className="bg-gray-50 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-100 transition-colors"
+              onClick={() => handleModuleClick(item.module)}
+            >
+              <div className="text-2xl font-bold text-gray-900">{item.count}</div>
+              <div className="text-sm text-gray-600">{item.title}</div>
+              <div className={`text-xs mt-1 ${
+                item.status === 'incoming' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {item.status === 'incoming' ? 'Scheduled' : 'Planned'}
               </div>
             </div>
           ))}
@@ -317,31 +393,6 @@ const OperatorTodayTab = () => {
                  item.status === 'needed' ? 'Target Goal' :
                  item.status === 'scheduled' ? 'This Period' :
                  'Needs Contact'}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Movement Tracking */}
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-          <Home className="text-orange-600" size={24} />
-          MOVEMENT TRACKING
-        </h2>
-        <div className="grid grid-cols-2 gap-4">
-          {movement.map((item, index) => (
-            <div 
-              key={index} 
-              className="bg-gray-50 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-100 transition-colors"
-              onClick={() => handleModuleClick(item.module)}
-            >
-              <div className="text-2xl font-bold text-gray-900">{item.count}</div>
-              <div className="text-sm text-gray-600">{item.title}</div>
-              <div className={`text-xs mt-1 ${
-                item.status === 'incoming' ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {item.status === 'incoming' ? 'Scheduled' : 'Planned'}
               </div>
             </div>
           ))}
