@@ -81,7 +81,7 @@ const Index = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent 
               align="end" 
-              className="w-56 bg-white border shadow-lg z-[100] max-h-[calc(100vh-160px)] overflow-y-auto mb-20"
+              className="w-56 bg-white border shadow-lg z-[100] max-h-[calc(100vh-200px)] overflow-y-auto mb-32"
               sideOffset={8}
             >
               <DropdownMenuLabel className="font-normal">
