@@ -47,6 +47,32 @@ const OperatorTodayTab = () => {
     { title: 'Move Out\'s Next 7 Days', count: 4, status: 'normal' }
   ];
 
+  const renewalsData = [
+    { title: 'Expirations 60 Days', count: 14, status: 'normal' },
+    { title: 'Expirations 90 Days', count: 11, status: 'normal' },
+    { title: 'Pending', count: 2, status: 'normal' },
+    { title: 'Renewed', count: 5, status: 'good' },
+    { title: '90 Day Retention Forecast', count: '48%', status: 'poor' },
+    { title: 'New Lease Tradional', count: '8.14%', status: 'normal' },
+    { title: 'New Lease Renewal', count: '0.57%', status: 'normal' },
+    { title: 'All Leases', count: '8.95%', status: 'normal' },
+    { title: 'Total Pending Renewal Allowance', count: '$1,379.08', status: 'normal' },
+    { title: 'Per Renewal Allowance', count: '$137.91', status: 'normal' }
+  ];
+
+  const delinquencyData = [
+    { title: 'Balances 30 Days', count: '$0.00', status: 'good' },
+    { title: 'Balances 60 Days', count: '$0.00', status: 'good' },
+    { title: 'Balances 90+ Days', count: '$0.00', status: 'good' },
+    { title: 'Accounts in Legal', count: 0, status: 'good' },
+    { title: 'Overdue to Send to Legal', count: 0, status: 'good' },
+    { title: 'Overdue to Send Collections Email (After MO)', count: 0, status: 'good' },
+    { title: 'Overdue to Send Collections Email (15 days)', count: 0, status: 'good' },
+    { title: 'Overdue First Send Collections Email', count: 0, status: 'good' },
+    { title: 'Overdue to Send To Collections (30 days after MO)', count: 0, status: 'good' },
+    { title: 'Sent to Collections', count: 0, status: 'good' }
+  ];
+
   // Dynamic leasing data based on timeframe
   const getLeasingData = (timeframe: string) => {
     const baseData = {
@@ -95,32 +121,6 @@ const OperatorTodayTab = () => {
       { title: 'Required Prospect Outreach', count: data.outreach, status: 'normal', module: 'crm-outreach' }
     ];
   };
-
-  const renewalsData = [
-    { title: 'Expirations 60 Days', count: 14, status: 'normal' },
-    { title: 'Expirations 90 Days', count: 11, status: 'normal' },
-    { title: 'Pending', count: 2, status: 'normal' },
-    { title: 'Renewed', count: 5, status: 'good' },
-    { title: '90 Day Retention Forecast', count: '48%', status: 'poor' },
-    { title: 'New Lease Tradional', count: '8.14%', status: 'normal' },
-    { title: 'New Lease Renewal', count: '0.57%', status: 'normal' },
-    { title: 'All Leases', count: '8.95%', status: 'normal' },
-    { title: 'Total Pending Renewal Allowance', count: '$1,379.08', status: 'normal' },
-    { title: 'Per Renewal Allowance', count: '$137.91', status: 'normal' }
-  ];
-
-  const delinquencyData = [
-    { title: 'Balances 30 Days', count: '$0.00', status: 'good' },
-    { title: 'Balances 60 Days', count: '$0.00', status: 'good' },
-    { title: 'Balances 90+ Days', count: '$0.00', status: 'good' },
-    { title: 'Accounts in Legal', count: 0, status: 'good' },
-    { title: 'Overdue to Send to Legal', count: 0, status: 'good' },
-    { title: 'Overdue to Send Collections Email (After MO)', count: 0, status: 'good' },
-    { title: 'Overdue to Send Collections Email (15 days)', count: 0, status: 'good' },
-    { title: 'Overdue First Send Collections Email', count: 0, status: 'good' },
-    { title: 'Overdue to Send To Collections (30 days after MO)', count: 0, status: 'good' },
-    { title: 'Sent to Collections', count: 0, status: 'good' }
-  ];
 
   // Dashboard chart data
   const workOrderData = [
@@ -191,28 +191,57 @@ const OperatorTodayTab = () => {
     }
   };
 
-  const renderSection = (title: string, data: any[], bgColor: string = 'bg-blue-100', showToggle: boolean = false) => (
+  const renderSection = (title: string, data: any[], bgColor: string = 'bg-blue-100') => (
     <div className="mb-8">
       <div className={`${bgColor} p-4 rounded-t-lg`}>
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-          {showToggle && (
+        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+      </div>
+      <div className="grid grid-cols-2 gap-4 p-4 bg-white rounded-b-lg border border-t-0 border-gray-200">
+        {data.map((item, index) => (
+          <Card 
+            key={index} 
+            className={`cursor-pointer hover:shadow-md transition-shadow ${getStatusColor(item.status)}`}
+            onClick={() => handleCardClick(item)}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-gray-900 mb-1">{item.title}</h3>
+                  <p className={`text-2xl font-bold ${getTextColor(item.status)}`}>
+                    {item.count} {item.suffix && <span className="text-sm font-normal">{item.suffix}</span>}
+                  </p>
+                </div>
+                <ChevronRight size={16} className="text-gray-400" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderLeasingSection = () => (
+    <div className="mb-8">
+      <div className="bg-purple-100 p-4 rounded-t-lg">
+        <div className="flex flex-col space-y-3">
+          <h2 className="text-lg font-semibold text-gray-900">LEASING</h2>
+          <div className="flex justify-center">
             <ToggleGroup 
               type="single" 
               value={leasingTimeframe} 
               onValueChange={(value) => value && setLeasingTimeframe(value as any)}
-              className="bg-white rounded-md p-1"
+              className="bg-white rounded-lg p-1 shadow-sm"
             >
-              <ToggleGroupItem value="week" className="text-xs px-2 py-1">End of Week</ToggleGroupItem>
-              <ToggleGroupItem value="30" className="text-xs px-2 py-1">30 Days</ToggleGroupItem>
-              <ToggleGroupItem value="60" className="text-xs px-2 py-1">60 Days</ToggleGroupItem>
-              <ToggleGroupItem value="90" className="text-xs px-2 py-1">90 Days</ToggleGroupItem>
+              <ToggleGroupItem value="week" className="text-sm px-4 py-2 data-[state=on]:bg-purple-600 data-[state=on]:text-white">End of Week</ToggleGroupItem>
+              <ToggleGroupItem value="30" className="text-sm px-4 py-2 data-[state=on]:bg-purple-600 data-[state=on]:text-white">30 Days</ToggleGroupItem>
+              <ToggleGroupItem value="60" className="text-sm px-4 py-2 data-[state=on]:bg-purple-600 data-[state=on]:text-white">60 Days</ToggleGroupItem>
+              <ToggleGroupItem value="90" className="text-sm px-4 py-2 data-[state=on]:bg-purple-600 data-[state=on]:text-white">90 Days</ToggleGroupItem>
             </ToggleGroup>
-          )}
+          </div>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4 p-4 bg-white rounded-b-lg border border-t-0 border-gray-200">
-        {data.map((item, index) => (
+        {getLeasingData(leasingTimeframe).map((item, index) => (
           <Card 
             key={index} 
             className={`cursor-pointer hover:shadow-md transition-shadow ${getStatusColor(item.status)}`}
@@ -393,7 +422,7 @@ const OperatorTodayTab = () => {
         <>
           {renderSection('COMMUNITY MANAGEMENT', communityManagementData, 'bg-blue-100')}
           {renderSection('PROPERTY SERVICES', propertyServicesData, 'bg-green-100')}
-          {renderSection('LEASING', getLeasingData(leasingTimeframe), 'bg-purple-100', true)}
+          {renderLeasingSection()}
           {renderSection('RENEWALS', renewalsData, 'bg-orange-100')}
           {renderSection('DELINQUENCY', delinquencyData, 'bg-red-100')}
         </>

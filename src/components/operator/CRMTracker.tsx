@@ -1,10 +1,12 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeft, Search, Calendar, DollarSign, Home, Phone, Mail, Eye, Play, FileText, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Search, Calendar, DollarSign, Home, Phone, Mail, Eye, Play, FileText, ChevronRight, MessageCircle, Plus, Edit } from 'lucide-react';
 
 interface CRMTrackerProps {
   onClose: () => void;
@@ -15,6 +17,8 @@ const CRMTracker: React.FC<CRMTrackerProps> = ({ onClose, initialFilter }) => {
   const [filter, setFilter] = useState(initialFilter);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProspect, setSelectedProspect] = useState<any>(null);
+  const [showNotesDialog, setShowNotesDialog] = useState(false);
+  const [newNote, setNewNote] = useState('');
 
   const prospects = [
     {
@@ -32,9 +36,12 @@ const CRMTracker: React.FC<CRMTrackerProps> = ({ onClose, initialFilter }) => {
       rent: '$7,271/1906',
       moveIn: '7/27/1906',
       source: 'Call',
-      status: 'Reschedule',
+      status: 'reschedule',
       priceRange: '$1,500-$1,700',
-      notes: '',
+      notes: [
+        { date: '4/25/2025', text: 'Initial contact made, interested in studio' },
+        { date: '4/26/2025', text: 'Scheduled tour for tomorrow' }
+      ],
       toured: true,
       tourVideos: ['https://example.com/tour1.mp4'],
       apartmentsSeen: ['315', '317', '320'],
@@ -55,9 +62,12 @@ const CRMTracker: React.FC<CRMTrackerProps> = ({ onClose, initialFilter }) => {
       rent: '4K',
       moveIn: '6/6/2025',
       source: '',
-      status: 'Follow Up',
+      status: 'follow-up',
       priceRange: '$1,800-$2,200',
-      notes: 'Has a roommate - seemed really interested - Roommate also reached out in the CRM',
+      notes: [
+        { date: '4/28/2025', text: 'Has a roommate - seemed really interested' },
+        { date: '4/29/2025', text: 'Roommate also reached out in the CRM' }
+      ],
       toured: true,
       tourVideos: ['https://example.com/tour2.mp4'],
       apartmentsSeen: ['317', '318'],
@@ -78,9 +88,11 @@ const CRMTracker: React.FC<CRMTrackerProps> = ({ onClose, initialFilter }) => {
       rent: '',
       moveIn: '8/1/2025',
       source: '',
-      status: 'Follow Up',
+      status: 'scheduled',
       priceRange: '$1,200-$1,500',
-      notes: 'Sent text 5.9 DB',
+      notes: [
+        { date: '5/1/2025', text: 'Sent text 5.9 DB' }
+      ],
       toured: false,
       tourVideos: [],
       apartmentsSeen: [],
@@ -101,13 +113,15 @@ const CRMTracker: React.FC<CRMTrackerProps> = ({ onClose, initialFilter }) => {
       rent: '',
       moveIn: '',
       source: '',
-      status: 'Reschedule',
+      status: 'won',
       priceRange: '$1,300-$1,600',
-      notes: '',
-      toured: false,
+      notes: [
+        { date: '5/4/2025', text: 'Signed lease agreement!' }
+      ],
+      toured: true,
       tourVideos: [],
-      apartmentsSeen: [],
-      feedback: ''
+      apartmentsSeen: ['SB1', 'SB2'],
+      feedback: 'Perfect fit for their budget'
     }
   ];
 
@@ -115,11 +129,11 @@ const CRMTracker: React.FC<CRMTrackerProps> = ({ onClose, initialFilter }) => {
     let filtered = prospects;
     
     if (filter === 'leases') {
-      filtered = prospects.filter(p => p.status === 'Follow Up' && p.toured);
+      filtered = prospects.filter(p => p.toured);
     } else if (filter === 'shows') {
-      filtered = prospects.filter(p => p.status === 'Reschedule' || !p.toured);
+      filtered = prospects.filter(p => p.status === 'scheduled');
     } else if (filter === 'outreach') {
-      filtered = prospects.filter(p => p.notes.includes('text') || p.notes.includes('call') || p.notes.includes('email'));
+      filtered = prospects.filter(p => p.status === 'reschedule' || p.status === 'follow-up');
     }
 
     if (searchTerm) {
@@ -134,19 +148,34 @@ const CRMTracker: React.FC<CRMTrackerProps> = ({ onClose, initialFilter }) => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Reschedule': return 'bg-orange-100 text-orange-800';
-      case 'Follow Up': return 'bg-blue-100 text-blue-800';
-      case 'Scheduled': return 'bg-green-100 text-green-800';
+      case 'reschedule': return 'bg-orange-100 text-orange-800';
+      case 'follow-up': return 'bg-blue-100 text-blue-800';
+      case 'scheduled': return 'bg-green-100 text-green-800';
+      case 'toured': return 'bg-purple-100 text-purple-800';
+      case 'won': return 'bg-emerald-100 text-emerald-800';
+      case 'lost': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getFilterTitle = () => {
     switch (filter) {
-      case 'leases': return 'Required Leases Pipeline';
-      case 'shows': return 'Required Shows Pipeline';
-      case 'outreach': return 'Required Outreach Pipeline';
+      case 'leases': return 'Toured Prospects Pipeline';
+      case 'shows': return 'Scheduled Shows Pipeline';
+      case 'outreach': return 'Outreach Required Pipeline';
       default: return 'CRM Pipeline';
+    }
+  };
+
+  const addNote = () => {
+    if (newNote.trim() && selectedProspect) {
+      const updatedNotes = [
+        ...selectedProspect.notes,
+        { date: new Date().toLocaleDateString(), text: newNote.trim() }
+      ];
+      setSelectedProspect({ ...selectedProspect, notes: updatedNotes });
+      setNewNote('');
+      setShowNotesDialog(false);
     }
   };
 
@@ -165,7 +194,7 @@ const CRMTracker: React.FC<CRMTrackerProps> = ({ onClose, initialFilter }) => {
             <CardTitle className="flex items-center justify-between">
               {selectedProspect.name}
               <Badge className={getStatusColor(selectedProspect.status)}>
-                {selectedProspect.status}
+                {selectedProspect.status.replace('-', ' ').toUpperCase()}
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -189,12 +218,47 @@ const CRMTracker: React.FC<CRMTrackerProps> = ({ onClose, initialFilter }) => {
               </div>
             </div>
 
-            {selectedProspect.notes && (
-              <div className="mb-6">
-                <p className="text-sm text-gray-600 mb-2">Notes</p>
-                <p className="bg-gray-50 p-3 rounded-md">{selectedProspect.notes}</p>
+            {/* Notes Section */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold">Activity Notes</h3>
+                <Dialog open={showNotesDialog} onOpenChange={setShowNotesDialog}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" variant="outline">
+                      <Plus size={16} className="mr-2" />
+                      Add Note
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add New Note</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <Textarea
+                        placeholder="Enter note..."
+                        value={newNote}
+                        onChange={(e) => setNewNote(e.target.value)}
+                      />
+                      <div className="flex gap-2">
+                        <Button onClick={addNote}>Add Note</Button>
+                        <Button variant="outline" onClick={() => setShowNotesDialog(false)}>Cancel</Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
-            )}
+              
+              <div className="space-y-3 max-h-48 overflow-y-auto">
+                {selectedProspect.notes.map((note: any, index: number) => (
+                  <div key={index} className="bg-gray-50 p-3 rounded-md">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="text-xs text-gray-500">{note.date}</span>
+                    </div>
+                    <p className="text-sm">{note.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {selectedProspect.toured && (
               <>
@@ -234,18 +298,23 @@ const CRMTracker: React.FC<CRMTrackerProps> = ({ onClose, initialFilter }) => {
               </>
             )}
 
-            <div className="flex gap-2">
-              <Button className="flex-1">
+            {/* Action Buttons - Stacked */}
+            <div className="space-y-3">
+              <Button className="w-full">
                 <Phone size={16} className="mr-2" />
                 Call
               </Button>
-              <Button variant="outline" className="flex-1">
+              <Button variant="outline" className="w-full">
                 <Mail size={16} className="mr-2" />
                 Email
               </Button>
-              <Button variant="outline" className="flex-1">
+              <Button variant="outline" className="w-full">
                 <Calendar size={16} className="mr-2" />
                 Schedule Tour
+              </Button>
+              <Button variant="outline" className="w-full">
+                <MessageCircle size={16} className="mr-2" />
+                Send Message
               </Button>
             </div>
           </CardContent>
@@ -269,14 +338,14 @@ const CRMTracker: React.FC<CRMTrackerProps> = ({ onClose, initialFilter }) => {
           onClick={() => setFilter('leases')}
           size="sm"
         >
-          Leases
+          Toured
         </Button>
         <Button
           variant={filter === 'shows' ? 'default' : 'outline'}
           onClick={() => setFilter('shows')}
           size="sm"
         >
-          Shows
+          Scheduled
         </Button>
         <Button
           variant={filter === 'outreach' ? 'default' : 'outline'}
@@ -304,7 +373,7 @@ const CRMTracker: React.FC<CRMTrackerProps> = ({ onClose, initialFilter }) => {
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold text-lg">{prospect.name}</h3>
                 <Badge className={getStatusColor(prospect.status)}>
-                  {prospect.status}
+                  {prospect.status.replace('-', ' ').toUpperCase()}
                 </Badge>
               </div>
               
@@ -327,8 +396,10 @@ const CRMTracker: React.FC<CRMTrackerProps> = ({ onClose, initialFilter }) => {
                 </div>
               </div>
 
-              {prospect.notes && (
-                <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded mb-2">{prospect.notes}</p>
+              {prospect.notes.length > 0 && (
+                <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded mb-2">
+                  Latest: {prospect.notes[prospect.notes.length - 1].text}
+                </p>
               )}
 
               <div className="flex justify-between items-center">
