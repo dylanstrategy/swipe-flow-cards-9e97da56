@@ -26,17 +26,37 @@ const WorkOrderRescheduleStep = ({
 }: WorkOrderRescheduleStepProps) => {
   const [calendarOpen, setCalendarOpen] = useState(false);
   
-  const timeSlots = [
-    '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
-    '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM'
-  ];
+  // Dynamic time slots based on day of week
+  const getAvailableTimeSlots = (date: Date) => {
+    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    
+    switch (dayOfWeek) {
+      case 1: // Monday - Limited availability
+        return ['11:00 AM', '2:00 PM'];
+      case 2: // Tuesday - Morning heavy
+        return ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM'];
+      case 3: // Wednesday - Afternoon slots
+        return ['1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM'];
+      case 4: // Thursday - Mixed availability
+        return ['9:00 AM', '12:00 PM', '3:00 PM'];
+      case 5: // Friday - Early morning only
+        return ['8:00 AM', '9:00 AM'];
+      case 6: // Saturday - Weekend emergency slots
+        return ['10:00 AM', '12:00 PM'];
+      default: // Sunday - No availability
+        return [];
+    }
+  };
 
   const isComplete = selectedDate && selectedTime;
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
+    setSelectedTime(''); // Reset time when date changes
     setCalendarOpen(false);
   };
+
+  const availableTimeSlots = selectedDate ? getAvailableTimeSlots(selectedDate) : [];
 
   return (
     <div className="h-full flex flex-col space-y-3 overflow-hidden">
@@ -105,18 +125,25 @@ const WorkOrderRescheduleStep = ({
             <h3 className="font-medium text-gray-900 mb-2 text-sm">
               Available Times for {format(selectedDate, 'MMM do')}
             </h3>
-            <div className="grid grid-cols-3 gap-2">
-              {timeSlots.map((time) => (
-                <Button
-                  key={time}
-                  variant={selectedTime === time ? "default" : "outline"}
-                  className="h-10 text-xs font-medium"
-                  onClick={() => setSelectedTime(time)}
-                >
-                  {time}
-                </Button>
-              ))}
-            </div>
+            {availableTimeSlots.length > 0 ? (
+              <div className="grid grid-cols-3 gap-2">
+                {availableTimeSlots.map((time) => (
+                  <Button
+                    key={time}
+                    variant={selectedTime === time ? "default" : "outline"}
+                    className="h-10 text-xs font-medium"
+                    onClick={() => setSelectedTime(time)}
+                  >
+                    {time}
+                  </Button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-gray-500">No availability on {format(selectedDate, 'EEEE')}</p>
+                <p className="text-xs text-gray-400 mt-1">Please select a different date</p>
+              </div>
+            )}
           </div>
         )}
       </div>
