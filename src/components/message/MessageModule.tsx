@@ -215,9 +215,9 @@ const MessageModule = ({
                 const touchEvent = new TouchEvent('touchstart', {
                   bubbles: true,
                   cancelable: true,
-                  touches: e.touches,
-                  targetTouches: e.targetTouches,
-                  changedTouches: e.changedTouches
+                  touches: Array.from(e.touches),
+                  targetTouches: Array.from(e.targetTouches),
+                  changedTouches: Array.from(e.changedTouches)
                 });
                 swipeableScreen.dispatchEvent(touchEvent);
               }
@@ -228,9 +228,9 @@ const MessageModule = ({
                 const touchEvent = new TouchEvent('touchmove', {
                   bubbles: true,
                   cancelable: true,
-                  touches: e.touches,
-                  targetTouches: e.targetTouches,
-                  changedTouches: e.changedTouches
+                  touches: Array.from(e.touches),
+                  targetTouches: Array.from(e.targetTouches),
+                  changedTouches: Array.from(e.changedTouches)
                 });
                 swipeableScreen.dispatchEvent(touchEvent);
               }
@@ -241,9 +241,9 @@ const MessageModule = ({
                 const touchEvent = new TouchEvent('touchend', {
                   bubbles: true,
                   cancelable: true,
-                  touches: e.touches,
-                  targetTouches: e.targetTouches,
-                  changedTouches: e.changedTouches
+                  touches: Array.from(e.touches),
+                  targetTouches: Array.from(e.targetTouches),
+                  changedTouches: Array.from(e.changedTouches)
                 });
                 swipeableScreen.dispatchEvent(touchEvent);
               }
