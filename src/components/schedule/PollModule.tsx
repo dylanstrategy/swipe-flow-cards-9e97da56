@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, X, BarChart3, Users, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -90,6 +89,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
   };
 
   const handleSubmit = () => {
+    console.log('Submitting poll:', pollData);
     toast({
       title: "Poll Created Successfully",
       description: "Your poll has been scheduled and will appear on all resident calendars.",
@@ -276,7 +276,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 
       case 3:
         return (
-          <div className="space-y-6 pb-40">
+          <div className="space-y-6 pb-48">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Poll Settings</CardTitle>
@@ -392,25 +392,6 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Swipeable Submit Button - Positioned above nav bar */}
-            <div className="fixed bottom-20 left-4 right-4 z-50">
-              <SwipeCard
-                onSwipeUp={{
-                  label: "Create Poll",
-                  action: handleSubmit,
-                  color: "#22C55E",
-                  icon: "↑"
-                }}
-                enableSwipeUp={true}
-                className="shadow-lg border-0"
-              >
-                <div className="bg-green-600 hover:bg-green-700 text-white p-4 rounded-xl flex items-center justify-center gap-2 shadow-lg">
-                  <span className="font-medium">Swipe up to create poll</span>
-                  <ArrowRight size={16} />
-                </div>
-              </SwipeCard>
-            </div>
           </div>
         );
 
@@ -420,20 +401,43 @@ const PollModule = ({ onClose }: PollModuleProps) => {
   };
 
   return (
-    <SwipeableScreen
-      title="Create Poll"
-      currentStep={step}
-      totalSteps={3}
-      onClose={onClose}
-      onSwipeUp={step < 3 && canProceed() ? nextStep : undefined}
-      onSwipeLeft={step > 1 ? prevStep : undefined}
-      canSwipeUp={step < 3 && canProceed()}
-      hideSwipeHandling={step === 3}
-    >
-      <div className={step === 3 ? "h-full overflow-y-auto" : "h-full overflow-hidden"}>
-        {renderCurrentStep()}
-      </div>
-    </SwipeableScreen>
+    <>
+      <SwipeableScreen
+        title="Create Poll"
+        currentStep={step}
+        totalSteps={3}
+        onClose={onClose}
+        onSwipeUp={step < 3 && canProceed() ? nextStep : undefined}
+        onSwipeLeft={step > 1 ? prevStep : undefined}
+        canSwipeUp={step < 3 && canProceed()}
+        hideSwipeHandling={step === 3}
+      >
+        <div className={step === 3 ? "h-full overflow-y-auto" : "h-full overflow-hidden"}>
+          {renderCurrentStep()}
+        </div>
+      </SwipeableScreen>
+
+      {/* Swipeable Submit Button - Only show on step 3 */}
+      {step === 3 && (
+        <div className="fixed bottom-24 left-4 right-4 z-[9998]">
+          <SwipeCard
+            onSwipeUp={{
+              label: "Create Poll",
+              action: handleSubmit,
+              color: "#22C55E",
+              icon: "↑"
+            }}
+            enableSwipeUp={true}
+            className="shadow-xl border-0"
+          >
+            <div className="bg-green-600 hover:bg-green-700 text-white p-5 rounded-xl flex items-center justify-center gap-2 shadow-lg">
+              <span className="font-semibold text-lg">Swipe up to create poll</span>
+              <ArrowRight size={20} />
+            </div>
+          </SwipeCard>
+        </div>
+      )}
+    </>
   );
 };
 
