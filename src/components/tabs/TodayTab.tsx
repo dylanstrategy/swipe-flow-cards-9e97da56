@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
@@ -20,6 +21,7 @@ const TodayTab = () => {
   const [showMessageModule, setShowMessageModule] = useState(false);
   const [showServiceModule, setShowServiceModule] = useState(false);
   const [showWorkOrderFlow, setShowWorkOrderFlow] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
   const [messageConfig, setMessageConfig] = useState({
     subject: '',
     recipientType: 'management' as 'management' | 'maintenance' | 'leasing',
@@ -168,6 +170,34 @@ const TodayTab = () => {
       title: "Offer Activated",
       description: `${offer.title} from ${offer.business}`,
     });
+  };
+
+  const nextStep = () => {
+    if (currentStep < 4) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      // Final submission
+      setShowWorkOrderFlow(false);
+      setCurrentStep(1);
+      toast({
+        title: "Work Order Submitted",
+        description: "Your work order has been successfully submitted. You'll receive a confirmation email shortly.",
+      });
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    } else {
+      setShowWorkOrderFlow(false);
+      setCurrentStep(1);
+    }
+  };
+
+  const handleCloseWorkOrder = () => {
+    setShowWorkOrderFlow(false);
+    setCurrentStep(1);
   };
 
   const getEventsForDate = (date: Date) => {
@@ -335,10 +365,10 @@ const TodayTab = () => {
     return (
       <WorkOrderFlow
         selectedScheduleType="Work Order"
-        currentStep={1}
-        onNextStep={() => {}}
-        onPrevStep={() => {}}
-        onClose={() => setShowWorkOrderFlow(false)}
+        currentStep={currentStep}
+        onNextStep={nextStep}
+        onPrevStep={prevStep}
+        onClose={handleCloseWorkOrder}
       />
     );
   }
