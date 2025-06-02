@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format, addHours } from 'date-fns';
 import PointOfSale from '../PointOfSale';
@@ -45,7 +44,7 @@ const MessageConfirmation = ({ subject, message, recipientType, onDone }: Messag
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1 min-h-0 overflow-y-auto pb-20">
+      <div className="flex-1 min-h-0 overflow-y-auto pb-32">
         <div className="p-4 space-y-4">
           {/* Success Message */}
           <div className="text-center space-y-3">
@@ -82,14 +81,11 @@ const MessageConfirmation = ({ subject, message, recipientType, onDone }: Messag
               onOfferClick={handleOfferClick}
             />
           </div>
-
-          {/* Additional spacing for better scrolling */}
-          <div className="h-8"></div>
         </div>
       </div>
 
-      {/* Fixed Done Button */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
+      {/* Fixed Done Button - positioned higher to avoid nav */}
+      <div className="absolute bottom-20 left-0 right-0 p-4 bg-white border-t border-gray-200">
         <button
           onClick={onDone}
           className="w-full bg-black text-white py-3 px-6 rounded-xl font-semibold text-base hover:bg-gray-800 transition-colors"
