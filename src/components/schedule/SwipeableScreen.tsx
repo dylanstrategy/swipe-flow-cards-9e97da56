@@ -1,5 +1,4 @@
-
-import React, { useState, useRef, ReactNode, useEffect } from 'react';
+import React, { useState, useRef, ReactNode, useEffect, forwardRef } from 'react';
 import { ArrowUp, X } from 'lucide-react';
 
 interface SwipeableScreenProps {
@@ -15,7 +14,7 @@ interface SwipeableScreenProps {
   rightButton?: ReactNode;
 }
 
-const SwipeableScreen = ({ 
+const SwipeableScreen = forwardRef<HTMLDivElement, SwipeableScreenProps>(({ 
   children, 
   onSwipeUp, 
   onSwipeLeft, 
@@ -26,7 +25,7 @@ const SwipeableScreen = ({
   onClose,
   hideSwipeHandling = false,
   rightButton
-}: SwipeableScreenProps) => {
+}, ref) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [showAction, setShowAction] = useState<'up' | 'left' | null>(null);
@@ -150,7 +149,7 @@ const SwipeableScreen = ({
 
   if (hideSwipeHandling) {
     return (
-      <div className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen" data-swipeable-screen>
+      <div ref={ref} className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen" data-swipeable-screen>
         {/* Header with X button and optional right button */}
         <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200 relative z-10">
           <div>
@@ -190,6 +189,7 @@ const SwipeableScreen = ({
 
   return (
     <div 
+      ref={ref}
       className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen overflow-hidden select-none"
       data-swipeable-screen
       onTouchStart={handleTouchStart}
@@ -266,6 +266,8 @@ const SwipeableScreen = ({
       </div>
     </div>
   );
-};
+});
+
+SwipeableScreen.displayName = 'SwipeableScreen';
 
 export default SwipeableScreen;

@@ -35,6 +35,7 @@ const MessageModule = ({
     recipientType,
     attachments: [] as Attachment[]
   });
+  const swipeableRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Prevent zoom on mount and add input focus handling
@@ -176,6 +177,7 @@ const MessageModule = ({
   return (
     <>
       <SwipeableScreen
+        ref={swipeableRef}
         title={getRecipientTitle()}
         currentStep={currentStep}
         totalSteps={2}
@@ -209,43 +211,34 @@ const MessageModule = ({
           <div 
             className="absolute inset-0 pointer-events-auto"
             onTouchStart={(e) => {
-              // Forward touch events to the SwipeableScreen for swipe detection
-              const swipeableScreen = document.querySelector('[data-swipeable-screen]');
+              // Forward touch events to the SwipeableScreen element directly
+              const swipeableScreen = swipeableRef.current;
               if (swipeableScreen) {
-                const touchEvent = new TouchEvent('touchstart', {
-                  bubbles: true,
-                  cancelable: true,
-                  touches: Array.from(e.touches),
-                  targetTouches: Array.from(e.targetTouches),
-                  changedTouches: Array.from(e.changedTouches)
-                });
-                swipeableScreen.dispatchEvent(touchEvent);
+                const event = new Event('touchstart', { bubbles: true });
+                Object.defineProperty(event, 'touches', { value: e.touches });
+                Object.defineProperty(event, 'targetTouches', { value: e.targetTouches });
+                Object.defineProperty(event, 'changedTouches', { value: e.changedTouches });
+                swipeableScreen.dispatchEvent(event);
               }
             }}
             onTouchMove={(e) => {
-              const swipeableScreen = document.querySelector('[data-swipeable-screen]');
+              const swipeableScreen = swipeableRef.current;
               if (swipeableScreen) {
-                const touchEvent = new TouchEvent('touchmove', {
-                  bubbles: true,
-                  cancelable: true,
-                  touches: Array.from(e.touches),
-                  targetTouches: Array.from(e.targetTouches),
-                  changedTouches: Array.from(e.changedTouches)
-                });
-                swipeableScreen.dispatchEvent(touchEvent);
+                const event = new Event('touchmove', { bubbles: true });
+                Object.defineProperty(event, 'touches', { value: e.touches });
+                Object.defineProperty(event, 'targetTouches', { value: e.targetTouches });
+                Object.defineProperty(event, 'changedTouches', { value: e.changedTouches });
+                swipeableScreen.dispatchEvent(event);
               }
             }}
             onTouchEnd={(e) => {
-              const swipeableScreen = document.querySelector('[data-swipeable-screen]');
+              const swipeableScreen = swipeableRef.current;
               if (swipeableScreen) {
-                const touchEvent = new TouchEvent('touchend', {
-                  bubbles: true,
-                  cancelable: true,
-                  touches: Array.from(e.touches),
-                  targetTouches: Array.from(e.targetTouches),
-                  changedTouches: Array.from(e.changedTouches)
-                });
-                swipeableScreen.dispatchEvent(touchEvent);
+                const event = new Event('touchend', { bubbles: true });
+                Object.defineProperty(event, 'touches', { value: e.touches });
+                Object.defineProperty(event, 'targetTouches', { value: e.targetTouches });
+                Object.defineProperty(event, 'changedTouches', { value: e.changedTouches });
+                swipeableScreen.dispatchEvent(event);
               }
             }}
           />
