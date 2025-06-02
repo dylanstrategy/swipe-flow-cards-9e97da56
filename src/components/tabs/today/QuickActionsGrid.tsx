@@ -15,37 +15,66 @@ const QuickActionsGrid = ({ onAction, onServiceClick, onMaintenanceClick, getRen
       icon: Package, 
       label: 'Services', 
       action: 'services',
-      onClick: onServiceClick
+      onClick: onServiceClick,
+      bgColor: 'bg-green-500',
+      textColor: 'text-white'
     },
     { 
       icon: Wrench, 
-      label: 'Maintenance', 
+      label: 'Work Orders', 
       action: 'maintenance',
-      onClick: onMaintenanceClick
+      onClick: onMaintenanceClick,
+      bgColor: 'bg-purple-600',
+      textColor: 'text-white',
+      backgroundImage: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400',
+      subtitle: '1 active • 2 pending'
     },
     { 
       icon: CreditCard, 
-      label: 'Pay Rent', 
+      label: 'Rent Due', 
       action: 'pay-rent',
       className: getRentUrgencyClass(),
-      onClick: () => onAction('Opened', 'Rent Payment')
+      onClick: () => onAction('Opened', 'Rent Payment'),
+      bgColor: 'bg-blue-500',
+      textColor: 'text-white',
+      subtitle: '$1,550 • Due in 3 days'
     }
   ];
 
   return (
     <div className="mb-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         {quickActions.map((action) => {
           const IconComponent = action.icon;
           return (
             <button
               key={action.action}
               onClick={action.onClick}
-              className={`bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-all text-center ${action.className || ''}`}
+              className={`relative overflow-hidden p-6 rounded-xl transition-all hover:scale-105 active:scale-95 ${action.bgColor} ${action.className || ''}`}
+              style={action.backgroundImage ? {
+                backgroundImage: `url(${action.backgroundImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              } : {}}
             >
-              <IconComponent size={24} className="mx-auto mb-2 text-blue-600" />
-              <span className="text-sm font-medium text-gray-700">{action.label}</span>
+              {action.backgroundImage && (
+                <div className="absolute inset-0 bg-purple-600/80 backdrop-blur-sm"></div>
+              )}
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <IconComponent size={32} className={action.textColor} />
+                  <div className="text-left">
+                    <div className={`text-xl font-semibold ${action.textColor}`}>
+                      {action.label}
+                    </div>
+                    {action.subtitle && (
+                      <div className={`text-sm opacity-90 ${action.textColor}`}>
+                        {action.subtitle}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </button>
           );
         })}
