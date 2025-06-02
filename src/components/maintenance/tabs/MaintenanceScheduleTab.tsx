@@ -3,10 +3,32 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UnitTurnTracker from '../UnitTurnTracker';
 import WorkOrderTracker from '../WorkOrderTracker';
+import UnitTurnDetailTracker from '../UnitTurnDetailTracker';
+import WorkOrderDetailTracker from '../WorkOrderDetailTracker';
 import { Calendar, Home, Wrench, BarChart3 } from 'lucide-react';
 
 const MaintenanceScheduleTab = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [selectedUnitTurn, setSelectedUnitTurn] = useState<any>(null);
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
+
+  if (selectedUnitTurn) {
+    return (
+      <UnitTurnDetailTracker 
+        unitTurn={selectedUnitTurn}
+        onClose={() => setSelectedUnitTurn(null)}
+      />
+    );
+  }
+
+  if (selectedWorkOrder) {
+    return (
+      <WorkOrderDetailTracker 
+        workOrder={selectedWorkOrder}
+        onClose={() => setSelectedWorkOrder(null)}
+      />
+    );
+  }
 
   return (
     <div className="px-4 py-6 pb-24">
@@ -36,17 +58,17 @@ const MaintenanceScheduleTab = () => {
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid gap-6">
-            <WorkOrderTracker />
-            <UnitTurnTracker />
+            <WorkOrderTracker onSelectWorkOrder={setSelectedWorkOrder} />
+            <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
           </div>
         </TabsContent>
 
         <TabsContent value="workorders">
-          <WorkOrderTracker />
+          <WorkOrderTracker onSelectWorkOrder={setSelectedWorkOrder} />
         </TabsContent>
 
         <TabsContent value="unitturns">
-          <UnitTurnTracker />
+          <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
         </TabsContent>
       </Tabs>
     </div>

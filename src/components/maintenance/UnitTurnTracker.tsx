@@ -1,11 +1,14 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Calendar, Clock, Home, CheckCircle2, AlertCircle } from 'lucide-react';
 
-const UnitTurnTracker = () => {
+interface UnitTurnTrackerProps {
+  onSelectUnitTurn?: (unitTurn: any) => void;
+}
+
+const UnitTurnTracker = ({ onSelectUnitTurn }: UnitTurnTrackerProps) => {
   const unitTurns = [
     {
       id: 'UT-323-4',
@@ -83,7 +86,7 @@ const UnitTurnTracker = () => {
 
       {/* Summary Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <Card>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onSelectUnitTurn?.(unitTurns[0])}>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-orange-600">
               {unitTurns.filter(turn => turn.status === 'In Progress').length}
@@ -91,7 +94,7 @@ const UnitTurnTracker = () => {
             <div className="text-sm text-gray-600">In Progress</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onSelectUnitTurn?.(unitTurns[0])}>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-green-600">
               {unitTurns.filter(turn => turn.status === 'Nearly Complete').length}
@@ -99,7 +102,7 @@ const UnitTurnTracker = () => {
             <div className="text-sm text-gray-600">Near Complete</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onSelectUnitTurn?.(unitTurns[0])}>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-red-600">
               {unitTurns.filter(turn => turn.daysUntilMoveIn <= 7).length}
@@ -112,7 +115,11 @@ const UnitTurnTracker = () => {
       {/* Unit Turn Cards */}
       <div className="space-y-4">
         {unitTurns.map((turn) => (
-          <Card key={turn.id} className="hover:shadow-md transition-shadow">
+          <Card 
+            key={turn.id} 
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => onSelectUnitTurn?.(turn)}
+          >
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">

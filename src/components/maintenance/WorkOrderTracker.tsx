@@ -1,10 +1,13 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Wrench, AlertTriangle, CheckCircle2, User } from 'lucide-react';
 
-const WorkOrderTracker = () => {
+interface WorkOrderTrackerProps {
+  onSelectWorkOrder?: (workOrder: any) => void;
+}
+
+const WorkOrderTracker = ({ onSelectWorkOrder }: WorkOrderTrackerProps) => {
   const workOrderStats = {
     total: 24,
     urgent: 3,
@@ -96,7 +99,7 @@ const WorkOrderTracker = () => {
 
       {/* Summary Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <Card>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onSelectWorkOrder?.(recentWorkOrders[0])}>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-red-600 flex items-center justify-center gap-1">
               <AlertTriangle className="w-5 h-5" />
@@ -105,7 +108,7 @@ const WorkOrderTracker = () => {
             <div className="text-sm text-gray-600">Urgent</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onSelectWorkOrder?.(recentWorkOrders[0])}>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-orange-600 flex items-center justify-center gap-1">
               <Clock className="w-5 h-5" />
@@ -114,7 +117,7 @@ const WorkOrderTracker = () => {
             <div className="text-sm text-gray-600">Overdue</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onSelectWorkOrder?.(recentWorkOrders[0])}>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-green-600 flex items-center justify-center gap-1">
               <CheckCircle2 className="w-5 h-5" />
@@ -154,7 +157,11 @@ const WorkOrderTracker = () => {
       <div className="space-y-3">
         <h3 className="text-lg font-medium text-gray-900">Recent Work Orders</h3>
         {recentWorkOrders.map((order) => (
-          <Card key={order.id} className="hover:shadow-md transition-shadow">
+          <Card 
+            key={order.id} 
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => onSelectWorkOrder?.(order)}
+          >
             <CardContent className="p-4">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
