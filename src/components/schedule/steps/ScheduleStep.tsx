@@ -24,22 +24,36 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
 
   return (
     <div className="h-full flex flex-col">
-      <div className="text-center mb-4">
-        <Clock className="mx-auto text-blue-600 mb-2" size={32} />
+      <div className="text-center mb-3">
+        <Clock className="mx-auto text-blue-600 mb-2" size={28} />
         <h3 className="text-lg font-semibold text-gray-900 mb-1">Schedule Repair</h3>
       </div>
       
-      <div className="flex-1 space-y-4 overflow-y-auto">
+      <div className="flex-1 space-y-3 overflow-y-auto">
         <div>
-          <h4 className="font-medium text-gray-900 mb-3">Select Date</h4>
+          <h4 className="font-medium text-gray-900 mb-2 text-sm">Select Date</h4>
           <div className="bg-white border border-gray-200 rounded-lg">
             <Calendar
               mode="single"
               selected={selectedDate}
               onSelect={setSelectedDate}
               disabled={(date) => date < new Date()}
-              className={cn("p-3")}
+              className={cn("p-2")}
               classNames={{
+                months: "flex flex-col space-y-2",
+                month: "space-y-2",
+                caption: "flex justify-center pt-1 relative items-center",
+                caption_label: "text-sm font-medium",
+                nav: "space-x-1 flex items-center",
+                nav_button: "h-6 w-6 bg-transparent p-0 opacity-50 hover:opacity-100",
+                nav_button_previous: "absolute left-1",
+                nav_button_next: "absolute right-1",
+                table: "w-full border-collapse space-y-1",
+                head_row: "flex",
+                head_cell: "text-muted-foreground rounded-md w-8 font-normal text-xs",
+                row: "flex w-full mt-1",
+                cell: "h-8 w-8 text-center text-xs p-0 relative",
+                day: "h-8 w-8 p-0 font-normal text-xs",
                 day_today: "bg-blue-600 text-white hover:bg-blue-700",
                 day_selected: "bg-blue-600 text-white hover:bg-blue-700"
               }}
@@ -49,7 +63,7 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
 
         {selectedDate && (
           <div>
-            <h4 className="font-medium text-gray-900 mb-3">Available Times</h4>
+            <h4 className="font-medium text-gray-900 mb-2 text-sm">Available Times</h4>
             <div className="grid grid-cols-3 gap-2">
               {availableTimes.map((time) => (
                 <Button
@@ -57,7 +71,7 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
                   variant={selectedTime === time ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedTime(time)}
-                  className="text-xs py-2 px-3"
+                  className="text-xs py-1.5 px-2 h-8"
                 >
                   {time}
                 </Button>
@@ -67,11 +81,13 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
         )}
 
         {canProceed && (
-          <SwipeUpPrompt 
-            onContinue={onNext}
-            message="Schedule confirmed!"
-            buttonText="Continue"
-          />
+          <div className="pt-2">
+            <SwipeUpPrompt 
+              onContinue={onNext}
+              message="Schedule confirmed!"
+              buttonText="Continue"
+            />
+          </div>
         )}
       </div>
     </div>
