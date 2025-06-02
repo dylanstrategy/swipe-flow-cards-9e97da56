@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Plus, X, BarChart3, Users, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -143,7 +144,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                     placeholder="What would you like to ask residents?"
                     value={pollData.title}
                     onChange={(e) => setPollData({ ...pollData, title: e.target.value })}
-                    style={{ fontSize: '16px' }}
+                    className="text-base"
                   />
                 </div>
                 
@@ -156,7 +157,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                     value={pollData.description}
                     onChange={(e) => setPollData({ ...pollData, description: e.target.value })}
                     rows={3}
-                    style={{ fontSize: '16px' }}
+                    className="text-base resize-none"
                   />
                 </div>
 
@@ -165,12 +166,12 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                     Poll Type
                   </label>
                   <Select value={pollData.type} onValueChange={(value: any) => setPollData({ ...pollData, type: value })}>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white border border-gray-300">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
                       {pollTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
+                        <SelectItem key={type.value} value={type.value} className="cursor-pointer">
                           <div>
                             <div className="font-medium">{type.label}</div>
                             <div className="text-xs text-gray-500">{type.description}</div>
@@ -206,8 +207,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                             placeholder={`Option ${index + 1}`}
                             value={option.text}
                             onChange={(e) => updateOption(option.id, e.target.value)}
-                            className="flex-1"
-                            style={{ fontSize: '16px' }}
+                            className="flex-1 text-base"
                           />
                           {pollData.options.length > 2 && (
                             <button
@@ -275,127 +275,125 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 
       case 3:
         return (
-          <div className="flex flex-col h-full">
-            <div className="flex-1 space-y-4 overflow-y-auto pb-24">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Poll Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+          <div className="space-y-6 pb-20">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Poll Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Poll Duration
+                  </label>
+                  <Select value={pollData.duration} onValueChange={(value) => setPollData({ ...pollData, duration: value })}>
+                    <SelectTrigger className="bg-white border border-gray-300">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
+                      {durationOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Target Audience
+                  </label>
+                  <Select value={pollData.targetAudience} onValueChange={(value: any) => setPollData({ ...pollData, targetAudience: value })}>
+                    <SelectTrigger className="bg-white border border-gray-300">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
+                      {targetOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {pollData.targetAudience === 'building' && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Poll Duration
+                      Building
                     </label>
-                    <Select value={pollData.duration} onValueChange={(value) => setPollData({ ...pollData, duration: value })}>
-                      <SelectTrigger className="bg-white">
-                        <SelectValue />
+                    <Select value={pollData.building} onValueChange={(value) => setPollData({ ...pollData, building: value })}>
+                      <SelectTrigger className="bg-white border border-gray-300">
+                        <SelectValue placeholder="Select building" />
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
-                        {durationOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="building-a">Building A</SelectItem>
+                        <SelectItem value="building-b">Building B</SelectItem>
+                        <SelectItem value="building-c">Building C</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+                )}
 
+                {pollData.targetAudience === 'specific-units' && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Target Audience
+                      Unit Numbers
                     </label>
-                    <Select value={pollData.targetAudience} onValueChange={(value: any) => setPollData({ ...pollData, targetAudience: value })}>
-                      <SelectTrigger className="bg-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
-                        {targetOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Input
+                      placeholder="e.g., 101, 102, 205-210"
+                      value={pollData.units}
+                      onChange={(e) => setPollData({ ...pollData, units: e.target.value })}
+                      className="text-base"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Separate multiple units with commas. Use hyphens for ranges.
+                    </p>
                   </div>
+                )}
 
-                  {pollData.targetAudience === 'building' && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Building
-                      </label>
-                      <Select value={pollData.building} onValueChange={(value) => setPollData({ ...pollData, building: value })}>
-                        <SelectTrigger className="bg-white">
-                          <SelectValue placeholder="Select building" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border border-gray-200 shadow-lg z-[9999]">
-                          <SelectItem value="building-a">Building A</SelectItem>
-                          <SelectItem value="building-b">Building B</SelectItem>
-                          <SelectItem value="building-c">Building C</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={pollData.anonymous}
+                      onChange={(e) => setPollData({ ...pollData, anonymous: e.target.checked })}
+                      className="rounded"
+                    />
+                    <span className="text-sm text-gray-700">Anonymous responses</span>
+                  </label>
+                </div>
+              </CardContent>
+            </Card>
 
-                  {pollData.targetAudience === 'specific-units' && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Unit Numbers
-                      </label>
-                      <Input
-                        placeholder="e.g., 101, 102, 205-210"
-                        value={pollData.units}
-                        onChange={(e) => setPollData({ ...pollData, units: e.target.value })}
-                        style={{ fontSize: '16px' }}
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Separate multiple units with commas. Use hyphens for ranges.
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="space-y-3">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={pollData.anonymous}
-                        onChange={(e) => setPollData({ ...pollData, anonymous: e.target.checked })}
-                        className="rounded"
-                      />
-                      <span className="text-sm text-gray-700">Anonymous responses</span>
-                    </label>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Preview</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <BarChart3 className="text-purple-600" size={16} />
+                    <Badge variant="outline">Poll</Badge>
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Preview</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <BarChart3 className="text-purple-600" size={16} />
-                      <Badge variant="outline">Poll</Badge>
-                    </div>
-                    <h3 className="font-semibold text-gray-900 mb-2">{pollData.title || 'Poll Title'}</h3>
-                    <p className="text-sm text-gray-600 mb-3">{pollData.description || 'Poll description'}</p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <Clock size={12} />
-                        {durationOptions.find(d => d.value === pollData.duration)?.label}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Users size={12} />
-                        {targetOptions.find(t => t.value === pollData.targetAudience)?.label}
-                      </span>
-                    </div>
+                  <h3 className="font-semibold text-gray-900 mb-2">{pollData.title || 'Poll Title'}</h3>
+                  <p className="text-sm text-gray-600 mb-3">{pollData.description || 'Poll description'}</p>
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Clock size={12} />
+                      {durationOptions.find(d => d.value === pollData.duration)?.label}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Users size={12} />
+                      {targetOptions.find(t => t.value === pollData.targetAudience)?.label}
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
 
-            {/* Fixed Submit Button at Bottom */}
-            <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
+            {/* Fixed Submit Button */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
               <Button 
                 onClick={handleSubmit}
                 className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2 py-3"
@@ -423,7 +421,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
       canSwipeUp={step < 3 && canProceed()}
       hideSwipeHandling={step === 3}
     >
-      <div className="h-full overflow-hidden">
+      <div className={step === 3 ? "h-full overflow-y-auto" : "h-full overflow-hidden"}>
         {renderCurrentStep()}
       </div>
     </SwipeableScreen>
