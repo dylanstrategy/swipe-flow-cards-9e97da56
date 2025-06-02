@@ -1,11 +1,17 @@
+
 import React, { useState } from 'react';
-import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench } from 'lucide-react';
+import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench, ChevronDown, BarChart3, PieChart } from 'lucide-react';
 import CRMTracker from '../CRMTracker';
+import MoveInTracker from '../MoveInTracker';
+import MoveOutTracker from '../MoveOutTracker';
 
 const OperatorTodayTab = () => {
   const [selectedTimeframe, setSelectedTimeframe] = useState('30');
   const [showCRMTracker, setShowCRMTracker] = useState(false);
+  const [showMoveInTracker, setShowMoveInTracker] = useState(false);
+  const [showMoveOutTracker, setShowMoveOutTracker] = useState(false);
   const [crmFilter, setCrmFilter] = useState<'leases' | 'shows' | 'outreach'>('leases');
+  const [showGraphs, setShowGraphs] = useState(false);
 
   const timeframeOptions = [
     { value: 'week', label: 'End of Week' },
@@ -23,7 +29,9 @@ const OperatorTodayTab = () => {
           available: 12,
           requiredLeases: 15,
           shows: 25,
-          outreach: 18
+          outreach: 18,
+          moveIns: 5,
+          moveOuts: 3
         };
       case '30':
         return {
@@ -32,7 +40,9 @@ const OperatorTodayTab = () => {
           available: 18,
           requiredLeases: 28,
           shows: 42,
-          outreach: 35
+          outreach: 35,
+          moveIns: 12,
+          moveOuts: 8
         };
       case '60':
         return {
@@ -41,7 +51,9 @@ const OperatorTodayTab = () => {
           available: 22,
           requiredLeases: 45,
           shows: 68,
-          outreach: 52
+          outreach: 52,
+          moveIns: 22,
+          moveOuts: 15
         };
       case '90':
         return {
@@ -50,7 +62,9 @@ const OperatorTodayTab = () => {
           available: 28,
           requiredLeases: 62,
           shows: 89,
-          outreach: 71
+          outreach: 71,
+          moveIns: 35,
+          moveOuts: 25
         };
       default:
         return {
@@ -59,7 +73,9 @@ const OperatorTodayTab = () => {
           available: 18,
           requiredLeases: 28,
           shows: 42,
-          outreach: 35
+          outreach: 35,
+          moveIns: 12,
+          moveOuts: 8
         };
     }
   };
@@ -71,8 +87,24 @@ const OperatorTodayTab = () => {
     setShowCRMTracker(true);
   };
 
+  const handleMoveInClick = () => {
+    setShowMoveInTracker(true);
+  };
+
+  const handleMoveOutClick = () => {
+    setShowMoveOutTracker(true);
+  };
+
   if (showCRMTracker) {
     return <CRMTracker onClose={() => setShowCRMTracker(false)} initialFilter={crmFilter} />;
+  }
+
+  if (showMoveInTracker) {
+    return <MoveInTracker onClose={() => setShowMoveInTracker(false)} />;
+  }
+
+  if (showMoveOutTracker) {
+    return <MoveOutTracker onClose={() => setShowMoveOutTracker(false)} />;
   }
 
   const overview = [
@@ -139,9 +171,28 @@ const OperatorTodayTab = () => {
     }
   ];
 
+  const movement = [
+    {
+      title: 'Move-Ins',
+      count: currentCounts.moveIns,
+      status: 'incoming',
+      module: 'movein'
+    },
+    {
+      title: 'Move-Outs',
+      count: currentCounts.moveOuts,
+      status: 'outgoing',
+      module: 'moveout'
+    }
+  ];
+
   const handleModuleClick = (module: string, filter?: 'leases' | 'shows' | 'outreach') => {
     if (module === 'crm' && filter) {
       handleCRMClick(filter);
+    } else if (module === 'movein') {
+      handleMoveInClick();
+    } else if (module === 'moveout') {
+      handleMoveOutClick();
     }
   };
 
@@ -152,6 +203,35 @@ const OperatorTodayTab = () => {
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Operations Dashboard</h1>
         <p className="text-gray-600">The Meridian • Live Data</p>
       </div>
+
+      {/* Graph Toggle */}
+      <div className="text-center">
+        <button
+          onClick={() => setShowGraphs(!showGraphs)}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          {showGraphs ? <PieChart size={20} /> : <BarChart3 size={20} />}
+          {showGraphs ? 'Hide Graphs' : 'Show Graphs'}
+        </button>
+      </div>
+
+      {/* Graphs Section */}
+      {showGraphs && (
+        <div className="bg-white rounded-xl shadow-sm border p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+            <BarChart3 className="text-purple-600" size={24} />
+            ANALYTICS
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-gray-50 rounded-lg p-4 h-64 flex items-center justify-center">
+              <p className="text-gray-500">Occupancy Trend Chart</p>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-4 h-64 flex items-center justify-center">
+              <p className="text-gray-500">Leasing Pipeline Chart</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Property Overview */}
       <div className="bg-white rounded-xl shadow-sm border p-6">
@@ -194,7 +274,7 @@ const OperatorTodayTab = () => {
             LEASING
           </h2>
           
-          {/* Timeframe Toggle */}
+          {/* Timeframe Toggle - Cleaner Design */}
           <div className="flex bg-gray-100 rounded-lg p-1">
             {timeframeOptions.map((option) => (
               <button
@@ -237,6 +317,31 @@ const OperatorTodayTab = () => {
                  item.status === 'needed' ? 'Target Goal' :
                  item.status === 'scheduled' ? 'This Period' :
                  'Needs Contact'}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Movement Tracking */}
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+          <Home className="text-orange-600" size={24} />
+          MOVEMENT TRACKING
+        </h2>
+        <div className="grid grid-cols-2 gap-4">
+          {movement.map((item, index) => (
+            <div 
+              key={index} 
+              className="bg-gray-50 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-100 transition-colors"
+              onClick={() => handleModuleClick(item.module)}
+            >
+              <div className="text-2xl font-bold text-gray-900">{item.count}</div>
+              <div className="text-sm text-gray-600">{item.title}</div>
+              <div className={`text-xs mt-1 ${
+                item.status === 'incoming' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {item.status === 'incoming' ? 'Scheduled' : 'Planned'}
               </div>
             </div>
           ))}
