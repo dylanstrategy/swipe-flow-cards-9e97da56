@@ -19,6 +19,25 @@ const WorkOrderDetailsStep = ({ workOrder }: WorkOrderDetailsStepProps) => {
 
   return (
     <div className="space-y-6">
+      {/* Work Order Header with Image */}
+      <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 text-white">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 bg-white/20 rounded-lg flex items-center justify-center">
+            <img 
+              src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=64&h=64&fit=crop&crop=center" 
+              alt="Work order"
+              className="w-12 h-12 rounded object-cover"
+            />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-xl font-bold mb-1">Work Order #{workOrder.id}</h2>
+            <p className="text-orange-100 text-sm">
+              Review the details and proceed with the work order
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Original Issue Photo */}
       <div>
         <h3 className="font-medium text-gray-900 mb-3">Issue Reported</h3>

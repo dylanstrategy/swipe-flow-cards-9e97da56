@@ -29,7 +29,7 @@ const WorkOrderRescheduleStep = ({
   const isComplete = selectedDate && selectedTime;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20">
       {/* Prominent Reschedule Header */}
       <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">
         <div className="flex items-center gap-4">
@@ -71,28 +71,26 @@ const WorkOrderRescheduleStep = ({
       {/* Reschedule Options */}
       <div>
         <h3 className="font-medium text-gray-900 mb-3">Select New Date</h3>
-        <Card>
-          <CardContent className="p-4">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              className="rounded-md border-0"
-              disabled={(date) => date < new Date()}
-            />
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-lg border border-gray-200">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={setSelectedDate}
+            className="w-full p-4"
+            disabled={(date) => date < new Date()}
+          />
+        </div>
       </div>
 
       {selectedDate && (
         <div>
-          <h3 className="font-medium text-gray-900 mb-3">Select Time</h3>
-          <div className="grid grid-cols-3 gap-2">
+          <h3 className="font-medium text-gray-900 mb-3">Available Times</h3>
+          <div className="grid grid-cols-3 gap-3">
             {timeSlots.map((time) => (
               <Button
                 key={time}
                 variant={selectedTime === time ? "default" : "outline"}
-                className="h-10 text-sm"
+                className="h-12 text-sm font-medium"
                 onClick={() => setSelectedTime(time)}
               >
                 {time}
@@ -103,7 +101,7 @@ const WorkOrderRescheduleStep = ({
       )}
 
       {isComplete && (
-        <div className="text-center">
+        <div className="text-center pt-4">
           <p className="text-sm text-gray-600 mb-2">Swipe up to confirm reschedule</p>
           <ArrowUp className="w-6 h-6 text-gray-400 mx-auto animate-bounce" />
         </div>
