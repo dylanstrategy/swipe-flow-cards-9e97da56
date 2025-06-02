@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils';
 import ScheduleMenu from '@/components/schedule/ScheduleMenu';
 import WorkOrderFlow from '@/components/schedule/WorkOrderFlow';
 import MessageModule from '@/components/message/MessageModule';
+import OperatorScheduleMenu from '@/components/schedule/OperatorScheduleMenu';
+import PollModule from '@/components/schedule/PollModule';
 import { useToast } from '@/hooks/use-toast';
 
 const OperatorScheduleTab = () => {
@@ -19,6 +21,7 @@ const OperatorScheduleTab = () => {
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [selectedScheduleType, setSelectedScheduleType] = useState<string>('');
   const [showMessageModule, setShowMessageModule] = useState(false);
+  const [showPollModule, setShowPollModule] = useState(false);
   const [messageConfig, setMessageConfig] = useState({
     subject: '',
     recipientType: 'management' as 'management' | 'maintenance' | 'leasing',
@@ -171,11 +174,14 @@ const OperatorScheduleTab = () => {
       });
       setShowMessageModule(true);
       setShowScheduleMenu(false);
+    } else if (type === 'Poll') {
+      setShowPollModule(true);
+      setShowScheduleMenu(false);
     } else {
       // For other types, you can implement different flows
       toast({
         title: `${type} Selected`,
-        description: `${type} flow coming soon!`,
+        description: `${type} scheduling flow coming soon!`,
       });
       setShowScheduleMenu(false);
     }
@@ -191,6 +197,19 @@ const OperatorScheduleTab = () => {
     setShowMessageModule(false);
     setShowScheduleMenu(false);
   };
+
+  const handleClosePoll = () => {
+    setShowPollModule(false);
+    setShowScheduleMenu(false);
+  };
+
+  if (showPollModule) {
+    return (
+      <PollModule
+        onClose={handleClosePoll}
+      />
+    );
+  }
 
   if (showMessageModule) {
     return (
@@ -217,7 +236,7 @@ const OperatorScheduleTab = () => {
 
   if (showScheduleMenu) {
     return (
-      <ScheduleMenu
+      <OperatorScheduleMenu
         onSelectType={startScheduling}
         onClose={() => setShowScheduleMenu(false)}
       />
