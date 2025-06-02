@@ -150,7 +150,7 @@ const SwipeableScreen = ({
 
   if (hideSwipeHandling) {
     return (
-      <div className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen">
+      <div className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen" data-swipeable-screen>
         {/* Header with X button and optional right button */}
         <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200 relative z-10">
           <div>
@@ -191,6 +191,7 @@ const SwipeableScreen = ({
   return (
     <div 
       className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen overflow-hidden select-none"
+      data-swipeable-screen
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}

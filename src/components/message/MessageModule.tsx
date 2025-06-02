@@ -198,13 +198,59 @@ const MessageModule = ({
           className="fixed inset-0 pointer-events-none z-[99999]"
           style={{
             position: 'fixed',
-            bottom: 0,
+            top: 0,
             left: 0,
             right: 0,
-            zIndex: 99999,
-            pointerEvents: 'none'
+            bottom: 0,
+            zIndex: 99999
           }}
         >
+          {/* Full screen swipe capture area */}
+          <div 
+            className="absolute inset-0 pointer-events-auto"
+            onTouchStart={(e) => {
+              // Forward touch events to the SwipeableScreen for swipe detection
+              const swipeableScreen = document.querySelector('[data-swipeable-screen]');
+              if (swipeableScreen) {
+                const touchEvent = new TouchEvent('touchstart', {
+                  bubbles: true,
+                  cancelable: true,
+                  touches: e.touches,
+                  targetTouches: e.targetTouches,
+                  changedTouches: e.changedTouches
+                });
+                swipeableScreen.dispatchEvent(touchEvent);
+              }
+            }}
+            onTouchMove={(e) => {
+              const swipeableScreen = document.querySelector('[data-swipeable-screen]');
+              if (swipeableScreen) {
+                const touchEvent = new TouchEvent('touchmove', {
+                  bubbles: true,
+                  cancelable: true,
+                  touches: e.touches,
+                  targetTouches: e.targetTouches,
+                  changedTouches: e.changedTouches
+                });
+                swipeableScreen.dispatchEvent(touchEvent);
+              }
+            }}
+            onTouchEnd={(e) => {
+              const swipeableScreen = document.querySelector('[data-swipeable-screen]');
+              if (swipeableScreen) {
+                const touchEvent = new TouchEvent('touchend', {
+                  bubbles: true,
+                  cancelable: true,
+                  touches: e.touches,
+                  targetTouches: e.targetTouches,
+                  changedTouches: e.changedTouches
+                });
+                swipeableScreen.dispatchEvent(touchEvent);
+              }
+            }}
+          />
+          
+          {/* Prompt positioned at bottom */}
           <div 
             className="absolute bottom-0 left-0 right-0 pointer-events-auto"
             style={{
