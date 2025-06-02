@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Plus, X, BarChart3, Users, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -128,7 +129,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
       case 1:
         return (
           <div className="h-full flex flex-col">
-            <div className="flex-1 space-y-4 overflow-y-auto pb-40">
+            <div className="flex-1 space-y-4 overflow-y-auto pb-6">
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -191,7 +192,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
       case 2:
         return (
           <div className="h-full flex flex-col">
-            <div className="flex-1 space-y-4 overflow-y-auto pb-40">
+            <div className="flex-1 space-y-4 overflow-y-auto pb-6">
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg">Poll Configuration</CardTitle>
