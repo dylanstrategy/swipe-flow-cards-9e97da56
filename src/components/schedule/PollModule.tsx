@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import SwipeableScreen from './SwipeableScreen';
+import SwipeCard from '../SwipeCard';
 
 interface PollModuleProps {
   onClose: () => void;
@@ -274,7 +275,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 
       case 3:
         return (
-          <div className="space-y-6 pb-24">
+          <div className="space-y-6 pb-32">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Poll Settings</CardTitle>
@@ -391,15 +392,23 @@ const PollModule = ({ onClose }: PollModuleProps) => {
               </CardContent>
             </Card>
 
-            {/* Fixed Submit Button for Step 3 */}
+            {/* Swipeable Submit Button */}
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
-              <Button 
-                onClick={handleSubmit}
-                className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2 py-3"
+              <SwipeCard
+                onSwipeUp={{
+                  label: "Create Poll",
+                  action: handleSubmit,
+                  color: "#22C55E",
+                  icon: "↑"
+                }}
+                enableSwipeUp={true}
+                className="shadow-none border-0"
               >
-                Create Poll
-                <ArrowRight size={16} />
-              </Button>
+                <div className="bg-green-600 hover:bg-green-700 text-white p-4 rounded-lg flex items-center justify-center gap-2">
+                  <span className="font-medium">Swipe up to create poll</span>
+                  <ArrowRight size={16} />
+                </div>
+              </SwipeCard>
             </div>
           </div>
         );
