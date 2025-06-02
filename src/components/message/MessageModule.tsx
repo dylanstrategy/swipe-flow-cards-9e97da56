@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
 import MessageComposer from './MessageComposer';
@@ -122,6 +123,7 @@ const MessageModule = ({
     }
   };
 
+  // Updated validation - ALL required fields must be filled
   const canProceedFromCurrentStep = (): boolean => {
     if (currentStep === 1) {
       return messageData.subject.trim() !== '' && messageData.message.trim() !== '';
@@ -131,6 +133,15 @@ const MessageModule = ({
 
   const handleClosePrompt = () => {
     setShowPrompt(false);
+    // Clear all data on current step when X is pressed
+    if (currentStep === 1) {
+      setMessageData({
+        subject: '',
+        message: '',
+        recipientType,
+        attachments: []
+      });
+    }
   };
 
   // Auto-show prompt when content is ready and not already showing
@@ -182,7 +193,7 @@ const MessageModule = ({
       <div className="h-full overflow-hidden relative">
         {renderCurrentStep()}
         
-        {/* Conditional SwipeUpPrompt - Only show on step 1 when ready and prompt is shown */}
+        {/* Conditional SwipeUpPrompt - Only show on step 1 when ALL fields are filled and prompt is shown */}
         {currentStep < 2 && showPrompt && canProceedFromCurrentStep() && (
           <SwipeUpPrompt 
             onContinue={handleNextStep}

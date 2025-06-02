@@ -1,5 +1,4 @@
 
-
 import React, { useState } from 'react';
 import { Plus, X, BarChart3, Users, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -101,19 +100,20 @@ const PollModule = ({ onClose }: PollModuleProps) => {
     onClose();
   };
 
+  // Updated validation logic
   const canProceed = (): boolean => {
     if (step === 1) {
-      return !!(pollData.title.trim() && pollData.description.trim() && pollData.type);
+      return pollData.title.trim() !== '' && pollData.description.trim() !== '' && pollData.type !== '';
     }
     if (step === 2) {
       if (pollData.type === 'multiple-choice') {
-        return pollData.options.every(option => option.text.trim());
+        return pollData.options.every(option => option.text.trim() !== '');
       }
       return true;
     }
     if (step === 3) {
       // All fields required for final step
-      const hasRequiredFields = !!(pollData.title.trim() && pollData.description.trim() && pollData.duration);
+      const hasRequiredFields = pollData.title.trim() !== '' && pollData.description.trim() !== '' && pollData.duration !== '';
       const hasTargetAudience = pollData.targetAudience === 'all' || 
         (pollData.targetAudience === 'building' && pollData.building.trim() !== '') ||
         (pollData.targetAudience === 'specific-units' && pollData.units.trim() !== '');
@@ -138,6 +138,33 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 
   const handleClosePrompt = () => {
     setShowPrompt(false);
+    // Clear all data on current step when X is pressed
+    if (step === 1) {
+      setPollData({
+        ...pollData,
+        title: '',
+        description: '',
+        type: 'multiple-choice'
+      });
+    } else if (step === 2) {
+      if (pollData.type === 'multiple-choice') {
+        setPollData({
+          ...pollData,
+          options: [
+            { id: '1', text: '' },
+            { id: '2', text: '' }
+          ]
+        });
+      }
+    } else if (step === 3) {
+      setPollData({
+        ...pollData,
+        duration: '7',
+        targetAudience: 'all',
+        building: '',
+        units: ''
+      });
+    }
   };
 
   // Auto-show prompt when content is ready and not already showing
@@ -473,4 +500,3 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 };
 
 export default PollModule;
-

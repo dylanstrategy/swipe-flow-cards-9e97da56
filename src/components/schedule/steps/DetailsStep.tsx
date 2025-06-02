@@ -13,8 +13,19 @@ interface DetailsStepProps {
 }
 
 const DetailsStep = ({ onNext, workOrderDetails, setWorkOrderDetails }: DetailsStepProps) => {
+  // Updated validation - ALL required fields including location
   const canProceed = () => {
-    return workOrderDetails.title.trim() && workOrderDetails.description.trim();
+    return workOrderDetails.title.trim() !== '' && 
+           workOrderDetails.description.trim() !== '' && 
+           workOrderDetails.location.trim() !== '';
+  };
+
+  const handleClearData = () => {
+    setWorkOrderDetails({
+      title: '',
+      description: '',
+      location: ''
+    });
   };
 
   return (
@@ -44,7 +55,7 @@ const DetailsStep = ({ onNext, workOrderDetails, setWorkOrderDetails }: DetailsS
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Location *</label>
           <input
             type="text"
             value={workOrderDetails.location}
@@ -60,6 +71,7 @@ const DetailsStep = ({ onNext, workOrderDetails, setWorkOrderDetails }: DetailsS
         <div className="mt-4">
           <SwipeUpPrompt 
             onContinue={onNext}
+            onClose={handleClearData}
             message="Ready to continue!"
             buttonText="Continue"
           />
@@ -67,7 +79,7 @@ const DetailsStep = ({ onNext, workOrderDetails, setWorkOrderDetails }: DetailsS
       )}
       {!canProceed() && (
         <div className="text-center mt-4">
-          <p className="text-gray-500 text-sm">Please fill in required fields</p>
+          <p className="text-gray-500 text-sm">Please fill in all required fields</p>
         </div>
       )}
     </div>

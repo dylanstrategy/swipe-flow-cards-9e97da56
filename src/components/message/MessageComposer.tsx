@@ -61,7 +61,18 @@ const MessageComposer = ({ initialSubject, onSend, recipientType, messageData, s
     }
   };
 
+  // Updated validation - ALL fields must be filled
   const isFormValid = messageData.subject.trim() !== '' && messageData.message.trim() !== '';
+
+  const handleClearData = () => {
+    setMessageData({ 
+      ...messageData, 
+      subject: '', 
+      message: '', 
+      attachments: [] 
+    });
+    setAttachments([]);
+  };
 
   return (
     <div className="flex-1 flex flex-col">
@@ -69,7 +80,7 @@ const MessageComposer = ({ initialSubject, onSend, recipientType, messageData, s
       <div className="space-y-6 flex-1 mb-4">
         <div className="space-y-2">
           <Label htmlFor="subject" className="text-base font-medium text-gray-900">
-            Subject
+            Subject *
           </Label>
           <Input
             id="subject"
@@ -83,7 +94,7 @@ const MessageComposer = ({ initialSubject, onSend, recipientType, messageData, s
 
         <div className="space-y-2 flex-1 flex flex-col">
           <Label htmlFor="message" className="text-base font-medium text-gray-900">
-            Message
+            Message *
           </Label>
           <Textarea
             ref={textareaRef}
@@ -102,14 +113,10 @@ const MessageComposer = ({ initialSubject, onSend, recipientType, messageData, s
         />
       </div>
 
-      {/* Swipe Instruction */}
-      {isFormValid && (
+      {/* Only show instruction when form is NOT valid */}
+      {!isFormValid && (
         <div className="py-4 text-center text-gray-500 text-sm border-t border-gray-100">
-          <p>Swipe up to send your message</p>
-          <div className="mt-2 text-xs flex items-center justify-center gap-1">
-            <span className="text-gray-400">↑</span>
-            <span>Send message</span>
-          </div>
+          <p>Fill out all required fields to continue</p>
         </div>
       )}
     </div>
