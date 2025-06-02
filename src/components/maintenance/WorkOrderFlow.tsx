@@ -5,6 +5,7 @@ import WorkOrderDetailsStep from './steps/WorkOrderDetailsStep';
 import WorkOrderDiagnosisStep from './steps/WorkOrderDiagnosisStep';
 import WorkOrderResolutionStep from './steps/WorkOrderResolutionStep';
 import WorkOrderRescheduleStep from './steps/WorkOrderRescheduleStep';
+import SwipeUpPrompt from '@/components/ui/swipe-up-prompt';
 import { Button } from '@/components/ui/button';
 
 interface WorkOrderFlowProps {
@@ -14,6 +15,7 @@ interface WorkOrderFlowProps {
 
 const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [showPrompt, setShowPrompt] = useState(false);
   const [diagnosisNotes, setDiagnosisNotes] = useState('');
   const [completionPhoto, setCompletionPhoto] = useState<string>('');
   const [selectedVendor, setSelectedVendor] = useState('');
@@ -51,6 +53,7 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
     if (canProceedFromCurrentStep()) {
       if (currentStep < 3) {
         setCurrentStep(currentStep + 1);
+        setShowPrompt(false);
       } else {
         // Submit work order
         console.log('Work order completed');
@@ -62,17 +65,45 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
   const handlePrevStep = () => {
     if (showReschedule) {
       setShowReschedule(false);
+      setShowPrompt(false);
       return;
     }
     
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      setShowPrompt(false);
     }
   };
 
   const handleReschedule = () => {
     setShowReschedule(true);
+    setShowPrompt(false);
   };
+
+  const handleClosePrompt = () => {
+    setShowPrompt(false);
+    // Clear all data on current step when X is pressed
+    if (showReschedule) {
+      setRescheduleDate(undefined);
+      setRescheduleTime('');
+    } else if (currentStep === 2) {
+      setDiagnosisNotes('');
+    } else if (currentStep === 3) {
+      setResolutionType(null);
+      setCompletionPhoto('');
+      setSelectedVendor('');
+      setVendorCost('');
+    }
+  };
+
+  // Auto-show prompt when content is ready and not already showing
+  React.useEffect(() => {
+    if (canProceedFromCurrentStep() && !showPrompt) {
+      setShowPrompt(true);
+    } else if (!canProceedFromCurrentStep() && showPrompt) {
+      setShowPrompt(false);
+    }
+  }, [currentStep, diagnosisNotes, resolutionType, completionPhoto, selectedVendor, vendorCost, showReschedule, rescheduleDate, rescheduleTime, showPrompt]);
 
   const getStepTitle = () => {
     if (showReschedule) return 'Reschedule Work Order';
@@ -143,7 +174,23 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
         ) : undefined
       }
     >
-      {renderCurrentStep()}
+      <div className="h-full overflow-hidden relative">
+        <div className="pb-32">
+          {renderCurrentStep()}
+        </div>
+        
+        {/* Conditional SwipeUpPrompt - Show when ready and prompt is shown */}
+        {showPrompt && canProceedFromCurrentStep() && (
+          <SwipeUpPrompt 
+            onContinue={handleNextStep}
+            onBack={showReschedule || currentStep > 1 ? handlePrevStep : undefined}
+            onClose={handleClosePrompt}
+            message={showReschedule ? "Ready to reschedule!" : currentStep === 3 ? "Ready to complete!" : "Ready to continue!"}
+            buttonText={showReschedule ? "Reschedule" : currentStep === 3 ? "Complete" : "Continue"}
+            showBack={showReschedule || currentStep > 1}
+          />
+        )}
+      </div>
     </SwipeableScreen>
   );
 };

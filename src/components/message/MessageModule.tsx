@@ -36,12 +36,6 @@ const MessageModule = ({
     attachments: [] as Attachment[]
   });
 
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [showAction, setShowAction] = useState<'up' | 'left' | null>(null);
-  const startPos = useRef({ x: 0, y: 0 });
-  const startTime = useRef(0);
-
   useEffect(() => {
     // Prevent zoom on mount and add input focus handling
     const viewport = document.querySelector('meta[name=viewport]');
@@ -191,7 +185,9 @@ const MessageModule = ({
       hideSwipeHandling={currentStep === 2}
     >
       <div className="h-full overflow-hidden relative">
-        {renderCurrentStep()}
+        <div className={currentStep < 2 ? "pb-32" : ""}>
+          {renderCurrentStep()}
+        </div>
         
         {/* Conditional SwipeUpPrompt - Only show on step 1 when ALL fields are filled and prompt is shown */}
         {currentStep < 2 && showPrompt && canProceedFromCurrentStep() && (

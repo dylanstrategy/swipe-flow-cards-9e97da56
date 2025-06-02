@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import SwipeableScreen from './SwipeableScreen';
 import PhotoCaptureStep from './steps/PhotoCaptureStep';
@@ -15,11 +16,7 @@ interface WorkOrderFlowProps {
 }
 
 const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevStep, onClose }: WorkOrderFlowProps) => {
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [showAction, setShowAction] = useState<'up' | 'left' | null>(null);
-  const startPos = useRef({ x: 0, y: 0 });
-  const startTime = useRef(0);
+  const [showPrompt, setShowPrompt] = useState(false);
   
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>('');
@@ -66,87 +63,45 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
     }
   };
 
-  const isSwipeEnabled = currentStep < 4; // Disable swipe for review step
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (!isSwipeEnabled) return;
-    
-    const touch = e.touches[0];
-    startPos.current = { x: touch.clientX, y: touch.clientY };
-    startTime.current = Date.now();
-    setIsDragging(true);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || !isSwipeEnabled) return;
-    
-    const touch = e.touches[0];
-    const deltaX = touch.clientX - startPos.current.x;
-    const deltaY = touch.clientY - startPos.current.y;
-    
-    if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
-      const dampedX = deltaX * 0.8;
-      const dampedY = deltaY * 0.8;
-      
-      setDragOffset({ x: dampedX, y: dampedY });
-      
-      if (Math.abs(deltaY) > Math.abs(deltaX)) {
-        if (deltaY < -15 && canProceedFromCurrentStep()) {
-          setShowAction('up');
-        } else {
-          setShowAction(null);
-        }
-      } else {
-        if (deltaX < -20 && currentStep > 1) {
-          setShowAction('left');
-        } else {
-          setShowAction(null);
-        }
-      }
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (!isSwipeEnabled) return;
-    
-    const deltaX = dragOffset.x;
-    const deltaY = dragOffset.y;
-    const deltaTime = Date.now() - startTime.current;
-    
-    const velocityY = Math.abs(deltaY) / Math.max(deltaTime, 1);
-    const velocityX = Math.abs(deltaX) / Math.max(deltaTime, 1);
-    
-    const upThreshold = 20;
-    const leftThreshold = 30;
-    const velocityThreshold = 0.1;
-    
-    const shouldCompleteUp = (Math.abs(deltaY) > upThreshold || velocityY > velocityThreshold) && 
-                            deltaY < -10 && canProceedFromCurrentStep();
-    const shouldCompleteLeft = (Math.abs(deltaX) > leftThreshold || velocityX > velocityThreshold) && 
-                              deltaX < -leftThreshold && currentStep > 1;
-    
-    if (shouldCompleteUp) {
+  const nextStep = () => {
+    if (currentStep < 4) {
       onNextStep();
-    } else if (shouldCompleteLeft) {
-      onPrevStep();
+      setShowPrompt(false);
     }
-    
-    setIsDragging(false);
-    setDragOffset({ x: 0, y: 0 });
-    setShowAction(null);
   };
 
-  const getActionOpacity = () => {
-    if (!showAction) return 0;
-    const distance = showAction === 'up' ? Math.abs(dragOffset.y) : Math.abs(dragOffset.x);
-    const progress = Math.min(distance / 25, 1);
-    return Math.max(0.5, progress * 0.9);
+  const prevStep = () => {
+    if (currentStep > 1) {
+      onPrevStep();
+      setShowPrompt(false);
+    }
   };
 
-  const getRotation = () => {
-    if (!isDragging) return 0;
-    return (dragOffset.x * 0.01);
+  const handleClosePrompt = () => {
+    setShowPrompt(false);
+    // Clear all data on current step when X is pressed
+    if (currentStep === 1) {
+      setPhotoCaptured(false);
+    } else if (currentStep === 2) {
+      setWorkOrderDetails({
+        title: '',
+        description: '',
+        location: ''
+      });
+    } else if (currentStep === 3) {
+      setSelectedDate(undefined);
+      setSelectedTime('');
+    }
   };
+
+  // Auto-show prompt when content is ready and not already showing
+  useEffect(() => {
+    if (currentStep < 4 && canProceedFromCurrentStep() && !showPrompt) {
+      setShowPrompt(true);
+    } else if (!canProceedFromCurrentStep() && showPrompt) {
+      setShowPrompt(false);
+    }
+  }, [currentStep, photoCaptured, workOrderDetails, selectedDate, selectedTime, showPrompt]);
 
   const renderCurrentStep = () => {
     switch (currentStep) {
@@ -185,37 +140,34 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   };
 
   return (
-    <>
-      <SwipeableScreen
-        title="Create Work Order"
-        currentStep={currentStep}
-        totalSteps={4}
-        onClose={onClose}
-        onSwipeUp={canProceedFromCurrentStep() ? onNextStep : undefined}
-        onSwipeLeft={currentStep > 1 ? onPrevStep : undefined}
-        canSwipeUp={canProceedFromCurrentStep()}
-        hideSwipeHandling={currentStep === 4}
-      >
-        <div className="relative h-full">
-          <div className={currentStep < 4 ? "pb-32" : ""}>
-            {renderCurrentStep()}
-          </div>
+    <SwipeableScreen
+      title="Create Work Order"
+      currentStep={currentStep}
+      totalSteps={4}
+      onClose={onClose}
+      onSwipeUp={currentStep < 4 && canProceedFromCurrentStep() ? nextStep : undefined}
+      onSwipeLeft={currentStep > 1 ? prevStep : undefined}
+      canSwipeUp={canProceedFromCurrentStep()}
+      hideSwipeHandling={currentStep === 4}
+    >
+      <div className="h-full overflow-hidden relative">
+        <div className={currentStep < 4 ? "pb-32" : ""}>
+          {renderCurrentStep()}
         </div>
-      </SwipeableScreen>
-
-      {/* Show SwipeUpPrompt for steps 1-3 when ready - positioned absolutely above everything */}
-      {currentStep < 4 && canProceedFromCurrentStep() && (
-        <SwipeUpPrompt 
-          onContinue={onNextStep}
-          onBack={currentStep > 1 ? onPrevStep : undefined}
-          onClose={onClose}
-          message="Ready to continue!"
-          buttonText="Continue"
-          backButtonText="Back"
-          showBack={currentStep > 1}
-        />
-      )}
-    </>
+        
+        {/* Conditional SwipeUpPrompt - Only show on steps 1-3 when ready and prompt is shown */}
+        {currentStep < 4 && showPrompt && canProceedFromCurrentStep() && (
+          <SwipeUpPrompt 
+            onContinue={nextStep}
+            onBack={currentStep > 1 ? prevStep : undefined}
+            onClose={handleClosePrompt}
+            message="Ready to continue!"
+            buttonText="Continue"
+            showBack={currentStep > 1}
+          />
+        )}
+      </div>
+    </SwipeableScreen>
   );
 };
 
