@@ -30,9 +30,9 @@ const TextSlide = ({ title, subtitle, icon, fields, canProceed }: TextSlideProps
       icon={icon}
       canProceed={canProceed}
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
         {fields.map((field, index) => (
-          <div key={index} className="space-y-2">
+          <div key={index} className="space-y-1.5">
             <Label htmlFor={`field-${index}`} className="block text-sm font-medium text-gray-700">
               {field.label}
               {field.required && <span className="text-red-500 ml-1">*</span>}
@@ -43,8 +43,9 @@ const TextSlide = ({ title, subtitle, icon, fields, canProceed }: TextSlideProps
                 value={field.value}
                 onChange={(e) => field.onChange(e.target.value)}
                 placeholder={field.placeholder}
-                className="w-full min-h-[100px] resize-none"
-                rows={4}
+                className="w-full min-h-[80px] resize-none text-base"
+                rows={3}
+                style={{ fontSize: '16px' }}
               />
             ) : (
               <Input
@@ -53,7 +54,8 @@ const TextSlide = ({ title, subtitle, icon, fields, canProceed }: TextSlideProps
                 value={field.value}
                 onChange={(e) => field.onChange(e.target.value)}
                 placeholder={field.placeholder}
-                className="w-full h-12"
+                className="w-full h-11 text-base"
+                style={{ fontSize: '16px' }}
               />
             )}
           </div>
