@@ -2,7 +2,7 @@
 import React from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { ArrowUp } from 'lucide-react';
+import SwipeUpPrompt from '@/components/ui/swipe-up-prompt';
 
 interface ScheduleStepProps {
   onNext: () => void;
@@ -75,17 +75,11 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
       </div>
 
       {canProceed() && (
-        <div className="text-center">
-          <p className="text-green-600 mb-2 text-sm">Schedule selected!</p>
-          <ArrowUp className="text-green-600 animate-bounce mx-auto mb-2" size={24} />
-          <p className="text-xs text-gray-500 mb-3">Swipe up anywhere to review</p>
-          <button
-            onClick={onNext}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-          >
-            Continue
-          </button>
-        </div>
+        <SwipeUpPrompt 
+          onContinue={onNext}
+          message="Schedule selected!"
+          buttonText="Continue"
+        />
       )}
       {!canProceed() && (
         <div className="text-center">

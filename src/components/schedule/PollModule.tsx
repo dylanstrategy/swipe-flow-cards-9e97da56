@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import SwipeableScreen from './SwipeableScreen';
 import SwipeCard from '../SwipeCard';
+import SwipeUpPrompt from '@/components/ui/swipe-up-prompt';
 
 interface PollModuleProps {
   onClose: () => void;
@@ -184,6 +185,14 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                 </div>
               </CardContent>
             </Card>
+
+            {canProceed() && (
+              <SwipeUpPrompt 
+                onContinue={nextStep}
+                message="Ready to continue!"
+                buttonText="Continue"
+              />
+            )}
           </div>
         );
 
@@ -271,6 +280,14 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                 )}
               </CardContent>
             </Card>
+
+            {canProceed() && (
+              <SwipeUpPrompt 
+                onContinue={nextStep}
+                message="Configuration complete!"
+                buttonText="Continue"
+              />
+            )}
           </div>
         );
 
@@ -419,7 +436,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 
       {/* Swipeable Submit Button - Only show on step 3 */}
       {step === 3 && (
-        <div className="fixed bottom-24 left-4 right-4 z-[9998]">
+        <div className="fixed bottom-28 left-4 right-4 z-[9998]">
           <SwipeCard
             onSwipeUp={{
               label: "Create Poll",

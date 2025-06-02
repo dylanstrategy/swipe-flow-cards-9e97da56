@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ArrowUp } from 'lucide-react';
+import SwipeUpPrompt from '@/components/ui/swipe-up-prompt';
 
 interface DetailsStepProps {
   onNext: () => void;
@@ -57,16 +57,12 @@ const DetailsStep = ({ onNext, workOrderDetails, setWorkOrderDetails }: DetailsS
       </div>
       
       {canProceed() && (
-        <div className="text-center mt-4">
-          <p className="text-green-600 mb-2 text-sm">Ready to continue!</p>
-          <ArrowUp className="text-green-600 animate-bounce mx-auto mb-2" size={24} />
-          <p className="text-xs text-gray-500 mb-3">Swipe up anywhere to schedule</p>
-          <button
-            onClick={onNext}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-          >
-            Continue
-          </button>
+        <div className="mt-4">
+          <SwipeUpPrompt 
+            onContinue={onNext}
+            message="Ready to continue!"
+            buttonText="Continue"
+          />
         </div>
       )}
       {!canProceed() && (
