@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Plus, X, BarChart3, Users, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -332,7 +333,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
       case 3:
         return (
           <div className="h-full flex flex-col">
-            <div className="flex-1 overflow-y-auto space-y-4 pb-24">
+            <div className="flex-1 overflow-y-auto space-y-4 pb-6">
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg">Poll Settings</CardTitle>
@@ -450,7 +451,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
               </Card>
             </div>
 
-            {/* Fixed Submit Button - only on last step */}
+            {/* Fixed Submit Button */}
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
               <Button
                 onClick={handleSubmit}
