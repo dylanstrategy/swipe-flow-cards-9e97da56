@@ -22,39 +22,28 @@ const LocationStep = ({ location, proximityRadius, onUpdate }: LocationStepProps
   ];
 
   useEffect(() => {
-    // Prevent zoom on input focus for mobile devices
+    // Force viewport to prevent zoom on ALL devices
     const viewport = document.querySelector('meta[name=viewport]');
-    const originalContent = viewport?.getAttribute('content');
-    
-    // Set viewport to prevent zoom
     if (viewport) {
-      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no');
     }
 
-    // Prevent zoom on input focus
-    const preventInputZoom = (e: Event) => {
-      const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+    // Prevent zoom on touch devices
+    const preventZoom = (e: TouchEvent) => {
+      if (e.touches.length > 1) {
         e.preventDefault();
-        target.focus();
       }
     };
 
-    const inputs = document.querySelectorAll('input[type="text"]');
-    inputs.forEach(input => {
-      input.addEventListener('touchstart', preventInputZoom);
-      input.addEventListener('focus', preventInputZoom);
-    });
+    // Add comprehensive zoom prevention
+    document.addEventListener('touchstart', preventZoom, { passive: false });
+    document.addEventListener('touchmove', preventZoom, { passive: false });
+    document.addEventListener('gesturestart', (e: any) => e.preventDefault(), { passive: false });
 
     return () => {
-      // Restore original viewport on unmount
-      if (viewport && originalContent) {
-        viewport.setAttribute('content', originalContent);
-      }
-      inputs.forEach(input => {
-        input.removeEventListener('touchstart', preventInputZoom);
-        input.removeEventListener('focus', preventInputZoom);
-      });
+      document.removeEventListener('touchstart', preventZoom);
+      document.removeEventListener('touchmove', preventZoom);
+      document.removeEventListener('gesturestart', (e: any) => e.preventDefault());
     };
   }, []);
 
@@ -83,11 +72,19 @@ const LocationStep = ({ location, proximityRadius, onUpdate }: LocationStepProps
           className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           style={{ 
             fontSize: '16px',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            transform: 'translateZ(0)',
             touchAction: 'manipulation',
             WebkitUserSelect: 'text',
             WebkitTouchCallout: 'none',
-            WebkitTapHighlightColor: 'transparent'
+            WebkitTapHighlightColor: 'transparent',
+            WebkitAppearance: 'none',
+            borderRadius: '8px'
           }}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck="false"
         />
         
         {/* Quick Location Options */}
