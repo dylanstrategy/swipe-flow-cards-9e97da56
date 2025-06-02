@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, X, BarChart3, Users, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -128,7 +127,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
     switch (step) {
       case 1:
         return (
-          <div className="h-full flex flex-col">
+          <div className="h-full flex flex-col pb-32">
             <div className="flex-1 space-y-4 overflow-y-auto">
               <Card>
                 <CardHeader className="pb-3">
@@ -186,22 +185,12 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                 </CardContent>
               </Card>
             </div>
-
-            {canProceed() && (
-              <div className="flex-shrink-0 pt-4">
-                <SwipeUpPrompt 
-                  onContinue={nextStep}
-                  message="Ready to continue!"
-                  buttonText="Continue"
-                />
-              </div>
-            )}
           </div>
         );
 
       case 2:
         return (
-          <div className="h-full flex flex-col">
+          <div className="h-full flex flex-col pb-32">
             <div className="flex-1 space-y-4 overflow-y-auto">
               <Card>
                 <CardHeader className="pb-3">
@@ -285,23 +274,13 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                 </CardContent>
               </Card>
             </div>
-
-            {canProceed() && (
-              <div className="flex-shrink-0 pt-4">
-                <SwipeUpPrompt 
-                  onContinue={nextStep}
-                  message="Configuration complete!"
-                  buttonText="Continue"
-                />
-              </div>
-            )}
           </div>
         );
 
       case 3:
         return (
           <div className="h-full flex flex-col">
-            <div className="flex-1 overflow-y-auto space-y-4 pb-20">
+            <div className="flex-1 overflow-y-auto space-y-4 pb-32">
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg">Poll Settings</CardTitle>
@@ -417,16 +396,16 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                   </div>
                 </CardContent>
               </Card>
-            </div>
 
-            {/* Fixed Submit Button */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
-              <Button
-                onClick={handleSubmit}
-                className="w-full bg-purple-600 text-white py-3 text-base font-semibold hover:bg-purple-700 transition-colors"
-              >
-                Create Poll
-              </Button>
+              {/* Fixed Submit Button */}
+              <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
+                <Button
+                  onClick={handleSubmit}
+                  className="w-full bg-purple-600 text-white py-3 text-base font-semibold hover:bg-purple-700 transition-colors"
+                >
+                  Create Poll
+                </Button>
+              </div>
             </div>
           </div>
         );
@@ -449,6 +428,17 @@ const PollModule = ({ onClose }: PollModuleProps) => {
     >
       <div className="h-full overflow-hidden">
         {renderCurrentStep()}
+        
+        {/* Fixed Continue/Back Prompt - Only show on steps 1 and 2 when ready */}
+        {step < 3 && canProceed() && (
+          <SwipeUpPrompt 
+            onContinue={nextStep}
+            onBack={step > 1 ? prevStep : undefined}
+            message="Ready to continue!"
+            buttonText="Continue"
+            showBack={step > 1}
+          />
+        )}
       </div>
     </SwipeableScreen>
   );

@@ -1,32 +1,54 @@
 
 import React from 'react';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface SwipeUpPromptProps {
   onContinue: () => void;
+  onBack?: () => void;
   message?: string;
   buttonText?: string;
+  backButtonText?: string;
   className?: string;
+  showBack?: boolean;
 }
 
 const SwipeUpPrompt = ({ 
-  onContinue, 
+  onContinue,
+  onBack,
   message = "Ready to continue!", 
   buttonText = "Continue",
-  className = ""
+  backButtonText = "Back",
+  className = "",
+  showBack = false
 }: SwipeUpPromptProps) => {
   return (
-    <div className={`text-center bg-white border border-gray-200 rounded-xl p-4 shadow-sm ${className}`}>
-      <p className="text-green-600 font-medium text-sm mb-2">{message}</p>
-      <ArrowUp className="text-green-600 animate-bounce mx-auto mb-3" size={24} />
-      <p className="text-xs text-gray-500 mb-3">Swipe up anywhere to continue</p>
-      <Button
-        onClick={onContinue}
-        className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-      >
-        {buttonText}
-      </Button>
+    <div className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 ${className}`}>
+      <div className="p-4 text-center">
+        <p className="text-green-600 font-medium text-sm mb-2">{message}</p>
+        <ArrowUp className="text-green-600 animate-bounce mx-auto mb-3" size={24} />
+        <p className="text-xs text-gray-500 mb-4">Swipe up anywhere to continue{showBack ? ' • Swipe left to go back' : ''}</p>
+        
+        <div className="flex gap-3 justify-center">
+          {showBack && onBack && (
+            <Button
+              onClick={onBack}
+              variant="outline"
+              className="flex items-center gap-2 px-6 py-2 rounded-lg font-semibold"
+            >
+              <ArrowLeft size={16} />
+              {backButtonText}
+            </Button>
+          )}
+          <Button
+            onClick={onContinue}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
+          >
+            <ArrowUp size={16} />
+            {buttonText}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
