@@ -5,7 +5,7 @@ import CRMTracker from '../CRMTracker';
 const OperatorTodayTab = () => {
   const [selectedTimeframe, setSelectedTimeframe] = useState('30');
   const [showCRMTracker, setShowCRMTracker] = useState(false);
-  const [crmFilter, setCrmFilter] = useState('');
+  const [crmFilter, setCrmFilter] = useState<'leases' | 'shows' | 'outreach'>('leases');
 
   const timeframeOptions = [
     { value: 'week', label: 'End of Week' },
@@ -66,7 +66,7 @@ const OperatorTodayTab = () => {
 
   const currentCounts = getCountsForTimeframe(selectedTimeframe);
 
-  const handleCRMClick = (filter: string) => {
+  const handleCRMClick = (filter: 'leases' | 'shows' | 'outreach') => {
     setCrmFilter(filter);
     setShowCRMTracker(true);
   };
@@ -121,25 +121,25 @@ const OperatorTodayTab = () => {
       count: currentCounts.requiredLeases,
       status: 'needed',
       module: 'crm',
-      filter: 'leases'
+      filter: 'leases' as const
     },
     {
       title: 'Shows',
       count: currentCounts.shows,
       status: 'scheduled',
       module: 'crm',
-      filter: 'shows'
+      filter: 'shows' as const
     },
     {
       title: 'Outreach',
       count: currentCounts.outreach,
       status: 'pending',
       module: 'crm',
-      filter: 'outreach'
+      filter: 'outreach' as const
     }
   ];
 
-  const handleModuleClick = (module: string, filter?: string) => {
+  const handleModuleClick = (module: string, filter?: 'leases' | 'shows' | 'outreach') => {
     if (module === 'crm' && filter) {
       handleCRMClick(filter);
     }
