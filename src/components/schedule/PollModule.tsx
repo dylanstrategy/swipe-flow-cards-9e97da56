@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Plus, X, BarChart3, Users, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -101,13 +102,21 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 
   const canProceed = (): boolean => {
     if (step === 1) {
-      return !!(pollData.title.trim() && pollData.description.trim());
+      return !!(pollData.title.trim() && pollData.description.trim() && pollData.type);
     }
     if (step === 2) {
       if (pollData.type === 'multiple-choice') {
         return pollData.options.every(option => option.text.trim());
       }
       return true;
+    }
+    if (step === 3) {
+      // All fields required for final step
+      const hasRequiredFields = !!(pollData.title.trim() && pollData.description.trim() && pollData.duration);
+      const hasTargetAudience = pollData.targetAudience === 'all' || 
+        (pollData.targetAudience === 'building' && pollData.building) ||
+        (pollData.targetAudience === 'specific-units' && pollData.units.trim());
+      return hasRequiredFields && hasTargetAudience;
     }
     return true;
   };
@@ -296,7 +305,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
       case 3:
         return (
           <div className="h-full flex flex-col">
-            <div className="flex-1 overflow-y-auto space-y-4 pb-6">
+            <div className="flex-1 overflow-y-auto space-y-4 pb-24">
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg">Poll Settings</CardTitle>
@@ -304,7 +313,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                 <CardContent className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Poll Duration
+                      Poll Duration *
                     </label>
                     <Select value={pollData.duration} onValueChange={(value) => setPollData({ ...pollData, duration: value })}>
                       <SelectTrigger className="bg-white border border-gray-300">
@@ -322,7 +331,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Target Audience
+                      Target Audience *
                     </label>
                     <Select value={pollData.targetAudience} onValueChange={(value: any) => setPollData({ ...pollData, targetAudience: value })}>
                       <SelectTrigger className="bg-white border border-gray-300">
@@ -341,7 +350,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                   {pollData.targetAudience === 'building' && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Building
+                        Building *
                       </label>
                       <Select value={pollData.building} onValueChange={(value) => setPollData({ ...pollData, building: value })}>
                         <SelectTrigger className="bg-white border border-gray-300">
@@ -359,7 +368,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
                   {pollData.targetAudience === 'specific-units' && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Unit Numbers
+                        Unit Numbers *
                       </label>
                       <Input
                         placeholder="e.g., 101, 102, 205-210"
@@ -418,7 +427,8 @@ const PollModule = ({ onClose }: PollModuleProps) => {
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
               <Button
                 onClick={handleSubmit}
-                className="w-full bg-purple-600 text-white py-3 text-base font-semibold hover:bg-purple-700 transition-colors"
+                disabled={!canProceed()}
+                className="w-full bg-purple-600 text-white py-3 text-base font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Create Poll
               </Button>
@@ -445,7 +455,7 @@ const PollModule = ({ onClose }: PollModuleProps) => {
       <div className="h-full overflow-hidden relative">
         {renderCurrentStep()}
         
-        {/* Conditional SwipeUpPrompt - Only show when ready and prompt is shown */}
+        {/* Conditional SwipeUpPrompt - Only show on steps 1-2 when ready and prompt is shown */}
         {step < 3 && showPrompt && canProceed() && (
           <SwipeUpPrompt 
             onContinue={nextStep}
