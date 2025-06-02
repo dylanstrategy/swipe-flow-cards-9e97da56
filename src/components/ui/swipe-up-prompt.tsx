@@ -25,14 +25,17 @@ const SwipeUpPrompt = ({
   showBack = false
 }: SwipeUpPromptProps) => {
   return (
-    <div className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-[99999] ${className}`}
-         style={{ 
-           position: 'fixed',
-           zIndex: 99999,
-           bottom: 0,
-           left: 0,
-           right: 0
-         }}>
+    <div 
+      className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg ${className}`}
+      style={{ 
+        position: 'fixed',
+        zIndex: 999999,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))'
+      }}
+    >
       <div className="p-4 text-center relative">
         {onClose && (
           <button
