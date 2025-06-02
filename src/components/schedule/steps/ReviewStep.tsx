@@ -18,7 +18,6 @@ interface ReviewStepProps {
 const ReviewStep = ({ onSubmit, workOrderDetails, selectedDate, selectedTime }: ReviewStepProps) => {
   const handleOfferClick = (offer: any) => {
     console.log('Work order offer clicked:', offer);
-    // Here you could track the offer click, redirect to a partner page, etc.
   };
 
   return (
@@ -29,8 +28,8 @@ const ReviewStep = ({ onSubmit, workOrderDetails, selectedDate, selectedTime }: 
         <p className="text-sm text-gray-600">Review your details before submitting</p>
       </div>
       
-      <div className="flex-1 min-h-0 overflow-y-auto pb-20">
-        <div className="space-y-4">
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="space-y-4 pb-6">
           <div className="bg-gray-50 p-4 rounded-lg">
             <h4 className="font-medium text-gray-900 mb-3 text-base">Work Order Details</h4>
             <div className="space-y-2">
@@ -54,19 +53,16 @@ const ReviewStep = ({ onSubmit, workOrderDetails, selectedDate, selectedTime }: 
               onOfferClick={handleOfferClick}
             />
           </div>
-
-          {/* Additional spacing for better scrolling */}
-          <div className="h-8"></div>
         </div>
       </div>
 
       {/* Fixed Submit Button */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
+      <div className="flex-shrink-0 pt-4 border-t border-gray-200">
         <Button
           onClick={onSubmit}
           className="w-full bg-blue-600 text-white py-3 text-base font-semibold hover:bg-blue-700 transition-colors"
         >
-          Submit Work Order
+          Complete Work Order
         </Button>
       </div>
     </div>

@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
-import { Camera, CheckCircle, ArrowUp } from 'lucide-react';
+import { Camera, CheckCircle } from 'lucide-react';
 
 interface PhotoCaptureStepProps {
   onNext: () => void;
+  onPhotoCaptured: (captured: boolean) => void;
 }
 
-const PhotoCaptureStep = ({ onNext }: PhotoCaptureStepProps) => {
+const PhotoCaptureStep = ({ onNext, onPhotoCaptured }: PhotoCaptureStepProps) => {
   const [isCapturing, setIsCapturing] = useState(false);
   const [photoCaptured, setPhotoCaptured] = useState(false);
 
@@ -15,11 +16,12 @@ const PhotoCaptureStep = ({ onNext }: PhotoCaptureStepProps) => {
     setTimeout(() => {
       setIsCapturing(false);
       setPhotoCaptured(true);
+      onPhotoCaptured(true);
     }, 2000);
   };
 
   return (
-    <div className="h-full flex flex-col items-center justify-center">
+    <div className="h-full flex flex-col items-center justify-center pb-20">
       <div className="mb-4 relative">
         {isCapturing ? (
           <div className="w-48 h-32 bg-gray-900 rounded-lg flex items-center justify-center relative overflow-hidden">
@@ -86,14 +88,7 @@ const PhotoCaptureStep = ({ onNext }: PhotoCaptureStepProps) => {
       {photoCaptured && (
         <div className="text-center">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Photo Captured!</h3>
-          <p className="text-gray-600 mb-3 text-sm">Swipe up anywhere to continue</p>
-          <ArrowUp className="text-green-600 animate-bounce mx-auto mb-3" size={24} />
-          <button
-            onClick={onNext}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-          >
-            Continue
-          </button>
+          <p className="text-gray-600 mb-3 text-sm">Ready to continue with details</p>
         </div>
       )}
     </div>

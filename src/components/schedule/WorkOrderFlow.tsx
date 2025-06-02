@@ -1,11 +1,11 @@
 
-
 import React, { useState, useRef } from 'react';
 import SwipeableScreen from './SwipeableScreen';
 import PhotoCaptureStep from './steps/PhotoCaptureStep';
 import DetailsStep from './steps/DetailsStep';
 import ScheduleStep from './steps/ScheduleStep';
 import ReviewStep from './steps/ReviewStep';
+import SwipeUpPrompt from '@/components/ui/swipe-up-prompt';
 
 interface WorkOrderFlowProps {
   selectedScheduleType: string;
@@ -29,13 +29,16 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
     description: '',
     location: ''
   });
+  const [photoCaptured, setPhotoCaptured] = useState(false);
 
   const canProceedFromCurrentStep = (): boolean => {
     switch (currentStep) {
       case 1:
-        return true; // PhotoCaptureStep handles its own validation
+        return photoCaptured;
       case 2:
-        return workOrderDetails.title.trim() !== '' && workOrderDetails.description.trim() !== '';
+        return workOrderDetails.title.trim() !== '' && 
+               workOrderDetails.description.trim() !== '' && 
+               workOrderDetails.location.trim() !== '';
       case 3:
         return selectedDate !== undefined && selectedTime !== '';
       case 4:
@@ -63,25 +66,20 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
     const deltaX = touch.clientX - startPos.current.x;
     const deltaY = touch.clientY - startPos.current.y;
     
-    // Much more sensitive detection - any movement triggers evaluation
     if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
-      // Simple damping for visual feedback
       const dampedX = deltaX * 0.8;
       const dampedY = deltaY * 0.8;
       
       setDragOffset({ x: dampedX, y: dampedY });
       
-      // Show action based on primary direction with very low thresholds
       if (Math.abs(deltaY) > Math.abs(deltaX)) {
-        // Vertical movement - check for swipe up
         if (deltaY < -15 && canProceedFromCurrentStep()) {
           setShowAction('up');
         } else {
           setShowAction(null);
         }
       } else {
-        // Horizontal movement - check for swipe left (made easier)
-        if (deltaX < -20 && currentStep > 1) { // Reduced from -30 to -20
+        if (deltaX < -20 && currentStep > 1) {
           setShowAction('left');
         } else {
           setShowAction(null);
@@ -97,13 +95,11 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
     const deltaY = dragOffset.y;
     const deltaTime = Date.now() - startTime.current;
     
-    // Calculate velocity for quick swipes
     const velocityY = Math.abs(deltaY) / Math.max(deltaTime, 1);
     const velocityX = Math.abs(deltaX) / Math.max(deltaTime, 1);
     
-    // Lower thresholds for easier swiping
     const upThreshold = 20;
-    const leftThreshold = 30; // Reduced from 40 to 30
+    const leftThreshold = 30;
     const velocityThreshold = 0.1;
     
     const shouldCompleteUp = (Math.abs(deltaY) > upThreshold || velocityY > velocityThreshold) && 
@@ -112,13 +108,9 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
                               deltaX < -leftThreshold && currentStep > 1;
     
     if (shouldCompleteUp) {
-      console.log('Swipe up detected - going to next step');
       onNextStep();
     } else if (shouldCompleteLeft) {
-      console.log('Swipe left detected - going to previous step');
       onPrevStep();
-    } else {
-      console.log('No valid swipe detected', { deltaX, deltaY, velocityX, velocityY });
     }
     
     setIsDragging(false);
@@ -129,7 +121,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   const getActionOpacity = () => {
     if (!showAction) return 0;
     const distance = showAction === 'up' ? Math.abs(dragOffset.y) : Math.abs(dragOffset.x);
-    const progress = Math.min(distance / 25, 1); // Reduced for faster opacity response
+    const progress = Math.min(distance / 25, 1);
     return Math.max(0.5, progress * 0.9);
   };
 
@@ -141,7 +133,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <PhotoCaptureStep onNext={onNextStep} />;
+        return <PhotoCaptureStep onNext={onNextStep} onPhotoCaptured={setPhotoCaptured} />;
       case 2:
         return (
           <DetailsStep 
@@ -226,9 +218,22 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
         onSwipeUp={canProceedFromCurrentStep() ? onNextStep : undefined}
         onSwipeLeft={currentStep > 1 ? onPrevStep : undefined}
         canSwipeUp={canProceedFromCurrentStep()}
-        hideSwipeHandling={true}
+        hideSwipeHandling={currentStep === 4}
       >
-        {renderCurrentStep()}
+        <div className="relative h-full">
+          {renderCurrentStep()}
+          
+          {/* Show SwipeUpPrompt for steps 1-3 when ready */}
+          {currentStep < 4 && canProceedFromCurrentStep() && (
+            <SwipeUpPrompt 
+              onContinue={onNextStep}
+              onBack={currentStep > 1 ? onPrevStep : undefined}
+              message="Ready to continue!"
+              buttonText="Continue"
+              showBack={currentStep > 1}
+            />
+          )}
+        </div>
       </SwipeableScreen>
     </div>
   );
