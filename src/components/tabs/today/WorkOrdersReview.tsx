@@ -11,11 +11,10 @@ interface WorkOrdersReviewProps {
 }
 
 const WorkOrdersReview = ({ onCreateWorkOrder, onClose }: WorkOrdersReviewProps) => {
-  // Sample pending work orders data
+  // Sample pending work orders data - all for the same unit (resident's unit)
   const pendingWorkOrders = [
     {
       id: 'WO-544857',
-      unit: '417',
       title: 'Dripping water faucet',
       description: 'Bathroom faucet dripping intermittently',
       priority: 'Medium',
@@ -28,7 +27,6 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose }: WorkOrdersReviewProps)
     },
     {
       id: 'WO-548686',
-      unit: '516',
       title: 'Window won\'t close properly',
       description: 'The balancer got stuck and window won\'t close',
       priority: 'High',
@@ -41,7 +39,6 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose }: WorkOrdersReviewProps)
     },
     {
       id: 'WO-547116',
-      unit: '319-2',
       title: 'Towel rack came off wall',
       description: 'The towel rack came off the wall in the bathroom',
       priority: 'Low',
@@ -102,9 +99,9 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose }: WorkOrdersReviewProps)
             <div>
               <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                 <Wrench className="text-purple-600" size={24} />
-                Work Orders
+                My Work Orders
               </h1>
-              <p className="text-gray-600">{pendingWorkOrders.length} pending orders</p>
+              <p className="text-gray-600">Apt 204 • {pendingWorkOrders.length} pending orders</p>
             </div>
           </div>
           
@@ -160,7 +157,7 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose }: WorkOrdersReviewProps)
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-lg">Unit {workOrder.unit}</span>
+                        <span className="font-semibold text-lg">#{workOrder.id}</span>
                         <Badge className={getPriorityColor(workOrder.priority)}>
                           {workOrder.priority}
                         </Badge>
@@ -224,6 +221,39 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose }: WorkOrdersReviewProps)
       </div>
     </div>
   );
+
+  function getPriorityColor(priority: string) {
+    switch (priority.toLowerCase()) {
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  }
+
+  function getStatusColor(status: string) {
+    switch (status.toLowerCase()) {
+      case 'in progress': return 'bg-orange-100 text-orange-800';
+      case 'scheduled': return 'bg-blue-100 text-blue-800';
+      case 'assigned': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  }
+
+  function formatDate(dateString: string) {
+    const date = new Date(dateString);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today';
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+      return 'Tomorrow';
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+  }
 };
 
 export default WorkOrdersReview;
