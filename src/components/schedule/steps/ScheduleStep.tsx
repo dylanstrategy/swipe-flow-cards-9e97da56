@@ -2,8 +2,10 @@
 import React from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
-import { Clock } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Clock, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import SwipeUpPrompt from '@/components/ui/swipe-up-prompt';
 
 interface ScheduleStepProps {
@@ -24,54 +26,52 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
 
   return (
     <div className="h-full flex flex-col">
-      <div className="text-center mb-3">
-        <Clock className="mx-auto text-blue-600 mb-2" size={28} />
+      <div className="text-center mb-4">
+        <Clock className="mx-auto text-blue-600 mb-2" size={32} />
         <h3 className="text-lg font-semibold text-gray-900 mb-1">Schedule Repair</h3>
       </div>
       
-      <div className="flex-1 space-y-3 overflow-y-auto">
+      <div className="flex-1 space-y-6">
+        {/* Date Selection */}
         <div>
-          <h4 className="font-medium text-gray-900 mb-2 text-sm">Select Date</h4>
-          <div className="bg-white border border-gray-200 rounded-lg">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              disabled={(date) => date < new Date()}
-              className={cn("p-2")}
-              classNames={{
-                months: "flex flex-col space-y-2",
-                month: "space-y-2",
-                caption: "flex justify-center pt-1 relative items-center",
-                caption_label: "text-sm font-medium",
-                nav: "space-x-1 flex items-center",
-                nav_button: "h-6 w-6 bg-transparent p-0 opacity-50 hover:opacity-100",
-                nav_button_previous: "absolute left-1",
-                nav_button_next: "absolute right-1",
-                table: "w-full border-collapse space-y-1",
-                head_row: "flex",
-                head_cell: "text-muted-foreground rounded-md w-8 font-normal text-xs",
-                row: "flex w-full mt-1",
-                cell: "h-8 w-8 text-center text-xs p-0 relative",
-                day: "h-8 w-8 p-0 font-normal text-xs",
-                day_today: "bg-blue-600 text-white hover:bg-blue-700",
-                day_selected: "bg-blue-600 text-white hover:bg-blue-700"
-              }}
-            />
-          </div>
+          <h4 className="font-medium text-gray-900 mb-3 text-base">Select Date</h4>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal h-12",
+                  !selectedDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                disabled={(date) => date < new Date()}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
+        {/* Time Selection - Only show when date is selected */}
         {selectedDate && (
           <div>
-            <h4 className="font-medium text-gray-900 mb-2 text-sm">Available Times</h4>
-            <div className="grid grid-cols-3 gap-2">
+            <h4 className="font-medium text-gray-900 mb-3 text-base">Available Times</h4>
+            <div className="grid grid-cols-2 gap-3">
               {availableTimes.map((time) => (
                 <Button
                   key={time}
                   variant={selectedTime === time ? "default" : "outline"}
-                  size="sm"
                   onClick={() => setSelectedTime(time)}
-                  className="text-xs py-1.5 px-2 h-8"
+                  className="h-11 text-sm font-medium"
                 >
                   {time}
                 </Button>
@@ -80,8 +80,9 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
           </div>
         )}
 
+        {/* Swipe Up Prompt - Only show when both date and time are selected */}
         {canProceed && (
-          <div className="pt-2">
+          <div className="pt-4">
             <SwipeUpPrompt 
               onContinue={onNext}
               message="Schedule confirmed!"
