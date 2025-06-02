@@ -24,16 +24,27 @@ const PhotoCaptureSlide = ({
   setCapturedPhotos
 }: PhotoCaptureSlideProps) => {
   const [isCapturing, setIsCapturing] = useState(false);
+  
+  // Calculate if we can proceed - this is what enables swipe up
   const canProceed = allowMultiple ? capturedPhotos.length > 0 : capturedPhoto !== '';
+  
+  console.log('🔍 PhotoCaptureSlide state:', { 
+    isCapturing, 
+    capturedPhoto, 
+    canProceed, 
+    allowMultiple, 
+    capturedPhotos 
+  });
 
   const handleCapture = () => {
-    console.log('🎬 Starting photo capture animation'); 
+    console.log('📸 Capture button clicked - starting animation'); 
     setIsCapturing(true);
     
     // Simulate photo capture with animation
     setTimeout(() => {
-      console.log('📸 Photo captured, setting state'); 
+      console.log('✅ Animation complete - setting photo captured'); 
       setIsCapturing(false);
+      
       if (allowMultiple && setCapturedPhotos) {
         const newPhotos = [...capturedPhotos, 'captured'];
         console.log('📝 Setting multiple photos:', newPhotos); 
@@ -42,11 +53,11 @@ const PhotoCaptureSlide = ({
         console.log('📝 Setting single photo: captured'); 
         setCapturedPhoto('captured');
       }
-    }, 2500); // Longer animation time
+    }, 2500);
   };
 
   const handleRetake = (index?: number) => {
-    console.log('🔄 Retake button clicked', { index }); 
+    console.log('🔄 Retake clicked', { index }); 
     if (allowMultiple && setCapturedPhotos && index !== undefined) {
       const newPhotos = capturedPhotos.filter((_, i) => i !== index);
       console.log('🗑️ Removing photo at index:', index, 'New photos:', newPhotos); 
@@ -66,6 +77,7 @@ const PhotoCaptureSlide = ({
     >
       <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center min-h-[320px] flex flex-col justify-center">
         {isCapturing ? (
+          // ANIMATION STATE - This shows while capturing
           <div className="space-y-6">
             {/* Camera Viewfinder Animation */}
             <div className="w-full h-48 bg-gray-900 rounded-xl flex items-center justify-center relative overflow-hidden mx-auto max-w-sm">
@@ -112,6 +124,7 @@ const PhotoCaptureSlide = ({
             </div>
           </div>
         ) : canProceed ? (
+          // PHOTO CAPTURED STATE - This shows after photo is taken, enables swipe up
           <div className="space-y-4">
             {allowMultiple ? (
               <>
@@ -150,6 +163,7 @@ const PhotoCaptureSlide = ({
             )}
           </div>
         ) : (
+          // INITIAL STATE - This shows before any photo is taken
           <div className="space-y-6">
             <Camera className="w-16 h-16 text-gray-400 mx-auto" />
             <div className="space-y-3">
