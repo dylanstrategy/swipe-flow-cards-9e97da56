@@ -2,10 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TabNavigation from '@/components/TabNavigation';
-import OperatorTodayTab from '@/components/operator/tabs/OperatorTodayTab';
-import OperatorScheduleTab from '@/components/operator/tabs/OperatorScheduleTab';
-import OperatorMessagesTab from '@/components/operator/tabs/OperatorMessagesTab';
-import OperatorResidentsTab from '@/components/operator/tabs/OperatorResidentsTab';
+import MaintenanceTodayTab from '@/components/maintenance/tabs/MaintenanceTodayTab';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,15 +14,15 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User, Settings, LogOut } from 'lucide-react';
 
-const Operator = () => {
+const Maintenance = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('today');
 
   const tabs = [
-    { id: 'today', label: 'Today', icon: '📊' },
+    { id: 'today', label: 'Today', icon: '🔧' },
     { id: 'schedule', label: 'Schedule', icon: '📅' },
-    { id: 'messages', label: 'Messages', icon: '💬' },
-    { id: 'residents', label: 'Residents', icon: '👥' }
+    { id: 'inventory', label: 'Inventory', icon: '📦' },
+    { id: 'vendors', label: 'Vendors', icon: '🏢' }
   ];
 
   const handleRoleSwitch = (role: string) => {
@@ -37,10 +34,10 @@ const Operator = () => {
         navigate('/');
         break;
       case 'operator':
-        // Already in operator view
+        navigate('/operator');
         break;
       case 'maintenance':
-        navigate('/maintenance');
+        // Already in maintenance view
         break;
       default:
         break;
@@ -50,15 +47,9 @@ const Operator = () => {
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'today':
-        return <OperatorTodayTab />;
-      case 'schedule':
-        return <OperatorScheduleTab />;
-      case 'messages':
-        return <OperatorMessagesTab />;
-      case 'residents':
-        return <OperatorResidentsTab />;
+        return <MaintenanceTodayTab />;
       default:
-        return <OperatorTodayTab />;
+        return <MaintenanceTodayTab />;
     }
   };
 
@@ -68,16 +59,16 @@ const Operator = () => {
       <div className="bg-white shadow-sm px-4 py-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Applaud Operations</h1>
-            <p className="text-sm text-gray-600">The Meridian • Property Management</p>
+            <h1 className="text-2xl font-bold text-gray-900">Maintenance Portal</h1>
+            <p className="text-sm text-gray-600">The Meridian • Maintenance Operations</p>
           </div>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="focus:outline-none">
                 <Avatar className="w-10 h-10 cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all">
-                  <AvatarFallback className="bg-blue-600 text-white font-semibold">
-                    OP
+                  <AvatarFallback className="bg-orange-600 text-white font-semibold">
+                    MT
                   </AvatarFallback>
                 </Avatar>
               </button>
@@ -85,9 +76,9 @@ const Operator = () => {
             <DropdownMenuContent align="end" className="w-56 bg-white border shadow-lg">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">John Smith</p>
+                  <p className="text-sm font-medium leading-none">Mike Rodriguez</p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    Property Manager
+                    Maintenance Technician
                   </p>
                 </div>
               </DropdownMenuLabel>
@@ -95,7 +86,7 @@ const Operator = () => {
               
               <DropdownMenuItem className="cursor-pointer">
                 <User className="mr-2 h-4 w-4" />
-                <span>Setup</span>
+                <span>Profile</span>
               </DropdownMenuItem>
               
               <DropdownMenuItem className="cursor-pointer focus:bg-accent">
@@ -120,16 +111,16 @@ const Operator = () => {
                   Resident View
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  className="cursor-pointer text-sm bg-blue-50"
+                  className="cursor-pointer text-sm"
                   onClick={() => handleRoleSwitch('operator')}
                 >
-                  Operator View (Current)
+                  Operator View
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  className="cursor-pointer text-sm"
+                  className="cursor-pointer text-sm bg-orange-50"
                   onClick={() => handleRoleSwitch('maintenance')}
                 >
-                  Maintenance View
+                  Maintenance View (Current)
                 </DropdownMenuItem>
               </div>
               
@@ -158,4 +149,4 @@ const Operator = () => {
   );
 };
 
-export default Operator;
+export default Maintenance;
