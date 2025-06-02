@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, ReactNode, useEffect } from 'react';
 import { ArrowUp, X } from 'lucide-react';
 
@@ -11,6 +12,7 @@ interface SwipeableScreenProps {
   totalSteps: number;
   onClose: () => void;
   hideSwipeHandling?: boolean;
+  rightButton?: ReactNode;
 }
 
 const SwipeableScreen = ({ 
@@ -22,7 +24,8 @@ const SwipeableScreen = ({
   currentStep,
   totalSteps,
   onClose,
-  hideSwipeHandling = false
+  hideSwipeHandling = false,
+  rightButton
 }: SwipeableScreenProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -148,18 +151,21 @@ const SwipeableScreen = ({
   if (hideSwipeHandling) {
     return (
       <div className="flex flex-col h-full">
-        {/* Header with X button */}
+        {/* Header with X button and optional right button */}
         <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200 relative z-10">
           <div>
             <h1 className="text-xl font-bold text-gray-900">{title}</h1>
             <span className="text-xs text-gray-500">Step {currentStep} of {totalSteps}</span>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <X className="text-gray-600" size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            {rightButton}
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <X className="text-gray-600" size={20} />
+            </button>
+          </div>
         </div>
         
         {/* Progress Bar */}
@@ -224,18 +230,21 @@ const SwipeableScreen = ({
         </div>
       )}
 
-      {/* Header with X button */}
+      {/* Header with X button and optional right button */}
       <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200 relative z-10">
         <div>
           <h1 className="text-xl font-bold text-gray-900">{title}</h1>
           <span className="text-xs text-gray-500">Step {currentStep} of {totalSteps}</span>
         </div>
-        <button
-          onClick={onClose}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-        >
-          <X className="text-gray-600" size={20} />
-        </button>
+        <div className="flex items-center gap-2">
+          {rightButton}
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X className="text-gray-600" size={20} />
+          </button>
+        </div>
       </div>
       
       {/* Progress Bar */}
