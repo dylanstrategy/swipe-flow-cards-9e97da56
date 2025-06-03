@@ -33,7 +33,6 @@ const SwipeUpPrompt = ({
         bottom: 0,
         left: 0,
         right: 0,
-        paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))',
         paddingBottom: 'max(1rem, calc(env(keyboard-inset-height, 0px) + env(safe-area-inset-bottom, 0px)))'
       }}
     >
