@@ -26,21 +26,25 @@ const SwipeUpPrompt = ({
 }: SwipeUpPromptProps) => {
   return (
     <div 
-      className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg ${className}`}
+      className={`fixed left-0 right-0 bg-white border-t border-gray-200 shadow-lg ${className}`}
       style={{ 
         position: 'fixed',
         zIndex: 999999,
-        bottom: 0,
+        bottom: 'max(1rem, env(safe-area-inset-bottom, 0px))',
         left: 0,
         right: 0,
-        paddingBottom: 'max(1rem, calc(env(keyboard-inset-height, 0px) + env(safe-area-inset-bottom, 0px)))'
+        paddingBottom: 'env(keyboard-inset-height, 0px)',
+        minHeight: '120px',
+        transform: 'translateZ(0)',
+        willChange: 'transform'
       }}
     >
       <div className="p-4 text-center relative">
         {onClose && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 transition-colors z-10"
+            className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            style={{ zIndex: 1000000 }}
           >
             <X size={20} />
           </button>
