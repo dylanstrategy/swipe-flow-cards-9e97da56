@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
 import MessageComposer from './MessageComposer';
@@ -192,20 +191,16 @@ const MessageModule = ({
         </div>
       </SwipeableScreen>
       
-      {/* SwipeUpPrompt positioned to not interfere with touch events */}
+      {/* SwipeUpPrompt with proper mobile positioning */}
       {currentStep < 2 && showPrompt && canProceedFromCurrentStep() && (
-        <div className="fixed bottom-0 left-0 right-0 pointer-events-none z-[99999]">
-          <div className="pointer-events-auto">
-            <SwipeUpPrompt 
-              onContinue={handleNextStep}
-              onBack={currentStep > 1 ? handlePrevStep : undefined}
-              onClose={handleClosePrompt}
-              message="Ready to send!"
-              buttonText="Send Message"
-              showBack={currentStep > 1}
-            />
-          </div>
-        </div>
+        <SwipeUpPrompt 
+          onContinue={handleNextStep}
+          onBack={currentStep > 1 ? handlePrevStep : undefined}
+          onClose={handleClosePrompt}
+          message="Ready to send!"
+          buttonText="Send Message"
+          showBack={currentStep > 1}
+        />
       )}
     </>
   );

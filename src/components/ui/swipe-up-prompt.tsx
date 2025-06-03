@@ -33,14 +33,15 @@ const SwipeUpPrompt = ({
         bottom: 0,
         left: 0,
         right: 0,
-        paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))'
+        paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))',
+        paddingBottom: 'max(1rem, calc(env(keyboard-inset-height, 0px) + env(safe-area-inset-bottom, 0px)))'
       }}
     >
       <div className="p-4 text-center relative">
         {onClose && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 transition-colors z-10"
           >
             <X size={20} />
           </button>
