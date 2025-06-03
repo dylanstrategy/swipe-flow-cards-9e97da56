@@ -30,13 +30,15 @@ const SwipeUpPrompt = ({
       style={{ 
         position: 'fixed',
         zIndex: 999999,
-        bottom: 'max(1rem, env(safe-area-inset-bottom, 0px))',
+        bottom: 0,
         left: 0,
         right: 0,
-        paddingBottom: 'env(keyboard-inset-height, 0px)',
         minHeight: '120px',
+        paddingBottom: 'max(16px, env(safe-area-inset-bottom, 0px))',
         transform: 'translateZ(0)',
-        willChange: 'transform'
+        willChange: 'transform',
+        // Force the element to always be visible above mobile browser UI
+        marginBottom: 'max(0px, calc(100vh - 100dvh))'
       }}
     >
       <div className="p-4 text-center relative">
