@@ -1,9 +1,11 @@
+
 import React, { useState } from 'react';
 import { ChevronLeft, Calendar, Clock, Check, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { EnhancedEvent, TimeSlot } from '@/types/events';
 import { format, addDays, isSameDay, isToday, isTomorrow } from 'date-fns';
 import SwipeableScreen from '../schedule/SwipeableScreen';
@@ -170,8 +172,8 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
         onSwipeLeft={prevStep}
         canSwipeUp={canProceedFromCurrentStep()}
       >
-        <div className="h-full pb-32">
-          <div className="mb-4">
+        <div className="h-full flex flex-col">
+          <div className="mb-4 flex-shrink-0">
             <p className="text-gray-600 mb-1">Selected date: <strong>{formatDate(selectedDate)}</strong></p>
             {event.assignedTeamMember && (
               <p className="text-sm text-gray-500">
@@ -180,27 +182,29 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            {availableSlots.map((slot) => (
-              <button
-                key={slot.start}
-                onClick={() => slot.available && setSelectedTime(slot.start)}
-                disabled={!slot.available}
-                className={`p-3 rounded-lg border text-center transition-colors ${
-                  selectedTime === slot.start
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : slot.available
-                    ? 'bg-white text-gray-900 border-gray-200 hover:border-blue-300'
-                    : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                }`}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <Clock size={16} />
-                  {formatTime(slot.start)}
-                </div>
-              </button>
-            ))}
-          </div>
+          <ScrollArea className="flex-1 pb-32">
+            <div className="grid grid-cols-2 gap-3 pr-2">
+              {availableSlots.map((slot) => (
+                <button
+                  key={slot.start}
+                  onClick={() => slot.available && setSelectedTime(slot.start)}
+                  disabled={!slot.available}
+                  className={`p-3 rounded-lg border text-center transition-colors ${
+                    selectedTime === slot.start
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : slot.available
+                      ? 'bg-white text-gray-900 border-gray-200 hover:border-blue-300'
+                      : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                  }`}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <Clock size={16} />
+                    {formatTime(slot.start)}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </ScrollArea>
         </div>
 
         {canProceedFromCurrentStep() && (
