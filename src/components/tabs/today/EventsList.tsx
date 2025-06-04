@@ -9,44 +9,18 @@ import { useToast } from '@/hooks/use-toast';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 
-const EventsList = () => {
+interface EventsListProps {
+  events: any[];
+  onAction: (action: string, item: string) => void;
+  onQuickReply: (subject: string, recipientType?: 'management' | 'maintenance' | 'leasing') => void;
+  getSwipeActionsForEvent: (event: any) => any;
+}
+
+const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent }: EventsListProps) => {
   const { toast } = useToast();
   const [showEventDetail, setShowEventDetail] = useState(false);
   const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EnhancedEvent | null>(null);
-
-  const events = [
-    {
-      id: 1,
-      time: '10:00 AM',
-      title: 'Move-in Inspection',
-      description: 'Unit 4B - Final walkthrough',
-      type: 'inspection',
-      priority: 'high',
-      unit: '4B',
-      building: 'Building A'
-    },
-    {
-      id: 2,
-      time: '2:00 PM',
-      title: 'Lease Renewal Meeting',
-      description: 'Discuss terms with tenant',
-      type: 'lease',
-      priority: 'medium',
-      unit: '2C',
-      building: 'Building B'
-    },
-    {
-      id: 3,
-      time: '3:30 PM',
-      title: 'Work Order',
-      description: 'HVAC maintenance check',
-      type: 'maintenance',
-      priority: 'normal',
-      unit: '5A',
-      building: 'Building C'
-    }
-  ];
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -69,34 +43,35 @@ const EventsList = () => {
   };
 
   const canReschedule = (type: string) => {
-    return ['inspection', 'lease', 'maintenance', 'meeting'].includes(type);
+    return ['inspection', 'lease', 'maintenance', 'meeting', 'Work Order', 'Management', 'Lease'].includes(type);
   };
 
   const enhanceEventForReschedule = (event: any): EnhancedEvent => {
-    const assignedTeamMember = teamAvailabilityService.assignTeamMember({ category: event.type });
+    const assignedTeamMember = teamAvailabilityService.assignTeamMember({ category: event.category || event.type });
     
     return {
       id: event.id,
-      date: new Date(),
-      time: event.time.replace(/\s(AM|PM)/, ''),
+      date: event.date || new Date(),
+      time: (event.time || '').replace(/\s(AM|PM)/, ''),
       title: event.title,
       description: event.description,
-      category: event.type,
+      category: event.category || event.type,
       priority: event.priority,
       assignedTeamMember,
       residentName: 'John Doe',
       phone: '(555) 123-4567',
       unit: event.unit,
       building: event.building,
-      canReschedule: canReschedule(event.type),
+      canReschedule: canReschedule(event.category || event.type),
       canCancel: true,
-      estimatedDuration: event.type === 'inspection' ? 120 : 60,
-      rescheduledCount: 0
+      estimatedDuration: (event.category || event.type) === 'inspection' ? 120 : 60,
+      rescheduledCount: 0,
+      image: event.image
     };
   };
 
   const handleHoldEvent = (event: any) => {
-    if (canReschedule(event.type)) {
+    if (canReschedule(event.category || event.type)) {
       const enhancedEvent = enhanceEventForReschedule(event);
       setSelectedEvent(enhancedEvent);
       setShowEventDetail(true);
@@ -171,7 +146,7 @@ const EventsList = () => {
           <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-100 shadow-sm">
             <div className="flex items-center space-x-3">
               <div className="flex items-center justify-center w-10 h-10 bg-blue-50 rounded-lg">
-                {getTypeIcon(event.type)}
+                {getTypeIcon(event.category || event.type)}
               </div>
               <div>
                 <h3 className="font-medium text-gray-900">{event.title}</h3>
