@@ -144,6 +144,12 @@ const OperatorScheduleTab = () => {
     setSelectedEventForReschedule(null);
   };
 
+  const handleHoldItem = (item: any) => {
+    const enhancedEvent = enhanceItemForReschedule(item);
+    setSelectedEventForReschedule(enhancedEvent);
+    setShowRescheduleFlow(true);
+  };
+
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'maintenance': return <Wrench size={16} className="text-orange-600" />;
@@ -367,13 +373,8 @@ const OperatorScheduleTab = () => {
           filteredItems.map((item) => (
             <SwipeCard
               key={item.id}
-              onSwipeRight={{
-                label: "Reschedule",
-                action: () => handleRescheduleItem(item),
-                color: "#F59E0B",
-                icon: "📅"
-              }}
               onTap={() => toast({ title: "Item Details", description: `Viewing ${item.title}` })}
+              onHold={() => handleHoldItem(item)}
             >
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
                 <CardContent className="p-4">

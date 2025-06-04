@@ -7,8 +7,14 @@ import CRMTracker from '../CRMTracker';
 import MoveInTracker from '../MoveInTracker';
 import MoveOutTracker from '../MoveOutTracker';
 import PricingModule from '../PricingModule';
+import SwipeCard from '@/components/SwipeCard';
+import RescheduleFlow from '@/components/events/RescheduleFlow';
+import { useToast } from '@/hooks/use-toast';
+import { EnhancedEvent } from '@/types/events';
+import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 
 const OperatorTodayTab = () => {
+  const { toast } = useToast();
   const [selectedTimeframe, setSelectedTimeframe] = useState('30');
   const [showCRMTracker, setShowCRMTracker] = useState(false);
   const [showMoveInTracker, setShowMoveInTracker] = useState(false);
@@ -18,13 +24,8 @@ const OperatorTodayTab = () => {
   const [crmFilter, setCrmFilter] = useState<'leases' | 'shows' | 'outreach'>('leases');
   const [showGraphs, setShowGraphs] = useState(false);
   const [showCalendarView, setShowCalendarView] = useState(false);
-
-  const timeframeOptions = [
-    { value: 'week', label: 'End of Week' },
-    { value: '30', label: '30 Days' },
-    { value: '60', label: '60 Days' },
-    { value: '90', label: '90 Days' }
-  ];
+  const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
+  const [selectedEventForReschedule, setSelectedEventForReschedule] = useState<EnhancedEvent | null>(null);
 
   // Daily scheduled events for calendar view
   const dailyEvents = [
@@ -35,7 +36,9 @@ const OperatorTodayTab = () => {
       description: 'Unit 4B - Sarah Johnson',
       type: 'move-in',
       priority: 'high',
-      status: 'scheduled'
+      status: 'scheduled',
+      building: 'Building A',
+      unit: '4B'
     },
     {
       id: 2,
@@ -44,7 +47,9 @@ const OperatorTodayTab = () => {
       description: 'Unit 2C - Mike Chen renewal',
       type: 'lease',
       priority: 'medium',
-      status: 'confirmed'
+      status: 'confirmed',
+      building: 'Building B',
+      unit: '2C'
     },
     {
       id: 3,
@@ -53,7 +58,9 @@ const OperatorTodayTab = () => {
       description: 'Unit 5A - HVAC repair follow-up',
       type: 'message',
       priority: 'normal',
-      status: 'pending'
+      status: 'pending',
+      building: 'Building C',
+      unit: '5A'
     },
     {
       id: 4,
@@ -62,7 +69,9 @@ const OperatorTodayTab = () => {
       description: 'Studio unit - Alex Rodriguez',
       type: 'tour',
       priority: 'normal',
-      status: 'confirmed'
+      status: 'confirmed',
+      building: 'Building A',
+      unit: 'Studio-12'
     },
     {
       id: 5,
@@ -71,7 +80,9 @@ const OperatorTodayTab = () => {
       description: 'Unit 1A - Notice processing',
       type: 'move-out',
       priority: 'medium',
-      status: 'processing'
+      status: 'processing',
+      building: 'Building A',
+      unit: '1A'
     },
     {
       id: 6,
@@ -80,9 +91,49 @@ const OperatorTodayTab = () => {
       description: 'Unit 3D - Late rent discussion',
       type: 'payment',
       priority: 'high',
-      status: 'urgent'
+      status: 'urgent',
+      building: 'Building B',
+      unit: '3D'
     }
   ];
+
+  const enhanceEventForReschedule = (event: any): EnhancedEvent => {
+    const assignedTeamMember = teamAvailabilityService.assignTeamMember({ category: event.type });
+    
+    return {
+      id: event.id,
+      date: new Date(),
+      time: event.time.replace(/\s(AM|PM)/, ''),
+      title: event.title,
+      description: event.description,
+      category: event.type,
+      priority: event.priority,
+      assignedTeamMember,
+      residentName: 'John Doe',
+      phone: '(555) 123-4567',
+      unit: event.unit,
+      building: event.building,
+      canReschedule: true,
+      canCancel: true,
+      estimatedDuration: event.type === 'move-in' || event.type === 'move-out' ? 120 : 60,
+      rescheduledCount: 0
+    };
+  };
+
+  const handleHoldEvent = (event: any) => {
+    const enhancedEvent = enhanceEventForReschedule(event);
+    setSelectedEventForReschedule(enhancedEvent);
+    setShowRescheduleFlow(true);
+  };
+
+  const handleRescheduleConfirm = (rescheduleData: any) => {
+    toast({
+      title: "Event Rescheduled",
+      description: `${selectedEventForReschedule?.title} has been rescheduled successfully.`,
+    });
+    setShowRescheduleFlow(false);
+    setSelectedEventForReschedule(null);
+  };
 
   const getCountsForTimeframe = (timeframe: string) => {
     switch (timeframe) {
@@ -163,6 +214,13 @@ const OperatorTodayTab = () => {
     { name: 'Leases', value: 8, color: '#EF4444' }
   ];
 
+  const timeframeOptions = [
+    { value: 'week', label: 'End of Week' },
+    { value: '30', label: '30 Days' },
+    { value: '60', label: '60 Days' },
+    { value: '90', label: '90 Days' }
+  ];
+
   const getEventTypeIcon = (type: string) => {
     switch (type) {
       case 'move-in': return <Home size={16} className="text-green-600" />;
@@ -206,6 +264,20 @@ const OperatorTodayTab = () => {
     setPricingFilter(filter);
     setShowPricingModule(true);
   };
+
+  if (showRescheduleFlow && selectedEventForReschedule) {
+    return (
+      <RescheduleFlow
+        event={selectedEventForReschedule}
+        onClose={() => {
+          setShowRescheduleFlow(false);
+          setSelectedEventForReschedule(null);
+        }}
+        onConfirm={handleRescheduleConfirm}
+        userRole="operator"
+      />
+    );
+  }
 
   if (showCRMTracker) {
     return <CRMTracker onClose={() => setShowCRMTracker(false)} initialFilter={crmFilter} />;
@@ -552,7 +624,7 @@ const OperatorTodayTab = () => {
         </div>
 
         {showCalendarView ? (
-          /* Daily Calendar View */
+          /* Daily Calendar View with Hold-to-Reschedule */
           <div className="space-y-4">
             <div className="text-center mb-4">
               <p className="text-gray-600">
@@ -567,32 +639,38 @@ const OperatorTodayTab = () => {
             </div>
             
             {dailyEvents.map((event) => (
-              <div key={event.id} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-                <div className="flex-shrink-0 w-16 text-center">
-                  <div className="text-sm font-medium text-gray-900">{event.time}</div>
-                </div>
-                
-                <div className="flex-shrink-0 mt-1">
-                  {getEventTypeIcon(event.type)}
-                </div>
-                
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-medium text-gray-900">{event.title}</h3>
-                    <Badge className={getEventPriorityColor(event.priority, event.status)}>
-                      {event.status === 'urgent' ? 'URGENT' : event.priority.toUpperCase()}
-                    </Badge>
+              <SwipeCard
+                key={event.id}
+                onTap={() => toast({ title: "Event Details", description: `Viewing ${event.title}` })}
+                onHold={() => handleHoldEvent(event)}
+              >
+                <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex-shrink-0 w-16 text-center">
+                    <div className="text-sm font-medium text-gray-900">{event.time}</div>
                   </div>
-                  <p className="text-sm text-gray-600">{event.description}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="outline" className="text-xs">
-                      {event.type.replace('-', ' ')}
-                    </Badge>
-                    <span className="text-xs text-gray-500">•</span>
-                    <span className="text-xs text-gray-500 capitalize">{event.status}</span>
+                  
+                  <div className="flex-shrink-0 mt-1">
+                    {getEventTypeIcon(event.type)}
+                  </div>
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="font-medium text-gray-900">{event.title}</h3>
+                      <Badge className={getEventPriorityColor(event.priority, event.status)}>
+                        {event.status === 'urgent' ? 'URGENT' : event.priority.toUpperCase()}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-600">{event.description}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge variant="outline" className="text-xs">
+                        {event.type.replace('-', ' ')}
+                      </Badge>
+                      <span className="text-xs text-gray-500">•</span>
+                      <span className="text-xs text-gray-500 capitalize">{event.status}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </SwipeCard>
             ))}
           </div>
         ) : (
