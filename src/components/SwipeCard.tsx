@@ -15,8 +15,10 @@ interface SwipeCardProps {
   onSwipeLeft?: SwipeAction;
   onSwipeUp?: SwipeAction;
   onTap?: () => void;
+  onHold?: () => void; // New hold action
   className?: string;
   enableSwipeUp?: boolean;
+  holdDuration?: number; // Configurable hold duration
 }
 
 const SwipeCard = ({ 
@@ -25,8 +27,10 @@ const SwipeCard = ({
   onSwipeLeft, 
   onSwipeUp,
   onTap,
+  onHold,
   className,
-  enableSwipeUp = false
+  enableSwipeUp = false,
+  holdDuration = 500
 }: SwipeCardProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -34,13 +38,27 @@ const SwipeCard = ({
   const cardRef = useRef<HTMLDivElement>(null);
   const startPos = useRef({ x: 0, y: 0 });
   const hasMoved = useRef(false);
+  const holdTimer = useRef<NodeJS.Timeout | null>(null);
+  const startTime = useRef<number>(0);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     startPos.current = { x: touch.clientX, y: touch.clientY };
+    startTime.current = Date.now();
     hasMoved.current = false;
     setIsDragging(true);
-    console.log('Touch start', { x: touch.clientX, y: touch.clientY });
+    
+    // Start hold timer if onHold is provided
+    if (onHold) {
+      holdTimer.current = setTimeout(() => {
+        if (!hasMoved.current) {
+          onHold();
+          setIsDragging(false);
+          setDragOffset({ x: 0, y: 0 });
+          setShowAction(null);
+        }
+      }, holdDuration);
+    }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -52,6 +70,15 @@ const SwipeCard = ({
     
     const horizontalDistance = Math.abs(deltaX);
     const verticalDistance = Math.abs(deltaY);
+    
+    // If user moves, cancel hold timer
+    if ((horizontalDistance > 10 || verticalDistance > 10) && !hasMoved.current) {
+      hasMoved.current = true;
+      if (holdTimer.current) {
+        clearTimeout(holdTimer.current);
+        holdTimer.current = null;
+      }
+    }
     
     if (horizontalDistance > 10 || (enableSwipeUp && verticalDistance > 10)) {
       hasMoved.current = true;
@@ -66,10 +93,8 @@ const SwipeCard = ({
         setDragOffset({ x: Math.max(-80, Math.min(80, dampedX)), y: 0 });
         if (deltaX > 50 && onSwipeRight) {
           setShowAction('right');
-          console.log('Showing right action');
         } else if (deltaX < -50 && onSwipeLeft) {
           setShowAction('left');
-          console.log('Showing left action', onSwipeLeft);
         } else {
           setShowAction(null);
         }
@@ -81,23 +106,25 @@ const SwipeCard = ({
   };
 
   const handleTouchEnd = () => {
-    const threshold = 80; // Reduced threshold for easier swiping
-    
-    console.log('Touch end', { dragOffset, threshold, onSwipeLeft, onSwipeRight });
+    // Clear hold timer
+    if (holdTimer.current) {
+      clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+    }
+
+    const threshold = 80;
+    const holdTime = Date.now() - startTime.current;
     
     if (enableSwipeUp && Math.abs(dragOffset.y) > threshold && dragOffset.y < -threshold && onSwipeUp) {
-      console.log('Executing swipe up');
       onSwipeUp.action();
     } else if (Math.abs(dragOffset.x) > threshold) {
       if (dragOffset.x > threshold && onSwipeRight) {
-        console.log('Executing swipe right');
         onSwipeRight.action();
       } else if (dragOffset.x < -threshold && onSwipeLeft) {
-        console.log('Executing swipe left', onSwipeLeft.label);
         onSwipeLeft.action();
       }
-    } else if (!hasMoved.current && onTap) {
-      console.log('Executing tap');
+    } else if (!hasMoved.current && holdTime < holdDuration && onTap) {
+      // Only trigger tap if it wasn't a hold and user didn't move
       onTap();
     }
     

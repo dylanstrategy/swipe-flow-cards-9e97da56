@@ -1,8 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { format, isPast, isToday, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import SwipeCard from '../../SwipeCard';
+import EventDetailModal from '../../events/EventDetailModal';
+import { EnhancedEvent } from '@/types/events';
+import { teamAvailabilityService } from '@/services/teamAvailabilityService';
+import { useToast } from '@/hooks/use-toast';
 
 interface Event {
   id: number;
@@ -24,6 +28,9 @@ interface EventsListProps {
 }
 
 const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent }: EventsListProps) => {
+  const [selectedEvent, setSelectedEvent] = useState<EnhancedEvent | null>(null);
+  const { toast } = useToast();
+
   const formatTime = (time: string) => {
     const [hours, minutes] = time.split(':');
     const hour = parseInt(hours);
@@ -48,6 +55,46 @@ const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent }:
     return '';
   };
 
+  const enhanceEventForModal = (event: Event): EnhancedEvent => {
+    const assignedTeamMember = teamAvailabilityService.assignTeamMember(event);
+    
+    return {
+      ...event,
+      assignedTeamMember,
+      residentName: 'John Doe', // Mock data
+      phone: '(555) 123-4567',
+      unit: '4B',
+      building: 'Building A',
+      canReschedule: true,
+      canCancel: event.category !== 'Payment', // Can't cancel payments
+      estimatedDuration: event.category === 'Work Order' ? 120 : 60,
+      rescheduledCount: 0
+    };
+  };
+
+  const handleHold = (event: Event) => {
+    const enhancedEvent = enhanceEventForModal(event);
+    setSelectedEvent(enhancedEvent);
+  };
+
+  const handleReschedule = (rescheduleData: any) => {
+    toast({
+      title: "Event Rescheduled",
+      description: `${selectedEvent?.title} has been rescheduled successfully.`,
+    });
+    setSelectedEvent(null);
+    onAction("Rescheduled", selectedEvent?.title || "Event");
+  };
+
+  const handleCancel = () => {
+    toast({
+      title: "Event Cancelled",
+      description: `${selectedEvent?.title} has been cancelled.`,
+    });
+    setSelectedEvent(null);
+    onAction("Cancelled", selectedEvent?.title || "Event");
+  };
+
   if (events.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
@@ -57,83 +104,97 @@ const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent }:
   }
 
   return (
-    <div className="space-y-4">
-      {events.map((event) => {
-        // Get base swipe actions
-        const baseSwipeActions = getSwipeActionsForEvent(event);
-        
-        // For Management category, ensure we use the passed onQuickReply function
-        const swipeActions = event.category === 'Management' ? {
-          onSwipeRight: baseSwipeActions.onSwipeRight,
-          onSwipeLeft: {
-            label: "Quick Reply",
-            action: () => {
-              console.log('Quick Reply triggered for:', event.title);
-              onQuickReply(event.title, 'management');
-            },
-            color: "#3B82F6",
-            icon: "💬"
-          }
-        } : baseSwipeActions;
-        
-        const urgencyClass = getUrgencyClass(event);
-        
-        console.log('Event swipe actions:', {
-          eventId: event.id,
-          category: event.category,
-          hasSwipeLeft: !!swipeActions.onSwipeLeft,
-          swipeLeftLabel: swipeActions.onSwipeLeft?.label
-        });
-        
-        return (
-          <div key={event.id} className="flex items-start gap-4">
-            <div className="text-sm font-medium text-gray-600 w-20 flex-shrink-0 pt-4">
-              {formatTime(event.time)}
-            </div>
-            <div className="flex-1">
-              <SwipeCard
-                onSwipeRight={swipeActions.onSwipeRight}
-                onSwipeLeft={swipeActions.onSwipeLeft}
-                onTap={() => onAction("Viewed details", event.title)}
-                className={urgencyClass}
-                enableSwipeUp={false}
-              >
-                <div className={cn(
-                  "bg-blue-50 rounded-lg p-4",
-                  urgencyClass && "border-2 border-red-200"
-                )}>
-                  <div className="flex items-start gap-3">
-                    {event.image ? (
-                      <div 
-                        className="w-16 h-16 rounded-lg bg-cover bg-center flex-shrink-0"
-                        style={{ backgroundImage: `url(${event.image})` }}
-                      />
-                    ) : (
-                      <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
-                        {event.category === 'Management' ? '✉️' : 
-                         event.category === 'Community Event' ? '🎉' : 
-                         event.category === 'Work Order' ? '🔧' :
-                         event.category === 'Lease' ? '📋' :
-                         event.category === 'Point of Sale' ? '🏪' : '📢'}
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900 mb-1">{event.title}</h4>
-                      <p className="text-gray-600 text-sm">{event.description}</p>
-                      {urgencyClass && (
-                        <p className="text-red-600 text-xs mt-1 font-medium">
-                          {isPast(event.dueDate || new Date()) ? 'OVERDUE!' : 'DUE SOON!'}
-                        </p>
+    <>
+      <div className="space-y-4">
+        {events.map((event) => {
+          // Get base swipe actions
+          const baseSwipeActions = getSwipeActionsForEvent(event);
+          
+          // For Management category, ensure we use the passed onQuickReply function
+          const swipeActions = event.category === 'Management' ? {
+            onSwipeRight: baseSwipeActions.onSwipeRight,
+            onSwipeLeft: {
+              label: "Quick Reply",
+              action: () => {
+                console.log('Quick Reply triggered for:', event.title);
+                onQuickReply(event.title, 'management');
+              },
+              color: "#3B82F6",
+              icon: "💬"
+            }
+          } : baseSwipeActions;
+          
+          const urgencyClass = getUrgencyClass(event);
+          
+          console.log('Event swipe actions:', {
+            eventId: event.id,
+            category: event.category,
+            hasSwipeLeft: !!swipeActions.onSwipeLeft,
+            swipeLeftLabel: swipeActions.onSwipeLeft?.label
+          });
+          
+          return (
+            <div key={event.id} className="flex items-start gap-4">
+              <div className="text-sm font-medium text-gray-600 w-20 flex-shrink-0 pt-4">
+                {formatTime(event.time)}
+              </div>
+              <div className="flex-1">
+                <SwipeCard
+                  onSwipeRight={swipeActions.onSwipeRight}
+                  onSwipeLeft={swipeActions.onSwipeLeft}
+                  onTap={() => onAction("Viewed details", event.title)}
+                  onHold={() => handleHold(event)}
+                  className={urgencyClass}
+                  enableSwipeUp={false}
+                >
+                  <div className={cn(
+                    "bg-blue-50 rounded-lg p-4",
+                    urgencyClass && "border-2 border-red-200"
+                  )}>
+                    <div className="flex items-start gap-3">
+                      {event.image ? (
+                        <div 
+                          className="w-16 h-16 rounded-lg bg-cover bg-center flex-shrink-0"
+                          style={{ backgroundImage: `url(${event.image})` }}
+                        />
+                      ) : (
+                        <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
+                          {event.category === 'Management' ? '✉️' : 
+                           event.category === 'Community Event' ? '🎉' : 
+                           event.category === 'Work Order' ? '🔧' :
+                           event.category === 'Lease' ? '📋' :
+                           event.category === 'Point of Sale' ? '🏪' : '📢'}
+                        </div>
                       )}
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900 mb-1">{event.title}</h4>
+                        <p className="text-gray-600 text-sm">{event.description}</p>
+                        {urgencyClass && (
+                          <p className="text-red-600 text-xs mt-1 font-medium">
+                            {isPast(event.dueDate || new Date()) ? 'OVERDUE!' : 'DUE SOON!'}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </SwipeCard>
+                </SwipeCard>
+              </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+
+      {/* Event Detail Modal */}
+      {selectedEvent && (
+        <EventDetailModal
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+          onReschedule={handleReschedule}
+          onCancel={handleCancel}
+          userRole="resident"
+        />
+      )}
+    </>
   );
 };
 
