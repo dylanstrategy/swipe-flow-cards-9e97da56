@@ -173,10 +173,14 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
 
     return (
       <div 
-        className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen overflow-hidden"
+        className="fixed inset-0 bg-white z-[9999] flex flex-col overflow-hidden"
         onTouchMove={(e) => e.stopPropagation()}
         onTouchStart={(e) => e.stopPropagation()}
-        style={{ touchAction: 'none' }}
+        style={{ 
+          width: '100vw', 
+          height: '100vh',
+          touchAction: 'none'
+        }}
       >
         {/* Header */}
         <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200">

@@ -48,16 +48,25 @@ const EventDetailModal = ({ event, onClose, onReschedule, onCancel, userRole }: 
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-[10000] flex items-end"
+      className="fixed inset-0 bg-black bg-opacity-50 z-[10000] flex items-center justify-center"
       onTouchMove={handleTouchMove}
       onTouchStart={handleTouchStart}
+      style={{ 
+        width: '100vw', 
+        height: '100vh',
+        touchAction: 'none'
+      }}
     >
       <div 
-        className="bg-white w-full max-h-[90vh] rounded-t-2xl overflow-hidden"
-        style={{ touchAction: 'pan-y' }}
+        className="bg-white w-full h-full flex flex-col overflow-hidden"
+        style={{ 
+          touchAction: 'pan-y',
+          maxWidth: '100vw',
+          maxHeight: '100vh'
+        }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">Event Details</h2>
           <button
             onClick={onClose}
@@ -68,7 +77,15 @@ const EventDetailModal = ({ event, onClose, onReschedule, onCancel, userRole }: 
         </div>
 
         {/* Content */}
-        <div className="p-4 overflow-y-auto max-h-[calc(90vh-120px)]" style={{ touchAction: 'pan-y' }}>
+        <div 
+          className="flex-1 p-4 overflow-y-auto" 
+          style={{ 
+            touchAction: 'pan-y',
+            overscrollBehavior: 'contain',
+            WebkitOverflowScrolling: 'touch'
+          }}
+          onTouchMove={(e) => e.stopPropagation()}
+        >
           <div className="space-y-6">
             {/* Event Image */}
             {event.image && (
@@ -159,7 +176,7 @@ const EventDetailModal = ({ event, onClose, onReschedule, onCancel, userRole }: 
         </div>
 
         {/* Actions */}
-        <div className="p-4 border-t border-gray-200 space-y-3">
+        <div className="flex-shrink-0 p-4 border-t border-gray-200 space-y-3">
           {event.canReschedule && (
             <Button
               onClick={() => onReschedule({})}
