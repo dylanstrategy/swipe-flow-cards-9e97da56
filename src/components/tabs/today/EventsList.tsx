@@ -1,107 +1,134 @@
 
 import React, { useState } from 'react';
-import { format, isPast, isToday, differenceInDays } from 'date-fns';
-import { cn } from '@/lib/utils';
-import SwipeCard from '../../SwipeCard';
-import EventDetailModal from '../../events/EventDetailModal';
-import RescheduleFlow from '../../events/RescheduleFlow';
+import { Clock, Home, Users, Calendar, Wrench, MessageSquare } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import SwipeCard from '@/components/SwipeCard';
+import RescheduleFlow from '@/components/events/RescheduleFlow';
+import EventDetailModal from '@/components/events/EventDetailModal';
+import { useToast } from '@/hooks/use-toast';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
-import { useToast } from '@/hooks/use-toast';
 
-interface Event {
-  id: number;
-  date: Date;
-  time: string;
-  title: string;
-  description: string;
-  image?: string;
-  category: string;
-  priority: string;
-  dueDate?: Date;
-}
-
-interface EventsListProps {
-  events: Event[];
-  onAction: (action: string, item: string) => void;
-  onQuickReply: (subject: string, recipientType: 'management' | 'maintenance' | 'leasing') => void;
-  getSwipeActionsForEvent: (event: any) => any;
-}
-
-const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent }: EventsListProps) => {
-  const [selectedEvent, setSelectedEvent] = useState<EnhancedEvent | null>(null);
-  const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
+const EventsList = () => {
   const { toast } = useToast();
+  const [showEventDetail, setShowEventDetail] = useState(false);
+  const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<EnhancedEvent | null>(null);
 
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
-  };
-
-  const getUrgencyClass = (event: Event) => {
-    if (!event.dueDate) return '';
-    
-    const daysUntilDue = differenceInDays(event.dueDate, new Date());
-    const isOverdue = isPast(event.dueDate) && !isToday(event.dueDate);
-    const isDueSoon = daysUntilDue <= 3 && daysUntilDue >= 0;
-    
-    if (isOverdue) {
-      return 'wiggle-urgent pulse-urgent';
-    } else if (isDueSoon && event.priority === 'high') {
-      return 'wiggle-urgent';
+  const events = [
+    {
+      id: 1,
+      time: '10:00 AM',
+      title: 'Move-in Inspection',
+      description: 'Unit 4B - Final walkthrough',
+      type: 'inspection',
+      priority: 'high',
+      unit: '4B',
+      building: 'Building A'
+    },
+    {
+      id: 2,
+      time: '2:00 PM',
+      title: 'Lease Renewal Meeting',
+      description: 'Discuss terms with tenant',
+      type: 'lease',
+      priority: 'medium',
+      unit: '2C',
+      building: 'Building B'
+    },
+    {
+      id: 3,
+      time: '3:30 PM',
+      title: 'Work Order',
+      description: 'HVAC maintenance check',
+      type: 'maintenance',
+      priority: 'normal',
+      unit: '5A',
+      building: 'Building C'
     }
-    
-    return '';
+  ];
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'inspection': return <Home size={16} className="text-blue-600" />;
+      case 'lease': return <Users size={16} className="text-green-600" />;
+      case 'maintenance': return <Wrench size={16} className="text-orange-600" />;
+      case 'meeting': return <Calendar size={16} className="text-purple-600" />;
+      case 'message': return <MessageSquare size={16} className="text-gray-600" />;
+      default: return <Calendar size={16} className="text-gray-600" />;
+    }
   };
 
-  const enhanceEventForModal = (event: Event): EnhancedEvent => {
-    const assignedTeamMember = teamAvailabilityService.assignTeamMember(event);
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'normal': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const canReschedule = (type: string) => {
+    return ['inspection', 'lease', 'maintenance', 'meeting'].includes(type);
+  };
+
+  const enhanceEventForReschedule = (event: any): EnhancedEvent => {
+    const assignedTeamMember = teamAvailabilityService.assignTeamMember({ category: event.type });
     
     return {
-      ...event,
+      id: event.id,
+      date: new Date(),
+      time: event.time.replace(/\s(AM|PM)/, ''),
+      title: event.title,
+      description: event.description,
+      category: event.type,
+      priority: event.priority,
       assignedTeamMember,
       residentName: 'John Doe',
       phone: '(555) 123-4567',
-      unit: '4B',
-      building: 'Building A',
-      canReschedule: true,
-      canCancel: event.category !== 'Payment',
-      estimatedDuration: event.category === 'Work Order' ? 120 : 60,
+      unit: event.unit,
+      building: event.building,
+      canReschedule: canReschedule(event.type),
+      canCancel: true,
+      estimatedDuration: event.type === 'inspection' ? 120 : 60,
       rescheduledCount: 0
     };
   };
 
-  const handleHold = (event: Event) => {
-    const enhancedEvent = enhanceEventForModal(event);
-    setSelectedEvent(enhancedEvent);
+  const handleHoldEvent = (event: any) => {
+    if (canReschedule(event.type)) {
+      const enhancedEvent = enhanceEventForReschedule(event);
+      setSelectedEvent(enhancedEvent);
+      setShowEventDetail(true);
+    } else {
+      toast({
+        title: "Event Details",
+        description: `${event.title} - This event cannot be rescheduled`,
+      });
+    }
   };
 
-  const handleReschedule = (rescheduleData: any) => {
+  const handleEventDetailReschedule = (rescheduleData: any) => {
+    setShowEventDetail(false);
+    setShowRescheduleFlow(true);
+  };
+
+  const handleRescheduleConfirm = (rescheduleData: any) => {
     toast({
       title: "Event Rescheduled",
       description: `${selectedEvent?.title} has been rescheduled successfully.`,
     });
-    setSelectedEvent(null);
     setShowRescheduleFlow(false);
-    onAction("Rescheduled", selectedEvent?.title || "Event");
+    setSelectedEvent(null);
   };
 
-  const handleCancel = () => {
+  const handleEventDetailCancel = () => {
     toast({
       title: "Event Cancelled",
       description: `${selectedEvent?.title} has been cancelled.`,
     });
+    setShowEventDetail(false);
     setSelectedEvent(null);
-    onAction("Cancelled", selectedEvent?.title || "Event");
-  };
-
-  const handleDirectReschedule = (event: Event) => {
-    const enhancedEvent = enhanceEventForModal(event);
-    setSelectedEvent(enhancedEvent);
-    setShowRescheduleFlow(true);
   };
 
   if (showRescheduleFlow && selectedEvent) {
@@ -112,113 +139,62 @@ const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent }:
           setShowRescheduleFlow(false);
           setSelectedEvent(null);
         }}
-        onConfirm={handleReschedule}
+        onConfirm={handleRescheduleConfirm}
         userRole="resident"
       />
     );
   }
 
-  if (events.length === 0) {
+  if (showEventDetail && selectedEvent) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        <p>No events scheduled for this date</p>
-      </div>
+      <EventDetailModal
+        event={selectedEvent}
+        onClose={() => {
+          setShowEventDetail(false);
+          setSelectedEvent(null);
+        }}
+        onReschedule={handleEventDetailReschedule}
+        onCancel={handleEventDetailCancel}
+        userRole="resident"
+      />
     );
   }
 
   return (
-    <>
-      <div className="space-y-4">
-        {events.map((event) => {
-          // Get base swipe actions and enhance with reschedule capability
-          const baseSwipeActions = getSwipeActionsForEvent(event);
-          
-          // Add reschedule action for applicable events
-          const swipeActions = event.category === 'Work Order' || event.category === 'Lease' ? {
-            ...baseSwipeActions,
-            onSwipeRight: {
-              label: "Reschedule",
-              action: () => handleDirectReschedule(event),
-              color: "#F59E0B",
-              icon: "📅"
-            }
-          } : event.category === 'Management' ? {
-            onSwipeRight: baseSwipeActions.onSwipeRight,
-            onSwipeLeft: {
-              label: "Quick Reply",
-              action: () => {
-                console.log('Quick Reply triggered for:', event.title);
-                onQuickReply(event.title, 'management');
-              },
-              color: "#3B82F6",
-              icon: "💬"
-            }
-          } : baseSwipeActions;
-          
-          const urgencyClass = getUrgencyClass(event);
-          
-          return (
-            <div key={event.id} className="flex items-start gap-4">
-              <div className="text-sm font-medium text-gray-600 w-20 flex-shrink-0 pt-4">
-                {formatTime(event.time)}
+    <div className="space-y-3">
+      {events.map((event) => (
+        <SwipeCard
+          key={event.id}
+          onTap={() => toast({ title: "Event Details", description: `Viewing ${event.title}` })}
+          onHold={() => handleHoldEvent(event)}
+        >
+          <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-100 shadow-sm">
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center justify-center w-10 h-10 bg-blue-50 rounded-lg">
+                {getTypeIcon(event.type)}
               </div>
-              <div className="flex-1">
-                <SwipeCard
-                  onSwipeRight={swipeActions.onSwipeRight}
-                  onSwipeLeft={swipeActions.onSwipeLeft}
-                  onTap={() => onAction("Viewed details", event.title)}
-                  onHold={() => handleHold(event)}
-                  className={urgencyClass}
-                  enableSwipeUp={false}
-                >
-                  <div className={cn(
-                    "bg-blue-50 rounded-lg p-4",
-                    urgencyClass && "border-2 border-red-200"
-                  )}>
-                    <div className="flex items-start gap-3">
-                      {event.image ? (
-                        <div 
-                          className="w-16 h-16 rounded-lg bg-cover bg-center flex-shrink-0"
-                          style={{ backgroundImage: `url(${event.image})` }}
-                        />
-                      ) : (
-                        <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
-                          {event.category === 'Management' ? '✉️' : 
-                           event.category === 'Community Event' ? '🎉' : 
-                           event.category === 'Work Order' ? '🔧' :
-                           event.category === 'Lease' ? '📋' :
-                           event.category === 'Point of Sale' ? '🏪' : '📢'}
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900 mb-1">{event.title}</h4>
-                        <p className="text-gray-600 text-sm">{event.description}</p>
-                        {urgencyClass && (
-                          <p className="text-red-600 text-xs mt-1 font-medium">
-                            {isPast(event.dueDate || new Date()) ? 'OVERDUE!' : 'DUE SOON!'}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </SwipeCard>
+              <div>
+                <h3 className="font-medium text-gray-900">{event.title}</h3>
+                <p className="text-sm text-gray-600">{event.description}</p>
+                <div className="flex items-center space-x-2 mt-1">
+                  <Clock size={14} className="text-gray-400" />
+                  <span className="text-sm text-gray-500">{event.time}</span>
+                  {event.unit && (
+                    <>
+                      <span className="text-sm text-gray-400">•</span>
+                      <span className="text-sm text-gray-500">{event.unit}</span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          );
-        })}
-      </div>
-
-      {/* Event Detail Modal */}
-      {selectedEvent && !showRescheduleFlow && (
-        <EventDetailModal
-          event={selectedEvent}
-          onClose={() => setSelectedEvent(null)}
-          onReschedule={() => setShowRescheduleFlow(true)}
-          onCancel={handleCancel}
-          userRole="resident"
-        />
-      )}
-    </>
+            <Badge className={getPriorityColor(event.priority)}>
+              {event.priority}
+            </Badge>
+          </div>
+        </SwipeCard>
+      ))}
+    </div>
   );
 };
 

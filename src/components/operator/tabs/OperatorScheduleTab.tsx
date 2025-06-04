@@ -11,6 +11,7 @@ import MessageModule from '@/components/message/MessageModule';
 import OperatorScheduleMenu from '@/components/schedule/OperatorScheduleMenu';
 import PollModule from '@/components/schedule/PollModule';
 import RescheduleFlow from '@/components/events/RescheduleFlow';
+import EventDetailModal from '@/components/events/EventDetailModal';
 import { useToast } from '@/hooks/use-toast';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
@@ -26,6 +27,7 @@ const OperatorScheduleTab = () => {
   const [selectedScheduleType, setSelectedScheduleType] = useState<string>('');
   const [showMessageModule, setShowMessageModule] = useState(false);
   const [showPollModule, setShowPollModule] = useState(false);
+  const [showEventDetail, setShowEventDetail] = useState(false);
   const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
   const [selectedEventForReschedule, setSelectedEventForReschedule] = useState<EnhancedEvent | null>(null);
   const [messageConfig, setMessageConfig] = useState({
@@ -129,9 +131,14 @@ const OperatorScheduleTab = () => {
     };
   };
 
-  const handleRescheduleItem = (item: any) => {
+  const handleHoldItem = (item: any) => {
     const enhancedEvent = enhanceItemForReschedule(item);
     setSelectedEventForReschedule(enhancedEvent);
+    setShowEventDetail(true);
+  };
+
+  const handleEventDetailReschedule = (rescheduleData: any) => {
+    setShowEventDetail(false);
     setShowRescheduleFlow(true);
   };
 
@@ -144,10 +151,13 @@ const OperatorScheduleTab = () => {
     setSelectedEventForReschedule(null);
   };
 
-  const handleHoldItem = (item: any) => {
-    const enhancedEvent = enhanceItemForReschedule(item);
-    setSelectedEventForReschedule(enhancedEvent);
-    setShowRescheduleFlow(true);
+  const handleEventDetailCancel = () => {
+    toast({
+      title: "Appointment Cancelled",
+      description: `${selectedEventForReschedule?.title} has been cancelled.`,
+    });
+    setShowEventDetail(false);
+    setSelectedEventForReschedule(null);
   };
 
   const getTypeIcon = (type: string) => {
@@ -260,6 +270,21 @@ const OperatorScheduleTab = () => {
           setSelectedEventForReschedule(null);
         }}
         onConfirm={handleRescheduleConfirm}
+        userRole="operator"
+      />
+    );
+  }
+
+  if (showEventDetail && selectedEventForReschedule) {
+    return (
+      <EventDetailModal
+        event={selectedEventForReschedule}
+        onClose={() => {
+          setShowEventDetail(false);
+          setSelectedEventForReschedule(null);
+        }}
+        onReschedule={handleEventDetailReschedule}
+        onCancel={handleEventDetailCancel}
         userRole="operator"
       />
     );

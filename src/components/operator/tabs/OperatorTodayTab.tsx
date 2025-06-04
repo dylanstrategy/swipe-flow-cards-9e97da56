@@ -9,6 +9,7 @@ import MoveOutTracker from '../MoveOutTracker';
 import PricingModule from '../PricingModule';
 import SwipeCard from '@/components/SwipeCard';
 import RescheduleFlow from '@/components/events/RescheduleFlow';
+import EventDetailModal from '@/components/events/EventDetailModal';
 import { useToast } from '@/hooks/use-toast';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
@@ -24,6 +25,7 @@ const OperatorTodayTab = () => {
   const [crmFilter, setCrmFilter] = useState<'leases' | 'shows' | 'outreach'>('leases');
   const [showGraphs, setShowGraphs] = useState(false);
   const [showCalendarView, setShowCalendarView] = useState(false);
+  const [showEventDetail, setShowEventDetail] = useState(false);
   const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
   const [selectedEventForReschedule, setSelectedEventForReschedule] = useState<EnhancedEvent | null>(null);
 
@@ -96,44 +98,6 @@ const OperatorTodayTab = () => {
       unit: '3D'
     }
   ];
-
-  const enhanceEventForReschedule = (event: any): EnhancedEvent => {
-    const assignedTeamMember = teamAvailabilityService.assignTeamMember({ category: event.type });
-    
-    return {
-      id: event.id,
-      date: new Date(),
-      time: event.time.replace(/\s(AM|PM)/, ''),
-      title: event.title,
-      description: event.description,
-      category: event.type,
-      priority: event.priority,
-      assignedTeamMember,
-      residentName: 'John Doe',
-      phone: '(555) 123-4567',
-      unit: event.unit,
-      building: event.building,
-      canReschedule: true,
-      canCancel: true,
-      estimatedDuration: event.type === 'move-in' || event.type === 'move-out' ? 120 : 60,
-      rescheduledCount: 0
-    };
-  };
-
-  const handleHoldEvent = (event: any) => {
-    const enhancedEvent = enhanceEventForReschedule(event);
-    setSelectedEventForReschedule(enhancedEvent);
-    setShowRescheduleFlow(true);
-  };
-
-  const handleRescheduleConfirm = (rescheduleData: any) => {
-    toast({
-      title: "Event Rescheduled",
-      description: `${selectedEventForReschedule?.title} has been rescheduled successfully.`,
-    });
-    setShowRescheduleFlow(false);
-    setSelectedEventForReschedule(null);
-  };
 
   const getCountsForTimeframe = (timeframe: string) => {
     switch (timeframe) {
@@ -221,6 +185,58 @@ const OperatorTodayTab = () => {
     { value: '90', label: '90 Days' }
   ];
 
+  const enhanceEventForReschedule = (event: any): EnhancedEvent => {
+    const assignedTeamMember = teamAvailabilityService.assignTeamMember({ category: event.type });
+    
+    return {
+      id: event.id,
+      date: new Date(),
+      time: event.time.replace(/\s(AM|PM)/, ''),
+      title: event.title,
+      description: event.description,
+      category: event.type,
+      priority: event.priority,
+      assignedTeamMember,
+      residentName: 'John Doe',
+      phone: '(555) 123-4567',
+      unit: event.unit,
+      building: event.building,
+      canReschedule: true,
+      canCancel: true,
+      estimatedDuration: event.type === 'move-in' || event.type === 'move-out' ? 120 : 60,
+      rescheduledCount: 0
+    };
+  };
+
+  const handleHoldEvent = (event: any) => {
+    const enhancedEvent = enhanceEventForReschedule(event);
+    setSelectedEventForReschedule(enhancedEvent);
+    setShowEventDetail(true);
+  };
+
+  const handleEventDetailReschedule = (rescheduleData: any) => {
+    setShowEventDetail(false);
+    setShowRescheduleFlow(true);
+  };
+
+  const handleRescheduleConfirm = (rescheduleData: any) => {
+    toast({
+      title: "Event Rescheduled",
+      description: `${selectedEventForReschedule?.title} has been rescheduled successfully.`,
+    });
+    setShowRescheduleFlow(false);
+    setSelectedEventForReschedule(null);
+  };
+
+  const handleEventDetailCancel = () => {
+    toast({
+      title: "Event Cancelled",
+      description: `${selectedEventForReschedule?.title} has been cancelled.`,
+    });
+    setShowEventDetail(false);
+    setSelectedEventForReschedule(null);
+  };
+
   const getEventTypeIcon = (type: string) => {
     switch (type) {
       case 'move-in': return <Home size={16} className="text-green-600" />;
@@ -274,6 +290,21 @@ const OperatorTodayTab = () => {
           setSelectedEventForReschedule(null);
         }}
         onConfirm={handleRescheduleConfirm}
+        userRole="operator"
+      />
+    );
+  }
+
+  if (showEventDetail && selectedEventForReschedule) {
+    return (
+      <EventDetailModal
+        event={selectedEventForReschedule}
+        onClose={() => {
+          setShowEventDetail(false);
+          setSelectedEventForReschedule(null);
+        }}
+        onReschedule={handleEventDetailReschedule}
+        onCancel={handleEventDetailCancel}
         userRole="operator"
       />
     );
