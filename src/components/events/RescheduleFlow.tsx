@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { EnhancedEvent, TimeSlot } from '@/types/events';
 import { format, addDays, isSameDay, isToday, isTomorrow } from 'date-fns';
+import SwipeableScreen from '../schedule/SwipeableScreen';
+import SwipeUpPrompt from '@/components/ui/swipe-up-prompt';
 
 interface RescheduleFlowProps {
   event: EnhancedEvent;
@@ -70,55 +72,61 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
     });
   };
 
-  const canProceedToNextStep = () => {
-    if (currentStep === 1) return selectedDate;
-    if (currentStep === 2) return selectedTime;
-    return true;
+  const canProceedFromCurrentStep = (): boolean => {
+    if (currentStep === 1) return selectedDate !== undefined;
+    if (currentStep === 2) return selectedTime !== '';
+    return false;
+  };
+
+  const nextStep = () => {
+    if (currentStep < 3) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
   };
 
   // Step 1: Date Selection
   if (currentStep === 1) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-[10000] flex items-end md:items-center justify-center">
-        <div className="bg-white w-full max-w-md max-h-[90vh] overflow-y-auto rounded-t-xl md:rounded-xl shadow-xl">
-          <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
-                <ChevronLeft size={20} />
-              </button>
-              <h2 className="text-lg font-semibold text-gray-900">Select New Date</h2>
-            </div>
-            <span className="text-sm text-gray-500">Step 1 of 3</span>
+      <SwipeableScreen
+        title="Select New Date"
+        currentStep={currentStep}
+        totalSteps={3}
+        onClose={onClose}
+        onSwipeUp={canProceedFromCurrentStep() ? nextStep : undefined}
+        onSwipeLeft={prevStep}
+        canSwipeUp={canProceedFromCurrentStep()}
+      >
+        <div className="h-full pb-32">
+          <div className="mb-4">
+            <p className="text-gray-600 mb-2">Rescheduling: <strong>{event.title}</strong></p>
+            <p className="text-sm text-gray-500">
+              Currently scheduled for {formatDate(event.date)} at {formatTime(event.time)}
+            </p>
           </div>
 
-          <div className="p-4">
-            <div className="mb-4">
-              <p className="text-gray-600 mb-2">Rescheduling: <strong>{event.title}</strong></p>
-              <p className="text-sm text-gray-500">
-                Currently scheduled for {formatDate(event.date)} at {formatTime(event.time)}
-              </p>
-            </div>
-
-            <CalendarComponent
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              disabled={(date) => date < new Date() || isSameDay(date, event.date)}
-              className="rounded-md border"
-            />
-          </div>
-
-          <div className="sticky bottom-0 bg-white border-t p-4">
-            <Button
-              onClick={() => setCurrentStep(2)}
-              disabled={!canProceedToNextStep()}
-              className="w-full"
-            >
-              Continue to Time Selection
-            </Button>
-          </div>
+          <CalendarComponent
+            mode="single"
+            selected={selectedDate}
+            onSelect={setSelectedDate}
+            disabled={(date) => date < new Date() || isSameDay(date, event.date)}
+            className="rounded-md border"
+          />
         </div>
-      </div>
+
+        {canProceedFromCurrentStep() && (
+          <SwipeUpPrompt 
+            onContinue={nextStep}
+            message="Date selected!"
+            buttonText="Continue to Time Selection"
+          />
+        )}
+      </SwipeableScreen>
     );
   }
 
@@ -127,152 +135,144 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
     const availableSlots = getAvailableTimeSlots(selectedDate);
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-[10000] flex items-end md:items-center justify-center">
-        <div className="bg-white w-full max-w-md max-h-[90vh] overflow-y-auto rounded-t-xl md:rounded-xl shadow-xl">
-          <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button onClick={() => setCurrentStep(1)} className="p-1 text-gray-400 hover:text-gray-600">
-                <ChevronLeft size={20} />
+      <SwipeableScreen
+        title="Select Time"
+        currentStep={currentStep}
+        totalSteps={3}
+        onClose={onClose}
+        onSwipeUp={canProceedFromCurrentStep() ? nextStep : undefined}
+        onSwipeLeft={prevStep}
+        canSwipeUp={canProceedFromCurrentStep()}
+      >
+        <div className="h-full pb-32">
+          <div className="mb-4">
+            <p className="text-gray-600 mb-1">Selected date: <strong>{formatDate(selectedDate)}</strong></p>
+            {event.assignedTeamMember && (
+              <p className="text-sm text-gray-500">
+                Available times for {event.assignedTeamMember.name}
+              </p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {availableSlots.map((slot) => (
+              <button
+                key={slot.start}
+                onClick={() => slot.available && setSelectedTime(slot.start)}
+                disabled={!slot.available}
+                className={`p-3 rounded-lg border text-center transition-colors ${
+                  selectedTime === slot.start
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : slot.available
+                    ? 'bg-white text-gray-900 border-gray-200 hover:border-blue-300'
+                    : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Clock size={16} />
+                  {formatTime(slot.start)}
+                </div>
               </button>
-              <h2 className="text-lg font-semibold text-gray-900">Select Time</h2>
-            </div>
-            <span className="text-sm text-gray-500">Step 2 of 3</span>
-          </div>
-
-          <div className="p-4">
-            <div className="mb-4">
-              <p className="text-gray-600 mb-1">Selected date: <strong>{formatDate(selectedDate)}</strong></p>
-              {event.assignedTeamMember && (
-                <p className="text-sm text-gray-500">
-                  Available times for {event.assignedTeamMember.name}
-                </p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {availableSlots.map((slot) => (
-                <button
-                  key={slot.start}
-                  onClick={() => slot.available && setSelectedTime(slot.start)}
-                  disabled={!slot.available}
-                  className={`p-3 rounded-lg border text-center transition-colors ${
-                    selectedTime === slot.start
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : slot.available
-                      ? 'bg-white text-gray-900 border-gray-200 hover:border-blue-300'
-                      : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                  }`}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    <Clock size={16} />
-                    {formatTime(slot.start)}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="sticky bottom-0 bg-white border-t p-4">
-            <Button
-              onClick={() => setCurrentStep(3)}
-              disabled={!canProceedToNextStep()}
-              className="w-full"
-            >
-              Continue to Confirmation
-            </Button>
+            ))}
           </div>
         </div>
-      </div>
+
+        {canProceedFromCurrentStep() && (
+          <SwipeUpPrompt 
+            onContinue={nextStep}
+            onBack={prevStep}
+            message="Time selected!"
+            buttonText="Continue to Confirmation"
+            showBack={true}
+          />
+        )}
+      </SwipeableScreen>
     );
   }
 
-  // Step 3: Confirmation
+  // Step 3: Confirmation (no swipe - final step)
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-[10000] flex items-end md:items-center justify-center">
-      <div className="bg-white w-full max-w-md max-h-[90vh] overflow-y-auto rounded-t-xl md:rounded-xl shadow-xl">
-        <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setCurrentStep(2)} className="p-1 text-gray-400 hover:text-gray-600">
-              <ChevronLeft size={20} />
-            </button>
-            <h2 className="text-lg font-semibold text-gray-900">Confirm Reschedule</h2>
-          </div>
-          <span className="text-sm text-gray-500">Step 3 of 3</span>
-        </div>
-
-        <div className="p-4 space-y-6">
-          {/* Summary */}
-          <div className="bg-blue-50 rounded-lg p-4">
-            <h3 className="font-medium text-blue-900 mb-2">Reschedule Summary</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-blue-700">Event:</span>
-                <span className="text-blue-900 font-medium">{event.title}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-blue-700">New Date:</span>
-                <span className="text-blue-900">{selectedDate && formatDate(selectedDate)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-blue-700">New Time:</span>
-                <span className="text-blue-900">{selectedTime && formatTime(selectedTime)}</span>
-              </div>
-              {event.assignedTeamMember && (
-                <div className="flex justify-between">
-                  <span className="text-blue-700">Team Member:</span>
-                  <span className="text-blue-900">{event.assignedTeamMember.name}</span>
-                </div>
-              )}
+    <SwipeableScreen
+      title="Confirm Reschedule"
+      currentStep={currentStep}
+      totalSteps={3}
+      onClose={onClose}
+      onSwipeLeft={prevStep}
+      hideSwipeHandling={true}
+    >
+      <div className="space-y-6">
+        {/* Summary */}
+        <div className="bg-blue-50 rounded-lg p-4">
+          <h3 className="font-medium text-blue-900 mb-2">Reschedule Summary</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-blue-700">Event:</span>
+              <span className="text-blue-900 font-medium">{event.title}</span>
             </div>
-          </div>
-
-          {/* Reason (optional) */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Reason for rescheduling (optional)
-            </label>
-            <Textarea
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Enter reason for rescheduling..."
-              className="w-full"
-              rows={3}
-            />
-          </div>
-
-          {/* Notification Settings */}
-          <div className="space-y-3">
-            <h4 className="font-medium text-gray-900">Notifications</h4>
-            
-            {userRole !== 'resident' && (
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="notify-resident"
-                  checked={notifyResident}
-                  onCheckedChange={(checked) => setNotifyResident(checked as boolean)}
-                />
-                <label htmlFor="notify-resident" className="text-sm text-gray-700">
-                  Notify resident about the change
-                </label>
-              </div>
-            )}
-
+            <div className="flex justify-between">
+              <span className="text-blue-700">New Date:</span>
+              <span className="text-blue-900">{selectedDate && formatDate(selectedDate)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-blue-700">New Time:</span>
+              <span className="text-blue-900">{selectedTime && formatTime(selectedTime)}</span>
+            </div>
             {event.assignedTeamMember && (
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="notify-team"
-                  checked={notifyTeamMember}
-                  onCheckedChange={(checked) => setNotifyTeamMember(checked as boolean)}
-                />
-                <label htmlFor="notify-team" className="text-sm text-gray-700">
-                  Notify {event.assignedTeamMember.name} about the change
-                </label>
+              <div className="flex justify-between">
+                <span className="text-blue-700">Team Member:</span>
+                <span className="text-blue-900">{event.assignedTeamMember.name}</span>
               </div>
             )}
           </div>
         </div>
 
-        <div className="sticky bottom-0 bg-white border-t p-4 space-y-3">
+        {/* Reason (optional) */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Reason for rescheduling (optional)
+          </label>
+          <Textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Enter reason for rescheduling..."
+            className="w-full"
+            rows={3}
+          />
+        </div>
+
+        {/* Notification Settings */}
+        <div className="space-y-3">
+          <h4 className="font-medium text-gray-900">Notifications</h4>
+          
+          {userRole !== 'resident' && (
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="notify-resident"
+                checked={notifyResident}
+                onCheckedChange={(checked) => setNotifyResident(checked as boolean)}
+              />
+              <label htmlFor="notify-resident" className="text-sm text-gray-700">
+                Notify resident about the change
+              </label>
+            </div>
+          )}
+
+          {event.assignedTeamMember && (
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="notify-team"
+                checked={notifyTeamMember}
+                onCheckedChange={(checked) => setNotifyTeamMember(checked as boolean)}
+              />
+              <label htmlFor="notify-team" className="text-sm text-gray-700">
+                Notify {event.assignedTeamMember.name} about the change
+              </label>
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="space-y-3 pt-4">
           <Button
             onClick={handleConfirm}
             className="w-full bg-green-600 hover:bg-green-700"
@@ -281,7 +281,7 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
             Confirm Reschedule
           </Button>
           <Button
-            onClick={() => setCurrentStep(2)}
+            onClick={prevStep}
             variant="outline"
             className="w-full"
           >
@@ -289,7 +289,7 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
           </Button>
         </div>
       </div>
-    </div>
+    </SwipeableScreen>
   );
 };
 
