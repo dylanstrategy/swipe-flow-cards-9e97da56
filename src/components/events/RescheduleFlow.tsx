@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ChevronLeft, Calendar, Clock, Check, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,7 +24,7 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
   const [notifyResident, setNotifyResident] = useState(true);
   const [notifyTeamMember, setNotifyTeamMember] = useState(true);
 
-  // Mock available time slots - in real app, this would come from team availability service
+  // Mock available time slots - updated for better presentation variety
   const getAvailableTimeSlots = (date: Date): TimeSlot[] => {
     if (!event.assignedTeamMember) return [];
     
@@ -35,8 +34,35 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
       '15:00', '15:30', '16:00', '16:30', '17:00'
     ];
 
-    // Mock some unavailable slots
-    const unavailableSlots = isToday(date) ? ['09:00', '10:30', '14:00'] : ['11:00', '15:30'];
+    // Create different availability patterns based on day of week for presentation
+    const dayOfWeek = date.getDay();
+    let unavailableSlots: string[] = [];
+
+    switch (dayOfWeek) {
+      case 1: // Monday - busy morning
+        unavailableSlots = ['09:00', '09:30', '10:00', '14:30', '15:00'];
+        break;
+      case 2: // Tuesday - light schedule
+        unavailableSlots = ['11:30', '13:00'];
+        break;
+      case 3: // Wednesday - busy afternoon
+        unavailableSlots = ['14:00', '14:30', '15:00', '15:30', '16:00'];
+        break;
+      case 4: // Thursday - scattered availability
+        unavailableSlots = ['09:30', '11:00', '12:30', '16:30'];
+        break;
+      case 5: // Friday - limited afternoon
+        unavailableSlots = ['15:00', '15:30', '16:00', '16:30', '17:00'];
+        break;
+      case 6: // Saturday - weekend schedule
+        unavailableSlots = ['09:00', '12:00', '12:30', '13:00', '13:30'];
+        break;
+      case 0: // Sunday - very limited
+        unavailableSlots = ['09:00', '09:30', '10:30', '11:30', '12:00', '12:30', '13:00', '13:30', '16:00', '16:30', '17:00'];
+        break;
+      default:
+        unavailableSlots = ['11:00', '15:30'];
+    }
     
     return baseSlots.map(time => ({
       start: time,
