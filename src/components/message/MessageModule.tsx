@@ -126,15 +126,15 @@ const MessageModule = ({
 
   const handleClosePrompt = () => {
     setShowPrompt(false);
-    // Clear all data on current step when X is pressed
-    if (currentStep === 1) {
-      setMessageData({
-        subject: '',
-        message: '',
-        recipientType,
-        attachments: []
-      });
-    }
+  };
+
+  const handleClearData = () => {
+    setMessageData({
+      subject: '',
+      message: '',
+      recipientType,
+      attachments: []
+    });
   };
 
   // Auto-show prompt when content is ready and not already showing
@@ -197,6 +197,7 @@ const MessageModule = ({
           onContinue={handleNextStep}
           onBack={currentStep > 1 ? handlePrevStep : undefined}
           onClose={handleClosePrompt}
+          onClear={handleClearData}
           message="Ready to send!"
           buttonText="Send Message"
           showBack={currentStep > 1}
