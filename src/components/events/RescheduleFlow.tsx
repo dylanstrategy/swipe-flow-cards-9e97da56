@@ -118,6 +118,14 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
     }
   };
 
+  const handleClearData = () => {
+    setSelectedDate(undefined);
+    setSelectedTime('');
+    setReason('');
+    setNotifyResident(true);
+    setNotifyTeamMember(true);
+  };
+
   // Step 1: Date Selection
   if (currentStep === 1) {
     return (
@@ -150,6 +158,7 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
         {canProceedFromCurrentStep() && (
           <SwipeUpPrompt 
             onContinue={nextStep}
+            onClear={handleClearData}
             message="Date selected!"
             buttonText="Continue to Time Selection"
           />
@@ -182,35 +191,38 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
             )}
           </div>
 
-          <ScrollArea className="flex-1 pb-32">
-            <div className="grid grid-cols-2 gap-3 pr-2">
-              {availableSlots.map((slot) => (
-                <button
-                  key={slot.start}
-                  onClick={() => slot.available && setSelectedTime(slot.start)}
-                  disabled={!slot.available}
-                  className={`p-3 rounded-lg border text-center transition-colors ${
-                    selectedTime === slot.start
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : slot.available
-                      ? 'bg-white text-gray-900 border-gray-200 hover:border-blue-300'
-                      : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                  }`}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    <Clock size={16} />
-                    {formatTime(slot.start)}
-                  </div>
-                </button>
-              ))}
+          <div className="flex-1 min-h-0 pb-32">
+            <div className="h-full overflow-y-auto">
+              <div className="grid grid-cols-2 gap-3 pr-2">
+                {availableSlots.map((slot) => (
+                  <button
+                    key={slot.start}
+                    onClick={() => slot.available && setSelectedTime(slot.start)}
+                    disabled={!slot.available}
+                    className={`p-3 rounded-lg border text-center transition-colors ${
+                      selectedTime === slot.start
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : slot.available
+                        ? 'bg-white text-gray-900 border-gray-200 hover:border-blue-300'
+                        : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <Clock size={16} />
+                      {formatTime(slot.start)}
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
-          </ScrollArea>
+          </div>
         </div>
 
         {canProceedFromCurrentStep() && (
           <SwipeUpPrompt 
             onContinue={nextStep}
             onBack={prevStep}
+            onClear={handleClearData}
             message="Time selected!"
             buttonText="Continue to Confirmation"
             showBack={true}

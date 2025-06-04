@@ -79,7 +79,10 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
 
   const handleClosePrompt = () => {
     setShowPrompt(false);
-    // Clear all data on current step when X is pressed
+  };
+
+  const handleClearData = () => {
+    // Clear all data based on current step
     if (currentStep === 1) {
       setPhotoCaptured(false);
     } else if (currentStep === 2) {
@@ -161,6 +164,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
             onContinue={nextStep}
             onBack={currentStep > 1 ? prevStep : undefined}
             onClose={handleClosePrompt}
+            onClear={handleClearData}
             message="Ready to continue!"
             buttonText="Continue"
             showBack={currentStep > 1}
