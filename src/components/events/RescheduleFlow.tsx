@@ -126,6 +126,15 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
     setNotifyTeamMember(true);
   };
 
+  // Prevent background scrolling
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.stopPropagation();
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+  };
+
   // Step 1: Date Selection
   if (currentStep === 1) {
     return (
@@ -138,7 +147,12 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
         onSwipeLeft={prevStep}
         canSwipeUp={canProceedFromCurrentStep()}
       >
-        <div className="h-full pb-32">
+        <div 
+          className="h-full pb-32" 
+          onTouchMove={handleTouchMove}
+          onTouchStart={handleTouchStart}
+          style={{ touchAction: 'pan-y' }}
+        >
           <div className="mb-4">
             <p className="text-gray-600 mb-2">Rescheduling: <strong>{event.title}</strong></p>
             <p className="text-sm text-gray-500">
@@ -181,7 +195,12 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
         onSwipeLeft={prevStep}
         canSwipeUp={canProceedFromCurrentStep()}
       >
-        <div className="h-full flex flex-col">
+        <div 
+          className="h-full flex flex-col"
+          onTouchMove={handleTouchMove}
+          onTouchStart={handleTouchStart}
+          style={{ touchAction: 'pan-y' }}
+        >
           <div className="mb-4 flex-shrink-0">
             <p className="text-gray-600 mb-1">Selected date: <strong>{formatDate(selectedDate)}</strong></p>
             {event.assignedTeamMember && (
@@ -192,7 +211,13 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
           </div>
 
           <div className="flex-1 min-h-0 pb-32">
-            <div className="h-full overflow-y-auto">
+            <div 
+              className="h-full overflow-y-auto"
+              style={{ 
+                touchAction: 'pan-y',
+                overscrollBehavior: 'contain'
+              }}
+            >
               <div className="grid grid-cols-2 gap-3 pr-2">
                 {availableSlots.map((slot) => (
                   <button
@@ -242,7 +267,12 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
       onSwipeLeft={prevStep}
       hideSwipeHandling={true}
     >
-      <div className="space-y-6">
+      <div 
+        className="space-y-6"
+        onTouchMove={handleTouchMove}
+        onTouchStart={handleTouchStart}
+        style={{ touchAction: 'pan-y' }}
+      >
         {/* Summary */}
         <div className="bg-blue-50 rounded-lg p-4">
           <h3 className="font-medium text-blue-900 mb-2">Reschedule Summary</h3>
