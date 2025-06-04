@@ -10,7 +10,11 @@ import WorkOrderFlow from '@/components/schedule/WorkOrderFlow';
 import MessageModule from '@/components/message/MessageModule';
 import OperatorScheduleMenu from '@/components/schedule/OperatorScheduleMenu';
 import PollModule from '@/components/schedule/PollModule';
+import RescheduleFlow from '@/components/events/RescheduleFlow';
 import { useToast } from '@/hooks/use-toast';
+import { EnhancedEvent } from '@/types/events';
+import { teamAvailabilityService } from '@/services/teamAvailabilityService';
+import SwipeCard from '@/components/SwipeCard';
 
 const OperatorScheduleTab = () => {
   const { toast } = useToast();
@@ -22,6 +26,8 @@ const OperatorScheduleTab = () => {
   const [selectedScheduleType, setSelectedScheduleType] = useState<string>('');
   const [showMessageModule, setShowMessageModule] = useState(false);
   const [showPollModule, setShowPollModule] = useState(false);
+  const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
+  const [selectedEventForReschedule, setSelectedEventForReschedule] = useState<EnhancedEvent | null>(null);
   const [messageConfig, setMessageConfig] = useState({
     subject: '',
     recipientType: 'management' as 'management' | 'maintenance' | 'leasing',
@@ -100,6 +106,44 @@ const OperatorScheduleTab = () => {
     { value: 'renewal', label: 'Renewals' }
   ];
 
+  const enhanceItemForReschedule = (item: any): EnhancedEvent => {
+    const assignedTeamMember = teamAvailabilityService.assignTeamMember({ category: item.type });
+    
+    return {
+      id: item.id,
+      date: item.date,
+      time: item.time.replace(/\s(AM|PM)/, ''),
+      title: item.title,
+      description: item.description,
+      category: item.type,
+      priority: item.priority,
+      assignedTeamMember,
+      residentName: 'John Doe',
+      phone: '(555) 123-4567',
+      unit: item.unit,
+      building: item.building,
+      canReschedule: true,
+      canCancel: true,
+      estimatedDuration: item.type === 'maintenance' ? 120 : 60,
+      rescheduledCount: 0
+    };
+  };
+
+  const handleRescheduleItem = (item: any) => {
+    const enhancedEvent = enhanceItemForReschedule(item);
+    setSelectedEventForReschedule(enhancedEvent);
+    setShowRescheduleFlow(true);
+  };
+
+  const handleRescheduleConfirm = (rescheduleData: any) => {
+    toast({
+      title: "Appointment Rescheduled",
+      description: `${selectedEventForReschedule?.title} has been rescheduled successfully.`,
+    });
+    setShowRescheduleFlow(false);
+    setSelectedEventForReschedule(null);
+  };
+
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'maintenance': return <Wrench size={16} className="text-orange-600" />;
@@ -140,7 +184,6 @@ const OperatorScheduleTab = () => {
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Final submission
       setIsCreatingOrder(false);
       setCurrentStep(1);
       setShowScheduleMenu(false);
@@ -178,7 +221,6 @@ const OperatorScheduleTab = () => {
       setShowPollModule(true);
       setShowScheduleMenu(false);
     } else {
-      // For other types, you can implement different flows
       toast({
         title: `${type} Selected`,
         description: `${type} scheduling flow coming soon!`,
@@ -202,6 +244,20 @@ const OperatorScheduleTab = () => {
     setShowPollModule(false);
     setShowScheduleMenu(false);
   };
+
+  if (showRescheduleFlow && selectedEventForReschedule) {
+    return (
+      <RescheduleFlow
+        event={selectedEventForReschedule}
+        onClose={() => {
+          setShowRescheduleFlow(false);
+          setSelectedEventForReschedule(null);
+        }}
+        onConfirm={handleRescheduleConfirm}
+        userRole="operator"
+      />
+    );
+  }
 
   if (showPollModule) {
     return (
@@ -250,7 +306,6 @@ const OperatorScheduleTab = () => {
         <p className="text-gray-600">Manage daily operations and appointments</p>
       </div>
 
-      {/* Floating Plus Button */}
       <button 
         onClick={() => setShowScheduleMenu(true)}
         className="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-700 transition-all duration-200 hover:scale-110 z-50"
@@ -258,7 +313,6 @@ const OperatorScheduleTab = () => {
         <Plus className="text-white" size={28} />
       </button>
 
-      {/* Calendar */}
       <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-100">
         <Calendar
           mode="single"
@@ -272,7 +326,6 @@ const OperatorScheduleTab = () => {
         />
       </div>
 
-      {/* Category Filter */}
       <div className="mb-6">
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
           <SelectTrigger className="w-full">
@@ -288,7 +341,6 @@ const OperatorScheduleTab = () => {
         </Select>
       </div>
 
-      {/* Selected Date Header */}
       <div className="mb-4">
         <h2 className="text-lg font-semibold text-gray-900">
           {formatSelectedDate(selectedDate)}
@@ -298,7 +350,6 @@ const OperatorScheduleTab = () => {
         </p>
       </div>
 
-      {/* Scheduled Items */}
       <div className="space-y-4">
         {filteredItems.length === 0 ? (
           <Card>
@@ -314,41 +365,52 @@ const OperatorScheduleTab = () => {
           </Card>
         ) : (
           filteredItems.map((item) => (
-            <Card key={item.id} className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardContent className="p-4">
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 mt-1">
-                    {getTypeIcon(item.type)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-gray-900">{item.title}</h3>
-                      <div className="flex items-center space-x-2">
-                        <Badge className={getPriorityColor(item.priority)}>
-                          {item.priority}
+            <SwipeCard
+              key={item.id}
+              onSwipeRight={{
+                label: "Reschedule",
+                action: () => handleRescheduleItem(item),
+                color: "#F59E0B",
+                icon: "📅"
+              }}
+              onTap={() => toast({ title: "Item Details", description: `Viewing ${item.title}` })}
+            >
+              <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                <CardContent className="p-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 mt-1">
+                      {getTypeIcon(item.type)}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold text-gray-900">{item.title}</h3>
+                        <div className="flex items-center space-x-2">
+                          <Badge className={getPriorityColor(item.priority)}>
+                            {item.priority}
+                          </Badge>
+                          <span className="text-sm text-gray-500">{item.time}</span>
+                        </div>
+                      </div>
+                      <p className="text-gray-600 text-sm mb-2">{item.description}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2 text-xs text-gray-500">
+                          <span>{item.building}</span>
+                          {item.unit && (
+                            <>
+                              <span>•</span>
+                              <span>Unit {item.unit}</span>
+                            </>
+                          )}
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {item.category}
                         </Badge>
-                        <span className="text-sm text-gray-500">{item.time}</span>
                       </div>
-                    </div>
-                    <p className="text-gray-600 text-sm mb-2">{item.description}</p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2 text-xs text-gray-500">
-                        <span>{item.building}</span>
-                        {item.unit && (
-                          <>
-                            <span>•</span>
-                            <span>Unit {item.unit}</span>
-                          </>
-                        )}
-                      </div>
-                      <Badge variant="outline" className="text-xs">
-                        {item.category}
-                      </Badge>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </SwipeCard>
           ))
         )}
       </div>

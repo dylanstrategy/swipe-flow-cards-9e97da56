@@ -4,6 +4,7 @@ import { format, isPast, isToday, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import SwipeCard from '../../SwipeCard';
 import EventDetailModal from '../../events/EventDetailModal';
+import RescheduleFlow from '../../events/RescheduleFlow';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 import { useToast } from '@/hooks/use-toast';
@@ -29,6 +30,7 @@ interface EventsListProps {
 
 const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent }: EventsListProps) => {
   const [selectedEvent, setSelectedEvent] = useState<EnhancedEvent | null>(null);
+  const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
   const { toast } = useToast();
 
   const formatTime = (time: string) => {
@@ -61,12 +63,12 @@ const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent }:
     return {
       ...event,
       assignedTeamMember,
-      residentName: 'John Doe', // Mock data
+      residentName: 'John Doe',
       phone: '(555) 123-4567',
       unit: '4B',
       building: 'Building A',
       canReschedule: true,
-      canCancel: event.category !== 'Payment', // Can't cancel payments
+      canCancel: event.category !== 'Payment',
       estimatedDuration: event.category === 'Work Order' ? 120 : 60,
       rescheduledCount: 0
     };
@@ -83,6 +85,7 @@ const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent }:
       description: `${selectedEvent?.title} has been rescheduled successfully.`,
     });
     setSelectedEvent(null);
+    setShowRescheduleFlow(false);
     onAction("Rescheduled", selectedEvent?.title || "Event");
   };
 
@@ -94,6 +97,26 @@ const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent }:
     setSelectedEvent(null);
     onAction("Cancelled", selectedEvent?.title || "Event");
   };
+
+  const handleDirectReschedule = (event: Event) => {
+    const enhancedEvent = enhanceEventForModal(event);
+    setSelectedEvent(enhancedEvent);
+    setShowRescheduleFlow(true);
+  };
+
+  if (showRescheduleFlow && selectedEvent) {
+    return (
+      <RescheduleFlow
+        event={selectedEvent}
+        onClose={() => {
+          setShowRescheduleFlow(false);
+          setSelectedEvent(null);
+        }}
+        onConfirm={handleReschedule}
+        userRole="resident"
+      />
+    );
+  }
 
   if (events.length === 0) {
     return (
@@ -107,11 +130,19 @@ const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent }:
     <>
       <div className="space-y-4">
         {events.map((event) => {
-          // Get base swipe actions
+          // Get base swipe actions and enhance with reschedule capability
           const baseSwipeActions = getSwipeActionsForEvent(event);
           
-          // For Management category, ensure we use the passed onQuickReply function
-          const swipeActions = event.category === 'Management' ? {
+          // Add reschedule action for applicable events
+          const swipeActions = event.category === 'Work Order' || event.category === 'Lease' ? {
+            ...baseSwipeActions,
+            onSwipeRight: {
+              label: "Reschedule",
+              action: () => handleDirectReschedule(event),
+              color: "#F59E0B",
+              icon: "📅"
+            }
+          } : event.category === 'Management' ? {
             onSwipeRight: baseSwipeActions.onSwipeRight,
             onSwipeLeft: {
               label: "Quick Reply",
@@ -125,13 +156,6 @@ const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent }:
           } : baseSwipeActions;
           
           const urgencyClass = getUrgencyClass(event);
-          
-          console.log('Event swipe actions:', {
-            eventId: event.id,
-            category: event.category,
-            hasSwipeLeft: !!swipeActions.onSwipeLeft,
-            swipeLeftLabel: swipeActions.onSwipeLeft?.label
-          });
           
           return (
             <div key={event.id} className="flex items-start gap-4">
@@ -185,11 +209,11 @@ const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent }:
       </div>
 
       {/* Event Detail Modal */}
-      {selectedEvent && (
+      {selectedEvent && !showRescheduleFlow && (
         <EventDetailModal
           event={selectedEvent}
           onClose={() => setSelectedEvent(null)}
-          onReschedule={handleReschedule}
+          onReschedule={() => setShowRescheduleFlow(true)}
           onCancel={handleCancel}
           userRole="resident"
         />
