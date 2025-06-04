@@ -126,15 +126,6 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
     setNotifyTeamMember(true);
   };
 
-  // Prevent background scrolling
-  const handleTouchMove = (e: React.TouchEvent) => {
-    e.stopPropagation();
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    e.stopPropagation();
-  };
-
   // Step 1: Date Selection
   if (currentStep === 1) {
     return (
@@ -147,12 +138,7 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
         onSwipeLeft={prevStep}
         canSwipeUp={canProceedFromCurrentStep()}
       >
-        <div 
-          className="h-full pb-32" 
-          onTouchMove={handleTouchMove}
-          onTouchStart={handleTouchStart}
-          style={{ touchAction: 'pan-y' }}
-        >
+        <div className="h-full pb-32">
           <div className="mb-4">
             <p className="text-gray-600 mb-2">Rescheduling: <strong>{event.title}</strong></p>
             <p className="text-sm text-gray-500">
@@ -186,22 +172,39 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
     const availableSlots = getAvailableTimeSlots(selectedDate);
 
     return (
-      <SwipeableScreen
-        title="Select Time"
-        currentStep={currentStep}
-        totalSteps={3}
-        onClose={onClose}
-        onSwipeUp={canProceedFromCurrentStep() ? nextStep : undefined}
-        onSwipeLeft={prevStep}
-        canSwipeUp={canProceedFromCurrentStep()}
+      <div 
+        className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen overflow-hidden"
+        onTouchMove={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        style={{ touchAction: 'none' }}
       >
-        <div 
-          className="h-full flex flex-col"
-          onTouchMove={handleTouchMove}
-          onTouchStart={handleTouchStart}
-          style={{ touchAction: 'pan-y' }}
-        >
-          <div className="mb-4 flex-shrink-0">
+        {/* Header */}
+        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Select Time</h1>
+            <span className="text-xs text-gray-500">Step {currentStep} of 3</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <span className="text-gray-600 text-xl">×</span>
+          </button>
+        </div>
+        
+        {/* Progress Bar */}
+        <div className="flex-shrink-0 px-4 py-2">
+          <div className="w-full bg-gray-200 rounded-full h-1.5">
+            <div 
+              className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
+              style={{ width: `${(currentStep / 3) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 flex flex-col p-4 overflow-hidden">
+          <div className="flex-shrink-0 mb-4">
             <p className="text-gray-600 mb-1">Selected date: <strong>{formatDate(selectedDate)}</strong></p>
             {event.assignedTeamMember && (
               <p className="text-sm text-gray-500">
@@ -215,8 +218,10 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
               className="h-full overflow-y-auto"
               style={{ 
                 touchAction: 'pan-y',
-                overscrollBehavior: 'contain'
+                overscrollBehavior: 'contain',
+                WebkitOverflowScrolling: 'touch'
               }}
+              onTouchMove={(e) => e.stopPropagation()}
             >
               <div className="grid grid-cols-2 gap-3 pr-2">
                 {availableSlots.map((slot) => (
@@ -253,7 +258,7 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
             showBack={true}
           />
         )}
-      </SwipeableScreen>
+      </div>
     );
   }
 
@@ -267,12 +272,7 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
       onSwipeLeft={prevStep}
       hideSwipeHandling={true}
     >
-      <div 
-        className="space-y-6"
-        onTouchMove={handleTouchMove}
-        onTouchStart={handleTouchStart}
-        style={{ touchAction: 'pan-y' }}
-      >
+      <div className="space-y-6">
         {/* Summary */}
         <div className="bg-blue-50 rounded-lg p-4">
           <h3 className="font-medium text-blue-900 mb-2">Reschedule Summary</h3>
