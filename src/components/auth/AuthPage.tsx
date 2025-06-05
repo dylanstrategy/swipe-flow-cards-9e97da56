@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from './AuthProvider';
 import { useToast } from '@/hooks/use-toast';
-import { Crown } from 'lucide-react';
 
 const AuthPage = () => {
   const [isSignUp, setIsSignUp] = useState(false);

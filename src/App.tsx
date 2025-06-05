@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -14,6 +15,7 @@ import Maintenance from "./pages/Maintenance";
 import Operator from "./pages/Operator";
 import NotFound from "./pages/NotFound";
 import SuperAdmin from "./pages/SuperAdmin";
+import OwnerLogin from "./pages/OwnerLogin";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +28,7 @@ const App = () => (
             <Toaster />
             <BrowserRouter>
               <Routes>
+                <Route path="/owner-login" element={<OwnerLogin />} />
                 <Route path="/" element={
                   <ProtectedRoute>
                     <Index />
