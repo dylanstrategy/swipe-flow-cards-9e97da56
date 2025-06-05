@@ -144,272 +144,288 @@ const MessagingSetup = ({ onBack }: MessagingSetupProps) => {
     const availableVars = availableVariables[formData.dataSource as keyof typeof availableVariables] || [];
 
     return (
-      <Card>
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            {template ? 'Edit Template' : 'New Template'}
-          </h3>
-          
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="name">Template Name</Label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Tour Confirmation"
-                />
-              </div>
-              <div>
-                <Label htmlFor="category">Category</Label>
-                <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {templateCategories.map(cat => (
-                      <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="trigger">Trigger Event</Label>
-                <Select value={formData.trigger} onValueChange={(value) => setFormData(prev => ({ ...prev, trigger: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {triggerOptions.map(trigger => (
-                      <SelectItem key={trigger.value} value={trigger.value}>
-                        {trigger.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="dataSource">Data Source</Label>
-                <Select value={formData.dataSource} onValueChange={(value) => setFormData(prev => ({ ...prev, dataSource: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {dataSourceOptions.map(source => (
-                      <SelectItem key={source.value} value={source.value}>
-                        {source.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <Label className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                Message Timing
-              </Label>
-              <div className="grid grid-cols-3 gap-2 mt-2">
-                <Select value={formData.frequency} onValueChange={(value) => setFormData(prev => ({ ...prev, frequency: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="immediate">Send Immediately</SelectItem>
-                    <SelectItem value="scheduled">Schedule</SelectItem>
-                    <SelectItem value="reminder">Send as Reminder</SelectItem>
-                  </SelectContent>
-                </Select>
-                {formData.frequency !== 'immediate' && (
-                  <>
-                    <Input
-                      type="number"
-                      value={formData.timing.value}
-                      onChange={(e) => setFormData(prev => ({ 
-                        ...prev, 
-                        timing: { ...prev.timing, value: parseInt(e.target.value) }
-                      }))}
-                      placeholder="0"
-                    />
-                    <Select 
-                      value={formData.timing.unit} 
-                      onValueChange={(value) => setFormData(prev => ({ 
-                        ...prev, 
-                        timing: { ...prev.timing, unit: value }
-                      }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="minutes">Minutes</SelectItem>
-                        <SelectItem value="hours">Hours</SelectItem>
-                        <SelectItem value="days">Days</SelectItem>
-                        <SelectItem value="weeks">Weeks</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="subject">Email Subject</Label>
-              <Input
-                value={formData.subject}
-                onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
-                placeholder="Your Tour is Confirmed!"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="content">Message Content</Label>
-              <Textarea
-                value={formData.content}
-                onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                rows={4}
-                placeholder="Hi {{resident_name}}, your tour is scheduled for {{date}} at {{time}}..."
-              />
-              <div className="mt-2 p-3 bg-gray-50 rounded border">
-                <p className="text-sm font-medium text-gray-700 mb-2">
-                  Available Variables for {selectedDataSource?.label}:
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {availableVars.map(variable => (
-                    <Badge key={variable} variant="outline" className="text-xs cursor-pointer" 
-                           onClick={() => {
-                             const textarea = document.querySelector('textarea');
-                             if (textarea) {
-                               const cursorPos = textarea.selectionStart;
-                               const textBefore = formData.content.substring(0, cursorPos);
-                               const textAfter = formData.content.substring(cursorPos);
-                               const newContent = textBefore + `{{${variable}}}` + textAfter;
-                               setFormData(prev => ({ ...prev, content: newContent }));
-                             }
-                           }}>
-                      {variable}
-                    </Badge>
-                  ))}
+      <div className="max-w-4xl mx-auto">
+        <Card>
+          <CardContent className="p-4 md:p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              {template ? 'Edit Template' : 'New Template'}
+            </h3>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-sm font-medium">Template Name</Label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Tour Confirmation"
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category" className="text-sm font-medium">Category</Label>
+                  <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="z-50 bg-white border shadow-lg">
+                      {templateCategories.map(cat => (
+                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-            </div>
 
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={formData.active}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, active: checked }))}
-              />
-              <Label>Active Template</Label>
-            </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="trigger" className="text-sm font-medium">Trigger Event</Label>
+                  <Select value={formData.trigger} onValueChange={(value) => setFormData(prev => ({ ...prev, trigger: value }))}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="z-50 bg-white border shadow-lg max-h-60 overflow-y-auto">
+                      {triggerOptions.map(trigger => (
+                        <SelectItem key={trigger.value} value={trigger.value}>
+                          {trigger.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dataSource" className="text-sm font-medium">Data Source</Label>
+                  <Select value={formData.dataSource} onValueChange={(value) => setFormData(prev => ({ ...prev, dataSource: value }))}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="z-50 bg-white border shadow-lg">
+                      {dataSourceOptions.map(source => (
+                        <SelectItem key={source.value} value={source.value}>
+                          {source.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
-            <div className="flex gap-3">
-              <Button onClick={() => onSave(formData)} className="flex-1">
-                Save Template
-              </Button>
-              <Button onClick={onCancel} variant="outline" className="flex-1">
-                Cancel
-              </Button>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-sm font-medium">
+                  <Clock className="w-4 h-4" />
+                  Message Timing
+                </Label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                  <Select value={formData.frequency} onValueChange={(value) => setFormData(prev => ({ ...prev, frequency: value }))}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="z-50 bg-white border shadow-lg">
+                      <SelectItem value="immediate">Send Immediately</SelectItem>
+                      <SelectItem value="scheduled">Schedule</SelectItem>
+                      <SelectItem value="reminder">Send as Reminder</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {formData.frequency !== 'immediate' && (
+                    <>
+                      <Input
+                        type="number"
+                        value={formData.timing.value}
+                        onChange={(e) => setFormData(prev => ({ 
+                          ...prev, 
+                          timing: { ...prev.timing, value: parseInt(e.target.value) }
+                        }))}
+                        placeholder="0"
+                        className="w-full"
+                      />
+                      <Select 
+                        value={formData.timing.unit} 
+                        onValueChange={(value) => setFormData(prev => ({ 
+                          ...prev, 
+                          timing: { ...prev.timing, unit: value }
+                        }))}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="z-50 bg-white border shadow-lg">
+                          <SelectItem value="minutes">Minutes</SelectItem>
+                          <SelectItem value="hours">Hours</SelectItem>
+                          <SelectItem value="days">Days</SelectItem>
+                          <SelectItem value="weeks">Weeks</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="subject" className="text-sm font-medium">Email Subject</Label>
+                <Input
+                  value={formData.subject}
+                  onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
+                  placeholder="Your Tour is Confirmed!"
+                  className="w-full"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="content" className="text-sm font-medium">Message Content</Label>
+                <Textarea
+                  value={formData.content}
+                  onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                  rows={4}
+                  placeholder="Hi {{resident_name}}, your tour is scheduled for {{date}} at {{time}}..."
+                  className="w-full resize-none"
+                />
+                <div className="p-3 bg-gray-50 rounded border">
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    Available Variables for {selectedDataSource?.label}:
+                  </p>
+                  <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+                    {availableVars.map(variable => (
+                      <Badge 
+                        key={variable} 
+                        variant="outline" 
+                        className="text-xs cursor-pointer hover:bg-gray-100 shrink-0" 
+                        onClick={() => {
+                          const textarea = document.querySelector('textarea');
+                          if (textarea) {
+                            const cursorPos = textarea.selectionStart;
+                            const textBefore = formData.content.substring(0, cursorPos);
+                            const textAfter = formData.content.substring(cursorPos);
+                            const newContent = textBefore + `{{${variable}}}` + textAfter;
+                            setFormData(prev => ({ ...prev, content: newContent }));
+                          }
+                        }}
+                      >
+                        {variable}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={formData.active}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, active: checked }))}
+                />
+                <Label className="text-sm font-medium">Active Template</Label>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                <Button onClick={() => onSave(formData)} className="flex-1">
+                  Save Template
+                </Button>
+                <Button onClick={onCancel} variant="outline" className="flex-1">
+                  Cancel
+                </Button>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     );
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Message Automations</h2>
-          <p className="text-gray-600">Configure automated message templates with timing and data integration</p>
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-6xl mx-auto space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Message Automations</h2>
+            <p className="text-gray-600 text-sm">Configure automated message templates with timing and data integration</p>
+          </div>
+          <Button onClick={() => setShowNewTemplate(true)} className="shrink-0">
+            <Plus className="w-4 h-4 mr-2" />
+            New Template
+          </Button>
         </div>
-        <Button onClick={() => setShowNewTemplate(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          New Template
-        </Button>
-      </div>
 
-      {showNewTemplate && (
-        <TemplateForm
-          onSave={handleSaveTemplate}
-          onCancel={() => setShowNewTemplate(false)}
-        />
-      )}
+        {showNewTemplate && (
+          <TemplateForm
+            onSave={handleSaveTemplate}
+            onCancel={() => setShowNewTemplate(false)}
+          />
+        )}
 
-      {editingTemplate && (
-        <TemplateForm
-          template={editingTemplate}
-          onSave={handleSaveTemplate}
-          onCancel={() => setEditingTemplate(null)}
-        />
-      )}
+        {editingTemplate && (
+          <TemplateForm
+            template={editingTemplate}
+            onSave={handleSaveTemplate}
+            onCancel={() => setEditingTemplate(null)}
+          />
+        )}
 
-      <div className="space-y-4">
-        {templates.map((template) => {
-          const category = templateCategories.find(c => c.id === template.category);
-          const trigger = triggerOptions.find(t => t.value === template.trigger);
-          const dataSource = dataSourceOptions.find(ds => ds.value === template.dataSource);
-          
-          return (
-            <Card key={template.id}>
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">{template.name}</h3>
-                      <Badge className={category?.color}>
-                        {category?.name}
-                      </Badge>
-                      <Badge className={template.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                        {template.active ? 'Active' : 'Inactive'}
-                      </Badge>
+        <div className="space-y-4">
+          {templates.map((template) => {
+            const category = templateCategories.find(c => c.id === template.category);
+            const trigger = triggerOptions.find(t => t.value === template.trigger);
+            const dataSource = dataSourceOptions.find(ds => ds.value === template.dataSource);
+            
+            return (
+              <Card key={template.id} className="overflow-hidden">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col lg:flex-row items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900 truncate">{template.name}</h3>
+                        <Badge className={category?.color}>
+                          {category?.name}
+                        </Badge>
+                        <Badge className={template.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                          {template.active ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </div>
+                      <p className="text-gray-600 mb-2 truncate">{template.subject}</p>
+                      <div className="flex flex-wrap items-center gap-4 mb-3 text-sm text-gray-500">
+                        <span className="truncate">Trigger: {trigger?.label}</span>
+                        <span className="hidden sm:inline">•</span>
+                        <span className="truncate">
+                          Timing: {template.frequency === 'immediate' ? 'Immediate' : `${template.timing.value} ${template.timing.unit} ${template.frequency === 'scheduled' ? 'after trigger' : 'before'}`}
+                        </span>
+                        <span className="hidden sm:inline">•</span>
+                        <span className="truncate">Data: {dataSource?.label}</span>
+                      </div>
+                      <div className="bg-gray-50 p-3 rounded">
+                        <p className="text-sm text-gray-700 break-words">
+                          {template.content.length > 150 ? `${template.content.substring(0, 150)}...` : template.content}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-gray-600 mb-2">{template.subject}</p>
-                    <div className="flex items-center gap-4 mb-3 text-sm text-gray-500">
-                      <span>Trigger: {trigger?.label}</span>
-                      <span>•</span>
-                      <span>Timing: {template.frequency === 'immediate' ? 'Immediate' : `${template.timing.value} ${template.timing.unit} ${template.frequency === 'scheduled' ? 'after trigger' : 'before'}`}</span>
-                      <span>•</span>
-                      <span>Data: {dataSource?.label}</span>
+                    <div className="flex gap-2 shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditingTemplate(template)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setTemplates(prev => prev.filter(t => t.id !== template.id))}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
-                    <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded">
-                      {template.content.substring(0, 150)}...
-                    </p>
                   </div>
-                  <div className="flex gap-2 ml-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setEditingTemplate(template)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setTemplates(prev => prev.filter(t => t.id !== template.id))}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
 
-      <div className="flex gap-3 pt-4">
-        <Button onClick={onBack} variant="outline" className="flex-1">
-          Back
-        </Button>
-        <Button className="flex-1">
-          Save All Changes
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3 pt-4">
+          <Button onClick={onBack} variant="outline" className="flex-1">
+            Back
+          </Button>
+          <Button className="flex-1">
+            Save All Changes
+          </Button>
+        </div>
       </div>
     </div>
   );
