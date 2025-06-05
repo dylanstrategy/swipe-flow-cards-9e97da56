@@ -113,16 +113,10 @@ const Login = () => {
           navigate('/', { replace: true });
           break;
       }
-    } else if (user && !userProfile && !loading) {
-      // User exists but no profile - this shouldn't happen with our trigger
-      // but let's handle it gracefully
-      console.log('⚠️ User exists but no profile found, redirecting to home');
-      setIsSubmitting(false);
-      navigate('/', { replace: true });
     }
   }, [user, userProfile, loading, navigate]);
 
-  // Show loading screen during auth initialization
+  // Show loading screen only during auth initialization
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
