@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, Save, Edit, User, Mail, Phone, Home, CheckCircle } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { ArrowLeft, Save, Edit, User, Mail, Phone, Home, CheckCircle, CreditCard, Building2, Bell, Eye, Target } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useResident } from '@/contexts/ResidentContext';
 
@@ -26,6 +28,21 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
     emergencyContactName: profile.emergencyContact.name,
     emergencyContactPhone: profile.emergencyContact.phone,
     emergencyContactRelationship: profile.emergencyContact.relationship
+  });
+
+  // Payment and preferences state
+  const [paymentPreferences, setPaymentPreferences] = useState({
+    preferredMethod: 'ach',
+    achAccountNumber: '****1234',
+    achRoutingNumber: '021000021',
+    creditCardLast4: '4567'
+  });
+
+  const [adPreferences, setAdPreferences] = useState({
+    emailMarketing: true,
+    smsMarketing: false,
+    personalizedAds: true,
+    communityUpdates: true
   });
 
   const handleSave = () => {
@@ -86,7 +103,7 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
   }, [profile]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-24">
       <div className="max-w-2xl mx-auto p-4 space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
@@ -94,8 +111,8 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900">Identity Setup</h1>
-            <p className="text-sm text-gray-600">Update your personal information and contact details</p>
+            <h1 className="text-2xl font-bold text-gray-900">Identity & Access</h1>
+            <p className="text-sm text-gray-600">Manage your personal information, payment methods, and preferences</p>
           </div>
         </div>
 
@@ -274,6 +291,114 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
                 disabled={!isEditing}
                 placeholder="(555) 987-6543"
                 className={isEditing ? "bg-white" : "bg-gray-100"}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Payment Methods */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="w-5 h-5" />
+              Payment Methods
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* ACH Bank Transfer */}
+            <div className="border rounded-lg p-4 bg-green-50 border-green-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <Building2 className="w-5 h-5 text-green-600" />
+                  <div>
+                    <div className="font-medium text-green-900">ACH Bank Transfer</div>
+                    <div className="text-sm text-green-700">Account ending in {paymentPreferences.achAccountNumber.slice(-4)}</div>
+                  </div>
+                </div>
+                <div className="bg-green-600 text-white text-xs px-2 py-1 rounded">Primary</div>
+              </div>
+              <div className="text-sm text-green-800">
+                Routing: {paymentPreferences.achRoutingNumber} • No fees • Auto-pay enabled
+              </div>
+            </div>
+
+            {/* Credit Card */}
+            <div className="border rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <CreditCard className="w-5 h-5 text-gray-600" />
+                  <div>
+                    <div className="font-medium">Credit Card</div>
+                    <div className="text-sm text-gray-600">Visa ending in {paymentPreferences.creditCardLast4}</div>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm">Edit</Button>
+              </div>
+              <div className="text-sm text-gray-600">
+                Backup payment method • 2.9% processing fee
+              </div>
+            </div>
+
+            <Button variant="outline" className="w-full">
+              <CreditCard className="w-4 h-4 mr-2" />
+              Add Payment Method
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Advertisement Preferences */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="w-5 h-5" />
+              Advertisement Preferences
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="font-medium">Email Marketing</div>
+                <div className="text-sm text-gray-600">Receive promotional emails and updates</div>
+              </div>
+              <Switch 
+                checked={adPreferences.emailMarketing}
+                onCheckedChange={(checked) => setAdPreferences({ ...adPreferences, emailMarketing: checked })}
+              />
+            </div>
+            <Separator />
+            
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="font-medium">SMS Marketing</div>
+                <div className="text-sm text-gray-600">Receive promotional text messages</div>
+              </div>
+              <Switch 
+                checked={adPreferences.smsMarketing}
+                onCheckedChange={(checked) => setAdPreferences({ ...adPreferences, smsMarketing: checked })}
+              />
+            </div>
+            <Separator />
+            
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="font-medium">Personalized Ads</div>
+                <div className="text-sm text-gray-600">Show ads based on your preferences</div>
+              </div>
+              <Switch 
+                checked={adPreferences.personalizedAds}
+                onCheckedChange={(checked) => setAdPreferences({ ...adPreferences, personalizedAds: checked })}
+              />
+            </div>
+            <Separator />
+            
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="font-medium">Community Updates</div>
+                <div className="text-sm text-gray-600">Receive updates about community events and news</div>
+              </div>
+              <Switch 
+                checked={adPreferences.communityUpdates}
+                onCheckedChange={(checked) => setAdPreferences({ ...adPreferences, communityUpdates: checked })}
               />
             </div>
           </CardContent>
