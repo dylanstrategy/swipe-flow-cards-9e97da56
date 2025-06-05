@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { Plus, Calendar, Clock } from 'lucide-react';
 
 const ScheduleSetup = () => {
@@ -29,6 +30,36 @@ const ScheduleSetup = () => {
     }
   ]);
 
+  const [workHours, setWorkHours] = useState({
+    monday: { enabled: true, start: '08:00', end: '17:00' },
+    tuesday: { enabled: true, start: '08:00', end: '17:00' },
+    wednesday: { enabled: true, start: '08:00', end: '17:00' },
+    thursday: { enabled: true, start: '08:00', end: '17:00' },
+    friday: { enabled: true, start: '08:00', end: '17:00' },
+    saturday: { enabled: false, start: '09:00', end: '15:00' },
+    sunday: { enabled: false, start: '10:00', end: '14:00' }
+  });
+
+  const updateWorkHours = (day: string, field: string, value: any) => {
+    setWorkHours(prev => ({
+      ...prev,
+      [day]: {
+        ...prev[day as keyof typeof prev],
+        [field]: value
+      }
+    }));
+  };
+
+  const daysOfWeek = [
+    { key: 'monday', label: 'Monday' },
+    { key: 'tuesday', label: 'Tuesday' },
+    { key: 'wednesday', label: 'Wednesday' },
+    { key: 'thursday', label: 'Thursday' },
+    { key: 'friday', label: 'Friday' },
+    { key: 'saturday', label: 'Saturday' },
+    { key: 'sunday', label: 'Sunday' }
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -38,6 +69,49 @@ const ScheduleSetup = () => {
           Add Schedule
         </Button>
       </div>
+
+      {/* Work Hours Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            Work Hours Configuration
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-3">
+            {daysOfWeek.map(({ key, label }) => (
+              <div key={key} className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Switch
+                    checked={workHours[key as keyof typeof workHours].enabled}
+                    onCheckedChange={(checked) => updateWorkHours(key, 'enabled', checked)}
+                  />
+                  <Label className="min-w-[80px] font-medium">{label}</Label>
+                </div>
+                {workHours[key as keyof typeof workHours].enabled && (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="time"
+                      value={workHours[key as keyof typeof workHours].start}
+                      onChange={(e) => updateWorkHours(key, 'start', e.target.value)}
+                      className="w-24"
+                    />
+                    <span className="text-sm text-gray-500">to</span>
+                    <Input
+                      type="time"
+                      value={workHours[key as keyof typeof workHours].end}
+                      onChange={(e) => updateWorkHours(key, 'end', e.target.value)}
+                      className="w-24"
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <Button variant="outline" className="w-full">Save Work Hours</Button>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
