@@ -719,7 +719,45 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_available_units: {
+        Args: { property_uuid: string }
+        Returns: {
+          id: string
+          unit_number: string
+          bedroom_type: string
+          bath_type: string
+          sq_ft: number
+          floor: number
+        }[]
+      }
+      get_unit_occupancy_rate: {
+        Args: { property_uuid: string }
+        Returns: number
+      }
+      get_user_property_id: {
+        Args: { user_id: string }
+        Returns: string
+      }
+      get_user_role: {
+        Args: { user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      is_admin_or_operator: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      is_maintenance_staff: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      update_unit_status: {
+        Args: {
+          unit_uuid: string
+          new_status: Database["public"]["Enums"]["unit_status"]
+          notes_text?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:

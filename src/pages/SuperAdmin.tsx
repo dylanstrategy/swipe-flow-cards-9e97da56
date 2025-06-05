@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUsers, useProperties, useUnits } from '@/hooks/useSupabaseData';
@@ -8,13 +7,23 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RoleImpersonation from '@/components/RoleImpersonation';
-import { Users, Building, Home, Calendar, Settings, LogOut } from 'lucide-react';
+import CreateUserModal from '@/components/admin/CreateUserModal';
+import CreatePropertyModal from '@/components/admin/CreatePropertyModal';
+import CreateUnitModal from '@/components/admin/CreateUnitModal';
+import { Users, Building, Home, Calendar, Settings, LogOut, Plus, Edit, Trash2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const SuperAdmin = () => {
   const { userProfile, signOut } = useAuth();
-  const { users, loading: usersLoading } = useUsers();
-  const { properties, loading: propertiesLoading } = useProperties();
-  const { units, loading: unitsLoading } = useUnits();
+  const { users, loading: usersLoading, refetch: refetchUsers } = useUsers();
+  const { properties, loading: propertiesLoading, refetch: refetchProperties } = useProperties();
+  const { units, loading: unitsLoading, refetch: refetchUnits } = useUnits();
+  const { toast } = useToast();
+
+  const [showCreateUser, setShowCreateUser] = useState(false);
+  const [showCreateProperty, setShowCreateProperty] = useState(false);
+  const [showCreateUnit, setShowCreateUnit] = useState(false);
 
   const getRoleColor = (role: string) => {
     const colors = {
@@ -35,6 +44,93 @@ const SuperAdmin = () => {
     return role.split('_').map(word => 
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
+  };
+
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!window.confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.admin.deleteUser(userId);
+      if (error) throw error;
+
+      toast({
+        title: "User Deleted",
+        description: `${userName} has been deleted successfully.`,
+      });
+      refetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete user",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteProperty = async (propertyId: string, propertyName: string) => {
+    if (!window.confirm(`Are you sure you want to delete ${propertyName}? This will also delete all associated units.`)) {
+      return;
+    }
+
+    try {
+      // First delete all units in the property
+      const { error: unitsError } = await supabase
+        .from('units')
+        .delete()
+        .eq('property_id', propertyId);
+
+      if (unitsError) throw unitsError;
+
+      // Then delete the property
+      const { error: propertyError } = await supabase
+        .from('properties')
+        .delete()
+        .eq('id', propertyId);
+
+      if (propertyError) throw propertyError;
+
+      toast({
+        title: "Property Deleted",
+        description: `${propertyName} has been deleted successfully.`,
+      });
+      refetchProperties();
+      refetchUnits();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete property",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteUnit = async (unitId: string, unitNumber: string) => {
+    if (!window.confirm(`Are you sure you want to delete Unit ${unitNumber}?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('units')
+        .delete()
+        .eq('id', unitId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Unit Deleted",
+        description: `Unit ${unitNumber} has been deleted successfully.`,
+      });
+      refetchUnits();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete unit",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -165,8 +261,16 @@ const SuperAdmin = () => {
           <TabsContent value="users" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>Manage all system users and their roles</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>User Management</CardTitle>
+                    <CardDescription>Manage all system users and their roles</CardDescription>
+                  </div>
+                  <Button onClick={() => setShowCreateUser(true)} className="flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add User
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {usersLoading ? (
@@ -183,9 +287,19 @@ const SuperAdmin = () => {
                             <p className="text-sm text-gray-600">{user.email}</p>
                             <p className="text-xs text-gray-500">Created: {new Date(user.created_at).toLocaleDateString()}</p>
                           </div>
-                          <Badge className={getRoleColor(user.role)}>
-                            {formatRoleName(user.role)}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge className={getRoleColor(user.role)}>
+                              {formatRoleName(user.role)}
+                            </Badge>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => handleDeleteUser(user.id, `${user.first_name} ${user.last_name}`)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -198,8 +312,16 @@ const SuperAdmin = () => {
           <TabsContent value="properties" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Property Management</CardTitle>
-                <CardDescription>Overview of all properties in the system</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Property Management</CardTitle>
+                    <CardDescription>Overview of all properties in the system</CardDescription>
+                  </div>
+                  <Button onClick={() => setShowCreateProperty(true)} className="flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Property
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {propertiesLoading ? (
@@ -213,10 +335,30 @@ const SuperAdmin = () => {
                 ) : (
                   <div className="space-y-4">
                     {properties.map((property) => (
-                      <div key={property.id} className="p-4 border rounded-lg">
-                        <h3 className="font-medium">{property.name}</h3>
-                        <p className="text-sm text-gray-600">{property.address}</p>
-                        <p className="text-xs text-gray-500">Created: {new Date(property.created_at).toLocaleDateString()}</p>
+                      <div key={property.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <h3 className="font-medium">{property.name}</h3>
+                          <p className="text-sm text-gray-600">{property.address}</p>
+                          <p className="text-xs text-gray-500">Created: {new Date(property.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowCreateUnit(true)}
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            Add Unit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => handleDeleteProperty(property.id, property.name)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -228,8 +370,16 @@ const SuperAdmin = () => {
           <TabsContent value="units" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Unit Management</CardTitle>
-                <CardDescription>Overview of all units across properties</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Unit Management</CardTitle>
+                    <CardDescription>Overview of all units across properties</CardDescription>
+                  </div>
+                  <Button onClick={() => setShowCreateUnit(true)} className="flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Unit
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {unitsLoading ? (
@@ -247,18 +397,31 @@ const SuperAdmin = () => {
                         <div key={unit.id} className="p-4 border rounded-lg">
                           <div className="flex items-center justify-between mb-2">
                             <h3 className="font-medium">Unit {unit.unit_number}</h3>
-                            <Badge className={
-                              unit.status === 'occupied' ? 'bg-green-100 text-green-800' :
-                              unit.status === 'available' ? 'bg-blue-100 text-blue-800' :
-                              unit.status === 'maintenance' ? 'bg-orange-100 text-orange-800' :
-                              'bg-gray-100 text-gray-800'
-                            }>
-                              {unit.status}
-                            </Badge>
+                            <div className="flex items-center gap-1">
+                              <Badge className={
+                                unit.status === 'occupied' ? 'bg-green-100 text-green-800' :
+                                unit.status === 'available' ? 'bg-blue-100 text-blue-800' :
+                                unit.status === 'maintenance' ? 'bg-orange-100 text-orange-800' :
+                                'bg-gray-100 text-gray-800'
+                              }>
+                                {unit.status}
+                              </Badge>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-red-600 hover:text-red-700 ml-1"
+                                onClick={() => handleDeleteUnit(unit.id, unit.unit_number)}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
                           </div>
                           <p className="text-sm text-gray-600">
                             {unit.bedroom_type || 'N/A'} bed, {unit.bath_type || 'N/A'} bath
                           </p>
+                          {unit.sq_ft && (
+                            <p className="text-xs text-gray-500">{unit.sq_ft} sq ft</p>
+                          )}
                           {unit.lease_start && unit.lease_end && (
                             <p className="text-xs text-gray-500">
                               Lease: {new Date(unit.lease_start).toLocaleDateString()} - {new Date(unit.lease_end).toLocaleDateString()}
@@ -304,6 +467,23 @@ const SuperAdmin = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Modals */}
+      <CreateUserModal 
+        isOpen={showCreateUser} 
+        onClose={() => setShowCreateUser(false)}
+        onUserCreated={refetchUsers}
+      />
+      <CreatePropertyModal 
+        isOpen={showCreateProperty} 
+        onClose={() => setShowCreateProperty(false)}
+        onPropertyCreated={refetchProperties}
+      />
+      <CreateUnitModal 
+        isOpen={showCreateUnit} 
+        onClose={() => setShowCreateUnit(false)}
+        onUnitCreated={refetchUnits}
+      />
     </div>
   );
 };
