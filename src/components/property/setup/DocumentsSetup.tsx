@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { Upload, FileText, CheckCircle, AlertCircle, X } from 'lucide-react';
+import { Upload, FileText, CheckCircle, X, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 interface DocumentsSetupProps {
@@ -78,87 +78,109 @@ const DocumentsSetup = ({ onBack }: DocumentsSetupProps) => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Document Management</h2>
-        <p className="text-gray-600">Upload and organize property documents</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b px-6 py-4">
+        <div className="flex items-center justify-between max-w-6xl mx-auto">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Property Setup
+            </Button>
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-4">
-        {documentCategories.map((category) => {
-          const files = uploadedFiles[category.id] || [];
-          
-          return (
-            <Card key={category.id}>
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">{category.title}</h3>
-                      {getStatusBadge(category)}
-                    </div>
-                    <p className="text-gray-600 mb-3">{category.description}</p>
-                    <p className="text-sm text-gray-500">
-                      {files.length}/{category.maxFiles} files uploaded
-                    </p>
-                  </div>
-                </div>
+      {/* Content */}
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Document Management</h1>
+          <p className="text-gray-600">Upload and organize property documents</p>
+        </div>
 
-                {/* Upload Area */}
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center mb-4">
-                  <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-600 mb-2">Drop files here or click to upload</p>
-                  <input
-                    type="file"
-                    multiple
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) => handleFileUpload(category.id, e)}
-                    className="hidden"
-                    id={`upload-${category.id}`}
-                  />
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => document.getElementById(`upload-${category.id}`)?.click()}
-                  >
-                    Choose Files
-                  </Button>
-                </div>
-
-                {/* Uploaded Files */}
-                {files.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-gray-900">Uploaded Files</h4>
-                    {files.map((fileName, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <FileText className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm text-gray-900">{fileName}</span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFile(category.id, fileName)}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
+        <div className="space-y-6">
+          {documentCategories.map((category) => {
+            const files = uploadedFiles[category.id] || [];
+            
+            return (
+              <Card key={category.id}>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <CardTitle className="text-lg">{category.title}</CardTitle>
+                        {getStatusBadge(category)}
                       </div>
-                    ))}
+                      <p className="text-gray-600 mb-3">{category.description}</p>
+                      <p className="text-sm text-gray-500">
+                        {files.length}/{category.maxFiles} files uploaded
+                      </p>
+                    </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Upload Area */}
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-600 mb-2">Drop files here or click to upload</p>
+                    <input
+                      type="file"
+                      multiple
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) => handleFileUpload(category.id, e)}
+                      className="hidden"
+                      id={`upload-${category.id}`}
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => document.getElementById(`upload-${category.id}`)?.click()}
+                    >
+                      Choose Files
+                    </Button>
+                  </div>
 
-      <div className="flex gap-3 pt-4">
-        <Button onClick={onBack} variant="outline" className="flex-1">
-          Back
-        </Button>
-        <Button className="flex-1">
-          Save Changes
-        </Button>
+                  {/* Uploaded Files */}
+                  {files.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-gray-900">Uploaded Files</h4>
+                      {files.map((fileName, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <FileText className="w-4 h-4 text-blue-600" />
+                            <span className="text-sm text-gray-900">{fileName}</span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeFile(category.id, fileName)}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 pt-6">
+          <Button onClick={onBack} variant="outline" className="flex-1">
+            Back to Setup
+          </Button>
+          <Button className="flex-1">
+            Save Changes
+          </Button>
+        </div>
       </div>
     </div>
   );

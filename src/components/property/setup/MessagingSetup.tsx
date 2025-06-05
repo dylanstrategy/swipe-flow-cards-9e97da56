@@ -1,14 +1,11 @@
 
 import React, { useState } from 'react';
-import { MessageSquare, Plus, Edit, Trash2, Clock, Calendar } from 'lucide-react';
+import { MessageSquare, Plus, Edit, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 
 interface MessagingSetupProps {
   onBack: () => void;
@@ -17,413 +14,145 @@ interface MessagingSetupProps {
 const MessagingSetup = ({ onBack }: MessagingSetupProps) => {
   const [templates, setTemplates] = useState([
     {
-      id: '1',
+      id: 1,
       name: 'Tour Confirmation',
-      category: 'tours',
-      subject: 'Your Tour is Confirmed!',
-      content: 'Hi {{resident_name}}, your tour is scheduled for {{date}} at {{time}}. We look forward to showing you around!',
-      trigger: 'tour_scheduled',
-      frequency: 'immediate',
-      timing: { value: 0, unit: 'minutes' },
-      active: true,
-      dataSource: 'tour_system'
+      trigger: 'Tour Scheduled',
+      message: 'Hi {name}! Your tour is confirmed for {date} at {time}. See you soon!',
+      active: true
+    },
+    {
+      id: 2,
+      name: 'Application Received',
+      trigger: 'Application Submitted',
+      message: 'Thanks {name}! We received your application and will review it within 24 hours.',
+      active: true
+    },
+    {
+      id: 3,
+      name: 'Move-in Reminder',
+      trigger: '7 Days Before Move-in',
+      message: 'Hi {name}! Your move-in date is approaching. Here\'s what you need to know...',
+      active: false
     }
   ]);
 
-  const [editingTemplate, setEditingTemplate] = useState<any>(null);
-  const [showNewTemplate, setShowNewTemplate] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<number | null>(null);
 
-  const templateCategories = [
-    { id: 'tours', name: 'Tours', color: 'bg-blue-100 text-blue-800' },
-    { id: 'movein', name: 'Move-In', color: 'bg-green-100 text-green-800' },
-    { id: 'moveout', name: 'Move-Out', color: 'bg-red-100 text-red-800' },
-    { id: 'renewals', name: 'Renewals', color: 'bg-purple-100 text-purple-800' },
-    { id: 'maintenance', name: 'Maintenance', color: 'bg-orange-100 text-orange-800' },
-    { id: 'community', name: 'Community', color: 'bg-pink-100 text-pink-800' },
-    { id: 'leasing', name: 'Leasing', color: 'bg-indigo-100 text-indigo-800' },
-    { id: 'payments', name: 'Payments', color: 'bg-yellow-100 text-yellow-800' }
-  ];
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b px-6 py-4">
+        <div className="flex items-center justify-between max-w-6xl mx-auto">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Property Setup
+            </Button>
+          </div>
+        </div>
+      </div>
 
-  const triggerOptions = [
-    // Tour triggers
-    { value: 'tour_scheduled', label: 'Tour Scheduled', category: 'tours' },
-    { value: 'tour_completed', label: 'Tour Completed', category: 'tours' },
-    { value: 'tour_reminder', label: 'Tour Reminder', category: 'tours' },
-    { value: 'tour_no_show', label: 'Tour No-Show', category: 'tours' },
-    
-    // Application/Leasing triggers
-    { value: 'application_received', label: 'Application Received', category: 'leasing' },
-    { value: 'application_approved', label: 'Application Approved', category: 'leasing' },
-    { value: 'application_denied', label: 'Application Denied', category: 'leasing' },
-    { value: 'lease_signed', label: 'Lease Signed', category: 'leasing' },
-    { value: 'lease_pending', label: 'Lease Pending Signature', category: 'leasing' },
-    
-    // Lease expiration triggers
-    { value: 'lease_expiring_90_days', label: '90 Days Before Lease End', category: 'renewals' },
-    { value: 'lease_expiring_60_days', label: '60 Days Before Lease End', category: 'renewals' },
-    { value: 'lease_expiring_30_days', label: '30 Days Before Lease End', category: 'renewals' },
-    { value: 'lease_expiring_14_days', label: '14 Days Before Lease End', category: 'renewals' },
-    { value: 'lease_expiring_7_days', label: '7 Days Before Lease End', category: 'renewals' },
-    
-    // Renewal triggers
-    { value: 'renewal_notice_sent', label: 'Renewal Notice Sent', category: 'renewals' },
-    { value: 'renewal_offer_sent', label: 'Renewal Offer Sent', category: 'renewals' },
-    { value: 'renewal_signed', label: 'Renewal Signed', category: 'renewals' },
-    { value: 'renewal_declined', label: 'Renewal Declined', category: 'renewals' },
-    
-    // Move-in triggers
-    { value: 'move_in_scheduled', label: 'Move-In Scheduled', category: 'movein' },
-    { value: 'move_in_completed', label: 'Move-In Completed', category: 'movein' },
-    { value: 'move_in_reminder', label: 'Move-In Reminder', category: 'movein' },
-    
-    // Move-out triggers
-    { value: 'notice_to_vacate_received', label: 'Notice to Vacate Received', category: 'moveout' },
-    { value: 'move_out_scheduled', label: 'Move-Out Scheduled', category: 'moveout' },
-    { value: 'move_out_completed', label: 'Move-Out Completed', category: 'moveout' },
-    
-    // Maintenance triggers
-    { value: 'work_order_created', label: 'Work Order Created', category: 'maintenance' },
-    { value: 'work_order_scheduled', label: 'Work Order Scheduled', category: 'maintenance' },
-    { value: 'work_order_completed', label: 'Work Order Completed', category: 'maintenance' },
-    { value: 'work_order_delayed', label: 'Work Order Delayed', category: 'maintenance' },
-    
-    // Payment triggers
-    { value: 'payment_received', label: 'Payment Received', category: 'payments' },
-    { value: 'payment_overdue', label: 'Payment Overdue', category: 'payments' },
-    { value: 'payment_reminder', label: 'Payment Reminder', category: 'payments' },
-    
-    // Community triggers
-    { value: 'event_scheduled', label: 'Community Event Scheduled', category: 'community' },
-    { value: 'amenity_maintenance', label: 'Amenity Maintenance Notice', category: 'community' }
-  ];
+      {/* Content */}
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Message Automations</h1>
+          <p className="text-gray-600">Set up automated messaging templates and workflows</p>
+        </div>
 
-  const dataSourceOptions = [
-    { value: 'tour_system', label: 'Tour Management System' },
-    { value: 'lease_management', label: 'Lease Management System' },
-    { value: 'pricing_engine', label: 'Pricing Engine' },
-    { value: 'payment_system', label: 'Payment System' },
-    { value: 'maintenance_system', label: 'Maintenance System' },
-    { value: 'resident_portal', label: 'Resident Portal' },
-    { value: 'crm_system', label: 'CRM System' }
-  ];
-
-  const availableVariables = {
-    tour_system: ['resident_name', 'date', 'time', 'unit_number', 'leasing_agent', 'property_name'],
-    lease_management: ['resident_name', 'lease_start_date', 'lease_end_date', 'lease_term', 'rent_amount', 'unit_number', 'renewal_rate', 'renewal_term_options'],
-    pricing_engine: ['current_rent', 'market_rent', 'renewal_rate', 'concessions_available', 'lease_term_pricing'],
-    payment_system: ['amount_due', 'due_date', 'payment_method', 'late_fee', 'balance'],
-    maintenance_system: ['work_order_number', 'scheduled_date', 'technician_name', 'estimated_duration'],
-    resident_portal: ['resident_name', 'unit_number', 'move_in_date', 'emergency_contact'],
-    crm_system: ['resident_name', 'contact_info', 'preferences', 'interaction_history']
-  };
-
-  const handleSaveTemplate = (template: any) => {
-    if (template.id) {
-      setTemplates(prev => prev.map(t => t.id === template.id ? template : t));
-    } else {
-      setTemplates(prev => [...prev, { ...template, id: Date.now().toString() }]);
-    }
-    setEditingTemplate(null);
-    setShowNewTemplate(false);
-  };
-
-  const TemplateForm = ({ template, onSave, onCancel }: any) => {
-    const [formData, setFormData] = useState(template || {
-      name: '',
-      category: 'tours',
-      subject: '',
-      content: '',
-      trigger: 'tour_scheduled',
-      frequency: 'immediate',
-      timing: { value: 0, unit: 'minutes' },
-      active: true,
-      dataSource: 'tour_system'
-    });
-
-    const selectedDataSource = dataSourceOptions.find(ds => ds.value === formData.dataSource);
-    const availableVars = availableVariables[formData.dataSource as keyof typeof availableVariables] || [];
-
-    return (
-      <div className="max-w-4xl mx-auto">
         <Card>
-          <CardContent className="p-4 md:p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              {template ? 'Edit Template' : 'New Template'}
-            </h3>
-            
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-sm font-medium">Template Name</Label>
-                  <Input
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Tour Confirmation"
-                    className="w-full"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category" className="text-sm font-medium">Category</Label>
-                  <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="z-50 bg-white border shadow-lg">
-                      {templateCategories.map(cat => (
-                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="trigger" className="text-sm font-medium">Trigger Event</Label>
-                  <Select value={formData.trigger} onValueChange={(value) => setFormData(prev => ({ ...prev, trigger: value }))}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="z-50 bg-white border shadow-lg max-h-60 overflow-y-auto">
-                      {triggerOptions.map(trigger => (
-                        <SelectItem key={trigger.value} value={trigger.value}>
-                          {trigger.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dataSource" className="text-sm font-medium">Data Source</Label>
-                  <Select value={formData.dataSource} onValueChange={(value) => setFormData(prev => ({ ...prev, dataSource: value }))}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="z-50 bg-white border shadow-lg">
-                      {dataSourceOptions.map(source => (
-                        <SelectItem key={source.value} value={source.value}>
-                          {source.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2 text-sm font-medium">
-                  <Clock className="w-4 h-4" />
-                  Message Timing
-                </Label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <Select value={formData.frequency} onValueChange={(value) => setFormData(prev => ({ ...prev, frequency: value }))}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="z-50 bg-white border shadow-lg">
-                      <SelectItem value="immediate">Send Immediately</SelectItem>
-                      <SelectItem value="scheduled">Schedule</SelectItem>
-                      <SelectItem value="reminder">Send as Reminder</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {formData.frequency !== 'immediate' && (
-                    <>
-                      <Input
-                        type="number"
-                        value={formData.timing.value}
-                        onChange={(e) => setFormData(prev => ({ 
-                          ...prev, 
-                          timing: { ...prev.timing, value: parseInt(e.target.value) }
-                        }))}
-                        placeholder="0"
-                        className="w-full"
-                      />
-                      <Select 
-                        value={formData.timing.unit} 
-                        onValueChange={(value) => setFormData(prev => ({ 
-                          ...prev, 
-                          timing: { ...prev.timing, unit: value }
-                        }))}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="z-50 bg-white border shadow-lg">
-                          <SelectItem value="minutes">Minutes</SelectItem>
-                          <SelectItem value="hours">Hours</SelectItem>
-                          <SelectItem value="days">Days</SelectItem>
-                          <SelectItem value="weeks">Weeks</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="subject" className="text-sm font-medium">Email Subject</Label>
-                <Input
-                  value={formData.subject}
-                  onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
-                  placeholder="Your Tour is Confirmed!"
-                  className="w-full"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="content" className="text-sm font-medium">Message Content</Label>
-                <Textarea
-                  value={formData.content}
-                  onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                  rows={4}
-                  placeholder="Hi {{resident_name}}, your tour is scheduled for {{date}} at {{time}}..."
-                  className="w-full resize-none"
-                />
-                <div className="p-3 bg-gray-50 rounded border">
-                  <p className="text-sm font-medium text-gray-700 mb-2">
-                    Available Variables for {selectedDataSource?.label}:
-                  </p>
-                  <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
-                    {availableVars.map(variable => (
-                      <Badge 
-                        key={variable} 
-                        variant="outline" 
-                        className="text-xs cursor-pointer hover:bg-gray-100 shrink-0" 
-                        onClick={() => {
-                          const textarea = document.querySelector('textarea');
-                          if (textarea) {
-                            const cursorPos = textarea.selectionStart;
-                            const textBefore = formData.content.substring(0, cursorPos);
-                            const textAfter = formData.content.substring(cursorPos);
-                            const newContent = textBefore + `{{${variable}}}` + textAfter;
-                            setFormData(prev => ({ ...prev, content: newContent }));
-                          }
-                        }}
-                      >
-                        {variable}
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5" />
+                Message Templates
+              </CardTitle>
+              <Button className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Add Template
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {templates.map((template) => (
+              <div key={template.id} className="border rounded-lg p-4 bg-white">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className="font-semibold">{template.name}</h3>
+                      <Badge className={template.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                        {template.active ? 'Active' : 'Inactive'}
                       </Badge>
-                    ))}
+                    </div>
+                    <p className="text-sm text-gray-600">Trigger: {template.trigger}</p>
                   </div>
+                  <Button variant="outline" size="sm" onClick={() => setEditingTemplate(template.id)}>
+                    <Edit className="w-4 h-4" />
+                  </Button>
                 </div>
+                
+                {editingTemplate === template.id ? (
+                  <div className="space-y-3">
+                    <div>
+                      <Label>Message Content</Label>
+                      <Textarea
+                        value={template.message}
+                        onChange={(e) => {
+                          setTemplates(templates.map(t => 
+                            t.id === template.id ? {...t, message: e.target.value} : t
+                          ));
+                        }}
+                        className="mt-1"
+                        rows={3}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => setEditingTemplate(null)}>
+                        Save
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setEditingTemplate(null)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 p-3 rounded text-sm">
+                    {template.message}
+                  </div>
+                )}
               </div>
+            ))}
+          </CardContent>
+        </Card>
 
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={formData.active}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, active: checked }))}
-                />
-                <Label className="text-sm font-medium">Active Template</Label>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                <Button onClick={() => onSave(formData)} className="flex-1">
-                  Save Template
-                </Button>
-                <Button onClick={onCancel} variant="outline" className="flex-1">
-                  Cancel
-                </Button>
-              </div>
+        {/* Variables Help */}
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="p-4">
+            <h4 className="font-semibold text-blue-900 mb-2">Available Variables</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-blue-800">
+              <code>{'{name}'}</code>
+              <code>{'{date}'}</code>
+              <code>{'{time}'}</code>
+              <code>{'{unit}'}</code>
+              <code>{'{rent}'}</code>
+              <code>{'{property}'}</code>
+              <code>{'{phone}'}</code>
+              <code>{'{email}'}</code>
             </div>
           </CardContent>
         </Card>
-      </div>
-    );
-  };
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Message Automations</h2>
-            <p className="text-gray-600 text-sm">Configure automated message templates with timing and data integration</p>
-          </div>
-          <Button onClick={() => setShowNewTemplate(true)} className="shrink-0">
-            <Plus className="w-4 h-4 mr-2" />
-            New Template
-          </Button>
-        </div>
-
-        {showNewTemplate && (
-          <TemplateForm
-            onSave={handleSaveTemplate}
-            onCancel={() => setShowNewTemplate(false)}
-          />
-        )}
-
-        {editingTemplate && (
-          <TemplateForm
-            template={editingTemplate}
-            onSave={handleSaveTemplate}
-            onCancel={() => setEditingTemplate(null)}
-          />
-        )}
-
-        <div className="space-y-4">
-          {templates.map((template) => {
-            const category = templateCategories.find(c => c.id === template.category);
-            const trigger = triggerOptions.find(t => t.value === template.trigger);
-            const dataSource = dataSourceOptions.find(ds => ds.value === template.dataSource);
-            
-            return (
-              <Card key={template.id} className="overflow-hidden">
-                <CardContent className="p-4 md:p-6">
-                  <div className="flex flex-col lg:flex-row items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900 truncate">{template.name}</h3>
-                        <Badge className={category?.color}>
-                          {category?.name}
-                        </Badge>
-                        <Badge className={template.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                          {template.active ? 'Active' : 'Inactive'}
-                        </Badge>
-                      </div>
-                      <p className="text-gray-600 mb-2 truncate">{template.subject}</p>
-                      <div className="flex flex-wrap items-center gap-4 mb-3 text-sm text-gray-500">
-                        <span className="truncate">Trigger: {trigger?.label}</span>
-                        <span className="hidden sm:inline">•</span>
-                        <span className="truncate">
-                          Timing: {template.frequency === 'immediate' ? 'Immediate' : `${template.timing.value} ${template.timing.unit} ${template.frequency === 'scheduled' ? 'after trigger' : 'before'}`}
-                        </span>
-                        <span className="hidden sm:inline">•</span>
-                        <span className="truncate">Data: {dataSource?.label}</span>
-                      </div>
-                      <div className="bg-gray-50 p-3 rounded">
-                        <p className="text-sm text-gray-700 break-words">
-                          {template.content.length > 150 ? `${template.content.substring(0, 150)}...` : template.content}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 shrink-0">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setEditingTemplate(template)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setTemplates(prev => prev.filter(t => t.id !== template.id))}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-3 pt-4">
+        {/* Action Buttons */}
+        <div className="flex gap-3 pt-6">
           <Button onClick={onBack} variant="outline" className="flex-1">
-            Back
+            Back to Setup
           </Button>
           <Button className="flex-1">
-            Save All Changes
+            Save Templates
           </Button>
         </div>
       </div>

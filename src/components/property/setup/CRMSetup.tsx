@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
-import { TrendingUp, Clock, User, AlertTriangle } from 'lucide-react';
+import { TrendingUp, Clock, User, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -61,21 +60,40 @@ const CRMSetup = ({ onBack }: CRMSetupProps) => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">CRM & Follow-up Logic</h2>
-        <p className="text-gray-600">Configure lead tracking and follow-up automation</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b px-6 py-4">
+        <div className="flex items-center justify-between max-w-6xl mx-auto">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Property Setup
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {/* Follow-up Timing */}
-      <Card>
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Clock className="w-5 h-5 text-blue-600" />
-            Follow-up Timing
-          </h3>
-          
-          <div className="space-y-4">
+      {/* Content */}
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">CRM & Follow-up Logic</h1>
+          <p className="text-gray-600">Configure lead tracking and follow-up automation</p>
+        </div>
+
+        {/* Follow-up Timing */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-blue-600" />
+              Follow-up Timing
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div>
               <Label>Post-Tour Follow-ups (days after tour)</Label>
               <Input
@@ -108,51 +126,51 @@ const CRMSetup = ({ onBack }: CRMSetupProps) => {
                 className="mt-1"
               />
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Required Contact Fields */}
-      <Card>
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <User className="w-5 h-5 text-green-600" />
-            Required Contact Fields
-          </h3>
-          
-          <div className="grid grid-cols-2 gap-4">
-            {Object.entries(crmSettings.requiredFields).map(([field, required]) => (
-              <div key={field} className="flex items-center space-x-2">
-                <Checkbox
-                  checked={required}
-                  onCheckedChange={(checked) => 
-                    setCrmSettings(prev => ({
-                      ...prev,
-                      requiredFields: {
-                        ...prev.requiredFields,
-                        [field]: checked as boolean
-                      }
-                    }))
-                  }
-                />
-                <label className="text-sm font-medium">
-                  {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                </label>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+        {/* Required Contact Fields */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="w-5 h-5 text-green-600" />
+              Required Contact Fields
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              {Object.entries(crmSettings.requiredFields).map(([field, required]) => (
+                <div key={field} className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={required}
+                    onCheckedChange={(checked) => 
+                      setCrmSettings(prev => ({
+                        ...prev,
+                        requiredFields: {
+                          ...prev.requiredFields,
+                          [field]: checked as boolean
+                        }
+                      }))
+                    }
+                  />
+                  <label className="text-sm font-medium">
+                    {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Lead Sources */}
-      <Card>
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-purple-600" />
-            Lead Source Tracking
-          </h3>
-          
-          <div className="space-y-4">
+        {/* Lead Sources */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-purple-600" />
+              Lead Source Tracking
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             {crmSettings.leadSources.map((source, index) => (
               <div key={index} className="flex items-center gap-4 p-4 border rounded-lg">
                 <Checkbox
@@ -176,19 +194,18 @@ const CRMSetup = ({ onBack }: CRMSetupProps) => {
                 </div>
               </div>
             ))}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Escalation Rules */}
-      <Card>
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-orange-600" />
-            Escalation Alerts
-          </h3>
-          
-          <div className="space-y-3">
+        {/* Escalation Rules */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-orange-600" />
+              Escalation Alerts
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
             <div className="flex items-center space-x-2">
               <Checkbox
                 checked={crmSettings.escalationRules.missedFollowUp}
@@ -242,17 +259,18 @@ const CRMSetup = ({ onBack }: CRMSetupProps) => {
                 Priority alerts for high-value leads ($3000+ monthly rent)
               </label>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <div className="flex gap-3 pt-4">
-        <Button onClick={onBack} variant="outline" className="flex-1">
-          Back
-        </Button>
-        <Button className="flex-1">
-          Save CRM Settings
-        </Button>
+        {/* Action Buttons */}
+        <div className="flex gap-3 pt-6">
+          <Button onClick={onBack} variant="outline" className="flex-1">
+            Back to Setup
+          </Button>
+          <Button className="flex-1">
+            Save CRM Settings
+          </Button>
+        </div>
       </div>
     </div>
   );
