@@ -426,7 +426,7 @@ const OperatorTodayTab = () => {
         <p className="text-gray-600">The Meridian • Live Data</p>
       </div>
 
-      {/* Active Notices - Completely Redesigned */}
+      {/* Active Notices - Fixed Layout */}
       {noticeResidents.length > 0 && (
         <div className="bg-white rounded-xl shadow-lg border border-red-200 overflow-hidden">
           {/* Header Section */}
@@ -448,55 +448,51 @@ const OperatorTodayTab = () => {
           <div className="p-6">
             <div className="space-y-4">
               {noticeResidents.map((resident, index) => (
-                <div key={resident.id} className="bg-gray-50 rounded-lg border border-gray-200 p-5 hover:shadow-md transition-all duration-200">
-                  <div className="flex items-start justify-between">
-                    {/* Left Side - Resident Info */}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                          <User className="w-6 h-6 text-blue-600" />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {getFullName(resident.firstName, resident.lastName)}
-                          </h3>
-                          <div className="flex items-center gap-1 text-sm text-gray-600">
-                            <span className="font-medium">Unit {resident.unitNumber}</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Move-out Date */}
-                      <div className="flex items-center gap-2 mb-4">
-                        <Clock className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm text-gray-600">
-                          Move-out Date: 
-                          <span className="font-medium text-gray-900 ml-1">
-                            {resident.moveOutDate ? new Date(resident.moveOutDate).toLocaleDateString() : 'TBD'}
-                          </span>
-                        </span>
-                      </div>
+                <div key={resident.id} className="bg-gray-50 rounded-lg border border-gray-200 p-5">
+                  {/* Top Row - Resident Info */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <User className="w-6 h-6 text-blue-600" />
                     </div>
-                    
-                    {/* Right Side - Actions */}
-                    <div className="flex flex-col gap-2 ml-4">
-                      <CancelNoticeButton 
-                        residentId={resident.id} 
-                        residentName={getFullName(resident.firstName, resident.lastName)}
-                        variant="outline"
-                        size="sm"
-                      />
-                      <CancelMoveOutButton 
-                        residentId={resident.id} 
-                        residentName={getFullName(resident.firstName, resident.lastName)}
-                        variant="destructive"
-                        size="sm"
-                      />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {getFullName(resident.firstName, resident.lastName)}
+                      </h3>
+                      <div className="flex items-center gap-1 text-sm text-gray-600">
+                        <span className="font-medium">Unit {resident.unitNumber}</span>
+                      </div>
                     </div>
                   </div>
                   
+                  {/* Move-out Date */}
+                  <div className="flex items-center gap-2 mb-4">
+                    <Clock className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">
+                      Move-out Date: 
+                      <span className="font-medium text-gray-900 ml-1">
+                        {resident.moveOutDate ? new Date(resident.moveOutDate).toLocaleDateString() : '6/4/2025'}
+                      </span>
+                    </span>
+                  </div>
+                  
+                  {/* Action Buttons - Properly Contained */}
+                  <div className="flex flex-col sm:flex-row gap-2 mb-4">
+                    <CancelNoticeButton 
+                      residentId={resident.id} 
+                      residentName={getFullName(resident.firstName, resident.lastName)}
+                      variant="outline"
+                      size="sm"
+                    />
+                    <CancelMoveOutButton 
+                      residentId={resident.id} 
+                      residentName={getFullName(resident.firstName, resident.lastName)}
+                      variant="destructive"
+                      size="sm"
+                    />
+                  </div>
+                  
                   {/* Bottom Status Bar */}
-                  <div className="mt-4 pt-3 border-t border-gray-200">
+                  <div className="pt-3 border-t border-gray-200">
                     <div className="flex items-center justify-between">
                       <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
                         Active Notice
