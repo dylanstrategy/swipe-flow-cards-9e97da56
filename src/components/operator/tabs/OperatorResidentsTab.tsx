@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Search, User, Phone, Mail, Home, Calendar, ChevronRight, ArrowLeft, Truck, FileText, Upload, Download, Eye, TruckIcon, RefreshCw, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { Search, User, Phone, Mail, Home, Calendar, ChevronRight, ArrowLeft, Truck, FileText, Upload, Download, Eye, TruckIcon, RefreshCw, AlertTriangle, CheckCircle, XCircle, ArrowUpDown } from 'lucide-react';
 import MoveInTracker from '../MoveInTracker';
 import MoveOutTracker from '../MoveOutTracker';
 import RenewalForm from '../../forms/RenewalForm';
@@ -18,6 +18,10 @@ const OperatorResidentsTab = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterUnitType, setFilterUnitType] = useState('all');
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [selectedResident, setSelectedResident] = useState<any>(null);
   const [showMoveInTracker, setShowMoveInTracker] = useState(false);
   const [showMoveOutTracker, setShowMoveOutTracker] = useState(false);
@@ -66,12 +70,54 @@ const OperatorResidentsTab = () => {
     }
   };
 
-  const filteredResidents = allResidents.filter(resident => {
-    const matchesSearch = resident.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         resident.unitNumber.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || resident.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
+  // Get unique unit types for filter
+  const unitTypes = Array.from(new Set(allResidents.map(r => r.unitType || 'Unknown'))).sort();
+
+  const filteredAndSortedResidents = allResidents
+    .filter(resident => {
+      const matchesSearch = resident.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           resident.unitNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = filterStatus === 'all' || resident.status === filterStatus;
+      const matchesUnitType = filterUnitType === 'all' || resident.unitType === filterUnitType;
+      return matchesSearch && matchesStatus && matchesUnitType;
+    })
+    .sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'name':
+          comparison = a.fullName.localeCompare(b.fullName);
+          break;
+        case 'unit':
+          // Sort units chronologically (numerically)
+          const unitA = parseInt(a.unitNumber) || 0;
+          const unitB = parseInt(b.unitNumber) || 0;
+          comparison = unitA - unitB;
+          break;
+        case 'unitType':
+          comparison = (a.unitType || '').localeCompare(b.unitType || '');
+          break;
+        case 'status':
+          comparison = a.status.localeCompare(b.status);
+          break;
+        case 'rent':
+          comparison = (a.currentRent || 0) - (b.currentRent || 0);
+          break;
+        default:
+          comparison = 0;
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+  };
 
   const handleMoveInTracker = (residentId: string) => {
     setMoveInResidentId(residentId);
@@ -575,104 +621,258 @@ const OperatorResidentsTab = () => {
       </div>
 
       {/* Search and Filter */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-          <Input
-            placeholder="Search residents or units..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+      <div className="space-y-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Input
+              placeholder="Search residents or units..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === 'cards' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('cards')}
+            >
+              Cards
+            </Button>
+            <Button
+              variant={viewMode === 'table' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('table')}
+            >
+              Table
+            </Button>
+          </div>
         </div>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-full sm:w-48">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="current">Current</SelectItem>
-            <SelectItem value="notice">Notice</SelectItem>
-            <SelectItem value="future">Future</SelectItem>
-            <SelectItem value="prospect">Prospect</SelectItem>
-            <SelectItem value="past">Past</SelectItem>
-          </SelectContent>
-        </Select>
+        
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="current">Current</SelectItem>
+              <SelectItem value="notice">Notice</SelectItem>
+              <SelectItem value="future">Future</SelectItem>
+              <SelectItem value="prospect">Prospect</SelectItem>
+              <SelectItem value="past">Past</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={filterUnitType} onValueChange={setFilterUnitType}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="Filter by unit type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Unit Types</SelectItem>
+              {unitTypes.map(type => (
+                <SelectItem key={type} value={type}>{type}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name">Name</SelectItem>
+              <SelectItem value="unit">Unit (Chronological)</SelectItem>
+              <SelectItem value="unitType">Unit Type</SelectItem>
+              <SelectItem value="status">Status</SelectItem>
+              <SelectItem value="rent">Rent</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleSort(sortBy)}
+            className="flex items-center gap-2"
+          >
+            <ArrowUpDown className="w-4 h-4" />
+            {sortOrder === 'asc' ? 'A→Z' : 'Z→A'}
+          </Button>
+        </div>
       </div>
 
-      {/* Residents List */}
-      <div className="space-y-4">
-        {filteredResidents.map((resident) => (
-          <Card 
-            key={resident.id} 
-            className="hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => setSelectedResident(resident)}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <User className="w-5 h-5 text-blue-600" />
+      {/* Residents List - Cards View */}
+      {viewMode === 'cards' && (
+        <div className="space-y-4">
+          {filteredAndSortedResidents.map((resident) => (
+            <Card 
+              key={resident.id} 
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => setSelectedResident(resident)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                          <User className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{resident.fullName}</h3>
+                          <p className="text-sm text-gray-600">Unit {resident.unitNumber} • {resident.unitType}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{resident.fullName}</h3>
-                        <p className="text-sm text-gray-600">Unit {resident.unitNumber}</p>
+                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 mb-3">
+                      <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <Phone className="w-4 h-4" />
+                        <span>{resident.phone}</span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <Mail className="w-4 h-4" />
+                        <span className="truncate">{resident.email}</span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <Calendar className="w-4 h-4" />
+                        <span>${resident.currentRent.toLocaleString()}/mo</span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <Home className="w-4 h-4" />
+                        <span>{resident.workOrders} open work orders</span>
                       </div>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400" />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 mb-3">
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Phone className="w-4 h-4" />
-                      <span>{resident.phone}</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Mail className="w-4 h-4" />
-                      <span className="truncate">{resident.email}</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Calendar className="w-4 h-4" />
-                      <span>${resident.currentRent.toLocaleString()}/mo</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Home className="w-4 h-4" />
-                      <span>{resident.workOrders} open work orders</span>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Badge className={getResidentStatusColor(resident.status)}>
-                        {resident.status}
-                      </Badge>
-                      {resident.leaseStatus === 'delinquent' && (
-                        <Badge className="bg-red-100 text-red-800">
-                          Delinquent
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Badge className={getResidentStatusColor(resident.status)}>
+                          {resident.status}
                         </Badge>
-                      )}
-                      {resident.status === 'future' && (
-                        <Badge className="bg-blue-100 text-blue-800">
-                          Move-in: {new Date(resident.moveInDate).toLocaleDateString()}
-                        </Badge>
+                        {resident.leaseStatus === 'delinquent' && (
+                          <Badge className="bg-red-100 text-red-800">
+                            Delinquent
+                          </Badge>
+                        )}
+                        {resident.status === 'future' && (
+                          <Badge className="bg-blue-100 text-blue-800">
+                            Move-in: {new Date(resident.moveInDate).toLocaleDateString()}
+                          </Badge>
+                        )}
+                      </div>
+                      {resident.balance > 0 && (
+                        <div className="text-sm font-medium text-red-600">
+                          Balance: ${resident.balance.toFixed(2)}
+                        </div>
                       )}
                     </div>
-                    {resident.balance > 0 && (
-                      <div className="text-sm font-medium text-red-600">
-                        Balance: ${resident.balance.toFixed(2)}
-                      </div>
-                    )}
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
-      {filteredResidents.length === 0 && (
+      {/* Residents List - Table View */}
+      {viewMode === 'table' && (
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead 
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleSort('name')}
+                >
+                  <div className="flex items-center gap-2">
+                    Name
+                    <ArrowUpDown className="w-4 h-4" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleSort('unit')}
+                >
+                  <div className="flex items-center gap-2">
+                    Unit
+                    <ArrowUpDown className="w-4 h-4" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleSort('unitType')}
+                >
+                  <div className="flex items-center gap-2">
+                    Type
+                    <ArrowUpDown className="w-4 h-4" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleSort('status')}
+                >
+                  <div className="flex items-center gap-2">
+                    Status
+                    <ArrowUpDown className="w-4 h-4" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleSort('rent')}
+                >
+                  <div className="flex items-center gap-2">
+                    Rent
+                    <ArrowUpDown className="w-4 h-4" />
+                  </div>
+                </TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredAndSortedResidents.map((resident) => (
+                <TableRow 
+                  key={resident.id}
+                  className="cursor-pointer"
+                  onClick={() => setSelectedResident(resident)}
+                >
+                  <TableCell>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <User className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <span className="font-medium">{resident.fullName}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>{resident.unitNumber}</TableCell>
+                  <TableCell>{resident.unitType}</TableCell>
+                  <TableCell>
+                    <Badge className={getResidentStatusColor(resident.status)}>
+                      {resident.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>${resident.currentRent.toLocaleString()}</TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      <div>{resident.phone}</div>
+                      <div className="text-gray-500 truncate max-w-32">{resident.email}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="sm">
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
+
+      {filteredAndSortedResidents.length === 0 && (
         <Card>
           <CardContent className="p-6 text-center">
             <User className="mx-auto h-12 w-12 text-gray-400 mb-4" />
