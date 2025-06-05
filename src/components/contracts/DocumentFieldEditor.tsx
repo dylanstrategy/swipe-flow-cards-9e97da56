@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -371,33 +372,33 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
         {/* Sidebar */}
         <div className="w-full lg:w-80 bg-white border-r border-gray-200 flex flex-col">
           {/* Field Tools */}
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Field Tools</h3>
-            <div className="grid grid-cols-1 gap-3">
+          <div className="p-4 border-b border-gray-200">
+            <h3 className="text-base font-medium text-gray-900 mb-3">Field Tools</h3>
+            <div className="space-y-2">
               {fieldTypes.map(({ type, icon: Icon, label, color }) => (
                 <Button
                   key={type}
                   variant={selectedTool === type ? "default" : "outline"}
-                  size="lg"
+                  size="sm"
                   onClick={() => setSelectedTool(selectedTool === type ? null : type)}
-                  className={`w-full flex items-center gap-4 justify-start h-14 px-4 rounded-xl border-2 transition-all ${
+                  className={`w-full flex items-center gap-3 justify-start h-10 px-3 text-sm ${
                     selectedTool === type 
-                      ? 'border-blue-500 bg-blue-500 text-white shadow-md' 
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      ? 'bg-blue-600 text-white border-blue-600' 
+                      : 'border-gray-200 hover:bg-gray-50'
                   }`}
                 >
-                  <div className={`w-5 h-5 rounded-md flex-shrink-0 ${selectedTool === type ? 'bg-white/20' : color}`} />
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  <span className="font-medium text-base">{label}</span>
+                  <div className={`w-3 h-3 rounded flex-shrink-0 ${selectedTool === type ? 'bg-white' : color}`} />
+                  <Icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="font-medium">{label}</span>
                 </Button>
               ))}
             </div>
             {selectedTool && (
-              <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
-                <p className="text-sm text-blue-800 font-semibold">
+              <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-xs text-blue-800 font-medium">
                   {selectedTool.charAt(0).toUpperCase() + selectedTool.slice(1)} tool selected
                 </p>
-                <p className="text-xs text-blue-600 mt-2">
+                <p className="text-xs text-blue-600 mt-1">
                   Click on the document to place the field
                 </p>
               </div>
@@ -596,3 +597,4 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
 };
 
 export default DocumentFieldEditor;
+
