@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { mockResidents, type ResidentProfile } from '@/data/mockResidents';
 
@@ -387,6 +386,50 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     console.log('Move-out checklist created:', updatedResidents.find(r => r.id === residentId)?.moveOutChecklist);
   };
 
+  const cancelMoveOut = (residentId: string) => {
+    const updatedResidents = allResidents.map(resident => {
+      if (resident.id === residentId) {
+        const updatedResident = {
+          ...resident,
+          status: 'current' as ResidentProfile['status'],
+          noticeToVacateSubmitted: false,
+          moveOutDate: undefined,
+          forwardingAddress: '',
+          moveOutChecklist: undefined,
+          moveOutChecklistComplete: false
+        };
+        
+        // If this is the current profile, update it too
+        if (residentId === profile.id) {
+          setProfile(updatedResident);
+          localStorage.setItem('residentProfile', JSON.stringify(updatedResident));
+        }
+        
+        return updatedResident;
+      }
+      return resident;
+    });
+    
+    setAllResidents(updatedResidents);
+    localStorage.setItem('allResidents', JSON.stringify(updatedResidents));
+
+    console.log(`Move-out cancelled for resident ${residentId}`);
+  };
+
+  const getMoveOutProgress = (residentId: string) => {
+    const resident = allResidents.find(r => r.id === residentId);
+    if (!resident || !resident.moveOutChecklist) {
+      return { completed: 0, total: 0, percentage: 0 };
+    }
+
+    const checklistItems = Object.values(resident.moveOutChecklist);
+    const completed = checklistItems.filter(item => item.completed).length;
+    const total = checklistItems.length;
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    return { completed, total, percentage };
+  };
+
   const generateMoveOutChecklist = (residentId: string) => {
     setAllResidents(prevResidents => 
       prevResidents.map(resident => {
@@ -553,6 +596,8 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       canMoveOut,
       updateMoveInDate,
       submitNoticeToVacate,
+      cancelMoveOut,
+      getMoveOutProgress,
       completeInspection,
       updateChecklistItem,
       generateMoveOutChecklist,
