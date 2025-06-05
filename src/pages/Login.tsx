@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ const Login = () => {
     setIsSubmitting(true);
     try {
       await signInWithGoogle();
+      // Don't set isSubmitting to false here - let the auth state change handle navigation
     } catch (error: any) {
       console.error('Google sign in error:', error);
       setError(error.message || "Failed to sign in with Google");
@@ -50,10 +52,10 @@ const Login = () => {
       } else {
         await signInWithEmail(email, password);
       }
+      // Don't set isSubmitting to false here - let the auth state change handle navigation
     } catch (error: any) {
       console.error('Auth error:', error);
       setError(error.message || "Authentication failed");
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -65,6 +67,7 @@ const Login = () => {
     
     try {
       await signInWithEmail(testAccount.email, testAccount.password);
+      // Don't set isSubmitting to false here - let the auth state change handle navigation
     } catch (error: any) {
       console.log('Login failed, creating account:', error.message);
       try {
@@ -72,22 +75,20 @@ const Login = () => {
           first_name: testAccount.label.split(' ')[0],
           last_name: testAccount.label.split(' ')[1] || 'User'
         });
+        // Don't set isSubmitting to false here - let the auth state change handle navigation
       } catch (signUpError: any) {
         console.error('Account creation failed:', signUpError);
         setError(signUpError.message || "Failed to create test account");
+        setIsSubmitting(false);
       }
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   // Handle role-based routing after successful login
   useEffect(() => {
-    if (user && userProfile && !loading) {
+    // Only redirect if we have both user and userProfile, and we're not currently loading
+    if (user && userProfile && !loading && !isSubmitting) {
       console.log('✅ User logged in with role:', userProfile.role);
-      
-      // Clear any submission state
-      setIsSubmitting(false);
       
       // Route based on user role
       switch (userProfile.role) {
@@ -126,7 +127,7 @@ const Login = () => {
           break;
       }
     }
-  }, [user, userProfile, loading, navigate]);
+  }, [user, userProfile, loading, navigate, isSubmitting]);
 
   // Show loading only during auth initialization
   if (loading) {
@@ -140,7 +141,7 @@ const Login = () => {
     );
   }
 
-  // If user is already logged in, show redirect message
+  // If user is already logged in and we have their profile, show redirect message
   if (user && userProfile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
