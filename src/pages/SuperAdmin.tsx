@@ -27,7 +27,9 @@ import {
   UserPlus,
   CreditCard,
   MessageSquare,
-  Activity
+  Activity,
+  Menu,
+  X
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -48,6 +50,7 @@ const SuperAdmin = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState('overview');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -198,6 +201,16 @@ const SuperAdmin = () => {
     navigate('/owner-login');
   };
 
+  const navigationItems = [
+    { id: 'overview', label: 'Overview', icon: BarChart3 },
+    { id: 'clients', label: 'Client Management', icon: Building },
+    { id: 'leads', label: 'CRM & Sales', icon: UserPlus },
+    { id: 'billing', label: 'Billing', icon: CreditCard },
+    { id: 'marketing', label: 'Marketing', icon: Mail },
+    { id: 'calendar', label: 'Calendar', icon: Calendar },
+    { id: 'operators', label: 'Operators', icon: Users }
+  ];
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -214,82 +227,153 @@ const SuperAdmin = () => {
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="min-w-0 flex-1">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Applaud Super Admin</h1>
-              <p className="text-sm text-gray-600">Global oversight & client management</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Applaud Super Admin</h1>
+                <p className="text-sm text-gray-600 hidden sm:block">Global oversight & client management</p>
+              </div>
             </div>
             
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="focus:outline-none flex-shrink-0">
-                  <Avatar className="w-10 h-10 cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all">
-                    <AvatarFallback className="bg-red-600 text-white font-semibold">
-                      SA
-                    </AvatarFallback>
-                  </Avatar>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">Super Admin</p>
-                    <p className="text-xs leading-none text-muted-foreground">admin@applaud.com</p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                
-                <DropdownMenuItem className="cursor-pointer">
-                  <UserCog className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </DropdownMenuItem>
-                
-                <DropdownMenuItem className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  className="cursor-pointer text-red-600"
-                  onClick={handleSignOut}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sign Out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center space-x-3">
+              {/* Mobile menu button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="focus:outline-none flex-shrink-0">
+                    <Avatar className="w-10 h-10 cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all">
+                      <AvatarFallback className="bg-red-600 text-white font-semibold">
+                        SA
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">Super Admin</p>
+                      <p className="text-xs leading-none text-muted-foreground">admin@applaud.com</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenuItem className="cursor-pointer">
+                    <UserCog className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    className="cursor-pointer text-red-600"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sign Out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Navigation */}
-      <div className="bg-white border-b">
+      {/* Mobile Navigation Overlay */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setMobileMenuOpen(false)}>
+          <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4 border-b">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Navigation</h2>
+                <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+            <div className="p-4">
+              <nav className="space-y-2">
+                {navigationItems.map((view) => {
+                  const Icon = view.icon;
+                  return (
+                    <button
+                      key={view.id}
+                      onClick={() => {
+                        setActiveView(view.id);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                        activeView === view.id
+                          ? 'bg-blue-100 text-blue-700 font-medium'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span>{view.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Navigation */}
+      <div className="bg-white border-b hidden lg:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex space-x-8 overflow-x-auto">
+            {navigationItems.map((view) => {
+              const Icon = view.icon;
+              return (
+                <button
+                  key={view.id}
+                  onClick={() => setActiveView(view.id)}
+                  className={`py-4 px-2 border-b-2 font-medium text-sm whitespace-nowrap flex items-center gap-2 transition-colors ${
+                    activeView === view.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {view.label}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+
+      {/* Mobile Tab Navigation (visible on small screens) */}
+      <div className="bg-white border-b lg:hidden">
+        <div className="px-4">
           <ScrollArea className="w-full">
-            <nav className="flex space-x-8 min-w-max">
-              {[
-                { id: 'overview', label: 'Overview', icon: BarChart3 },
-                { id: 'clients', label: 'Client Management', icon: Building },
-                { id: 'leads', label: 'CRM & Sales', icon: UserPlus },
-                { id: 'billing', label: 'Billing', icon: CreditCard },
-                { id: 'marketing', label: 'Marketing', icon: Mail },
-                { id: 'calendar', label: 'Calendar', icon: Calendar },
-                { id: 'operators', label: 'Operators', icon: Users }
-              ].map((view) => {
+            <nav className="flex space-x-6 py-2">
+              {navigationItems.map((view) => {
                 const Icon = view.icon;
                 return (
                   <button
                     key={view.id}
                     onClick={() => setActiveView(view.id)}
-                    className={`py-4 px-2 border-b-2 font-medium text-sm whitespace-nowrap flex items-center gap-2 ${
+                    className={`py-2 px-3 border-b-2 font-medium text-xs whitespace-nowrap flex flex-col items-center gap-1 min-w-0 transition-colors ${
                       activeView === view.id
                         ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                        : 'border-transparent text-gray-500'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
-                    {view.label}
+                    <span className="truncate">{view.label}</span>
                   </button>
                 );
               })}
