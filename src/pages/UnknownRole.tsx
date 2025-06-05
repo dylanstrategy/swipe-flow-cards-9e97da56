@@ -8,6 +8,14 @@ import { AlertTriangle, LogOut, Mail } from 'lucide-react';
 const UnknownRole = () => {
   const { userProfile, signOut } = useAuth();
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -55,7 +63,7 @@ const UnknownRole = () => {
             <Button 
               variant="destructive" 
               className="w-full flex items-center justify-center gap-2"
-              onClick={signOut}
+              onClick={handleSignOut}
             >
               <LogOut className="w-4 h-4" />
               Sign Out
