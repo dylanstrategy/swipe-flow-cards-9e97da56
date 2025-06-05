@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -72,7 +71,7 @@ const ScheduleSetup = () => {
 
       {/* Work Hours Configuration */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle className="text-base flex items-center gap-2">
             <Clock className="w-4 h-4" />
             Work Hours Configuration
@@ -81,35 +80,37 @@ const ScheduleSetup = () => {
         <CardContent className="space-y-4">
           <div className="space-y-3">
             {daysOfWeek.map(({ key, label }) => (
-              <div key={key} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
+              <div key={key} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                <div className="flex items-center gap-3 min-w-0">
                   <Switch
                     checked={workHours[key as keyof typeof workHours].enabled}
                     onCheckedChange={(checked) => updateWorkHours(key, 'enabled', checked)}
                   />
-                  <Label className="min-w-[80px] font-medium">{label}</Label>
+                  <Label className="min-w-[80px] font-medium text-sm">{label}</Label>
                 </div>
-                {workHours[key as keyof typeof workHours].enabled && (
-                  <div className="flex items-center gap-2">
+                {workHours[key as keyof typeof workHours].enabled ? (
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <Input
                       type="time"
                       value={workHours[key as keyof typeof workHours].start}
                       onChange={(e) => updateWorkHours(key, 'start', e.target.value)}
-                      className="w-24"
+                      className="w-20 h-8 text-xs"
                     />
-                    <span className="text-sm text-gray-500">to</span>
+                    <span className="text-xs text-gray-500">to</span>
                     <Input
                       type="time"
                       value={workHours[key as keyof typeof workHours].end}
                       onChange={(e) => updateWorkHours(key, 'end', e.target.value)}
-                      className="w-24"
+                      className="w-20 h-8 text-xs"
                     />
                   </div>
+                ) : (
+                  <span className="text-xs text-gray-400 flex-shrink-0">Closed</span>
                 )}
               </div>
             ))}
           </div>
-          <Button variant="outline" className="w-full">Save Work Hours</Button>
+          <Button variant="outline" className="w-full mt-4">Save Work Hours</Button>
         </CardContent>
       </Card>
 
