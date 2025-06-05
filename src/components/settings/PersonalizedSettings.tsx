@@ -333,21 +333,21 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
                     <div className="font-medium">Email Notifications</div>
                     <div className="text-sm text-gray-600">Receive updates via email</div>
                   </div>
-                  <input type="checkbox" defaultChecked className="h-4 w-4" />
+                  <Switch defaultChecked />
                 </div>
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">Push Notifications</div>
                     <div className="text-sm text-gray-600">Receive push notifications on your device</div>
                   </div>
-                  <input type="checkbox" defaultChecked className="h-4 w-4" />
+                  <Switch defaultChecked />
                 </div>
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">SMS Notifications</div>
                     <div className="text-sm text-gray-600">Receive text message alerts</div>
                   </div>
-                  <input type="checkbox" className="h-4 w-4" />
+                  <Switch />
                 </div>
               </div>
             </div>
@@ -370,30 +370,106 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
 
       case 'privacy':
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 max-w-full overflow-hidden">
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Privacy Controls</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="font-medium">Data Sharing</div>
                     <div className="text-sm text-gray-600">Control how your data is shared</div>
                   </div>
-                  <Button variant="outline" size="sm">Manage</Button>
+                  <Button variant="outline" size="sm" className="flex-shrink-0">Manage</Button>
                 </div>
                 <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="font-medium">Activity Tracking</div>
                     <div className="text-sm text-gray-600">Choose what activity to track</div>
                   </div>
-                  <input type="checkbox" defaultChecked className="h-4 w-4" />
+                  <Switch defaultChecked />
                 </div>
                 <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="font-medium">Location Services</div>
                     <div className="text-sm text-gray-600">Allow location-based features</div>
                   </div>
-                  <input type="checkbox" defaultChecked className="h-4 w-4" />
+                  <Switch defaultChecked />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Advertisement Preferences</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium">Personalized Ads</div>
+                    <div className="text-sm text-gray-600">Show ads based on your interests and activity</div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium">Property Recommendations</div>
+                    <div className="text-sm text-gray-600">Receive personalized property suggestions</div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium">Partner Offers</div>
+                    <div className="text-sm text-gray-600">Receive offers from trusted partners</div>
+                  </div>
+                  <Switch />
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium">Third-Party Data Sharing</div>
+                    <div className="text-sm text-gray-600">Allow sharing of anonymized data for advertising</div>
+                  </div>
+                  <Switch />
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium">Cross-Device Tracking</div>
+                    <div className="text-sm text-gray-600">Track activity across your devices for better ads</div>
+                  </div>
+                  <Switch />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Ad Categories</h3>
+              <p className="text-sm text-gray-600">Choose which types of ads you'd like to see</p>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <span className="font-medium">Home & Garden</span>
+                  <Switch defaultChecked />
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <span className="font-medium">Local Services</span>
+                  <Switch defaultChecked />
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <span className="font-medium">Entertainment</span>
+                  <Switch defaultChecked />
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <span className="font-medium">Food & Dining</span>
+                  <Switch defaultChecked />
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <span className="font-medium">Travel</span>
+                  <Switch />
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <span className="font-medium">Fashion & Beauty</span>
+                  <Switch />
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <span className="font-medium">Technology</span>
+                  <Switch defaultChecked />
                 </div>
               </div>
             </div>
@@ -402,12 +478,25 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
               <h3 className="text-lg font-semibold">Data Management</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <span>Download My Data</span>
-                  <Button variant="outline" size="sm">Export</Button>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium">Download My Data</div>
+                    <div className="text-sm text-gray-600">Export all your personal data</div>
+                  </div>
+                  <Button variant="outline" size="sm" className="flex-shrink-0">Export</Button>
                 </div>
                 <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <span>Delete Account</span>
-                  <Button variant="outline" size="sm">Request</Button>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium">Reset Ad Preferences</div>
+                    <div className="text-sm text-gray-600">Clear all advertising preferences and start fresh</div>
+                  </div>
+                  <Button variant="outline" size="sm" className="flex-shrink-0">Reset</Button>
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium">Delete Account</div>
+                    <div className="text-sm text-gray-600">Permanently delete your account and data</div>
+                  </div>
+                  <Button variant="outline" size="sm" className="flex-shrink-0 text-red-600 hover:text-red-700">Request</Button>
                 </div>
               </div>
             </div>
