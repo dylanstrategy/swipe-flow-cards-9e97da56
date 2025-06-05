@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -202,34 +203,34 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
   };
 
   return (
-    <div className="space-y-6">
+    <div className="w-full max-w-full overflow-hidden space-y-6">
       {/* SignNow Configuration Status */}
-      <Card>
+      <Card className="w-full">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="w-5 h-5" />
-            SignNow Integration
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Settings className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+            <span className="truncate">SignNow Integration</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className={`p-4 rounded-lg ${isSignNowConfigured ? 'bg-green-50' : 'bg-orange-50'}`}>
-              <h4 className={`font-medium mb-2 ${isSignNowConfigured ? 'text-green-900' : 'text-orange-900'}`}>
+            <div className={`p-3 sm:p-4 rounded-lg ${isSignNowConfigured ? 'bg-green-50' : 'bg-orange-50'}`}>
+              <h4 className={`font-medium mb-2 text-sm sm:text-base ${isSignNowConfigured ? 'text-green-900' : 'text-orange-900'}`}>
                 Configuration Status
               </h4>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
                   {isSignNowConfigured ? (
                     <>
-                      <CheckCircle className="w-4 h-4 text-green-600" />
-                      <span className="text-sm text-green-800">
+                      <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm text-green-800 truncate">
                         SignNow is configured and ready to use
                       </span>
                     </>
                   ) : (
                     <>
-                      <AlertCircle className="w-4 h-4 text-orange-600" />
-                      <span className="text-sm text-orange-800">
+                      <AlertCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm text-orange-800 truncate">
                         SignNow API credentials not configured
                       </span>
                     </>
@@ -239,8 +240,9 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
                   variant="outline"
                   size="sm"
                   onClick={() => setShowConfigModal(true)}
+                  className="flex-shrink-0 text-xs sm:text-sm"
                 >
-                  <Settings className="w-4 h-4 mr-2" />
+                  <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                   {isSignNowConfigured ? 'Update' : 'Configure'}
                 </Button>
               </div>
@@ -250,16 +252,16 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
       </Card>
 
       {/* Upload Section */}
-      <Card>
+      <Card className="w-full">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Upload className="w-5 h-5" />
-            Upload Contract Template
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Upload className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+            <span className="truncate">Upload Contract Template</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+            <div className="flex-1 w-full">
               <Label htmlFor="contract-upload" className="sr-only">
                 Choose contract file
               </Label>
@@ -269,79 +271,80 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
                 accept=".pdf,.doc,.docx"
                 onChange={handleFileUpload}
                 disabled={isUploading}
-                className="cursor-pointer"
+                className="cursor-pointer w-full"
               />
             </div>
             {isUploading && (
-              <div className="flex items-center gap-2 text-blue-600">
+              <div className="flex items-center gap-2 text-blue-600 flex-shrink-0">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span className="text-sm">Uploading...</span>
+                <span className="text-xs sm:text-sm whitespace-nowrap">Uploading...</span>
               </div>
             )}
           </div>
-          <p className="text-sm text-gray-500 mt-2">
+          <p className="text-xs sm:text-sm text-gray-500 mt-2">
             Supported formats: PDF, DOC, DOCX. Max file size: 10MB
           </p>
         </CardContent>
       </Card>
 
       {/* Templates List */}
-      <Card>
+      <Card className="w-full">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Contract Templates ({templates.length})
+          <CardTitle className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <FileText className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+              <span className="truncate text-base sm:text-lg">Contract Templates ({templates.length})</span>
             </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {templates.length === 0 ? (
-            <div className="text-center py-8">
-              <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No templates yet</h3>
-              <p className="text-gray-500">Upload your first contract template to get started.</p>
+            <div className="text-center py-6 sm:py-8">
+              <FileText className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No templates yet</h3>
+              <p className="text-sm sm:text-base text-gray-500">Upload your first contract template to get started.</p>
             </div>
           ) : (
             <div className="space-y-4">
               {templates.map((template) => (
-                <div key={template.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center space-x-4 flex-1">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-blue-600" />
+                <div key={template.id} className="flex flex-col lg:flex-row lg:items-center justify-between p-3 sm:p-4 border rounded-lg gap-4">
+                  <div className="flex items-start space-x-3 sm:space-x-4 flex-1 min-w-0">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium">{template.name}</h3>
-                      <p className="text-sm text-gray-500">{template.description}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Badge className={getStatusColor(template.status)}>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-sm sm:text-base truncate">{template.name}</h3>
+                      <p className="text-xs sm:text-sm text-gray-500 break-words">{template.description}</p>
+                      <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-2">
+                        <Badge className={`${getStatusColor(template.status)} text-xs`}>
                           {template.status}
                         </Badge>
-                        <Badge variant="outline" className={getCategoryColor(template.category)}>
+                        <Badge variant="outline" className={`${getCategoryColor(template.category)} text-xs`}>
                           {template.category}
                         </Badge>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-gray-400 whitespace-nowrap">
                           Uploaded {new Date(template.uploadedAt).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-shrink-0">
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => handleSendForSignature(template)}
                       disabled={!isSignNowConfigured}
+                      className="text-xs sm:text-sm whitespace-nowrap"
                     >
-                      <Send className="w-4 h-4 mr-2" />
+                      <Send className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                       Send for Signature
                     </Button>
                     
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="w-4 h-4" />
+                        <Button variant="ghost" size="sm" className="px-2">
+                          <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
