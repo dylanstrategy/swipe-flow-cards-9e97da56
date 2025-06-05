@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,12 +14,34 @@ interface PersonalizedSettingsProps {
   userRole: 'resident' | 'operator' | 'maintenance' | 'leasing' | 'senior_operator' | 'management';
 }
 
+interface ResidentData {
+  name: string;
+  email: string;
+  phone: string;
+  unitNumber: string;
+  propertyName: string;
+  leaseStart: string;
+  leaseEnd: string;
+  petName: string;
+  petType: string;
+  petBreed: string;
+}
+
+interface StaffData {
+  name: string;
+  email: string;
+  phone: string;
+  department: string;
+  employeeId: string;
+  startDate: string;
+}
+
 const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) => {
   const [showPropertySetup, setShowPropertySetup] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
   // Mock user data based on role
-  const getUserData = () => {
+  const getUserData = (): ResidentData | StaffData => {
     if (userRole === 'resident') {
       return {
         name: 'Sarah Chen',
@@ -113,12 +134,12 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                       {isResident ? (
                         <>
                           <Home className="w-4 h-4 flex-shrink-0" />
-                          <span>{formData.propertyName} • Apt {formData.unitNumber}</span>
+                          <span>{(formData as ResidentData).propertyName} • Apt {(formData as ResidentData).unitNumber}</span>
                         </>
                       ) : (
                         <>
                           <Building className="w-4 h-4 flex-shrink-0" />
-                          <span>{formData.department} • {formData.employeeId}</span>
+                          <span>{(formData as StaffData).department} • {(formData as StaffData).employeeId}</span>
                         </>
                       )}
                     </div>
@@ -190,21 +211,21 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label className="text-sm font-medium text-gray-700 mb-2 block">Unit Number</Label>
-                        <Input value={formData.unitNumber} disabled className="bg-gray-100" />
+                        <Input value={(formData as ResidentData).unitNumber} disabled className="bg-gray-100" />
                       </div>
                       <div>
                         <Label className="text-sm font-medium text-gray-700 mb-2 block">Property</Label>
-                        <Input value={formData.propertyName} disabled className="bg-gray-100" />
+                        <Input value={(formData as ResidentData).propertyName} disabled className="bg-gray-100" />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label className="text-sm font-medium text-gray-700 mb-2 block">Lease Start</Label>
-                        <Input value={formData.leaseStart} disabled className="bg-gray-100" />
+                        <Input value={(formData as ResidentData).leaseStart} disabled className="bg-gray-100" />
                       </div>
                       <div>
                         <Label className="text-sm font-medium text-gray-700 mb-2 block">Lease End</Label>
-                        <Input value={formData.leaseEnd} disabled className="bg-gray-100" />
+                        <Input value={(formData as ResidentData).leaseEnd} disabled className="bg-gray-100" />
                       </div>
                     </div>
                   </CardContent>
@@ -223,7 +244,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                       <div>
                         <Label className="text-sm font-medium text-gray-700 mb-2 block">Pet Name</Label>
                         <Input
-                          value={formData.petName}
+                          value={(formData as ResidentData).petName}
                           onChange={(e) => setFormData({ ...formData, petName: e.target.value })}
                           disabled={!isEditing}
                           className="bg-white disabled:bg-gray-100"
@@ -232,7 +253,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                       <div>
                         <Label className="text-sm font-medium text-gray-700 mb-2 block">Pet Type</Label>
                         <select
-                          value={formData.petType}
+                          value={(formData as ResidentData).petType}
                           onChange={(e) => setFormData({ ...formData, petType: e.target.value })}
                           disabled={!isEditing}
                           className={`w-full px-3 py-2 border rounded-md text-sm ${isEditing ? 'bg-white' : 'bg-gray-100'} disabled:bg-gray-100`}
@@ -249,11 +270,40 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                     <div>
                       <Label className="text-sm font-medium text-gray-700 mb-2 block">Breed</Label>
                       <Input
-                        value={formData.petBreed}
+                        value={(formData as ResidentData).petBreed}
                         onChange={(e) => setFormData({ ...formData, petBreed: e.target.value })}
                         disabled={!isEditing}
                         className="bg-white disabled:bg-gray-100"
                       />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Payment Methods - Residents only */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CreditCard className="w-5 h-5" />
+                      Payment Methods
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">VISA</span>
+                          </div>
+                          <div>
+                            <p className="font-medium">•••• 4532</p>
+                            <p className="text-sm text-gray-600">Expires 12/26</p>
+                          </div>
+                        </div>
+                        <Badge className="bg-green-100 text-green-800">Primary</Badge>
+                      </div>
+                      <Button variant="outline" className="w-full">
+                        Add Payment Method
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -273,47 +323,16 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label className="text-sm font-medium text-gray-700 mb-2 block">Department</Label>
-                      <Input value={formData.department} disabled className="bg-gray-100" />
+                      <Input value={(formData as StaffData).department} disabled className="bg-gray-100" />
                     </div>
                     <div>
                       <Label className="text-sm font-medium text-gray-700 mb-2 block">Employee ID</Label>
-                      <Input value={formData.employeeId} disabled className="bg-gray-100" />
+                      <Input value={(formData as StaffData).employeeId} disabled className="bg-gray-100" />
                     </div>
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-gray-700 mb-2 block">Start Date</Label>
-                    <Input value={formData.startDate} disabled className="bg-gray-100" />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Payment Methods - Residents only */}
-            {isResident && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="w-5 h-5" />
-                    Payment Methods
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-                          <span className="text-white text-xs font-bold">VISA</span>
-                        </div>
-                        <div>
-                          <p className="font-medium">•••• 4532</p>
-                          <p className="text-sm text-gray-600">Expires 12/26</p>
-                        </div>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">Primary</Badge>
-                    </div>
-                    <Button variant="outline" className="w-full">
-                      Add Payment Method
-                    </Button>
+                    <Input value={(formData as StaffData).startDate} disabled className="bg-gray-100" />
                   </div>
                 </CardContent>
               </Card>
