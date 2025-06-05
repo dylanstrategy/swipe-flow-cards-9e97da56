@@ -47,7 +47,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Auth state change:', event, session?.user?.email);
         setUser(session?.user ?? null);
         if (session?.user) {
-          await loadUserProfile(session.user.id);
+          // Wait a moment for the trigger to create the profile
+          if (event === 'SIGNED_IN') {
+            setTimeout(() => {
+              loadUserProfile(session.user.id);
+            }, 1000);
+          } else {
+            await loadUserProfile(session.user.id);
+          }
         } else {
           setUserProfile(null);
           setLoading(false);
@@ -134,35 +141,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     console.log('Sign up successful:', data);
-
-    // The user profile will be created by the database trigger
-    // But let's also manually create it to ensure it exists
-    if (data.user) {
-      console.log('Creating user profile manually for:', data.user.id);
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .upsert([
-          {
-            id: data.user.id,
-            email: email,
-            first_name: userData.firstName,
-            last_name: userData.lastName,
-            phone: userData.phone,
-            role: userData.role,
-            property: userData.property || '',
-            status: 'active',
-          }
-        ], {
-          onConflict: 'id'
-        });
-      
-      if (profileError) {
-        console.error('Error creating user profile:', profileError);
-        // Don't throw here as the trigger might have created it
-      } else {
-        console.log('User profile created successfully');
-      }
-    }
+    // The user profile will be created automatically by the database trigger
+    // No need to manually create it here
   };
 
   const signOut = async () => {
