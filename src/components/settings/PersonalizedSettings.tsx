@@ -63,15 +63,10 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
     adPreferences: 'both', // 'both', 'building', 'none'
     // Resident-specific settings
     lease: {
-      unitNumber: 'Apt 204',
-      leaseStart: '2024-01-01',
-      leaseEnd: '2024-12-31',
-      rentAmount: '2500',
-      petDeposit: '300',
+      preferredBudget: '2500',
       hasPets: true,
       petDetails: 'Golden Retriever - Max',
-      emergencyContact: 'Jane Doe - 555-0123',
-      moveInDate: '2024-01-01'
+      emergencyContact: 'Jane Doe - 555-0123'
     },
     services: {
       maintenanceAccess: 'scheduled',
@@ -87,9 +82,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
       volunteerInterest: true,
       socialMediaSharing: false,
       newsletterSubscription: true,
-      amenityBooking: true,
-      gymAccess: '24/7',
-      poolAccess: 'daylight'
+      amenityBooking: true
     }
   });
 
@@ -154,7 +147,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
       roleSpecificSections.push({
         id: 'resident' as const,
         title: 'Resident Setup',
-        description: 'Lease details, services, community preferences',
+        description: 'Personal preferences, services, community participation',
         icon: Home,
         status: 'incomplete'
       });
@@ -253,14 +246,14 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
           <div className="space-y-4 max-w-4xl mx-auto">
             <div className="mb-6">
               <h2 className="text-xl font-bold text-gray-900 mb-2">Resident Setup</h2>
-              <p className="text-gray-600">Configure your living preferences and services</p>
+              <p className="text-gray-600">Configure your personal preferences and services</p>
             </div>
             
             <div className="grid gap-4">
               <Card className="shadow-sm">
                 <CardContent className="p-4">
-                  <h3 className="text-lg font-semibold mb-3">Lease & Unit Details</h3>
-                  <p className="text-sm text-gray-600 mb-3">Update lease information and unit preferences</p>
+                  <h3 className="text-lg font-semibold mb-3">Personal Information</h3>
+                  <p className="text-sm text-gray-600 mb-3">Update your personal details and preferences</p>
                   <Button variant="outline" size="sm" onClick={() => setCurrentSection('resident-lease')}>
                     Update Details
                   </Button>
@@ -300,88 +293,24 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
         return (
           <div className="space-y-4 max-w-2xl mx-auto">
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Lease & Unit Details</h2>
-              <p className="text-gray-600">Update your lease information and unit preferences</p>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Personal Information</h2>
+              <p className="text-gray-600">Update your personal details and preferences</p>
             </div>
             
             <Card className="shadow-sm">
               <CardContent className="p-4 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium">Unit Number</Label>
-                    <Input
-                      value={settings.lease.unitNumber}
-                      onChange={(e) => setSettings(prev => ({
-                        ...prev,
-                        lease: { ...prev.lease, unitNumber: e.target.value }
-                      }))}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Move-In Date</Label>
-                    <Input
-                      type="date"
-                      value={settings.lease.moveInDate}
-                      onChange={(e) => setSettings(prev => ({
-                        ...prev,
-                        lease: { ...prev.lease, moveInDate: e.target.value }
-                      }))}
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium">Lease Start Date</Label>
-                    <Input
-                      type="date"
-                      value={settings.lease.leaseStart}
-                      onChange={(e) => setSettings(prev => ({
-                        ...prev,
-                        lease: { ...prev.lease, leaseStart: e.target.value }
-                      }))}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Lease End Date</Label>
-                    <Input
-                      type="date"
-                      value={settings.lease.leaseEnd}
-                      onChange={(e) => setSettings(prev => ({
-                        ...prev,
-                        lease: { ...prev.lease, leaseEnd: e.target.value }
-                      }))}
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium">Monthly Rent ($)</Label>
-                    <Input
-                      value={settings.lease.rentAmount}
-                      onChange={(e) => setSettings(prev => ({
-                        ...prev,
-                        lease: { ...prev.lease, rentAmount: e.target.value }
-                      }))}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Pet Deposit ($)</Label>
-                    <Input
-                      value={settings.lease.petDeposit}
-                      onChange={(e) => setSettings(prev => ({
-                        ...prev,
-                        lease: { ...prev.lease, petDeposit: e.target.value }
-                      }))}
-                      className="mt-1"
-                    />
-                  </div>
+                <div>
+                  <Label className="text-sm font-medium">Preferred Monthly Budget ($)</Label>
+                  <p className="text-xs text-gray-500 mb-1">For future lease renewals or upgrades</p>
+                  <Input
+                    value={settings.lease.preferredBudget}
+                    onChange={(e) => setSettings(prev => ({
+                      ...prev,
+                      lease: { ...prev.lease, preferredBudget: e.target.value }
+                    }))}
+                    className="mt-1"
+                    placeholder="e.g., 2500"
+                  />
                 </div>
 
                 <div className="flex items-center space-x-3">
@@ -398,8 +327,9 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                 {settings.lease.hasPets && (
                   <div>
                     <Label className="text-sm font-medium">Pet Details</Label>
+                    <p className="text-xs text-gray-500 mb-1">Describe your pets (breed, name, size, etc.)</p>
                     <Textarea
-                      placeholder="Describe your pets (breed, name, size, etc.)"
+                      placeholder="e.g., Golden Retriever - Max, 70 lbs, very friendly"
                       value={settings.lease.petDetails}
                       onChange={(e) => setSettings(prev => ({
                         ...prev,
@@ -412,8 +342,9 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
 
                 <div>
                   <Label className="text-sm font-medium">Emergency Contact</Label>
+                  <p className="text-xs text-gray-500 mb-1">Name and phone number</p>
                   <Input
-                    placeholder="Name and phone number"
+                    placeholder="e.g., Jane Doe - 555-0123"
                     value={settings.lease.emergencyContact}
                     onChange={(e) => setSettings(prev => ({
                       ...prev,
@@ -421,6 +352,16 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                     }))}
                     className="mt-1"
                   />
+                </div>
+
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Current Lease Information</h4>
+                  <div className="text-xs text-gray-600 space-y-1">
+                    <p><span className="font-medium">Unit:</span> Apt 204</p>
+                    <p><span className="font-medium">Lease Term:</span> Jan 1, 2024 - Dec 31, 2024</p>
+                    <p><span className="font-medium">Monthly Rent:</span> $2,500</p>
+                    <p className="text-xs text-gray-500 mt-2">Contact management to modify lease terms</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -445,6 +386,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
               <CardContent className="p-4 space-y-4">
                 <div>
                   <Label className="text-sm font-medium">Maintenance Access Preference</Label>
+                  <p className="text-xs text-gray-500 mb-1">How would you prefer maintenance staff to access your unit?</p>
                   <select
                     value={settings.services.maintenanceAccess}
                     onChange={(e) => setSettings(prev => ({
@@ -461,8 +403,9 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
 
                 <div>
                   <Label className="text-sm font-medium">Package Delivery Instructions</Label>
+                  <p className="text-xs text-gray-500 mb-1">Special instructions for package deliveries</p>
                   <Textarea
-                    placeholder="Special delivery instructions..."
+                    placeholder="e.g., Leave at door, Ring doorbell, etc."
                     value={settings.services.deliveryInstructions}
                     onChange={(e) => setSettings(prev => ({
                       ...prev,
@@ -473,6 +416,8 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                 </div>
 
                 <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700">Optional Services</h4>
+                  
                   <div className="flex items-center justify-between">
                     <div>
                       <Label className="text-sm font-medium">Cleaning Service</Label>
@@ -490,7 +435,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                   <div className="flex items-center justify-between">
                     <div>
                       <Label className="text-sm font-medium">Pet Walking Service</Label>
-                      <p className="text-xs text-gray-500">Daily pet walking</p>
+                      <p className="text-xs text-gray-500">Daily pet walking service</p>
                     </div>
                     <Switch
                       checked={settings.services.petWalking}
@@ -517,8 +462,8 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label className="text-sm font-medium">Guest Parking</Label>
-                      <p className="text-xs text-gray-500">Reserve guest parking spots</p>
+                      <Label className="text-sm font-medium">Guest Parking Requests</Label>
+                      <p className="text-xs text-gray-500">Request guest parking spots when available</p>
                     </div>
                     <Switch
                       checked={settings.services.guestParking}
@@ -531,8 +476,8 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label className="text-sm font-medium">Storage Unit</Label>
-                      <p className="text-xs text-gray-500">Access to storage unit</p>
+                      <Label className="text-sm font-medium">Storage Unit Interest</Label>
+                      <p className="text-xs text-gray-500">Notify me when storage units become available</p>
                     </div>
                     <Switch
                       checked={settings.services.storageUnit}
@@ -559,7 +504,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
           <div className="space-y-4 max-w-2xl mx-auto">
             <div className="mb-6">
               <h2 className="text-xl font-bold text-gray-900 mb-2">Community Participation</h2>
-              <p className="text-gray-600">Manage your community involvement and amenity access</p>
+              <p className="text-gray-600">Manage your community involvement preferences</p>
             </div>
             
             <Card className="shadow-sm">
@@ -582,7 +527,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                   <div className="flex items-center justify-between">
                     <div>
                       <Label className="text-sm font-medium">Volunteer Interest</Label>
-                      <p className="text-xs text-gray-500">Interested in volunteering for events</p>
+                      <p className="text-xs text-gray-500">Interested in volunteering for community events</p>
                     </div>
                     <Switch
                       checked={settings.community.volunteerInterest}
@@ -596,7 +541,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                   <div className="flex items-center justify-between">
                     <div>
                       <Label className="text-sm font-medium">Social Media Sharing</Label>
-                      <p className="text-xs text-gray-500">Allow sharing on community social media</p>
+                      <p className="text-xs text-gray-500">Allow sharing photos on community social media</p>
                     </div>
                     <Switch
                       checked={settings.community.socialMediaSharing}
@@ -623,8 +568,8 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label className="text-sm font-medium">Amenity Booking</Label>
-                      <p className="text-xs text-gray-500">Enable booking of community amenities</p>
+                      <Label className="text-sm font-medium">Amenity Booking Notifications</Label>
+                      <p className="text-xs text-gray-500">Get notified about amenity availability and bookings</p>
                     </div>
                     <Switch
                       checked={settings.community.amenityBooking}
@@ -636,36 +581,13 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium">Gym Access Hours</Label>
-                    <select
-                      value={settings.community.gymAccess}
-                      onChange={(e) => setSettings(prev => ({
-                        ...prev,
-                        community: { ...prev.community, gymAccess: e.target.value }
-                      }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md mt-1 text-sm"
-                    >
-                      <option value="24/7">24/7 Access</option>
-                      <option value="business">Business Hours Only</option>
-                      <option value="extended">Extended Hours (6am-10pm)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Pool Access</Label>
-                    <select
-                      value={settings.community.poolAccess}
-                      onChange={(e) => setSettings(prev => ({
-                        ...prev,
-                        community: { ...prev.community, poolAccess: e.target.value }
-                      }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md mt-1 text-sm"
-                    >
-                      <option value="daylight">Daylight Hours</option>
-                      <option value="extended">Extended Hours</option>
-                      <option value="restricted">Restricted Access</option>
-                    </select>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Amenity Access</h4>
+                  <div className="text-xs text-gray-600 space-y-1">
+                    <p><span className="font-medium">Gym Access:</span> 24/7</p>
+                    <p><span className="font-medium">Pool Access:</span> 6 AM - 10 PM</p>
+                    <p><span className="font-medium">Rooftop Access:</span> 8 AM - 9 PM</p>
+                    <p className="text-xs text-gray-500 mt-2">Access hours are set by property management</p>
                   </div>
                 </div>
               </CardContent>
