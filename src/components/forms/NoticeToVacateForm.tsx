@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -27,7 +28,7 @@ interface NoticeFormData {
 const NoticeToVacateForm = ({ residentName, isOperator = false, onClose }: NoticeToVacateFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { submitNoticeToVacate, profile, updateProfile } = useResident();
+  const { submitNoticeToVacate, profile, updateProfile, forceStateUpdate, updateResidentStatus } = useResident();
   
   const form = useForm<NoticeFormData>({
     defaultValues: {
@@ -40,16 +41,26 @@ const NoticeToVacateForm = ({ residentName, isOperator = false, onClose }: Notic
   });
 
   const onSubmit = async (data: NoticeFormData) => {
+    console.log('📋 FORM SUBMISSION - Notice to Vacate form submitted', data);
     setIsSubmitting(true);
     
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Submit notice to vacate - this will create the move-out checklist automatically
+    // First, update the status using the dedicated status update function
+    console.log('📋 FORM SUBMISSION - Calling updateResidentStatus');
+    updateResidentStatus(profile.id, 'notice');
+    
+    // Then, submit notice to vacate - this will create the move-out checklist automatically
+    console.log('📋 FORM SUBMISSION - Calling submitNoticeToVacate');
     submitNoticeToVacate(profile.id, data);
     
-    // Force a profile update to ensure UI refresh
+    // Force multiple state updates to ensure UI refresh
     setTimeout(() => {
+      console.log('📋 FORM SUBMISSION - Force state update #1');
+      forceStateUpdate();
+      
+      // Additional update with profile changes
       updateProfile({ 
         status: 'notice',
         noticeToVacateSubmitted: true,
@@ -57,6 +68,12 @@ const NoticeToVacateForm = ({ residentName, isOperator = false, onClose }: Notic
         forwardingAddress: data.forwardingAddress || ''
       });
     }, 100);
+    
+    // Final force update to ensure everything is synced
+    setTimeout(() => {
+      console.log('📋 FORM SUBMISSION - Force state update #2');
+      forceStateUpdate();
+    }, 300);
     
     toast({
       title: "Notice to Vacate Submitted",
