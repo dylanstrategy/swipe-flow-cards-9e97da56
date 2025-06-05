@@ -2,7 +2,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ResidentProvider } from "@/contexts/ResidentContext";
 import Index from "./pages/Index";
@@ -30,9 +30,30 @@ function LoadingScreen() {
   );
 }
 
+// Protected route wrapper
+function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole?: string }) {
+  const { user, userProfile, loading } = useAuth();
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  // If no user, redirect to login
+  if (!user || !userProfile) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // If role is required and doesn't match, redirect to unknown role
+  if (requiredRole && userProfile.role !== requiredRole) {
+    return <Navigate to="/unknown-role" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 // App routes component that uses auth context
 function AppRoutes() {
-  const { loading } = useAuth();
+  const { loading, user, userProfile } = useAuth();
 
   // Show loading screen while auth is initializing
   if (loading) {
@@ -44,15 +65,49 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/unknown-role" element={<UnknownRole />} />
       
-      {/* Main app routes */}
-      <Route path="/" element={<Index />} />
-      <Route path="/discovery" element={<Discovery />} />
-      <Route path="/matches" element={<Matches />} />
-      <Route path="/movein" element={<MoveIn />} />
-      <Route path="/movein/:homeId" element={<MoveIn />} />
-      <Route path="/maintenance" element={<Maintenance />} />
-      <Route path="/operator" element={<Operator />} />
-      <Route path="/super-admin" element={<SuperAdmin />} />
+      {/* Protected routes */}
+      <Route path="/super-admin" element={
+        <ProtectedRoute requiredRole="super_admin">
+          <SuperAdmin />
+        </ProtectedRoute>
+      } />
+      
+      {/* Main app routes - these need authentication but role-based routing happens in Login component */}
+      <Route path="/" element={
+        <ProtectedRoute>
+          <Index />
+        </ProtectedRoute>
+      } />
+      <Route path="/discovery" element={
+        <ProtectedRoute>
+          <Discovery />
+        </ProtectedRoute>
+      } />
+      <Route path="/matches" element={
+        <ProtectedRoute>
+          <Matches />
+        </ProtectedRoute>
+      } />
+      <Route path="/movein" element={
+        <ProtectedRoute>
+          <MoveIn />
+        </ProtectedRoute>
+      } />
+      <Route path="/movein/:homeId" element={
+        <ProtectedRoute>
+          <MoveIn />
+        </ProtectedRoute>
+      } />
+      <Route path="/maintenance" element={
+        <ProtectedRoute>
+          <Maintenance />
+        </ProtectedRoute>
+      } />
+      <Route path="/operator" element={
+        <ProtectedRoute>
+          <Operator />
+        </ProtectedRoute>
+      } />
       
       <Route path="*" element={<NotFound />} />
     </Routes>

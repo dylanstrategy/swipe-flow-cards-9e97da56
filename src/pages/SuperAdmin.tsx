@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,11 +23,13 @@ import CreatePropertyModal from '@/components/admin/CreatePropertyModal';
 import PropertyDetailModal from '@/components/admin/PropertyDetailModal';
 import RoleImpersonation from '@/components/RoleImpersonation';
 import type { Property } from '@/types/supabase';
+import { useNavigate } from 'react-router-dom';
 
 const SuperAdmin = () => {
   const { userProfile, user, signOut } = useAuth();
   const { users, loading: usersLoading, refetch: refetchUsers } = useUsers();
   const { properties, loading: propertiesLoading, refetch: refetchProperties } = useProperties();
+  const navigate = useNavigate();
   
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
   const [isCreatePropertyModalOpen, setIsCreatePropertyModalOpen] = useState(false);
@@ -41,72 +44,11 @@ const SuperAdmin = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
+      navigate('/login');
     } catch (error) {
       console.error('Sign out error:', error);
     }
   };
-
-  // Show debug information if access is denied
-  if (!userProfile || userProfile.role !== 'super_admin') {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-red-50 to-orange-100">
-        <div className="w-full max-w-md">
-          <Card className="shadow-lg">
-            <CardHeader className="text-center">
-              <div className="mx-auto w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4">
-                <AlertTriangle className="w-6 h-6 text-orange-600" />
-              </div>
-              <CardTitle className="text-2xl font-bold text-gray-900">
-                Access Denied
-              </CardTitle>
-              <p className="text-gray-600">
-                You don't have permission to access this page.
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-white p-4 rounded-lg border">
-                <h3 className="font-medium text-gray-900 mb-2">Debug Information</h3>
-                <div className="space-y-2 text-sm">
-                  <p><strong>User ID:</strong> {user?.id || 'Not logged in'}</p>
-                  <p><strong>Email:</strong> {user?.email || 'No email'}</p>
-                  <p><strong>Profile exists:</strong> {userProfile ? 'Yes' : 'No'}</p>
-                  <p><strong>Current role:</strong> {userProfile?.role || 'No role assigned'}</p>
-                  <p><strong>Required role:</strong> super_admin</p>
-                </div>
-              </div>
-              
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <h3 className="font-medium text-blue-900 mb-2">What to do:</h3>
-                <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• Contact your system administrator</li>
-                  <li>• Request super_admin role assignment</li>
-                  <li>• Check if you're using the correct account</li>
-                </ul>
-              </div>
-
-              {userProfile && userProfile.role !== 'super_admin' && (
-                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                  <p className="text-sm text-yellow-800">
-                    <strong>Note:</strong> Your current role is "{userProfile.role}". 
-                    Only users with "super_admin" role can access this page.
-                  </p>
-                </div>
-              )}
-
-              <Button 
-                onClick={handleSignOut}
-                className="w-full flex items-center justify-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-                variant="outline"
-              >
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   // Calculate stats from real data
   const totalUsers = users.length;
