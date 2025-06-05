@@ -16,7 +16,9 @@ import {
   Save,
   ArrowLeft,
   Trash2,
-  Edit3
+  Edit3,
+  Undo,
+  Database
 } from 'lucide-react';
 import {
   Select,
@@ -28,7 +30,7 @@ import {
 
 interface DocumentField {
   id: string;
-  type: 'signature' | 'initial' | 'date' | 'text' | 'checkbox';
+  type: 'signature' | 'initial' | 'date' | 'text' | 'checkbox' | 'merge';
   x: number;
   y: number;
   width: number;
@@ -59,9 +61,9 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
   const [fields, setFields] = useState<DocumentField[]>(initialFields);
   const [selectedTool, setSelectedTool] = useState<DocumentField['type'] | null>(null);
   const [selectedField, setSelectedField] = useState<DocumentField | null>(null);
-  const [isPlacing, setIsPlacing] = useState(false);
   const [documentLoaded, setDocumentLoaded] = useState(false);
   const [scale, setScale] = useState(1);
+  const [fieldHistory, setFieldHistory] = useState<DocumentField[][]>([]);
 
   const fieldTypes = [
     { type: 'signature' as const, icon: PenTool, label: 'Signature', color: 'bg-blue-500' },
@@ -69,10 +71,12 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
     { type: 'date' as const, icon: Calendar, label: 'Date', color: 'bg-purple-500' },
     { type: 'text' as const, icon: Type, label: 'Text', color: 'bg-orange-500' },
     { type: 'checkbox' as const, icon: CheckSquare, label: 'Checkbox', color: 'bg-red-500' },
+    { type: 'merge' as const, icon: Database, label: 'Merge Field', color: 'bg-teal-500' },
   ];
 
   const mergeFields = [
-    'resident_name',
+    'resident_first_name',
+    'resident_last_name',
     'resident_email', 
     'unit_number',
     'property_name',
@@ -96,7 +100,6 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
 
     try {
       // For demo purposes, we'll create a mock PDF page
-      // In a real implementation, you'd use PDF.js to render the actual PDF
       canvas.width = 600;
       canvas.height = 800;
       
@@ -150,7 +153,7 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Draw all fields
+    // Draw all fields with colored boxes
     fields.forEach(field => {
       drawField(ctx, field);
     });
@@ -163,24 +166,51 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
       date: '#8B5CF6',
       text: '#F59E0B',
       checkbox: '#EF4444',
+      merge: '#14B8A6',
     };
 
-    ctx.strokeStyle = colors[field.type];
-    ctx.fillStyle = colors[field.type] + '20';
-    ctx.lineWidth = 2;
+    const color = colors[field.type];
+    const isSelected = selectedField?.id === field.id;
 
-    // Draw field boundary
+    // Draw field boundary with colored background
+    ctx.fillStyle = color + '30'; // Semi-transparent background
     ctx.fillRect(field.x, field.y, field.width, field.height);
+    
+    // Draw border (thicker if selected)
+    ctx.strokeStyle = color;
+    ctx.lineWidth = isSelected ? 3 : 2;
     ctx.strokeRect(field.x, field.y, field.width, field.height);
 
     // Draw field label
-    ctx.fillStyle = colors[field.type];
-    ctx.font = '10px Arial';
-    ctx.fillText(
-      field.type.toUpperCase() + (field.mergeField ? ` (${field.mergeField})` : ''),
-      field.x,
-      field.y - 5
-    );
+    ctx.fillStyle = color;
+    ctx.font = 'bold 10px Arial';
+    const labelText = field.type.toUpperCase() + 
+      (field.mergeField ? ` (${field.mergeField.replace(/_/g, ' ')})` : '');
+    
+    // Background for label
+    const textMetrics = ctx.measureText(labelText);
+    const labelHeight = 14;
+    ctx.fillStyle = color;
+    ctx.fillRect(field.x, field.y - labelHeight, textMetrics.width + 8, labelHeight);
+    
+    // Label text
+    ctx.fillStyle = 'white';
+    ctx.fillText(labelText, field.x + 4, field.y - 3);
+
+    // Draw selection handles if selected
+    if (isSelected) {
+      const handleSize = 6;
+      ctx.fillStyle = color;
+      // Corner handles
+      ctx.fillRect(field.x - handleSize/2, field.y - handleSize/2, handleSize, handleSize);
+      ctx.fillRect(field.x + field.width - handleSize/2, field.y - handleSize/2, handleSize, handleSize);
+      ctx.fillRect(field.x - handleSize/2, field.y + field.height - handleSize/2, handleSize, handleSize);
+      ctx.fillRect(field.x + field.width - handleSize/2, field.y + field.height - handleSize/2, handleSize, handleSize);
+    }
+  };
+
+  const saveToHistory = () => {
+    setFieldHistory(prev => [...prev.slice(-9), [...fields]]);
   };
 
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
@@ -202,6 +232,9 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
       return;
     }
 
+    // Save current state to history before adding new field
+    saveToHistory();
+
     // Create new field
     const defaultSizes = {
       signature: { width: 150, height: 30 },
@@ -209,6 +242,7 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
       date: { width: 100, height: 25 },
       text: { width: 120, height: 25 },
       checkbox: { width: 20, height: 20 },
+      merge: { width: 120, height: 25 },
     };
 
     const size = defaultSizes[selectedTool];
@@ -221,6 +255,7 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
       height: size.height,
       role: 'Signer 1',
       required: true,
+      mergeField: selectedTool === 'merge' ? mergeFields[0] : undefined,
     };
 
     setFields(prev => [...prev, newField]);
@@ -229,9 +264,15 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
     setTimeout(() => {
       redrawFields();
     }, 0);
+
+    toast({
+      title: "Field Added",
+      description: `${selectedTool} field placed on document`,
+    });
   };
 
   const updateField = (fieldId: string, updates: Partial<DocumentField>) => {
+    saveToHistory();
     setFields(prev => prev.map(field => 
       field.id === fieldId ? { ...field, ...updates } : field
     ));
@@ -246,6 +287,7 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
   };
 
   const deleteField = (fieldId: string) => {
+    saveToHistory();
     setFields(prev => prev.filter(field => field.id !== fieldId));
     if (selectedField?.id === fieldId) {
       setSelectedField(null);
@@ -254,13 +296,36 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
     setTimeout(() => {
       redrawFields();
     }, 0);
+
+    toast({
+      title: "Field Deleted",
+      description: "Document field has been removed",
+    });
+  };
+
+  const handleUndo = () => {
+    if (fieldHistory.length === 0) return;
+    
+    const previousState = fieldHistory[fieldHistory.length - 1];
+    setFields(previousState);
+    setFieldHistory(prev => prev.slice(0, -1));
+    setSelectedField(null);
+    
+    setTimeout(() => {
+      redrawFields();
+    }, 0);
+
+    toast({
+      title: "Undone",
+      description: "Last action has been undone",
+    });
   };
 
   const handleSave = () => {
     if (fields.length === 0) {
       toast({
         title: "No Fields Added",
-        description: "Please add at least one signature field to the document",
+        description: "Please add at least one field to the document",
         variant: "destructive",
       });
       return;
@@ -287,11 +352,23 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
             <p className="text-sm text-gray-600 hidden sm:block">Add signature fields and merge fields</p>
           </div>
         </div>
-        <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 flex-shrink-0">
-          <Save className="w-4 h-4 mr-2" />
-          <span className="hidden sm:inline">Save Template</span>
-          <span className="sm:hidden">Save</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleUndo}
+            disabled={fieldHistory.length === 0}
+            className="flex-shrink-0"
+          >
+            <Undo className="w-4 h-4 mr-2" />
+            Undo
+          </Button>
+          <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 flex-shrink-0">
+            <Save className="w-4 h-4 mr-2" />
+            <span className="hidden sm:inline">Save Template</span>
+            <span className="sm:hidden">Save</span>
+          </Button>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -352,9 +429,11 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
                   </Select>
                 </div>
 
-                {(selectedField.type === 'text' || selectedField.type === 'date') && (
+                {(selectedField.type === 'text' || selectedField.type === 'date' || selectedField.type === 'merge') && (
                   <div>
-                    <Label htmlFor="merge-field" className="text-sm text-gray-700">Merge Field (Optional)</Label>
+                    <Label htmlFor="merge-field" className="text-sm text-gray-700">
+                      {selectedField.type === 'merge' ? 'Merge Field' : 'Merge Field (Optional)'}
+                    </Label>
                     <Select 
                       value={selectedField.mergeField || ''} 
                       onValueChange={(value) => updateField(selectedField.id, { mergeField: value || undefined })}
@@ -363,7 +442,7 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
                         <SelectValue placeholder="Select merge field" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        {selectedField.type !== 'merge' && <SelectItem value="">None</SelectItem>}
                         {mergeFields.map(field => (
                           <SelectItem key={field} value={field}>
                             {field.replace(/_/g, ' ').toUpperCase()}
@@ -381,7 +460,7 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
                       id="width"
                       type="number"
                       value={selectedField.width}
-                      onChange={(e) => updateField(selectedField.id, { width: parseInt(e.target.value) })}
+                      onChange={(e) => updateField(selectedField.id, { width: parseInt(e.target.value) || 0 })}
                       className="h-9 mt-1"
                     />
                   </div>
@@ -391,7 +470,7 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
                       id="height"
                       type="number"
                       value={selectedField.height}
-                      onChange={(e) => updateField(selectedField.id, { height: parseInt(e.target.value) })}
+                      onChange={(e) => updateField(selectedField.id, { height: parseInt(e.target.value) || 0 })}
                       className="h-9 mt-1"
                     />
                   </div>
@@ -412,7 +491,14 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
 
           {/* Fields List */}
           <div className="p-4">
-            <h3 className="font-medium text-gray-900 mb-3">Document Fields ({fields.length})</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium text-gray-900">Document Fields ({fields.length})</h3>
+              {fieldHistory.length > 0 && (
+                <Badge variant="outline" className="text-xs">
+                  {fieldHistory.length} in history
+                </Badge>
+              )}
+            </div>
             <div className="space-y-2 max-h-40 overflow-y-auto">
               {fields.length === 0 ? (
                 <p className="text-sm text-gray-500 text-center py-4">
@@ -459,6 +545,13 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
               style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}
             />
           </div>
+          {selectedTool && (
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>{selectedTool.toUpperCase()}</strong> tool selected. Click on the document to place the field.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
