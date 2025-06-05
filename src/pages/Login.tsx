@@ -61,7 +61,6 @@ const Login = () => {
         });
       } else {
         await signInWithEmail(email, password);
-        // Let the auth context handle navigation
       }
     } catch (error: any) {
       console.error('Auth error:', error);
@@ -92,19 +91,13 @@ const Login = () => {
           break;
         case 'operator':
         case 'senior_operator':
-          console.log('👨‍💼 Redirecting operator to /operator');
+        case 'leasing':
+          console.log('👨‍💼 Redirecting operator/leasing to /operator');
           navigate('/operator', { replace: true });
           break;
         case 'maintenance':
-          console.log('🔧 Redirecting maintenance to /maintenance');
-          navigate('/maintenance', { replace: true });
-          break;
-        case 'leasing':
-          console.log('🏢 Redirecting leasing to /operator');
-          navigate('/operator', { replace: true });
-          break;
         case 'vendor':
-          console.log('🏪 Redirecting vendor to /maintenance');
+          console.log('🔧 Redirecting maintenance/vendor to /maintenance');
           navigate('/maintenance', { replace: true });
           break;
         case 'resident':
@@ -120,10 +113,16 @@ const Login = () => {
           navigate('/', { replace: true });
           break;
       }
+    } else if (user && !userProfile && !loading) {
+      // User exists but no profile - this shouldn't happen with our trigger
+      // but let's handle it gracefully
+      console.log('⚠️ User exists but no profile found, redirecting to home');
+      setIsSubmitting(false);
+      navigate('/', { replace: true });
     }
   }, [user, userProfile, loading, navigate]);
 
-  // Show loading screen ONLY during auth initialization (when loading is true)
+  // Show loading screen during auth initialization
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -143,6 +142,19 @@ const Login = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="text-gray-600 text-lg">Redirecting to your dashboard...</p>
           <p className="text-sm text-gray-500">Role: {userProfile.role}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If user exists but no profile, show a different message
+  if (user && !userProfile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-gray-600 text-lg">Setting up your profile...</p>
+          <p className="text-sm text-gray-500">This should only take a moment</p>
         </div>
       </div>
     );
