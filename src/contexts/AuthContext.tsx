@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,13 +34,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Use refs to prevent multiple operations and track state
   const initializingRef = useRef(false);
   const currentUserIdRef = useRef<string | null>(null);
-  const profileHandledRef = useRef(false);
 
   const isImpersonating = impersonatedRole !== null;
   const canImpersonate = userProfile?.role === 'super_admin';
 
   // Function to determine role based on email
   const determineRoleFromEmail = (email: string): AppRole => {
+    console.log('Determining role for email:', email);
+    
     if (email === 'info@applaudliving.com') {
       return 'super_admin';
     }
@@ -66,8 +68,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Function to fetch or create user profile
   const fetchOrCreateUserProfile = async (userId: string, email: string): Promise<AppUser | null> => {
     try {
-      console.log('🔍 Fetching user profile for:', userId);
+      console.log('🔍 Fetching user profile for:', userId, email);
       
+      // First try to get existing user profile
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -76,6 +79,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('❌ Error fetching user profile:', error);
+        
+        // If error is about table not existing or schema issues, create a basic profile
+        if (error.message?.includes('schema') || error.message?.includes('relation')) {
+          console.log('⚠️ Database schema issue, creating local profile for now');
+          const role = determineRoleFromEmail(email);
+          const localProfile: AppUser = {
+            id: userId,
+            email: email,
+            first_name: 'New',
+            last_name: 'User',
+            role: role,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          return localProfile;
+        }
         return null;
       }
 
@@ -88,36 +107,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Determine role based on email
         const role = determineRoleFromEmail(email);
         
-        // Create new user profile
-        const { data: newUser, error: createError } = await supabase
-          .from('users')
-          .insert({
+        // Try to create new user profile
+        try {
+          const { data: newUser, error: createError } = await supabase
+            .from('users')
+            .insert({
+              id: userId,
+              email: email,
+              first_name: 'New',
+              last_name: 'User',
+              role: role
+            })
+            .select()
+            .single();
+
+          if (createError) {
+            console.error('❌ Error creating user profile:', createError);
+            // Create local profile if database creation fails
+            const localProfile: AppUser = {
+              id: userId,
+              email: email,
+              first_name: 'New',
+              last_name: 'User',
+              role: role,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+            return localProfile;
+          }
+
+          console.log('✅ Created new user profile:', newUser);
+          return newUser;
+        } catch (createError) {
+          console.error('❌ Exception creating user profile:', createError);
+          // Create local profile as fallback
+          const role = determineRoleFromEmail(email);
+          const localProfile: AppUser = {
             id: userId,
             email: email,
             first_name: 'New',
             last_name: 'User',
-            role: role
-          })
-          .select()
-          .single();
-
-        if (createError) {
-          console.error('❌ Error creating user profile:', createError);
-          return null;
+            role: role,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          return localProfile;
         }
-
-        console.log('✅ Created new user profile:', newUser);
-        return newUser;
       }
     } catch (error) {
       console.error('❌ Exception fetching/creating user profile:', error);
-      return null;
+      // Create local profile as ultimate fallback
+      const role = determineRoleFromEmail(email);
+      const localProfile: AppUser = {
+        id: userId,
+        email: email,
+        first_name: 'New',
+        last_name: 'User',
+        role: role,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      return localProfile;
     }
   };
 
   // Handle auth state changes
   const handleAuthStateChange = async (event: string, session: Session | null) => {
-    console.log('🔔 Auth state change:', event, 'Session:', !!session);
+    console.log('🔔 Auth state change:', event, 'Session exists:', !!session);
     
     // Prevent multiple simultaneous initializations
     if (initializingRef.current) {
@@ -128,7 +184,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializingRef.current = true;
     
     try {
-      // Only update state if values have actually changed
       const newUserId = session?.user?.id || null;
       
       if (newUserId !== currentUserIdRef.current) {
@@ -138,26 +193,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           console.log('👤 User signed in, fetching/creating profile...');
           currentUserIdRef.current = session.user.id;
-          profileHandledRef.current = false;
           
           const profile = await fetchOrCreateUserProfile(session.user.id, session.user.email || '');
           setUserProfile(profile);
-          profileHandledRef.current = true;
+          
+          if (profile) {
+            console.log('✅ Profile set successfully:', profile.role);
+          }
         } else {
           console.log('🚫 User signed out, clearing profile...');
           setUserProfile(null);
           setImpersonatedRole(null);
           currentUserIdRef.current = null;
-          profileHandledRef.current = false;
-          
-          // Clear localStorage on logout
-          localStorage.removeItem('supabase.auth.token');
         }
       }
     } catch (error) {
       console.error('❌ Error handling auth state change:', error);
     } finally {
-      // Only set loading to false after everything is resolved
       setLoading(false);
       initializingRef.current = false;
       console.log('✅ Auth initialization complete, loading set to false');
@@ -203,7 +255,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://preview--swipe-flow-cards.lovable.app',
+          redirectTo: window.location.origin,
         }
       });
       
@@ -228,18 +280,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
+      console.log('🔄 Starting email sign in for:', email);
       setLoading(true);
       
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('❌ Email sign in error:', error);
         setLoading(false);
         throw error;
       }
+      
+      console.log('✅ Email sign in successful:', data.user?.email);
     } catch (error: any) {
+      console.error('❌ Email sign in error:', error);
       setLoading(false);
       throw error;
     }
@@ -247,25 +304,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUpWithEmail = async (email: string, password: string, userData: any) => {
     try {
+      console.log('🔄 Starting email sign up for:', email);
       setLoading(true);
 
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: userData
+          data: userData,
+          emailRedirectTo: window.location.origin
         }
       });
 
       if (error) {
+        console.error('❌ Email sign up error:', error);
         setLoading(false);
         throw error;
       }
 
+      console.log('✅ Email sign up successful:', data);
       return {
         needsConfirmation: !data.session && !!data.user
       };
     } catch (error: any) {
+      console.error('❌ Email sign up error:', error);
       setLoading(false);
       throw error;
     }
@@ -277,12 +339,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      // Clear all state and localStorage
+      // Clear all state
       setImpersonatedRole(null);
       currentUserIdRef.current = null;
-      profileHandledRef.current = false;
       initializingRef.current = false;
-      localStorage.removeItem('supabase.auth.token');
       
       console.log('✅ Signed out successfully');
     } catch (error: any) {
