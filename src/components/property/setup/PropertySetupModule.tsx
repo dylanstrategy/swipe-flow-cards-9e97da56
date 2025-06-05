@@ -81,10 +81,18 @@ const PropertySetupModule = ({ onClose }: PropertySetupModuleProps) => {
     const module = modules.find(m => m.id === activeModule);
     if (module) {
       const Component = module.component;
-      // PPFManager expects onClose, others expect onBack
+      
+      // Handle different prop requirements for each component
+      if (module.id === 'data-sources') {
+        return <Component onBack={() => setActiveModule(null)} />;
+      }
       if (module.id === 'ppf-management') {
         return <Component onClose={() => setActiveModule(null)} />;
       }
+      if (module.id === 'pricing-dashboard') {
+        return <Component onBack={() => setActiveModule(null)} />;
+      }
+      // All other components expect onBack
       return <Component onBack={() => setActiveModule(null)} />;
     }
   }
