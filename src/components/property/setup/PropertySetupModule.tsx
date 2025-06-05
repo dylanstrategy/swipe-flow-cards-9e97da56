@@ -1,146 +1,143 @@
 
 import React, { useState } from 'react';
-import { Settings, Building, Palette, MessageSquare, FileText, Users, ArrowLeft, Database, Calendar } from 'lucide-react';
+import { X, Database, MessageSquare, Palette, FileText, Users, Wrench, Home, TrendingUp, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import AmenitiesSetup from './AmenitiesSetup';
-import BrandingSetup from './BrandingSetup';
-import MessagingSetup from './MessagingSetup';
-import DocumentsSetup from './DocumentsSetup';
-import CRMSetup from './CRMSetup';
 import DataSourceManager from './DataSourceManager';
 import PPFManager from './PPFManager';
+import MessagingSetup from './MessagingSetup';
+import BrandingSetup from './BrandingSetup';
+import DocumentsSetup from './DocumentsSetup';
+import CRMSetup from './CRMSetup';
+import AmenitiesSetup from './AmenitiesSetup';
+import PricingDashboard from './PricingDashboard';
 
 interface PropertySetupModuleProps {
   onClose: () => void;
 }
 
 const PropertySetupModule = ({ onClose }: PropertySetupModuleProps) => {
-  const [currentStep, setCurrentStep] = useState<string | null>(null);
+  const [activeModule, setActiveModule] = useState<string | null>(null);
 
-  const setupOptions = [
+  const modules = [
     {
-      id: 'amenities',
-      title: 'Amenities & Features',
-      description: 'Configure property amenities, unit features, and community spaces',
-      icon: Building,
-      color: 'bg-blue-50 text-blue-600 border-blue-200'
+      id: 'data-sources',
+      title: 'Data Source Management',
+      description: 'Configure lease tracking, renewals, and notices to automate PPF',
+      icon: Database,
+      component: DataSourceManager
     },
     {
-      id: 'branding',
-      title: 'Branding & Design',
-      description: 'Customize colors, logos, and visual identity',
-      icon: Palette,
-      color: 'bg-purple-50 text-purple-600 border-purple-200'
+      id: 'pricing-dashboard',
+      title: 'Dynamic Pricing Dashboard',
+      description: 'Real-time pricing engine with occupancy, comps, and expiration controls',
+      icon: DollarSign,
+      component: PricingDashboard
+    },
+    {
+      id: 'ppf-management',
+      title: 'PPF & Pricing Strategy',
+      description: 'Configure 18-week forecasting and automated pricing campaigns',
+      icon: TrendingUp,
+      component: PPFManager
     },
     {
       id: 'messaging',
       title: 'Message Automations',
       description: 'Set up automated messaging templates and workflows',
       icon: MessageSquare,
-      color: 'bg-green-50 text-green-600 border-green-200'
+      component: MessagingSetup
+    },
+    {
+      id: 'branding',
+      title: 'Branding & Design',
+      description: 'Customize your property branding and visual identity',
+      icon: Palette,
+      component: BrandingSetup
+    },
+    {
+      id: 'amenities',
+      title: 'Amenities Setup',
+      description: 'Configure amenities, hours of operation, and booking requirements',
+      icon: Home,
+      component: AmenitiesSetup
     },
     {
       id: 'documents',
       title: 'Documents & Forms',
-      description: 'Manage lease documents, forms, and digital signatures',
+      description: 'Manage lease agreements, applications, and legal documents',
       icon: FileText,
-      color: 'bg-orange-50 text-orange-600 border-orange-200'
+      component: DocumentsSetup
     },
     {
       id: 'crm',
       title: 'CRM Integration',
-      description: 'Connect with CRM systems and lead management tools',
+      description: 'Connect with external CRM systems and manage lead workflows',
       icon: Users,
-      color: 'bg-red-50 text-red-600 border-red-200'
-    },
-    {
-      id: 'datasources',
-      title: 'Data Sources & PPF',
-      description: 'Configure data integrations, pricing engine, and performance forecasting',
-      icon: Database,
-      color: 'bg-indigo-50 text-indigo-600 border-indigo-200'
-    },
-    {
-      id: 'ppf',
-      title: 'PPF Management',
-      description: 'Manage Property Performance Forecast and occupancy targets',
-      icon: Calendar,
-      color: 'bg-teal-50 text-teal-600 border-teal-200'
+      component: CRMSetup
     }
   ];
 
-  const renderCurrentStep = () => {
-    switch (currentStep) {
-      case 'amenities':
-        return <AmenitiesSetup onBack={() => setCurrentStep(null)} />;
-      case 'branding':
-        return <BrandingSetup onBack={() => setCurrentStep(null)} />;
-      case 'messaging':
-        return <MessagingSetup onBack={() => setCurrentStep(null)} />;
-      case 'documents':
-        return <DocumentsSetup onBack={() => setCurrentStep(null)} />;
-      case 'crm':
-        return <CRMSetup onBack={() => setCurrentStep(null)} />;
-      case 'datasources':
-        return <DataSourceManager onBack={() => setCurrentStep(null)} />;
-      case 'ppf':
-        return <PPFManager onClose={() => setCurrentStep(null)} />;
-      default:
-        return null;
+  if (activeModule) {
+    const module = modules.find(m => m.id === activeModule);
+    if (module) {
+      const Component = module.component;
+      return <Component onBack={() => setActiveModule(null)} />;
     }
-  };
-
-  if (currentStep) {
-    return renderCurrentStep();
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center space-x-3 mb-6">
-          <Button variant="ghost" size="sm" onClick={onClose} className="p-2">
-            <ArrowLeft size={20} />
-          </Button>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b px-6 py-4">
+        <div className="flex items-center justify-between max-w-6xl mx-auto">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Property Setup</h1>
-            <p className="text-gray-600">Configure your property management settings and integrations</p>
+            <p className="text-gray-600">Configure your property management system</p>
           </div>
+          <Button onClick={onClose} variant="outline" size="sm">
+            <X className="w-4 h-4" />
+          </Button>
         </div>
+      </div>
 
+      {/* Content */}
+      <div className="max-w-6xl mx-auto p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {setupOptions.map((option) => {
-            const IconComponent = option.icon;
+          {modules.map((module) => {
+            const IconComponent = module.icon;
             return (
-              <Card 
-                key={option.id}
-                className="cursor-pointer hover:shadow-lg transition-shadow border-2"
-                onClick={() => setCurrentStep(option.id)}
+              <Card
+                key={module.id}
+                className="cursor-pointer hover:shadow-lg transition-shadow duration-200 border-2 hover:border-blue-200"
+                onClick={() => setActiveModule(module.id)}
               >
                 <CardHeader className="pb-3">
-                  <div className={`w-12 h-12 rounded-lg ${option.color} flex items-center justify-center mb-3`}>
-                    <IconComponent size={24} />
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <IconComponent className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <CardTitle className="text-lg">{module.title}</CardTitle>
                   </div>
-                  <CardTitle className="text-lg">{option.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-600 text-sm">{option.description}</p>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    {module.description}
+                  </p>
+                  <Button 
+                    className="w-full mt-4" 
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveModule(module.id);
+                    }}
+                  >
+                    Configure
+                  </Button>
                 </CardContent>
               </Card>
             );
           })}
-        </div>
-
-        <div className="border-t pt-6">
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-500">
-              Complete setup to enable all property management features
-            </p>
-            <Button onClick={onClose}>
-              <Settings className="w-4 h-4 mr-2" />
-              Done
-            </Button>
-          </div>
         </div>
       </div>
     </div>
