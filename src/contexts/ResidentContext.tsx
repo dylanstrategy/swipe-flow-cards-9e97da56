@@ -127,6 +127,13 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const updatedProfile = { ...profile, ...updates };
     setProfile(updatedProfile);
     localStorage.setItem('residentProfile', JSON.stringify(updatedProfile));
+    
+    // Also update the resident in allResidents array
+    const updatedResidents = allResidents.map(resident => 
+      resident.id === updatedProfile.id ? updatedProfile : resident
+    );
+    setAllResidents(updatedResidents);
+    localStorage.setItem('allResidents', JSON.stringify(updatedResidents));
   };
 
   const updateResidentStatus = (residentId: string, newStatus: ResidentProfile['status']) => {
@@ -337,32 +344,42 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const submitNoticeToVacate = (residentId: string, data: any) => {
-    setAllResidents(prevResidents => 
-      prevResidents.map(resident => {
-        if (resident.id === residentId) {
-          return {
-            ...resident,
-            status: 'notice' as ResidentProfile['status'],
-            noticeToVacateSubmitted: true,
-            moveOutDate: data.moveOutDate,
-            forwardingAddress: data.forwardingAddress || '',
-            moveOutChecklist: {
-              'notice-to-vacate': { completed: true, completedBy: 'resident', completedDate: new Date().toISOString().split('T')[0] },
-              'forwarding-address': { completed: !!data.forwardingAddress, completedBy: 'resident', completedDate: data.forwardingAddress ? new Date().toISOString().split('T')[0] : undefined },
-              'final-inspection': { completed: false },
-              'exit-survey': { completed: false },
-              'key-return': { completed: false },
-              'final-balance': { completed: false },
-              'deposit-release': { completed: false },
-              'move-out-confirmation': { completed: false }
-            }
-          };
+    const updatedResidents = allResidents.map(resident => {
+      if (resident.id === residentId) {
+        const updatedResident = {
+          ...resident,
+          status: 'notice' as ResidentProfile['status'],
+          noticeToVacateSubmitted: true,
+          moveOutDate: data.moveOutDate,
+          forwardingAddress: data.forwardingAddress || '',
+          moveOutChecklist: {
+            'notice-to-vacate': { completed: true, completedBy: 'resident', completedDate: new Date().toISOString().split('T')[0] },
+            'forwarding-address': { completed: !!data.forwardingAddress, completedBy: 'resident', completedDate: data.forwardingAddress ? new Date().toISOString().split('T')[0] : undefined },
+            'final-inspection': { completed: false },
+            'exit-survey': { completed: false },
+            'key-return': { completed: false },
+            'final-balance': { completed: false },
+            'deposit-release': { completed: false },
+            'move-out-confirmation': { completed: false }
+          }
+        };
+        
+        // If this is the current profile, update it too
+        if (residentId === profile.id) {
+          setProfile(updatedResident);
+          localStorage.setItem('residentProfile', JSON.stringify(updatedResident));
         }
-        return resident;
-      })
-    );
+        
+        return updatedResident;
+      }
+      return resident;
+    });
+    
+    setAllResidents(updatedResidents);
+    localStorage.setItem('allResidents', JSON.stringify(updatedResidents));
 
     console.log(`Notice to Vacate submitted for resident ${residentId}`);
+    console.log('Updated resident:', updatedResidents.find(r => r.id === residentId));
   };
 
   const generateMoveOutChecklist = (residentId: string) => {
