@@ -1,6 +1,7 @@
 
 import React from 'react';
 import type { AppRole } from '@/types/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Import the page components
 import Index from '@/pages/Index';
@@ -15,7 +16,9 @@ interface ImpersonatedInterfaceProps {
 }
 
 const ImpersonatedInterface: React.FC<ImpersonatedInterfaceProps> = ({ role }) => {
-  console.log('🎭 ImpersonatedInterface rendering for role:', role);
+  const { impersonatedUser } = useAuth();
+  
+  console.log('🎭 ImpersonatedInterface rendering for role:', role, 'user:', impersonatedUser?.email);
 
   // Render the appropriate interface based on role
   const renderRoleInterface = () => {
@@ -90,11 +93,18 @@ const ImpersonatedInterface: React.FC<ImpersonatedInterfaceProps> = ({ role }) =
 
   console.log('🎭 About to render ImpersonatedInterface wrapper');
 
+  const getUserDisplayName = () => {
+    if (impersonatedUser) {
+      return `${impersonatedUser.first_name} ${impersonatedUser.last_name} (${impersonatedUser.email})`;
+    }
+    return role.replace('_', ' ');
+  };
+
   return (
     <div className="w-full h-full overflow-hidden">
       <div className="p-3 bg-blue-50 border-b border-blue-200">
         <p className="text-sm text-blue-800">
-          <strong>Preview Mode:</strong> Testing {role.replace('_', ' ')} user experience
+          <strong>Preview Mode:</strong> Testing as {getUserDisplayName()}
         </p>
       </div>
       <div className="flex-1 h-full overflow-auto">

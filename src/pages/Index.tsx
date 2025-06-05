@@ -14,7 +14,7 @@ interface IndexProps {
 
 const Index: React.FC<IndexProps> = ({ isImpersonated = false }) => {
   const navigate = useNavigate();
-  const { user, userProfile, loading } = useAuth();
+  const { user, userProfile, loading, impersonatedUser } = useAuth();
   const [activeTab, setActiveTab] = useState('today');
 
   useEffect(() => {
@@ -39,13 +39,16 @@ const Index: React.FC<IndexProps> = ({ isImpersonated = false }) => {
     return null;
   }
 
-  // When impersonated and no real user, create a mock user experience
-  const effectiveUser = isImpersonated && !user ? {
+  // When impersonated, use the specific impersonated user if available, otherwise create mock user
+  const effectiveUser = isImpersonated ? (impersonatedUser ? {
+    id: impersonatedUser.id,
+    email: impersonatedUser.email
+  } : {
     id: 'impersonated-user',
     email: 'test@resident.com'
-  } : user;
+  }) : user;
 
-  const effectiveUserProfile = isImpersonated && !userProfile ? {
+  const effectiveUserProfile = isImpersonated ? (impersonatedUser || {
     id: 'impersonated-profile',
     email: 'test@resident.com',
     first_name: 'Test',
@@ -53,12 +56,13 @@ const Index: React.FC<IndexProps> = ({ isImpersonated = false }) => {
     role: 'resident' as const,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
-  } : userProfile;
+  }) : userProfile;
 
   console.log('🏠 Index rendering with:', { 
     isImpersonated, 
     hasUser: !!user, 
     hasProfile: !!userProfile,
+    hasImpersonatedUser: !!impersonatedUser,
     effectiveUser: !!effectiveUser,
     effectiveProfile: !!effectiveUserProfile
   });
