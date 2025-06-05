@@ -20,13 +20,14 @@ function LoadingScreen() {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
-  const { user, userProfile, loading } = useAuth();
+  const { user, userProfile, loading, isImpersonating } = useAuth();
 
   console.log('🔒 ProtectedRoute check:', { 
     user: !!user, 
     userProfile: userProfile?.role, 
     requiredRole, 
-    loading 
+    loading,
+    isImpersonating
   });
 
   if (loading) {
@@ -39,10 +40,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
     return <Navigate to="/login" replace />;
   }
 
-  // If role is required and doesn't match, redirect to unknown role
-  if (requiredRole && userProfile.role !== requiredRole) {
-    console.log('🚫 Role mismatch:', userProfile.role, 'vs required:', requiredRole);
-    return <Navigate to="/unknown-role" replace />;
+  // If role is required, check permissions
+  if (requiredRole) {
+    // Super admins can access everything, even when impersonating
+    const isOriginalSuperAdmin = user.email === 'info@applaudliving.com';
+    
+    // If the current effective role doesn't match required role AND user is not originally a super admin
+    if (userProfile.role !== requiredRole && !isOriginalSuperAdmin) {
+      console.log('🚫 Role mismatch:', userProfile.role, 'vs required:', requiredRole, 'isOriginalSuperAdmin:', isOriginalSuperAdmin);
+      return <Navigate to="/unknown-role" replace />;
+    }
   }
 
   console.log('✅ Access granted');
