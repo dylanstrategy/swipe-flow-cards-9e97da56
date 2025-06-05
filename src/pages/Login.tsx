@@ -8,7 +8,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useRoleRedirect } from '@/hooks/useRoleRedirect';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -17,11 +16,34 @@ const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading, user } = useAuth();
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading, user, userProfile } = useAuth();
   const navigate = useNavigate();
-  
-  // Use the role redirect hook to handle automatic redirects
-  const { userProfile } = useRoleRedirect();
+
+  // Handle redirect after successful authentication
+  useEffect(() => {
+    if (!loading && user && userProfile) {
+      console.log('✅ User authenticated with profile, redirecting based on role:', userProfile.role);
+      
+      // Clear any submission state
+      setIsSubmitting(false);
+      
+      // Redirect based on role
+      switch (userProfile.role) {
+        case 'super_admin':
+          navigate('/super-admin', { replace: true });
+          break;
+        case 'operator':
+          navigate('/operator', { replace: true });
+          break;
+        case 'resident':
+          navigate('/', { replace: true });
+          break;
+        default:
+          navigate('/unknown-role', { replace: true });
+          break;
+      }
+    }
+  }, [user, userProfile, loading, navigate]);
 
   const handleForgotPassword = async () => {
     const email = prompt("Enter your email address:");
@@ -44,7 +66,8 @@ const Login = () => {
     try {
       console.log('🔑 Starting Google sign in...');
       await signInWithGoogle();
-      console.log('🔑 Google sign in completed');
+      console.log('🔑 Google sign in initiated');
+      // Don't set isSubmitting to false here - let the useEffect handle the redirect
     } catch (error: any) {
       console.error('Google sign in error:', error);
       setError(error.message || "Failed to sign in with Google");
@@ -66,6 +89,7 @@ const Login = () => {
       } else {
         await signInWithEmail(email, password);
       }
+      // Don't set isSubmitting to false here - let the useEffect handle the redirect
     } catch (error: any) {
       console.error('Auth error:', error);
       setError(error.message || "Authentication failed");
@@ -73,7 +97,7 @@ const Login = () => {
     }
   };
 
-  // Show loading screen only during auth initialization
+  // Show loading screen during auth initialization
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -85,20 +109,19 @@ const Login = () => {
     );
   }
 
-  // If user is already logged in and we have their profile, show redirect message
-  if (user && userProfile) {
+  // If user is logged in but we don't have profile yet, show loading
+  if (user && !userProfile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 text-lg">Redirecting to your dashboard...</p>
-          <p className="text-sm text-gray-500">Role: {userProfile.role}</p>
+          <p className="text-gray-600 text-lg">Setting up your account...</p>
         </div>
       </div>
     );
   }
 
-  // Show the login form (default state when not logged in)
+  // Show the login form (when not authenticated)
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
