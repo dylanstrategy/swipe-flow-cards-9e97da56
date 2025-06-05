@@ -47,16 +47,6 @@ function AppRoutes() {
     );
   }
 
-  // If user is authenticated but on login page, redirect to dashboard
-  if (user && userProfile && window.location.pathname === '/login') {
-    return <Navigate to="/" replace />;
-  }
-
-  // If not authenticated and not on login page, redirect to login
-  if (!user && window.location.pathname !== '/login' && window.location.pathname !== '/owner-login') {
-    return <Navigate to="/login" replace />;
-  }
-
   // Route based on user role
   const getDefaultRoute = () => {
     if (!userProfile) return '/login';
@@ -70,7 +60,7 @@ function AppRoutes() {
       case 'maintenance':
         return '/maintenance';
       case 'leasing':
-        return '/operator'; // Leasing uses operator interface
+        return '/operator';
       case 'resident':
         return '/';
       case 'prospect':

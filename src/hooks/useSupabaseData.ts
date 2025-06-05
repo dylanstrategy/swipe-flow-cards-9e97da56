@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeSync } from './useRealtimeSync';
@@ -36,12 +36,10 @@ export function useUsers() {
     }
   }, []);
 
-  const debouncedFetch = useCallback(debounce(fetchUsers, 300), [fetchUsers]);
+  const debouncedFetch = useMemo(() => debounce(fetchUsers, 300), [fetchUsers]);
 
-  const handleRealtimeChange = useCallback((table: string, event: string, payload: any) => {
-    if (table === 'users') {
-      debouncedFetch();
-    }
+  const handleRealtimeChange = useCallback(() => {
+    debouncedFetch();
   }, [debouncedFetch]);
 
   useRealtimeSync({
@@ -80,12 +78,10 @@ export function useProperties() {
     }
   }, []);
 
-  const debouncedFetch = useCallback(debounce(fetchProperties, 300), [fetchProperties]);
+  const debouncedFetch = useMemo(() => debounce(fetchProperties, 300), [fetchProperties]);
 
-  const handleRealtimeChange = useCallback((table: string, event: string, payload: any) => {
-    if (table === 'properties') {
-      debouncedFetch();
-    }
+  const handleRealtimeChange = useCallback(() => {
+    debouncedFetch();
   }, [debouncedFetch]);
 
   useRealtimeSync({
@@ -127,12 +123,10 @@ export function useUnits(propertyId?: string) {
     }
   }, [propertyId]);
 
-  const debouncedFetch = useCallback(debounce(fetchUnits, 300), [fetchUnits]);
+  const debouncedFetch = useMemo(() => debounce(fetchUnits, 300), [fetchUnits]);
 
-  const handleRealtimeChange = useCallback((table: string, event: string, payload: any) => {
-    if (table === 'units') {
-      debouncedFetch();
-    }
+  const handleRealtimeChange = useCallback(() => {
+    debouncedFetch();
   }, [debouncedFetch]);
 
   useRealtimeSync({
@@ -174,12 +168,10 @@ export function useMoveIns(residentId?: string) {
     }
   }, [residentId]);
 
-  const debouncedFetch = useCallback(debounce(fetchMoveIns, 300), [fetchMoveIns]);
+  const debouncedFetch = useMemo(() => debounce(fetchMoveIns, 300), [fetchMoveIns]);
 
-  const handleRealtimeChange = useCallback((table: string, event: string, payload: any) => {
-    if (table === 'move_ins') {
-      debouncedFetch();
-    }
+  const handleRealtimeChange = useCallback(() => {
+    debouncedFetch();
   }, [debouncedFetch]);
 
   useRealtimeSync({
@@ -221,12 +213,10 @@ export function useMoveOuts(residentId?: string) {
     }
   }, [residentId]);
 
-  const debouncedFetch = useCallback(debounce(fetchMoveOuts, 300), [fetchMoveOuts]);
+  const debouncedFetch = useMemo(() => debounce(fetchMoveOuts, 300), [fetchMoveOuts]);
 
-  const handleRealtimeChange = useCallback((table: string, event: string, payload: any) => {
-    if (table === 'move_outs') {
-      debouncedFetch();
-    }
+  const handleRealtimeChange = useCallback(() => {
+    debouncedFetch();
   }, [debouncedFetch]);
 
   useRealtimeSync({
@@ -263,12 +253,10 @@ export function useCalendarEvents() {
     }
   }, []);
 
-  const debouncedFetch = useCallback(debounce(fetchEvents, 300), [fetchEvents]);
+  const debouncedFetch = useMemo(() => debounce(fetchEvents, 300), [fetchEvents]);
 
-  const handleRealtimeChange = useCallback((table: string, event: string, payload: any) => {
-    if (table === 'calendar_events') {
-      debouncedFetch();
-    }
+  const handleRealtimeChange = useCallback(() => {
+    debouncedFetch();
   }, [debouncedFetch]);
 
   useRealtimeSync({

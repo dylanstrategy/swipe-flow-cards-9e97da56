@@ -67,7 +67,7 @@ export function useRealtimeSync({ tables, onDataChange, enabled = true }: Realti
         channelRef.current = null;
       }
     };
-  }, [tables, onDataChange, enabled, toast]);
+  }, [tables.join(','), enabled]); // Fix dependencies
 
   const disconnect = () => {
     if (channelRef.current) {
