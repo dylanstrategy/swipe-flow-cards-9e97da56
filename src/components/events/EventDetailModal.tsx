@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { X, Calendar, Clock, User, Phone, MapPin, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -48,7 +47,7 @@ const EventDetailModal = ({ event, onClose, onReschedule, onCancel, userRole }: 
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-[10000] flex items-center justify-center"
+      className="fixed inset-0 bg-black bg-opacity-50 z-[10000] flex items-end"
       onTouchMove={handleTouchMove}
       onTouchStart={handleTouchStart}
       style={{ 
@@ -58,11 +57,10 @@ const EventDetailModal = ({ event, onClose, onReschedule, onCancel, userRole }: 
       }}
     >
       <div 
-        className="bg-white w-full h-full flex flex-col overflow-hidden"
+        className="bg-white w-full max-h-[90vh] rounded-t-2xl flex flex-col overflow-hidden"
         style={{ 
           touchAction: 'pan-y',
-          maxWidth: '100vw',
-          maxHeight: '100vh'
+          maxWidth: '100vw'
         }}
       >
         {/* Header */}

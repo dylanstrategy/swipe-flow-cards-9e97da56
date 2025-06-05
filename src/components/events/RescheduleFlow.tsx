@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ChevronLeft, Calendar, Clock, Check, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -126,6 +125,11 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
     setNotifyTeamMember(true);
   };
 
+  const handleClose = () => {
+    handleClearData();
+    onClose();
+  };
+
   // Step 1: Date Selection
   if (currentStep === 1) {
     return (
@@ -133,7 +137,7 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
         title="Select New Date"
         currentStep={currentStep}
         totalSteps={3}
-        onClose={onClose}
+        onClose={handleClose}
         onSwipeUp={canProceedFromCurrentStep() ? nextStep : undefined}
         onSwipeLeft={prevStep}
         canSwipeUp={canProceedFromCurrentStep()}
@@ -189,7 +193,7 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
             <span className="text-xs text-gray-500">Step {currentStep} of 3</span>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
             <span className="text-gray-600 text-xl">×</span>
@@ -272,7 +276,7 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
       title="Confirm Reschedule"
       currentStep={currentStep}
       totalSteps={3}
-      onClose={onClose}
+      onClose={handleClose}
       onSwipeLeft={prevStep}
       hideSwipeHandling={true}
     >
