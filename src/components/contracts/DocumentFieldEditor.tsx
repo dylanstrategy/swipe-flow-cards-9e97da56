@@ -371,26 +371,31 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
         <div className="w-full lg:w-80 bg-white border-r border-gray-200 flex flex-col">
           {/* Field Tools */}
           <div className="p-4 border-b border-gray-200">
-            <h3 className="font-medium text-gray-900 mb-3">Field Tools</h3>
-            <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
+            <h3 className="font-medium text-gray-900 mb-4">Field Tools</h3>
+            <div className="space-y-3">
               {fieldTypes.map(({ type, icon: Icon, label, color }) => (
                 <Button
                   key={type}
                   variant={selectedTool === type ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedTool(selectedTool === type ? null : type)}
-                  className="flex items-center gap-2 justify-start"
+                  className="w-full flex items-center gap-3 justify-start h-12 px-4"
                 >
-                  <div className={`w-3 h-3 rounded flex-shrink-0 ${color}`} />
-                  <Icon className="w-4 h-4 flex-shrink-0" />
-                  <span className="truncate">{label}</span>
+                  <div className={`w-4 h-4 rounded flex-shrink-0 ${color}`} />
+                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  <span className="font-medium">{label}</span>
                 </Button>
               ))}
             </div>
             {selectedTool && (
-              <p className="text-xs text-gray-600 mt-3 p-2 bg-blue-50 rounded">
-                Click on the document to place a {selectedTool} field
-              </p>
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-800 font-medium">
+                  {selectedTool.charAt(0).toUpperCase() + selectedTool.slice(1)} tool selected
+                </p>
+                <p className="text-xs text-blue-600 mt-1">
+                  Click on the document to place the field
+                </p>
+              </div>
             )}
           </div>
 
@@ -570,9 +575,12 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
             />
           </div>
           {selectedTool && (
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-800">
-                <strong>{selectedTool.toUpperCase()}</strong> tool selected. Click on the document to place the field.
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-800 font-medium">
+                <strong>{selectedTool.toUpperCase()}</strong> tool selected
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                Click on the document to place the field.
               </p>
             </div>
           )}
