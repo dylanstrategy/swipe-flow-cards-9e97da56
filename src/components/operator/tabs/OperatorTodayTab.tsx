@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench, ChevronDown, BarChart3, PieChart, CalendarDays, Activity, AlertTriangle } from 'lucide-react';
+import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench, ChevronDown, BarChart3, PieChart, CalendarDays, Activity, AlertTriangle, Clock, User } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -426,39 +426,61 @@ const OperatorTodayTab = () => {
         <p className="text-gray-600">The Meridian • Live Data</p>
       </div>
 
-      {/* Active Notices - Using standardized name utility */}
+      {/* Active Notices - Redesigned */}
       {noticeResidents.length > 0 && (
-        <div className="bg-orange-50 border border-orange-200 rounded-xl shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <AlertTriangle className="text-orange-600" size={24} />
-            ACTIVE NOTICES TO VACATE ({noticeResidents.length})
-          </h2>
-          <div className="space-y-3">
-            {noticeResidents.map((resident) => (
-              <div key={resident.id} className="bg-white rounded-lg p-4 flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-gray-900">{getFullName(resident.firstName, resident.lastName)}</h3>
-                  <p className="text-sm text-gray-600">Unit {resident.unitNumber}</p>
-                  <p className="text-xs text-orange-600">
-                    Move-out: {resident.moveOutDate ? new Date(resident.moveOutDate).toLocaleDateString() : 'TBD'}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <CancelNoticeButton 
-                    residentId={resident.id} 
-                    residentName={getFullName(resident.firstName, resident.lastName)}
-                    variant="outline"
-                    size="sm"
-                  />
-                  <CancelMoveOutButton 
-                    residentId={resident.id} 
-                    residentName={getFullName(resident.firstName, resident.lastName)}
-                    variant="destructive"
-                    size="sm"
-                  />
-                </div>
+        <div className="bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-red-400 rounded-lg shadow-sm overflow-hidden">
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
               </div>
-            ))}
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Active Move-Out Notices</h2>
+                <p className="text-sm text-gray-600">{noticeResidents.length} resident{noticeResidents.length > 1 ? 's' : ''} with active notices</p>
+              </div>
+            </div>
+            
+            <div className="grid gap-3">
+              {noticeResidents.map((resident) => (
+                <div key={resident.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                        <User className="w-5 h-5 text-gray-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900">{getFullName(resident.firstName, resident.lastName)}</h3>
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <span className="flex items-center gap-1">
+                            <Home className="w-4 h-4" />
+                            Unit {resident.unitNumber}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            Move-out: {resident.moveOutDate ? new Date(resident.moveOutDate).toLocaleDateString() : 'TBD'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <CancelNoticeButton 
+                        residentId={resident.id} 
+                        residentName={getFullName(resident.firstName, resident.lastName)}
+                        variant="outline"
+                        size="sm"
+                      />
+                      <CancelMoveOutButton 
+                        residentId={resident.id} 
+                        residentName={getFullName(resident.firstName, resident.lastName)}
+                        variant="destructive"
+                        size="sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -631,11 +653,11 @@ const OperatorTodayTab = () => {
               <div className="text-sm text-gray-600">{item.title}</div>
               <div className={`text-xs mt-1 ${
                 item.status === 'current' ? 'text-blue-600' :
-                item.status === 'available' ? 'text-gray-600' :
-                item.status === 'ready' ? 'text-green-600' :
-                item.status === 'needed' ? 'text-red-600' :
-                item.status === 'scheduled' ? 'text-blue-600' :
-                'text-yellow-600'
+                item.status === 'available' ? 'Need Prep' :
+                item.status === 'ready' ? 'Move-in Ready' :
+                item.status === 'needed' ? 'Target Goal' :
+                item.status === 'scheduled' ? 'This Period' :
+                'Needs Contact'
               }`}>
                 {item.status === 'current' ? 'Current Rate' :
                  item.status === 'available' ? 'Need Prep' :
