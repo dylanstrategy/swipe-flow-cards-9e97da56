@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { ArrowLeft, User, Bell, Shield, Palette, ChevronRight, Calendar, CreditCard, Globe, HelpCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ArrowLeft, User, Bell, Shield, Palette, ChevronRight, Calendar, CreditCard, Globe, HelpCircle, Upload, Edit } from 'lucide-react';
 
 type SettingsSection = 'data' | 'notifications' | 'privacy' | 'theme' | 'language' | 'help' | 'identity' | 'calendar' | 'property';
 
@@ -132,57 +134,190 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
     switch (section) {
       case 'data':
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 max-w-full overflow-hidden">
+            {/* Profile Photo Section */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Personal Information</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <span>Full Name</span>
-                  <span className="text-gray-600">John Doe</span>
+              <h3 className="text-lg font-semibold">Profile Photo</h3>
+              <div className="flex flex-col sm:flex-row items-start gap-4 p-4 border rounded-lg">
+                <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                  <User className="w-8 h-8 text-gray-500" />
                 </div>
-                <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <span>Email</span>
-                  <span className="text-gray-600">john.doe@example.com</span>
-                </div>
-                <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <span>Phone</span>
-                  <span className="text-gray-600">(555) 123-4567</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-600 mb-3">Upload a profile photo to personalize your account</p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button variant="outline" size="sm" className="flex items-center gap-2">
+                      <Upload className="w-4 h-4" />
+                      Upload Photo
+                    </Button>
+                    <Button variant="outline" size="sm">Remove</Button>
+                  </div>
                 </div>
               </div>
             </div>
-            
+
+            {/* Personal Information */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Account Settings</h3>
+              <h3 className="text-lg font-semibold">Personal Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input id="fullName" defaultValue="John Doe" />
+                </div>
+                <div>
+                  <Label htmlFor="preferredName">Preferred Name</Label>
+                  <Input id="preferredName" defaultValue="John" />
+                </div>
+                <div>
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input id="email" type="email" defaultValue="john.doe@example.com" />
+                </div>
+                <div>
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input id="phone" type="tel" defaultValue="(555) 123-4567" />
+                </div>
+              </div>
+            </div>
+
+            {/* Emergency Contact */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Emergency Contact</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="emergencyName">Contact Name</Label>
+                  <Input id="emergencyName" placeholder="Emergency contact name" />
+                </div>
+                <div>
+                  <Label htmlFor="emergencyPhone">Contact Phone</Label>
+                  <Input id="emergencyPhone" type="tel" placeholder="Emergency contact phone" />
+                </div>
+                <div className="sm:col-span-2">
+                  <Label htmlFor="emergencyRelation">Relationship</Label>
+                  <Input id="emergencyRelation" placeholder="e.g., Spouse, Parent, Sibling" />
+                </div>
+              </div>
+            </div>
+
+            {/* Budget Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Budget Preferences</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="minBudget">Minimum Budget</Label>
+                  <Input id="minBudget" type="number" placeholder="$1,000" />
+                </div>
+                <div>
+                  <Label htmlFor="maxBudget">Maximum Budget</Label>
+                  <Input id="maxBudget" type="number" placeholder="$3,000" />
+                </div>
+                <div className="sm:col-span-2">
+                  <Label htmlFor="budgetNotes">Budget Notes</Label>
+                  <Input id="budgetNotes" placeholder="Any specific budget considerations..." />
+                </div>
+              </div>
+            </div>
+
+            {/* Pet/Animal Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Pet Information</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium">Do you have pets?</div>
+                    <div className="text-sm text-gray-600">Let us know about your furry friends</div>
+                  </div>
+                  <Switch />
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="petType">Pet Type</Label>
+                    <select id="petType" className="w-full px-3 py-2 border rounded-md text-sm">
+                      <option value="">Select pet type</option>
+                      <option value="dog">Dog</option>
+                      <option value="cat">Cat</option>
+                      <option value="bird">Bird</option>
+                      <option value="fish">Fish</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="petBreed">Breed</Label>
+                    <Input id="petBreed" placeholder="Pet breed" />
+                  </div>
+                  <div>
+                    <Label htmlFor="petName">Pet Name</Label>
+                    <Input id="petName" placeholder="Pet's name" />
+                  </div>
+                  <div>
+                    <Label htmlFor="petWeight">Weight (lbs)</Label>
+                    <Input id="petWeight" type="number" placeholder="Pet weight" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="petNotes">Additional Pet Information</Label>
+                    <Input id="petNotes" placeholder="Vaccinations, special needs, etc." />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Account Security */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Account Security</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <span>Password</span>
-                  <Button variant="outline" size="sm">Change</Button>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium">Password</div>
+                    <div className="text-sm text-gray-600">Last updated 3 months ago</div>
+                  </div>
+                  <Button variant="outline" size="sm">
+                    <Edit className="w-4 h-4 mr-2" />
+                    Change
+                  </Button>
                 </div>
                 <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <span>Two-Factor Authentication</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium">Two-Factor Authentication</div>
+                    <div className="text-sm text-gray-600">Add an extra layer of security</div>
+                  </div>
                   <Button variant="outline" size="sm">Setup</Button>
                 </div>
               </div>
             </div>
 
+            {/* Payment Methods */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Payment Methods</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="font-medium">Primary Card</div>
                     <div className="text-sm text-gray-600">Visa ending in 4567</div>
                   </div>
-                  <Button variant="outline" size="sm">Edit</Button>
+                  <Button variant="outline" size="sm">
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit
+                  </Button>
                 </div>
                 <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="font-medium">Bank Account</div>
                     <div className="text-sm text-gray-600">Account ending in 1234</div>
                   </div>
-                  <Button variant="outline" size="sm">Edit</Button>
+                  <Button variant="outline" size="sm">
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit
+                  </Button>
                 </div>
+                <Button variant="outline" className="w-full">
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Add Payment Method
+                </Button>
               </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="pt-4 border-t">
+              <Button className="w-full">Save Changes</Button>
             </div>
           </div>
         );
