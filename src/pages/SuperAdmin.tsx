@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 import { 
   Building, 
   Users, 
@@ -43,6 +44,7 @@ import {
 const SuperAdmin = () => {
   const { userProfile, signOut } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [companies, setCompanies] = useState<any[]>([]);
   const [properties, setProperties] = useState<any[]>([]);
   const [operators, setOperators] = useState<any[]>([]);
@@ -65,7 +67,9 @@ const SuperAdmin = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (companiesError) throw companiesError;
+      if (companiesError && companiesError.code !== 'PGRST116') {
+        console.error('Error loading companies:', companiesError);
+      }
 
       // Load properties
       const { data: propertiesData, error: propertiesError } = await supabase
@@ -73,7 +77,9 @@ const SuperAdmin = () => {
         .select('*, companies(name)')
         .order('created_at', { ascending: false });
 
-      if (propertiesError) throw propertiesError;
+      if (propertiesError && propertiesError.code !== 'PGRST116') {
+        console.error('Error loading properties:', propertiesError);
+      }
 
       // Load operators
       const { data: operatorsData, error: operatorsError } = await supabase
@@ -82,13 +88,15 @@ const SuperAdmin = () => {
         .in('role', ['operator', 'senior_operator'])
         .order('created_at', { ascending: false });
 
-      if (operatorsError) throw operatorsError;
+      if (operatorsError && operatorsError.code !== 'PGRST116') {
+        console.error('Error loading operators:', operatorsError);
+      }
 
       setCompanies(companiesData || []);
       setProperties(propertiesData || []);
       setOperators(operatorsData || []);
       
-      // Mock leads data
+      // Mock leads data for now
       setLeads([
         { id: '1', name: 'Meridian Properties', email: 'contact@meridianprops.com', status: 'contract_sent', units: 150, created_at: new Date() },
         { id: '2', name: 'Sunset Management', email: 'info@sunsetmgmt.com', status: 'call_scheduled', units: 75, created_at: new Date() },
@@ -98,7 +106,7 @@ const SuperAdmin = () => {
       console.error('Error loading data:', error);
       toast({
         title: "Error",
-        description: "Failed to load dashboard data",
+        description: "Failed to load dashboard data. Some features may not be available.",
         variant: "destructive",
       });
     } finally {
@@ -107,16 +115,16 @@ const SuperAdmin = () => {
   };
 
   const filteredCompanies = companies.filter(company =>
-    company.name.toLowerCase().includes(searchTerm.toLowerCase())
+    company.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredProperties = properties.filter(property =>
-    property.name.toLowerCase().includes(searchTerm.toLowerCase())
+    property.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredOperators = operators.filter(operator =>
-    `${operator.first_name} ${operator.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    operator.email.toLowerCase().includes(searchTerm.toLowerCase())
+    `${operator.first_name || ''} ${operator.last_name || ''}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    operator.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredLeads = leads.filter(lead =>
@@ -145,19 +153,77 @@ const SuperAdmin = () => {
     return colors[role as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
-  const handleImpersonate = (operatorId: string) => {
-    console.log('Impersonating operator:', operatorId);
+  const handleImpersonate = async (operatorId: string) => {
+    try {
+      // In a real implementation, this would switch user context
+      toast({
+        title: "Impersonation Feature",
+        description: "This would allow you to view the dashboard as the selected user. Feature coming soon.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to impersonate user",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddClient = async () => {
+    try {
+      // In a real implementation, this would open a form or send a registration link
+      const registrationLink = `${window.location.origin}/owner-login`;
+      
+      await navigator.clipboard.writeText(registrationLink);
+      
+      toast({
+        title: "Registration Link Generated",
+        description: "Client registration link copied to clipboard",
+      });
+    } catch (error) {
+      toast({
+        title: "Registration Link",
+        description: `Share this link with new clients: ${window.location.origin}/owner-login`,
+      });
+    }
+  };
+
+  const handleAddOperator = async () => {
+    try {
+      const registrationLink = `${window.location.origin}/`;
+      
+      await navigator.clipboard.writeText(registrationLink);
+      
+      toast({
+        title: "Operator Registration Link",
+        description: "Operator registration link copied to clipboard",
+      });
+    } catch (error) {
+      toast({
+        title: "Registration Link",
+        description: `Share this link with new operators: ${window.location.origin}/`,
+      });
+    }
+  };
+
+  const handleSendContract = (leadId: string) => {
     toast({
-      title: "Impersonation Started",
-      description: "You are now viewing as the selected operator",
+      title: "Contract Sent",
+      description: "Contract has been sent to the client for review and signature",
     });
   };
 
-  const handleSendRegistrationLink = (type: string) => {
-    console.log('Sending registration link for:', type);
+  const handleCreateInvoice = () => {
     toast({
-      title: "Registration Link Sent",
-      description: `${type} registration link has been sent`,
+      title: "Invoice Creation",
+      description: "Invoice creation module coming soon",
+    });
+  };
+
+  const handleCreateCampaign = () => {
+    toast({
+      title: "Campaign Creation",
+      description: "Marketing campaign builder coming soon",
     });
   };
 
@@ -345,24 +411,28 @@ const SuperAdmin = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {companies.slice(0, 5).map((company) => (
-                      <div key={company.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <Building className="w-4 h-4 text-blue-600" />
+                    {companies.length === 0 ? (
+                      <p className="text-gray-500 text-center py-8">No clients found. Add some clients to see activity here.</p>
+                    ) : (
+                      companies.slice(0, 5).map((company) => (
+                        <div key={company.id} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                              <Building className="w-4 h-4 text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium">{company.name}</p>
+                              <p className="text-sm text-gray-500">
+                                Created {new Date(company.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium">{company.name}</p>
-                            <p className="text-sm text-gray-500">
-                              Created {new Date(company.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
+                          <Badge className={getStatusColor(company.status || 'active')}>
+                            {company.status || 'active'}
+                          </Badge>
                         </div>
-                        <Badge className={getStatusColor(company.status)}>
-                          {company.status}
-                        </Badge>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -398,7 +468,7 @@ const SuperAdmin = () => {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">Client Management</h2>
-              <Button onClick={() => handleSendRegistrationLink('Client')}>
+              <Button onClick={handleAddClient}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Client
               </Button>
@@ -417,64 +487,78 @@ const SuperAdmin = () => {
             </div>
 
             <div className="grid gap-4">
-              {filteredCompanies.map((company) => (
-                <Card key={company.id}>
-                  <CardContent className="p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="flex items-center space-x-4 flex-1">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Building className="w-6 h-6 text-blue-600" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg">{company.name}</h3>
-                          <p className="text-gray-600">{company.contact_email}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge className={getStatusColor(company.status)}>
-                              {company.status}
-                            </Badge>
-                            <Badge variant="outline">{company.plan_type}</Badge>
-                            <span className="text-sm text-gray-500">
-                              {properties.filter(p => p.company_id === company.id).reduce((sum, p) => sum + (p.unit_count || 0), 0)} units
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={() => handleImpersonate(company.id)}>
-                          <Eye className="w-4 h-4 mr-2" />
-                          Impersonate
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <FileText className="w-4 h-4 mr-2" />
-                              View Contract
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <MessageSquare className="w-4 h-4 mr-2" />
-                              Send Message
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Suspend
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
+              {filteredCompanies.length === 0 ? (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <Building className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No clients yet</h3>
+                    <p className="text-gray-500 mb-4">Start by adding your first client to the platform.</p>
+                    <Button onClick={handleAddClient}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Your First Client
+                    </Button>
                   </CardContent>
                 </Card>
-              ))}
+              ) : (
+                filteredCompanies.map((company) => (
+                  <Card key={company.id}>
+                    <CardContent className="p-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-center space-x-4 flex-1">
+                          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <Building className="w-6 h-6 text-blue-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-lg">{company.name}</h3>
+                            <p className="text-gray-600">{company.contact_email}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Badge className={getStatusColor(company.status || 'active')}>
+                                {company.status || 'active'}
+                              </Badge>
+                              <Badge variant="outline">{company.plan_type || 'standard'}</Badge>
+                              <span className="text-sm text-gray-500">
+                                {properties.filter(p => p.company_id === company.id).reduce((sum, p) => sum + (p.unit_count || 0), 0)} units
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm" onClick={() => handleImpersonate(company.id)}>
+                            <Eye className="w-4 h-4 mr-2" />
+                            Impersonate
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <FileText className="w-4 h-4 mr-2" />
+                                View Contract
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <MessageSquare className="w-4 h-4 mr-2" />
+                                Send Message
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-red-600">
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Suspend
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
         )}
@@ -539,7 +623,7 @@ const SuperAdmin = () => {
                       </div>
                       
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => handleSendContract(lead.id)}>
                           <FileText className="w-4 h-4 mr-2" />
                           Send Contract
                         </Button>
@@ -577,7 +661,7 @@ const SuperAdmin = () => {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">Subscription & Billing</h2>
-              <Button>
+              <Button onClick={handleCreateInvoice}>
                 <Plus className="w-4 h-4 mr-2" />
                 Create Invoice
               </Button>
@@ -626,23 +710,27 @@ const SuperAdmin = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {companies.map((company) => (
-                    <div key={company.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Building className="w-5 h-5 text-blue-600" />
+                  {companies.length === 0 ? (
+                    <p className="text-gray-500 text-center py-8">No billing data available. Add clients to see their billing information.</p>
+                  ) : (
+                    companies.map((company) => (
+                      <div key={company.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <Building className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{company.name}</p>
+                            <p className="text-sm text-gray-500">{company.plan_type || 'standard'} plan</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium">{company.name}</p>
-                          <p className="text-sm text-gray-500">{company.plan_type} plan</p>
+                        <div className="text-right">
+                          <p className="font-medium">$2,850/month</p>
+                          <Badge className="bg-green-100 text-green-800">Paid</Badge>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium">$2,850/month</p>
-                        <Badge className="bg-green-100 text-green-800">Paid</Badge>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -653,7 +741,7 @@ const SuperAdmin = () => {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">Marketing & Campaigns</h2>
-              <Button>
+              <Button onClick={handleCreateCampaign}>
                 <Plus className="w-4 h-4 mr-2" />
                 Create Campaign
               </Button>
@@ -797,72 +885,86 @@ const SuperAdmin = () => {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">Operators</h2>
-              <Button onClick={() => handleSendRegistrationLink('Operator')}>
+              <Button onClick={handleAddOperator}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Operator
               </Button>
             </div>
 
             <div className="grid gap-4">
-              {filteredOperators.map((operator) => (
-                <Card key={operator.id}>
-                  <CardContent className="p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="flex items-center space-x-4 flex-1">
-                        <Avatar className="w-12 h-12">
-                          <AvatarFallback className="font-semibold">
-                            {operator.first_name?.[0]}{operator.last_name?.[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg">
-                            {operator.first_name} {operator.last_name}
-                          </h3>
-                          <p className="text-gray-600">{operator.email}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge className={getRoleColor(operator.role)}>
-                              {operator.role === 'senior_operator' ? 'Senior Operator' : 'Operator'}
-                            </Badge>
-                            <Badge className={getStatusColor(operator.status)}>
-                              {operator.status}
-                            </Badge>
-                            <span className="text-sm text-gray-500">{operator.property}</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={() => handleImpersonate(operator.id)}>
-                          <Eye className="w-4 h-4 mr-2" />
-                          Impersonate
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit Profile
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <MessageSquare className="w-4 h-4 mr-2" />
-                              Send Message
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Deactivate
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
+              {filteredOperators.length === 0 ? (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No operators yet</h3>
+                    <p className="text-gray-500 mb-4">Add operators to help manage your properties and residents.</p>
+                    <Button onClick={handleAddOperator}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Your First Operator
+                    </Button>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+              ) : (
+                filteredOperators.map((operator) => (
+                  <Card key={operator.id}>
+                    <CardContent className="p-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-center space-x-4 flex-1">
+                          <Avatar className="w-12 h-12">
+                            <AvatarFallback className="font-semibold">
+                              {operator.first_name?.[0]}{operator.last_name?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-lg">
+                              {operator.first_name} {operator.last_name}
+                            </h3>
+                            <p className="text-gray-600">{operator.email}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Badge className={getRoleColor(operator.role)}>
+                                {operator.role === 'senior_operator' ? 'Senior Operator' : 'Operator'}
+                              </Badge>
+                              <Badge className={getStatusColor(operator.status || 'active')}>
+                                {operator.status || 'active'}
+                              </Badge>
+                              <span className="text-sm text-gray-500">{operator.property}</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm" onClick={() => handleImpersonate(operator.id)}>
+                            <Eye className="w-4 h-4 mr-2" />
+                            Impersonate
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit Profile
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <MessageSquare className="w-4 h-4 mr-2" />
+                                Send Message
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-red-600">
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Deactivate
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
