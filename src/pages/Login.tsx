@@ -52,9 +52,6 @@ const Login = () => {
         case 'super_admin':
           navigate('/super-admin');
           break;
-        case 'support_team':
-          navigate('/internal-dashboard');
-          break;
         case 'operator':
         case 'senior_operator':
           navigate('/operator');

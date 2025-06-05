@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return 'super_admin';
     }
     if (email.endsWith('@applaudliving.com')) {
-      return 'operator'; // Support team gets operator role for now
+      return 'operator'; // Support team gets operator role
     }
     // Check for client domains (this would need to be expanded with actual client domains)
     if (email.includes('@client') || email.endsWith('.property.com')) {
