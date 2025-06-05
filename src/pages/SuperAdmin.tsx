@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,16 +21,9 @@ import CreateUserModal from '@/components/admin/CreateUserModal';
 import CreatePropertyModal from '@/components/admin/CreatePropertyModal';
 import PropertyDetailModal from '@/components/admin/PropertyDetailModal';
 import RoleImpersonation from '@/components/RoleImpersonation';
+import ImpersonatedInterface from '@/components/admin/ImpersonatedInterface';
 import type { Property } from '@/types/supabase';
 import { useNavigate } from 'react-router-dom';
-
-// Import role-specific components
-import Index from './Index';
-import Discovery from './Discovery';
-import Matches from './Matches';
-import MoveIn from './MoveIn';
-import Maintenance from './Maintenance';
-import Operator from './Operator';
 
 const SuperAdmin = () => {
   const { userProfile, user, signOut, isImpersonating, impersonatedRole } = useAuth();
@@ -99,32 +91,8 @@ const SuperAdmin = () => {
     }
   };
 
-  // Render the appropriate role interface when impersonating
-  const renderImpersonatedInterface = () => {
-    if (!isImpersonating || !impersonatedRole) return null;
-
-    console.log('🎭 Rendering impersonated interface for role:', impersonatedRole);
-
-    switch (impersonatedRole) {
-      case 'resident':
-        return <Index />;
-      case 'prospect':
-        return <Discovery />;
-      case 'operator':
-      case 'senior_operator':
-      case 'leasing':
-        return <Operator />;
-      case 'maintenance':
-        return <Maintenance />;
-      case 'vendor':
-        return <Index />; // Default to resident view for vendor
-      default:
-        return <Index />;
-    }
-  };
-
   // If impersonating, show the role interface with admin header
-  if (isImpersonating) {
+  if (isImpersonating && impersonatedRole) {
     return (
       <div className="min-h-screen bg-gray-50">
         {/* Admin Header - Always visible when impersonating */}
@@ -153,7 +121,7 @@ const SuperAdmin = () => {
         {/* Impersonated Role Interface */}
         <div className="border-4 border-dashed border-gray-300 bg-gray-100 p-4">
           <div className="bg-white rounded-lg shadow-sm min-h-[calc(100vh-200px)]">
-            {renderImpersonatedInterface()}
+            <ImpersonatedInterface role={impersonatedRole} />
           </div>
         </div>
       </div>
