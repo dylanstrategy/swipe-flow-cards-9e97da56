@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Save, Eye, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { useSettings } from '@/hooks/useSettings';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 interface ResidentPrivacySetupProps {
   onBack: () => void;
@@ -16,6 +16,7 @@ interface ResidentPrivacySetupProps {
 
 const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const { settings: privacyData, saveSettings, loading } = useSettings('privacy');
   
   // Default privacy settings
@@ -109,6 +110,14 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
     return (
       <div className="p-6 flex items-center justify-center">
         <div className="text-gray-600">Loading privacy settings...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="p-6 flex items-center justify-center">
+        <div className="text-gray-600">Please sign in to manage privacy settings.</div>
       </div>
     );
   }
