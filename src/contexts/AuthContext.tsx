@@ -86,33 +86,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         console.log('Initializing auth...');
         
-        // Set up auth state listener
+        // Set up auth state listener first
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             if (!mounted) return;
 
-            console.log('Auth event:', event, session?.user?.email);
+            console.log('Auth event:', event, 'User:', session?.user?.email, 'Session exists:', !!session);
             
             setSession(session);
             setUser(session?.user ?? null);
             
             if (session?.user) {
-              try {
-                const profile = await fetchUserProfile(session.user.id);
-                if (mounted && profile) {
-                  setUserProfile(profile);
+              // Use setTimeout to avoid blocking the auth state change
+              setTimeout(async () => {
+                if (!mounted) return;
+                try {
+                  const profile = await fetchUserProfile(session.user.id);
+                  if (mounted && profile) {
+                    setUserProfile(profile);
+                  }
+                } catch (error) {
+                  console.error('Error handling signed in user:', error);
                 }
-              } catch (error) {
-                console.error('Error handling signed in user:', error);
-              }
+                if (mounted) {
+                  setLoading(false);
+                }
+              }, 0);
             } else {
               if (mounted) {
                 setUserProfile(null);
+                setLoading(false);
               }
-            }
-            
-            if (mounted) {
-              setLoading(false);
             }
           }
         );
@@ -122,15 +126,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (!mounted) return;
         
-        console.log('Existing session check:', existingSession?.user?.email);
+        console.log('Existing session check:', existingSession?.user?.email, 'Session exists:', !!existingSession);
         
         if (existingSession?.user) {
           setSession(existingSession);
           setUser(existingSession.user);
           
-          const profile = await fetchUserProfile(existingSession.user.id);
-          if (mounted && profile) {
-            setUserProfile(profile);
+          try {
+            const profile = await fetchUserProfile(existingSession.user.id);
+            if (mounted && profile) {
+              setUserProfile(profile);
+            }
+          } catch (error) {
+            console.error('Error fetching existing user profile:', error);
           }
         }
         
