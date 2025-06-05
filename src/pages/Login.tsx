@@ -11,14 +11,24 @@ const Login = () => {
 
   // Redirect if already authenticated
   useEffect(() => {
+    console.log('🔍 Login page - checking auth state:', { 
+      hasUser: !!user, 
+      hasProfile: !!userProfile, 
+      email: user?.email,
+      role: userProfile?.role 
+    });
+    
     if (user && userProfile) {
       console.log('🔄 User already authenticated, redirecting...');
       const defaultRoute = getDefaultRouteForUser(userProfile);
+      console.log('📍 Redirecting to:', defaultRoute);
       navigate(defaultRoute, { replace: true });
     }
   }, [user, userProfile, navigate]);
 
   const getDefaultRouteForUser = (profile: any) => {
+    console.log('🎯 Getting default route for:', profile.email, profile.role);
+    
     if (profile.email === 'info@applaudliving.com') {
       return '/super-admin';
     }
@@ -50,7 +60,16 @@ const Login = () => {
     }
   };
 
-  // Don't render if already authenticated
+  // Show loading while checking auth state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // Don't render login form if already authenticated
   if (user && userProfile) {
     return (
       <div className="min-h-screen flex items-center justify-center">

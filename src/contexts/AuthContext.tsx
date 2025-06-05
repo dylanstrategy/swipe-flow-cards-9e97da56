@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,7 +27,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
   const [impersonatedRole, setImpersonatedRole] = useState<AppRole | null>(null);
   const { toast } = useToast();
 
@@ -57,44 +55,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateAuthState = async (session: Session | null) => {
-    console.log('🔄 Updating auth state - Session exists:', !!session);
-    
-    setSession(session);
-    setUser(session?.user ?? null);
-    
-    if (session?.user) {
-      console.log('👤 Fetching profile for user:', session.user.email);
-      const profile = await fetchUserProfile(session.user.id);
-      setUserProfile(profile);
-      console.log('✅ Profile set:', profile?.role);
-    } else {
-      console.log('🚫 No session, clearing profile');
-      setUserProfile(null);
-      setImpersonatedRole(null);
-    }
-  };
-
   useEffect(() => {
     console.log('🚀 AuthProvider initializing...');
     
+    let mounted = true;
+
     const initializeAuth = async () => {
       try {
-        // Get initial session
-        const { data: { session }, error } = await supabase.auth.getSession();
+        // First, check if there's a session from URL (OAuth callback)
+        const { data: urlSession, error: urlError } = await supabase.auth.getSessionFromUrl();
+        console.log('🔗 Session from URL:', !!urlSession.session, urlError ? 'Error: ' + urlError.message : '');
         
-        if (error) {
-          console.error('❌ Session check error:', error);
-        } else {
-          console.log('📍 Initial session check - Session exists:', !!session);
-          await updateAuthState(session);
+        // Then get the current session
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        console.log('📍 Current session check:', !!currentSession, error ? 'Error: ' + error.message : '');
+        
+        // Use URL session if available, otherwise use current session
+        const activeSession = urlSession.session || currentSession;
+        
+        if (mounted) {
+          setSession(activeSession);
+          setUser(activeSession?.user ?? null);
+          
+          if (activeSession?.user) {
+            console.log('👤 Fetching profile for user:', activeSession.user.email);
+            const profile = await fetchUserProfile(activeSession.user.id);
+            if (mounted) {
+              setUserProfile(profile);
+              console.log('✅ Profile set:', profile?.role);
+            }
+          } else {
+            console.log('🚫 No session found');
+            if (mounted) {
+              setUserProfile(null);
+              setImpersonatedRole(null);
+            }
+          }
         }
       } catch (error) {
         console.error('❌ Auth initialization error:', error);
       } finally {
-        setInitialized(true);
-        setLoading(false);
-        console.log('✅ Auth initialization complete');
+        if (mounted) {
+          setLoading(false);
+          console.log('✅ Auth initialization complete');
+        }
       }
     };
 
@@ -103,9 +107,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, session) => {
         console.log('🔔 Auth state change:', event, 'Session exists:', !!session);
         
-        // Only process meaningful events after initialization
-        if (initialized && (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED')) {
-          await updateAuthState(session);
+        if (mounted && (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED')) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          if (session?.user) {
+            console.log('👤 Fetching profile for user:', session.user.email);
+            const profile = await fetchUserProfile(session.user.id);
+            if (mounted) {
+              setUserProfile(profile);
+              console.log('✅ Profile set:', profile?.role);
+            }
+          } else {
+            console.log('🚫 No session, clearing profile');
+            if (mounted) {
+              setUserProfile(null);
+              setImpersonatedRole(null);
+            }
+          }
         }
       }
     );
@@ -113,10 +132,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
 
     return () => {
+      mounted = false;
       console.log('🧹 Cleaning up auth subscription');
       subscription.unsubscribe();
     };
-  }, [initialized]);
+  }, []);
 
   const signInWithGoogle = async () => {
     try {
