@@ -126,19 +126,19 @@ const SuperAdmin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 w-full overflow-hidden">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Applaud Super Admin</h1>
+        <div className="w-full max-w-none px-4 sm:px-6 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">Applaud Super Admin</h1>
               <p className="text-sm text-gray-600">Global oversight dashboard</p>
             </div>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="focus:outline-none">
+                <button className="focus:outline-none flex-shrink-0">
                   <Avatar className="w-10 h-10 cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all">
                     <AvatarFallback className="bg-red-600 text-white font-semibold">
                       SA
@@ -185,74 +185,76 @@ const SuperAdmin = () => {
 
       {/* Navigation */}
       <div className="bg-white border-b">
-        <div className="px-6">
-          <nav className="flex space-x-8">
-            {['overview', 'companies', 'properties', 'operators'].map((view) => (
-              <button
-                key={view}
-                onClick={() => setActiveView(view)}
-                className={`py-4 px-2 border-b-2 font-medium text-sm ${
-                  activeView === view
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {view.charAt(0).toUpperCase() + view.slice(1)}
-              </button>
-            ))}
-          </nav>
+        <div className="w-full max-w-none px-4 sm:px-6">
+          <ScrollArea orientation="horizontal" className="w-full">
+            <nav className="flex space-x-8 min-w-max">
+              {['overview', 'companies', 'properties', 'operators'].map((view) => (
+                <button
+                  key={view}
+                  onClick={() => setActiveView(view)}
+                  className={`py-4 px-2 border-b-2 font-medium text-sm whitespace-nowrap ${
+                    activeView === view
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  {view.charAt(0).toUpperCase() + view.slice(1)}
+                </button>
+              ))}
+            </nav>
+          </ScrollArea>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-6">
+      <div className="w-full max-w-none p-4 sm:p-6">
         {activeView === 'overview' && (
           <div className="space-y-6">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center">
-                    <Building className="h-8 w-8 text-blue-600" />
-                    <div className="ml-4">
+                    <Building className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
+                    <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                       <p className="text-sm font-medium text-gray-600">Companies</p>
-                      <p className="text-2xl font-bold text-gray-900">{companies.length}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-gray-900">{companies.length}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center">
-                    <Building className="h-8 w-8 text-green-600" />
-                    <div className="ml-4">
+                    <Building className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 flex-shrink-0" />
+                    <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                       <p className="text-sm font-medium text-gray-600">Properties</p>
-                      <p className="text-2xl font-bold text-gray-900">{properties.length}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-gray-900">{properties.length}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center">
-                    <Users className="h-8 w-8 text-purple-600" />
-                    <div className="ml-4">
+                    <Users className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 flex-shrink-0" />
+                    <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                       <p className="text-sm font-medium text-gray-600">Operators</p>
-                      <p className="text-2xl font-bold text-gray-900">{operators.length}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-gray-900">{operators.length}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center">
-                    <Users className="h-8 w-8 text-orange-600" />
-                    <div className="ml-4">
+                    <Users className="h-6 w-6 sm:h-8 sm:w-8 text-orange-600 flex-shrink-0" />
+                    <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                       <p className="text-sm font-medium text-gray-600">Total Units</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                      <p className="text-xl sm:text-2xl font-bold text-gray-900">
                         {properties.reduce((sum, prop) => sum + (prop.unit_count || 0), 0)}
                       </p>
                     </div>
@@ -270,18 +272,18 @@ const SuperAdmin = () => {
                 <div className="space-y-4">
                   {companies.slice(0, 5).map((company) => (
                     <div key={company.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <div className="flex items-center space-x-3 min-w-0 flex-1">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                           <Building className="w-4 h-4 text-blue-600" />
                         </div>
-                        <div>
-                          <p className="font-medium">{company.name}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium truncate">{company.name}</p>
                           <p className="text-sm text-gray-500">
                             Created {new Date(company.created_at).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
-                      <Badge className={getStatusColor(company.status)}>
+                      <Badge className={`${getStatusColor(company.status)} flex-shrink-0 ml-2`}>
                         {company.status}
                       </Badge>
                     </div>
@@ -294,9 +296,9 @@ const SuperAdmin = () => {
 
         {activeView === 'companies' && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">Companies</h2>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Company
               </Button>
@@ -317,16 +319,16 @@ const SuperAdmin = () => {
             <div className="grid gap-4">
               {filteredCompanies.map((company) => (
                 <Card key={company.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center space-x-4 min-w-0 flex-1">
+                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                           <Building className="w-6 h-6 text-blue-600" />
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-lg">{company.name}</h3>
-                          <p className="text-gray-600">{company.contact_email}</p>
-                          <div className="flex items-center gap-2 mt-2">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-lg truncate">{company.name}</h3>
+                          <p className="text-gray-600 truncate">{company.contact_email}</p>
+                          <div className="flex flex-wrap items-center gap-2 mt-2">
                             <Badge className={getStatusColor(company.status)}>
                               {company.status}
                             </Badge>
@@ -337,7 +339,7 @@ const SuperAdmin = () => {
                       
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
+                          <Button variant="ghost" size="icon" className="flex-shrink-0">
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -366,9 +368,9 @@ const SuperAdmin = () => {
 
         {activeView === 'properties' && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">Properties</h2>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Property
               </Button>
@@ -377,15 +379,15 @@ const SuperAdmin = () => {
             <div className="grid gap-4">
               {filteredProperties.map((property) => (
                 <Card key={property.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center space-x-4 min-w-0 flex-1">
+                        <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
                           <Building className="w-6 h-6 text-green-600" />
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-lg">{property.name}</h3>
-                          <p className="text-gray-600">{property.address}</p>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-lg truncate">{property.name}</h3>
+                          <p className="text-gray-600 truncate">{property.address}</p>
                           <p className="text-sm text-gray-500">
                             {property.unit_count} units • {property.companies?.name || 'No Company'}
                           </p>
@@ -397,7 +399,7 @@ const SuperAdmin = () => {
                       
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
+                          <Button variant="ghost" size="icon" className="flex-shrink-0">
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -426,9 +428,9 @@ const SuperAdmin = () => {
 
         {activeView === 'operators' && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">Operators</h2>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Operator
               </Button>
@@ -437,21 +439,21 @@ const SuperAdmin = () => {
             <div className="grid gap-4">
               {filteredOperators.map((operator) => (
                 <Card key={operator.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <Avatar className="w-12 h-12">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center space-x-4 min-w-0 flex-1">
+                        <Avatar className="w-12 h-12 flex-shrink-0">
                           <AvatarFallback className="font-semibold">
                             {operator.first_name?.[0]}{operator.last_name?.[0]}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
-                          <h3 className="font-semibold text-lg">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-lg truncate">
                             {operator.first_name} {operator.last_name}
                           </h3>
-                          <p className="text-gray-600">{operator.email}</p>
-                          <p className="text-sm text-gray-500">{operator.phone}</p>
-                          <div className="flex items-center gap-2 mt-2">
+                          <p className="text-gray-600 truncate">{operator.email}</p>
+                          <p className="text-sm text-gray-500 truncate">{operator.phone}</p>
+                          <div className="flex flex-wrap items-center gap-2 mt-2">
                             <Badge className={getRoleColor(operator.role)}>
                               {operator.role === 'senior_operator' ? 'Senior Operator' : 'Operator'}
                             </Badge>
@@ -464,7 +466,7 @@ const SuperAdmin = () => {
                       
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
+                          <Button variant="ghost" size="icon" className="flex-shrink-0">
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
