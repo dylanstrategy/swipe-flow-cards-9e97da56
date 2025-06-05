@@ -5,15 +5,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Search, User, Phone, Mail, Home, Calendar, ChevronRight, ArrowLeft, Truck, FileText, Upload, Download, Eye, TruckIcon, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Search, User, Phone, Mail, Home, Calendar, ChevronRight, ArrowLeft, Truck, FileText, Upload, Download, Eye, TruckIcon, RefreshCw, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import MoveInTracker from '../MoveInTracker';
 import MoveOutTracker from '../MoveOutTracker';
 import RenewalForm from '../../forms/RenewalForm';
 import NoticeToVacateForm from '../../forms/NoticeToVacateForm';
 import { useResident } from '@/contexts/ResidentContext';
+import { useToast } from '@/hooks/use-toast';
 
 const OperatorResidentsTab = () => {
-  const { allResidents } = useResident();
+  const { allResidents, updateResidentStatus } = useResident();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedResident, setSelectedResident] = useState<any>(null);
@@ -89,6 +91,56 @@ const OperatorResidentsTab = () => {
     }
   };
 
+  const getTaskCompletion = (residentId: string, status: string) => {
+    // Simulate different completion levels
+    const completionLevels = {
+      'future': Math.random() > 0.3 ? 100 : Math.floor(Math.random() * 90) + 60, // Most future residents are ready
+      'current': 100, // Current residents are always complete
+      'notice': Math.random() > 0.4 ? 100 : Math.floor(Math.random() * 90) + 70, // Most notice residents have some tasks done
+      'prospect': Math.floor(Math.random() * 40) + 10 // Prospects have minimal completion
+    };
+    
+    return completionLevels[status as keyof typeof completionLevels] || 0;
+  };
+
+  const handleMoveInResident = (resident: any) => {
+    const completion = getTaskCompletion(resident.id, resident.status);
+    if (completion < 100) {
+      toast({
+        title: "Cannot Move In",
+        description: `${resident.fullName} has incomplete tasks (${completion}% complete). Please complete all tasks first.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Update resident status to current
+    updateResidentStatus(resident.id, 'current');
+    toast({
+      title: "Resident Moved In",
+      description: `${resident.fullName} has been successfully moved in to Unit ${resident.unitNumber}.`
+    });
+  };
+
+  const handleMoveOutResident = (resident: any) => {
+    const completion = getTaskCompletion(resident.id, resident.status);
+    if (completion < 100) {
+      toast({
+        title: "Cannot Move Out",
+        description: `${resident.fullName} has incomplete tasks (${completion}% complete). Please complete all tasks first.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Update resident status to past
+    updateResidentStatus(resident.id, 'past');
+    toast({
+      title: "Resident Moved Out",
+      description: `${resident.fullName} has been successfully moved out from Unit ${resident.unitNumber}.`
+    });
+  };
+
   if (showMoveInTracker) {
     return (
       <MoveInTracker 
@@ -108,6 +160,10 @@ const OperatorResidentsTab = () => {
   }
 
   if (selectedResident) {
+    const taskCompletion = getTaskCompletion(selectedResident.id, selectedResident.status);
+    const canMoveIn = selectedResident.status === 'future' && taskCompletion === 100;
+    const canMoveOut = selectedResident.status === 'notice' && taskCompletion === 100;
+
     return (
       <div className="px-4 py-6 pb-24">
         <div className="mb-6">
@@ -126,6 +182,81 @@ const OperatorResidentsTab = () => {
             </div>
           </div>
         </div>
+
+        {/* Task Completion Status */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Task Completion</span>
+              <div className="flex items-center space-x-2">
+                {taskCompletion === 100 ? (
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                ) : (
+                  <XCircle className="w-5 h-5 text-red-600" />
+                )}
+                <span className={`font-bold ${taskCompletion === 100 ? 'text-green-600' : 'text-red-600'}`}>
+                  {taskCompletion}%
+                </span>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+              <div 
+                className={`h-3 rounded-full transition-all duration-300 ${
+                  taskCompletion === 100 ? 'bg-green-500' : 'bg-blue-500'
+                }`}
+                style={{ width: `${taskCompletion}%` }}
+              />
+            </div>
+            <p className="text-sm text-gray-600">
+              {taskCompletion === 100 
+                ? 'All tasks completed. Ready for move-in/move-out actions.'
+                : `${100 - taskCompletion}% of tasks remaining before move-in/move-out actions are available.`
+              }
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Move-In/Move-Out Actions */}
+        {(selectedResident.status === 'future' || selectedResident.status === 'notice') && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Truck className="w-5 h-5" />
+                <span>Move Actions</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {selectedResident.status === 'future' && (
+                <Button 
+                  onClick={() => handleMoveInResident(selectedResident)}
+                  disabled={!canMoveIn}
+                  className={`w-full ${canMoveIn ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-300'}`}
+                >
+                  <Truck className="w-4 h-4 mr-2" />
+                  {canMoveIn ? 'Move In Resident' : `Cannot Move In (${taskCompletion}% Complete)`}
+                </Button>
+              )}
+              
+              {selectedResident.status === 'notice' && (
+                <Button 
+                  onClick={() => handleMoveOutResident(selectedResident)}
+                  disabled={!canMoveOut}
+                  variant={canMoveOut ? "destructive" : "secondary"}
+                  className="w-full"
+                >
+                  <TruckIcon className="w-4 h-4 mr-2" />
+                  {canMoveOut ? 'Move Out Resident' : `Cannot Move Out (${taskCompletion}% Complete)`}
+                </Button>
+              )}
+              
+              <div className="text-xs text-gray-500 text-center">
+                {taskCompletion < 100 && 'Complete all tasks to enable move actions'}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Resident Profile Content */}
         <div className="space-y-6">
