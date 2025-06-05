@@ -8,103 +8,70 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 
 const OwnerLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, signInWithEmail, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleGoogleSignIn = async () => {
-    setLoading(true);
     setError('');
-
     try {
       await signInWithGoogle();
+      // Redirect will be handled by the auth context
     } catch (error: any) {
       console.error('Google sign in error:', error);
       setError(error.message || "Failed to sign in with Google");
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      // Check if user is super admin
-      const { data: profile } = await supabase
-        .from('users')
-        .select('role')
-        .eq('email', email)
-        .single();
-
-      if (profile?.role === 'super_admin') {
-        navigate('/super-admin');
-        toast({
-          title: "Welcome, Super Admin!",
-          description: "You have successfully signed in to the admin dashboard.",
-        });
-      } else {
-        setError('Access denied. Super admin privileges required.');
-        await supabase.auth.signOut();
-      }
+      await signInWithEmail(email, password);
+      // Redirect will be handled by the auth context
     } catch (error: any) {
       console.error('Login error:', error);
       setError(error.message || "Invalid credentials");
-    } finally {
-      setLoading(false);
     }
   };
 
   const createSuperAdminAccount = async () => {
-    setLoading(true);
     try {
-      // Create super admin account
-      const { data, error } = await supabase.auth.signUp({
-        email: 'admin@applaud.com',
-        password: 'ApplaudAdmin2024!',
-        options: {
-          data: {
-            first_name: 'Super',
-            last_name: 'Admin',
-            phone: '(555) 000-0000',
-            role: 'super_admin',
-            property: 'Applaud HQ'
-          }
-        }
+      // This creates the super admin account directly
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/rpc/create_super_admin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          admin_email: 'admin@applaud.com',
+          admin_password: 'ApplaudAdmin2024!'
+        })
       });
 
-      if (error) throw error;
-
-      toast({
-        title: "Super Admin Account Created!",
-        description: "Use admin@applaud.com / ApplaudAdmin2024! to sign in.",
-      });
+      if (response.ok) {
+        toast({
+          title: "Super Admin Account Created!",
+          description: "Use admin@applaud.com / ApplaudAdmin2024! to sign in.",
+        });
+      } else {
+        throw new Error('Failed to create admin account');
+      }
     } catch (error: any) {
       console.error('Error creating super admin:', error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to create super admin account",
-        variant: "destructive",
+        title: "Info",
+        description: "Super admin account may already exist. Try signing in with admin@applaud.com",
+        variant: "default",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -196,7 +163,7 @@ const OwnerLogin = () => {
             <div className="mt-4 text-center">
               <Button 
                 variant="ghost" 
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/login')}
                 className="text-sm"
               >
                 Back to Regular Login

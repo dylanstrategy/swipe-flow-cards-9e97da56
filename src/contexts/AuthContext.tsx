@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +11,8 @@ interface AuthContextType {
   userProfile: AppUser | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, userData: any) => Promise<void>;
   signOut: () => Promise<void>;
   impersonateRole: (role: AppRole) => void;
   stopImpersonation: () => void;
@@ -31,48 +34,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isImpersonating = impersonatedRole !== null;
   const canImpersonate = userProfile?.role === 'super_admin';
 
+  // Domain validation for operators
+  const isValidOperatorDomain = (email: string): boolean => {
+    const allowedDomains = ['@ironstate.com', '@applaudliving.com', '@meridian.com'];
+    return allowedDomains.some(domain => email.endsWith(domain));
+  };
+
   useEffect(() => {
-    // Set up auth state listener first
+    let mounted = true;
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+
         console.log('Auth event:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user) {
-          // Defer profile fetching to avoid recursive issues
-          setTimeout(async () => {
+        if (session?.user && event === 'SIGNED_IN') {
+          // Fetch user profile after sign in
+          try {
             await fetchUserProfile(session.user.id);
             
-            // Handle post-login redirects - only for successful sign-ins
-            if (event === 'SIGNED_IN') {
-              console.log('User signed in, checking redirect logic...');
-              
-              try {
-                const { data: profile, error } = await supabase
-                  .from('users')
-                  .select('role')
-                  .eq('id', session.user.id)
-                  .single();
-                
-                console.log('User profile from DB:', profile, 'Error:', error);
-                
-                if (profile?.role === 'super_admin') {
-                  console.log('Redirecting super admin to /super-admin');
-                  // Only redirect if we're on login pages
-                  if (window.location.pathname === '/login' || window.location.pathname === '/owner-login') {
-                    window.location.href = '/super-admin';
-                  }
-                } else if (window.location.pathname === '/login') {
-                  console.log('Redirecting regular user to /');
-                  window.location.href = '/';
-                }
-              } catch (error) {
-                console.error('Error checking user role for redirect:', error);
-              }
-            }
-          }, 100); // Slight delay to ensure profile is fetched
-        } else {
+            // Handle redirects based on current page and user role
+            setTimeout(() => {
+              if (!mounted) return;
+              handlePostLoginRedirect(session.user);
+            }, 500);
+          } catch (error) {
+            console.error('Error fetching profile after sign in:', error);
+            toast({
+              title: "Authentication Error",
+              description: "Failed to load user profile. Please try again.",
+              variant: "destructive",
+            });
+          }
+        } else if (!session) {
           setUserProfile(null);
         }
         
@@ -82,6 +80,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
       console.log('Existing session:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
@@ -92,8 +92,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
+
+  const handlePostLoginRedirect = async (user: User) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user role for redirect:', error);
+        return;
+      }
+
+      console.log('User profile for redirect:', profile);
+      const currentPath = window.location.pathname;
+      
+      // Only redirect if we're on a login page
+      if (currentPath === '/login' || currentPath === '/owner-login') {
+        switch (profile?.role) {
+          case 'super_admin':
+            console.log('Redirecting super admin to /super-admin');
+            window.location.href = '/super-admin';
+            break;
+          case 'senior_operator':
+          case 'operator':
+          case 'leasing':
+            console.log('Redirecting operator to /operator');
+            window.location.href = '/operator';
+            break;
+          case 'maintenance':
+            console.log('Redirecting maintenance to /maintenance');
+            window.location.href = '/maintenance';
+            break;
+          case 'resident':
+            console.log('Redirecting resident to /');
+            window.location.href = '/';
+            break;
+          case 'prospect':
+            console.log('Redirecting prospect to /discovery');
+            window.location.href = '/discovery';
+            break;
+          default:
+            console.log('Unknown role, redirecting to /');
+            window.location.href = '/';
+        }
+      }
+    } catch (error) {
+      console.error('Error in handlePostLoginRedirect:', error);
+    }
+  };
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -119,10 +173,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       console.log('Starting Google sign in...');
+      setLoading(true);
+      
+      const redirectTo = window.location.pathname === '/owner-login' 
+        ? `${window.location.origin}/owner-login`
+        : `${window.location.origin}/login`;
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/owner-login`,
+          redirectTo,
         }
       });
       
@@ -133,11 +193,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Google sign in initiated successfully');
     } catch (error: any) {
       console.error('Google sign in error:', error);
+      setLoading(false);
       toast({
         title: "Authentication Error",
-        description: error.message,
+        description: error.message || "Failed to sign in with Google",
         variant: "destructive",
       });
+      throw error;
+    }
+  };
+
+  const signInWithEmail = async (email: string, password: string) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      setLoading(false);
+      throw error;
+    }
+  };
+
+  const signUpWithEmail = async (email: string, password: string, userData: any) => {
+    try {
+      setLoading(true);
+
+      // Check domain restrictions for operators
+      if (userData.role && ['operator', 'senior_operator', 'leasing', 'maintenance'].includes(userData.role)) {
+        if (!isValidOperatorDomain(email)) {
+          throw new Error('Registration is only allowed for authorized company emails.');
+        }
+      }
+
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: userData
+        }
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      setLoading(false);
       throw error;
     }
   };
@@ -190,6 +292,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userProfile: userProfile ? { ...userProfile, role: effectiveRole || userProfile.role } : null,
     loading,
     signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
     signOut,
     impersonateRole,
     stopImpersonation,
