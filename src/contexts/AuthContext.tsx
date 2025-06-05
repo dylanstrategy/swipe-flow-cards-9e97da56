@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session, User } from '@supabase/supabase-js';
@@ -54,68 +55,85 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [devModeRole, setDevModeRole] = useState<AppRole | null>(null);
   const [devModeProperty, setDevModeProperty] = useState<string | null>(null);
 
+  const fetchProfile = async (userId: string) => {
+    console.log('👤 Fetching user profile for:', userId);
+    try {
+      const { data: profile, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('❌ Error fetching profile:', error);
+        setUserProfile(null);
+      } else {
+        console.log('👤 User profile fetched:', profile);
+        setUserProfile(profile as UserProfile);
+      }
+    } catch (err) {
+      console.error('🔥 Error fetching profile:', err);
+      setUserProfile(null);
+    }
+  };
+
   useEffect(() => {
     console.log('🔄 AuthProvider useEffect triggered');
-    setLoading(true);
+    let mounted = true;
 
-    const getSession = async () => {
-      console.log('🔑 Getting initial session');
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user || null);
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    };
-
-    const fetchProfile = async (userId: string) => {
-      console.log('👤 Fetching user profile...');
+    const initAuth = async () => {
       try {
-        const { data: profile, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', userId)
-          .single();
-
-        if (error) {
-          console.error('❌ Error fetching profile:', error);
-        } else {
-          console.log('👤 User profile fetched:', profile);
-          setUserProfile(profile as UserProfile);
+        console.log('🔑 Getting initial session');
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (mounted) {
+          setUser(session?.user || null);
+          if (session?.user) {
+            await fetchProfile(session.user.id);
+          }
+          setLoading(false);
         }
-      } catch (err) {
-        console.error('🔥 Error fetching profile:', err);
-      } finally {
-        setLoading(false);
+      } catch (error) {
+        console.error('🔥 Error during auth initialization:', error);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
-    getSession();
+    initAuth();
 
     // Subscribe to auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('👂 Auth state change event:', event);
-        setUser(session?.user || null);
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        } else {
-          setUserProfile(null);
-          setLoading(false);
-          // Clear dev mode on logout
-          setIsDevMode(false);
-          setDevModeRole(null);
-          setDevModeProperty(null);
+        
+        if (mounted) {
+          setUser(session?.user || null);
+          
+          if (session?.user) {
+            await fetchProfile(session.user.id);
+          } else {
+            setUserProfile(null);
+            // Clear dev mode on logout
+            setIsDevMode(false);
+            setDevModeRole(null);
+            setDevModeProperty(null);
+          }
+          
+          if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+            setLoading(false);
+          }
         }
       }
     );
 
     return () => {
+      mounted = false;
       console.log('🧹 AuthProvider useEffect cleanup');
       subscription?.unsubscribe();
     };
-  }, []);
+  }, []); // Remove all dependencies to prevent loops
 
   const signInWithEmail = async (email: string, password: string) => {
     console.log('🔑 Signing in with email:', email);
@@ -171,22 +189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshProfile = async () => {
     console.log('🔄 Refreshing profile...');
     if (user) {
-      try {
-        const { data: profile, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (error) {
-          console.error('❌ Error refreshing profile:', error);
-        } else {
-          console.log('👤 Profile refreshed:', profile);
-          setUserProfile(profile as UserProfile);
-        }
-      } catch (err) {
-        console.error('🔥 Error refreshing profile:', err);
-      }
+      await fetchProfile(user.id);
     } else {
       console.log('🚫 No user session, cannot refresh profile');
     }
