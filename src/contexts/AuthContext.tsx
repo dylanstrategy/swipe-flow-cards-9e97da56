@@ -27,42 +27,84 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<AppUser | null>(null);
-  const [loading, setLoading] = useState(false); // Start with false to prevent infinite loading
+  const [loading, setLoading] = useState(true); // Start with true
   const [impersonatedRole, setImpersonatedRole] = useState<AppRole | null>(null);
   const { toast } = useToast();
 
   const isImpersonating = impersonatedRole !== null;
   const canImpersonate = userProfile?.role === 'super_admin';
 
-  // Simplified auth initialization - no automatic profile fetching
+  // Function to fetch user profile from the database
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      console.log('🔍 Fetching user profile for:', userId);
+      
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('❌ Error fetching user profile:', error);
+        setUserProfile(null);
+        return;
+      }
+
+      if (data) {
+        console.log('✅ User profile fetched:', data);
+        setUserProfile(data);
+      } else {
+        console.log('⚠️ No user profile found for user:', userId);
+        setUserProfile(null);
+      }
+    } catch (error) {
+      console.error('❌ Exception fetching user profile:', error);
+      setUserProfile(null);
+    }
+  };
+
+  // Auth initialization and state management
   useEffect(() => {
-    console.log('🚀 AuthProvider initializing (simplified)...');
+    console.log('🚀 AuthProvider initializing...');
     
-    // Get initial session without fetching profile
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       console.log('🔍 Initial session check:', !!session, 'Error:', error);
       
       if (session?.user) {
+        console.log('👤 Initial session found, fetching profile...');
         setSession(session);
         setUser(session.user);
+        // Fetch profile for initial session
+        fetchUserProfile(session.user.id).finally(() => {
+          setLoading(false);
+        });
+      } else {
+        console.log('🚫 No initial session found');
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('🔔 Auth state change:', event, 'Session:', !!session);
         
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (!session) {
+        if (session?.user) {
+          console.log('👤 User signed in, fetching profile...');
+          setLoading(true); // Set loading while fetching profile
+          await fetchUserProfile(session.user.id);
+          setLoading(false); // Only set false AFTER profile is fetched
+        } else {
+          console.log('🚫 User signed out, clearing profile...');
           setUserProfile(null);
           setImpersonatedRole(null);
+          setLoading(false); // Set false after clearing profile
         }
-        
-        setLoading(false);
       }
     );
 
@@ -90,6 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       console.log('✅ Google sign in initiated');
+      // Don't set loading to false here - let the auth state change handler do it
     } catch (error: any) {
       console.error('❌ Google sign in error:', error);
       setLoading(false);
@@ -115,6 +158,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
         throw error;
       }
+      
+      // Don't set loading to false here - let the auth state change handler do it
     } catch (error: any) {
       setLoading(false);
       throw error;
@@ -138,6 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
 
+      // Don't set loading to false here - let the auth state change handler do it
       return {
         needsConfirmation: !data.session && !!data.user
       };
