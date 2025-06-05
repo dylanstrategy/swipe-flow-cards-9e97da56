@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User, Settings, Bell, Shield, CreditCard, HelpCircle, LogOut, ChevronRight, Home, Mail, Phone } from 'lucide-react';
 import { useResident } from '@/contexts/ResidentContext';
+import { useAuth } from '@/contexts/AuthContext';
 import ResidentIdentitySetup from '@/components/resident/ResidentIdentitySetup';
 import ResidentNotificationSetup from '@/components/resident/ResidentNotificationSetup';
 import ResidentPrivacySetup from '@/components/resident/ResidentPrivacySetup';
@@ -13,7 +14,16 @@ import { getFullName } from '@/utils/nameUtils';
 
 const AccountTab = () => {
   const { profile } = useResident();
+  const { signOut } = useAuth();
   const [currentView, setCurrentView] = useState<'main' | 'identity' | 'notifications' | 'privacy'>('main');
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
 
   const renderCurrentView = () => {
     switch (currentView) {
@@ -155,7 +165,11 @@ const AccountTab = () => {
               {/* Account Actions */}
               <Card>
                 <CardContent className="p-4">
-                  <Button variant="ghost" className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50">
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={handleSignOut}
+                  >
                     <LogOut className="w-5 h-5 mr-3 flex-shrink-0" />
                     Sign Out
                   </Button>
