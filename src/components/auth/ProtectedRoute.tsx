@@ -30,6 +30,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
     isImpersonating
   });
 
+  // Always show loading screen while auth is being determined
   if (loading) {
     return <LoadingScreen />;
   }

@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -18,12 +19,27 @@ const Login = () => {
   const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading, user, userProfile } = useAuth();
   const navigate = useNavigate();
 
-  // Quick test credentials
+  // Quick test credentials with predefined password
   const quickTestAccounts = [
-    { label: 'Super Admin', email: 'info@applaudliving.com', password: 'admin123' },
-    { label: 'Operator', email: 'operator@meridian.com', password: 'operator123' },
-    { label: 'Resident', email: 'resident@gmail.com', password: 'resident123' }
+    { label: 'Super Admin', email: 'info@applaudliving.com', password: 'Applaud123!' },
+    { label: 'Operator', email: 'operator@meridian.com', password: 'Applaud123!' },
+    { label: 'Resident', email: 'resident@gmail.com', password: 'Applaud123!' }
   ];
+
+  const handleForgotPassword = async () => {
+    const email = prompt("Enter your email address:");
+    if (email) {
+      try {
+        await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`
+        });
+        alert('Password reset email sent! Check your inbox.');
+      } catch (error) {
+        console.error('Password reset error:', error);
+        alert('Error sending password reset email. Please try again.');
+      }
+    }
+  };
 
   const handleGoogleSignIn = async () => {
     setError('');
@@ -52,6 +68,7 @@ const Login = () => {
         });
       } else {
         await signInWithEmail(email, password);
+        // Let the auth context handle navigation
       }
     } catch (error: any) {
       console.error('Auth error:', error);
@@ -67,6 +84,7 @@ const Login = () => {
     
     try {
       await signInWithEmail(testAccount.email, testAccount.password);
+      // Let the auth context handle navigation
     } catch (error: any) {
       console.log('Login failed, creating account:', error.message);
       try {
@@ -268,18 +286,29 @@ const Login = () => {
                 </Button>
               </form>
 
-              <div className="text-center">
+              <div className="text-center space-y-2">
                 <button
                   type="button"
                   onClick={() => {
                     setIsSignUp(!isSignUp);
                     setError('');
                   }}
-                  className="text-blue-600 hover:underline text-sm"
+                  className="text-blue-600 hover:underline text-sm block w-full"
                   disabled={isSubmitting}
                 >
                   {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
                 </button>
+                
+                {!isSignUp && (
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-blue-600 hover:underline text-sm"
+                    disabled={isSubmitting}
+                  >
+                    Forgot Password?
+                  </button>
+                )}
               </div>
             </div>
           </CardContent>
@@ -290,7 +319,7 @@ const Login = () => {
           <CardHeader>
             <CardTitle className="text-center text-lg">Quick Test Login</CardTitle>
             <p className="text-sm text-gray-600 text-center">
-              Click to instantly login with test accounts
+              Click to instantly login with test accounts (Password: Applaud123!)
             </p>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -305,9 +334,6 @@ const Login = () => {
                 Login as {account.label}
               </Button>
             ))}
-            <p className="text-xs text-gray-500 text-center mt-4">
-              These will create accounts if they don't exist
-            </p>
           </CardContent>
         </Card>
       </div>

@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session, User } from '@supabase/supabase-js';
@@ -80,15 +81,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('🔄 AuthProvider useEffect triggered');
     
     let mounted = true;
+    let authInitialized = false;
 
-    // Get initial session and profile together
+    // Initialize auth - get session and set up listener
     const initializeAuth = async () => {
       try {
         console.log('🔑 Getting initial session');
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('🔑 Initial session result:', session ? 'found' : 'none');
         
-        if (mounted) {
-          console.log('🔑 Initial session:', session ? 'found' : 'none');
+        if (mounted && !authInitialized) {
+          authInitialized = true;
           setUser(session?.user ?? null);
           
           if (session?.user) {
@@ -96,12 +99,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const profile = await fetchProfile(session.user.id);
             if (mounted) {
               setUserProfile(profile);
-              setLoading(false); // Only set loading false after profile is fetched
             }
-          } else {
-            if (mounted) {
-              setLoading(false); // No user, safe to set loading false
-            }
+          }
+          
+          if (mounted) {
+            setLoading(false);
           }
         }
       } catch (error) {
@@ -117,7 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       async (event, session) => {
         console.log('👂 Auth state change event:', event, 'Session:', session ? 'present' : 'none');
         
-        if (!mounted) return;
+        if (!mounted || !authInitialized) return;
 
         setUser(session?.user ?? null);
         
