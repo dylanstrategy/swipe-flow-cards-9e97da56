@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Save, User, Phone, Mail, MapPin, Calendar, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,13 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { useResident } from '@/contexts/ResidentContext';
+import { getFullName } from '@/utils/nameUtils';
 
 interface ResidentIdentitySetupProps {
   onBack: () => void;
 }
 
 interface ExtendedResidentProfile {
-  fullName: string;
+  firstName: string;
+  lastName: string;
   preferredName: string;
   email: string;
   phone: string;
@@ -42,7 +43,8 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
   const { toast } = useToast();
   
   const [formData, setFormData] = useState<ExtendedResidentProfile>({
-    fullName: profile.fullName,
+    firstName: profile.firstName || '',
+    lastName: profile.lastName || '',
     preferredName: profile.preferredName,
     email: profile.email,
     phone: profile.phone,
@@ -114,7 +116,9 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
     try {
       // Update resident profile
       updateProfile({
-        fullName: formData.fullName,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        fullName: getFullName(formData.firstName, formData.lastName),
         preferredName: formData.preferredName,
         email: formData.email,
         phone: formData.phone,
@@ -222,21 +226,30 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="firstName">First Name</Label>
                 <Input
-                  id="fullName"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  id="firstName"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                 />
               </div>
               <div>
-                <Label htmlFor="preferredName">Preferred Name</Label>
+                <Label htmlFor="lastName">Last Name</Label>
                 <Input
-                  id="preferredName"
-                  value={formData.preferredName}
-                  onChange={(e) => setFormData({ ...formData, preferredName: e.target.value })}
+                  id="lastName"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                 />
               </div>
+            </div>
+
+            <div>
+              <Label htmlFor="preferredName">Preferred Name</Label>
+              <Input
+                id="preferredName"
+                value={formData.preferredName}
+                onChange={(e) => setFormData({ ...formData, preferredName: e.target.value })}
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

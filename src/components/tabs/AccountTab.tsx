@@ -9,6 +9,7 @@ import { useResident } from '@/contexts/ResidentContext';
 import ResidentIdentitySetup from '@/components/resident/ResidentIdentitySetup';
 import ResidentNotificationSetup from '@/components/resident/ResidentNotificationSetup';
 import ResidentPrivacySetup from '@/components/resident/ResidentPrivacySetup';
+import { getFullName } from '@/utils/nameUtils';
 
 const AccountTab = () => {
   const { profile } = useResident();
@@ -32,7 +33,7 @@ const AccountTab = () => {
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                     <Avatar className="w-16 h-16 flex-shrink-0">
                       <AvatarFallback className="text-xl font-bold bg-blue-600 text-white">
-                        {profile.preferredName.charAt(0)}{profile.fullName.split(' ')[1]?.charAt(0)}
+                        {profile.preferredName.charAt(0)}{getFullName(profile.firstName, profile.lastName).split(' ')[1]?.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">

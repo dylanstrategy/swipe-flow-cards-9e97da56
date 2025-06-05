@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { UserRole, Permission, ROLE_PERMISSIONS, CreateUserRequest } from '@/types/users';
 import { ArrowLeft, User, Mail, Phone, Shield, Send } from 'lucide-react';
+import { getFullName } from '@/utils/nameUtils';
 
 interface CreateUserFormProps {
   onSubmit: (userData: CreateUserRequest) => void;
@@ -18,7 +19,8 @@ interface CreateUserFormProps {
 
 const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel, currentUserRole = 'senior_operator' }) => {
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
     role: 'maintenance' as UserRole,
@@ -81,7 +83,8 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel, cur
       : ROLE_PERMISSIONS[formData.role].map(p => p.id);
 
     const userData: CreateUserRequest = {
-      name: formData.name,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
       email: formData.email,
       phone: formData.phone,
       role: formData.role,
@@ -149,27 +152,38 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel, cur
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="name">Full Name *</Label>
+                      <Label htmlFor="firstName">First Name *</Label>
                       <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="Enter full name"
+                        id="firstName"
+                        value={formData.firstName}
+                        onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                        placeholder="Enter first name"
                         required
                       />
                     </div>
                     
                     <div>
-                      <Label htmlFor="phone">Phone Number *</Label>
+                      <Label htmlFor="lastName">Last Name *</Label>
                       <Input
-                        id="phone"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        placeholder="(555) 123-4567"
+                        id="lastName"
+                        value={formData.lastName}
+                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                        placeholder="Enter last name"
                         required
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="phone">Phone Number *</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      placeholder="(555) 123-4567"
+                      required
+                    />
                   </div>
 
                   <div>
@@ -295,7 +309,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel, cur
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <h4 className="font-medium mb-2">Summary</h4>
                   <div className="text-sm text-gray-600 space-y-1">
-                    <p><strong>Name:</strong> {formData.name || 'Not specified'}</p>
+                    <p><strong>Name:</strong> {getFullName(formData.firstName, formData.lastName) || 'Not specified'}</p>
                     <p><strong>Email:</strong> {formData.email || 'Not specified'}</p>
                     <p><strong>Role:</strong> {formData.role === 'senior_operator' ? 'Senior Operator' : formData.role.charAt(0).toUpperCase() + formData.role.slice(1)}</p>
                     <p><strong>Total Permissions:</strong> {getSelectedPermissions().length}</p>
@@ -307,7 +321,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel, cur
                   <Button type="button" variant="outline" onClick={onCancel}>
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={!formData.name || !formData.email || !formData.phone}>
+                  <Button type="submit" disabled={!formData.firstName || !formData.lastName || !formData.email || !formData.phone}>
                     <Send className="w-4 h-4 mr-2" />
                     Create User
                   </Button>

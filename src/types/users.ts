@@ -1,3 +1,6 @@
+
+import { getFullName } from '@/utils/nameUtils';
+
 export interface ContactInfo {
   email: string;
   phone: string;
