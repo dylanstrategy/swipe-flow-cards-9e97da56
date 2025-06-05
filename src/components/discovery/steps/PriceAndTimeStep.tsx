@@ -201,6 +201,19 @@ const PriceAndTimeStep = ({
           </div>
         )}
       </div>
+
+      {/* Continue Button - Fixed at bottom */}
+      {canContinue && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
+          <Button
+            onClick={onContinue}
+            className="w-full py-4 text-lg font-semibold"
+            size="lg"
+          >
+            Continue
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
