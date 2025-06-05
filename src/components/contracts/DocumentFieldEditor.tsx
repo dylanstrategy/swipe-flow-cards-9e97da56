@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -273,48 +274,50 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-white border-b">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={onBack}>
+      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <Button variant="ghost" size="sm" onClick={onBack} className="flex-shrink-0">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <div>
-            <h1 className="text-lg font-semibold">{documentName}</h1>
-            <p className="text-sm text-gray-600">Add signature fields and merge fields</p>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg font-semibold text-gray-900 truncate">{documentName}</h1>
+            <p className="text-sm text-gray-600 hidden sm:block">Add signature fields and merge fields</p>
           </div>
         </div>
-        <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
+        <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 flex-shrink-0">
           <Save className="w-4 h-4 mr-2" />
-          Save Template
+          <span className="hidden sm:inline">Save Template</span>
+          <span className="sm:hidden">Save</span>
         </Button>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Tools Panel */}
-        <div className="w-80 bg-white border-r flex flex-col">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        {/* Sidebar */}
+        <div className="w-full lg:w-80 bg-white border-r border-gray-200 flex flex-col">
           {/* Field Tools */}
-          <div className="p-4 border-b">
-            <h3 className="font-medium mb-3">Field Tools</h3>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="p-4 border-b border-gray-200">
+            <h3 className="font-medium text-gray-900 mb-3">Field Tools</h3>
+            <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
               {fieldTypes.map(({ type, icon: Icon, label, color }) => (
                 <Button
                   key={type}
                   variant={selectedTool === type ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedTool(selectedTool === type ? null : type)}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 justify-start"
                 >
-                  <div className={`w-3 h-3 rounded ${color}`} />
-                  <Icon className="w-4 h-4" />
-                  {label}
+                  <div className={`w-3 h-3 rounded flex-shrink-0 ${color}`} />
+                  <Icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">{label}</span>
                 </Button>
               ))}
             </div>
             {selectedTool && (
-              <p className="text-xs text-gray-600 mt-2">
+              <p className="text-xs text-gray-600 mt-3 p-2 bg-blue-50 rounded">
                 Click on the document to place a {selectedTool} field
               </p>
             )}
@@ -322,23 +325,23 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
 
           {/* Field Properties */}
           {selectedField && (
-            <div className="p-4 border-b flex-1">
-              <h3 className="font-medium mb-3">Field Properties</h3>
-              <div className="space-y-3">
+            <div className="p-4 border-b border-gray-200 flex-1 overflow-y-auto">
+              <h3 className="font-medium text-gray-900 mb-3">Field Properties</h3>
+              <div className="space-y-4">
                 <div>
-                  <Label className="text-xs">Field Type</Label>
-                  <Badge className="ml-2 text-xs">
+                  <Label className="text-sm text-gray-700">Field Type</Label>
+                  <Badge className="ml-2 text-xs bg-gray-100 text-gray-800">
                     {selectedField.type.toUpperCase()}
                   </Badge>
                 </div>
                 
                 <div>
-                  <Label htmlFor="role" className="text-xs">Signer Role</Label>
+                  <Label htmlFor="role" className="text-sm text-gray-700">Signer Role</Label>
                   <Select 
                     value={selectedField.role} 
                     onValueChange={(value) => updateField(selectedField.id, { role: value })}
                   >
-                    <SelectTrigger className="h-8 mt-1">
+                    <SelectTrigger className="h-9 mt-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -351,12 +354,12 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
 
                 {(selectedField.type === 'text' || selectedField.type === 'date') && (
                   <div>
-                    <Label htmlFor="merge-field" className="text-xs">Merge Field (Optional)</Label>
+                    <Label htmlFor="merge-field" className="text-sm text-gray-700">Merge Field (Optional)</Label>
                     <Select 
                       value={selectedField.mergeField || ''} 
                       onValueChange={(value) => updateField(selectedField.id, { mergeField: value || undefined })}
                     >
-                      <SelectTrigger className="h-8 mt-1">
+                      <SelectTrigger className="h-9 mt-1">
                         <SelectValue placeholder="Select merge field" />
                       </SelectTrigger>
                       <SelectContent>
@@ -371,26 +374,27 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
                   </div>
                 )}
 
-                <div>
-                  <Label htmlFor="width" className="text-xs">Width</Label>
-                  <Input
-                    id="width"
-                    type="number"
-                    value={selectedField.width}
-                    onChange={(e) => updateField(selectedField.id, { width: parseInt(e.target.value) })}
-                    className="h-8 mt-1"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="height" className="text-xs">Height</Label>
-                  <Input
-                    id="height"
-                    type="number"
-                    value={selectedField.height}
-                    onChange={(e) => updateField(selectedField.id, { height: parseInt(e.target.value) })}
-                    className="h-8 mt-1"
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="width" className="text-sm text-gray-700">Width</Label>
+                    <Input
+                      id="width"
+                      type="number"
+                      value={selectedField.width}
+                      onChange={(e) => updateField(selectedField.id, { width: parseInt(e.target.value) })}
+                      className="h-9 mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="height" className="text-sm text-gray-700">Height</Label>
+                    <Input
+                      id="height"
+                      type="number"
+                      value={selectedField.height}
+                      onChange={(e) => updateField(selectedField.id, { height: parseInt(e.target.value) })}
+                      className="h-9 mt-1"
+                    />
+                  </div>
                 </div>
 
                 <Button 
@@ -408,36 +412,50 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
 
           {/* Fields List */}
           <div className="p-4">
-            <h3 className="font-medium mb-3">Document Fields ({fields.length})</h3>
+            <h3 className="font-medium text-gray-900 mb-3">Document Fields ({fields.length})</h3>
             <div className="space-y-2 max-h-40 overflow-y-auto">
-              {fields.map(field => (
-                <div 
-                  key={field.id}
-                  className={`p-2 rounded border cursor-pointer text-xs ${
-                    selectedField?.id === field.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-                  }`}
-                  onClick={() => setSelectedField(field)}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{field.type.toUpperCase()}</span>
-                    <Badge variant="outline" className="text-xs">{field.role}</Badge>
+              {fields.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-4">
+                  No fields added yet. Select a tool and click on the document to add fields.
+                </p>
+              ) : (
+                fields.map(field => (
+                  <div 
+                    key={field.id}
+                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                      selectedField?.id === field.id 
+                        ? 'border-blue-500 bg-blue-50 shadow-sm' 
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                    onClick={() => setSelectedField(field)}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-medium text-sm text-gray-900 capitalize">
+                        {field.type}
+                      </span>
+                      <Badge variant="outline" className="text-xs">
+                        {field.role}
+                      </Badge>
+                    </div>
+                    {field.mergeField && (
+                      <div className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded mt-1">
+                        {field.mergeField.replace(/_/g, ' ')}
+                      </div>
+                    )}
                   </div>
-                  {field.mergeField && (
-                    <div className="text-gray-500 mt-1">{field.mergeField}</div>
-                  )}
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
 
         {/* Document Canvas */}
-        <div className="flex-1 overflow-auto p-4">
-          <div className="bg-white rounded-lg shadow-sm border inline-block">
+        <div className="flex-1 overflow-auto p-4 bg-gray-100">
+          <div className="bg-white rounded-lg shadow-sm border inline-block max-w-full">
             <canvas
               ref={canvasRef}
               onClick={handleCanvasClick}
-              className="cursor-crosshair border"
+              className="cursor-crosshair border rounded max-w-full h-auto"
               style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}
             />
           </div>
