@@ -23,7 +23,7 @@ import {
   Trash2,
   DollarSign,
   Calendar,
-  FileContract,
+  FileText,
   Mail,
   BarChart3,
   UserPlus,
@@ -457,7 +457,7 @@ const SuperAdmin = () => {
                               Edit Details
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              <FileContract className="w-4 h-4 mr-2" />
+                              <FileText className="w-4 h-4 mr-2" />
                               View Contract
                             </DropdownMenuItem>
                             <DropdownMenuItem>
@@ -540,7 +540,7 @@ const SuperAdmin = () => {
                       
                       <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm">
-                          <FileContract className="w-4 h-4 mr-2" />
+                          <FileText className="w-4 h-4 mr-2" />
                           Send Contract
                         </Button>
                         <DropdownMenu>
