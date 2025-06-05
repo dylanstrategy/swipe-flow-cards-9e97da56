@@ -60,74 +60,66 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     let mounted = true;
 
-    const initializeAuth = async () => {
-      try {
-        // First, check if there's a session from URL (OAuth callback)
-        const { data: urlSession, error: urlError } = await supabase.auth.getSessionFromUrl();
-        console.log('🔗 Session from URL:', !!urlSession.session, urlError ? 'Error: ' + urlError.message : '');
-        
-        // Then get the current session
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        console.log('📍 Current session check:', !!currentSession, error ? 'Error: ' + error.message : '');
-        
-        // Use URL session if available, otherwise use current session
-        const activeSession = urlSession.session || currentSession;
-        
-        if (mounted) {
-          setSession(activeSession);
-          setUser(activeSession?.user ?? null);
-          
-          if (activeSession?.user) {
-            console.log('👤 Fetching profile for user:', activeSession.user.email);
-            const profile = await fetchUserProfile(activeSession.user.id);
-            if (mounted) {
-              setUserProfile(profile);
-              console.log('✅ Profile set:', profile?.role);
-            }
-          } else {
-            console.log('🚫 No session found');
-            if (mounted) {
-              setUserProfile(null);
-              setImpersonatedRole(null);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('❌ Auth initialization error:', error);
-      } finally {
-        if (mounted) {
-          setLoading(false);
-          console.log('✅ Auth initialization complete');
-        }
-      }
-    };
-
-    // Set up auth state listener
+    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('🔔 Auth state change:', event, 'Session exists:', !!session);
         
-        if (mounted && (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED')) {
+        if (!mounted) return;
+        
+        if (event === 'SIGNED_IN' && session) {
+          console.log('✅ User signed in:', session.user.email);
           setSession(session);
-          setUser(session?.user ?? null);
+          setUser(session.user);
           
-          if (session?.user) {
-            console.log('👤 Fetching profile for user:', session.user.email);
-            const profile = await fetchUserProfile(session.user.id);
-            if (mounted) {
-              setUserProfile(profile);
-              console.log('✅ Profile set:', profile?.role);
-            }
-          } else {
-            console.log('🚫 No session, clearing profile');
-            if (mounted) {
-              setUserProfile(null);
-              setImpersonatedRole(null);
-            }
+          const profile = await fetchUserProfile(session.user.id);
+          if (mounted) {
+            setUserProfile(profile);
+            setLoading(false);
           }
+        } else if (event === 'SIGNED_OUT') {
+          console.log('🚫 User signed out');
+          setSession(null);
+          setUser(null);
+          setUserProfile(null);
+          setImpersonatedRole(null);
+          setLoading(false);
+        } else if (event === 'TOKEN_REFRESHED' && session) {
+          console.log('🔄 Token refreshed');
+          setSession(session);
+          setUser(session.user);
         }
       }
     );
+
+    // Then get the current session
+    const initializeAuth = async () => {
+      try {
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        console.log('📍 Initial session check:', !!currentSession, error ? 'Error: ' + error.message : '');
+        
+        if (mounted) {
+          if (currentSession?.user) {
+            console.log('👤 Found existing session for:', currentSession.user.email);
+            setSession(currentSession);
+            setUser(currentSession.user);
+            
+            const profile = await fetchUserProfile(currentSession.user.id);
+            if (mounted) {
+              setUserProfile(profile);
+            }
+          } else {
+            console.log('🚫 No existing session found');
+          }
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('❌ Auth initialization error:', error);
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
 
     initializeAuth();
 
@@ -152,6 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         console.error('❌ Google sign in error:', error);
+        setLoading(false);
         throw error;
       }
       
