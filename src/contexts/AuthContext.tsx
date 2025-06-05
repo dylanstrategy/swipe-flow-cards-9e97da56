@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [impersonatedRole, setImpersonatedRole] = useState<AppRole | null>(null);
+  const [initialized, setInitialized] = useState(false);
   const { toast } = useToast();
 
   const isImpersonating = impersonatedRole !== null;
@@ -59,82 +60,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
     
-    console.log('Initializing auth...');
-
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
+    const initializeAuth = async () => {
+      console.log('Initializing auth...');
+      
+      try {
+        // Check for existing session first
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        console.log('Auth event:', event, 'Session exists:', !!session);
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          try {
+        if (error) {
+          console.error('Session check error:', error);
+        } else {
+          console.log('Initial session check:', !!session);
+          
+          if (session?.user && mounted) {
+            setSession(session);
+            setUser(session.user);
+            
+            // Fetch user profile
             const profile = await fetchUserProfile(session.user.id);
             if (mounted) {
               setUserProfile(profile);
             }
-          } catch (error) {
-            console.error('Error fetching user profile:', error);
           }
-        } else {
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+          setInitialized(true);
+        }
+      }
+    };
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!mounted || !initialized) return;
+        
+        console.log('Auth state change:', event, 'Session exists:', !!session);
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user && event === 'SIGNED_IN') {
+          const profile = await fetchUserProfile(session.user.id);
+          if (mounted) {
+            setUserProfile(profile);
+          }
+        } else if (!session) {
           if (mounted) {
             setUserProfile(null);
             setImpersonatedRole(null);
           }
         }
-        
-        if (mounted) {
-          setLoading(false);
-        }
       }
     );
 
-    // Check for existing session
-    const checkSession = async () => {
-      try {
-        console.log('Checking for existing session...');
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Session check error:', error);
-          if (mounted) {
-            setLoading(false);
-          }
-          return;
-        }
-        
-        console.log('Session check result:', !!session);
-        
-        if (session?.user && mounted) {
-          setSession(session);
-          setUser(session.user);
-          
-          try {
-            const profile = await fetchUserProfile(session.user.id);
-            if (mounted) {
-              setUserProfile(profile);
-            }
-          } catch (error) {
-            console.error('Error fetching existing user profile:', error);
-          }
-        }
-        
-        if (mounted) {
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Session check failed:', error);
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    checkSession();
+    initializeAuth();
 
     return () => {
       mounted = false;

@@ -67,6 +67,8 @@ function getDefaultRouteForRole(userProfile: any): string {
 function AppRoutes() {
   const { user, userProfile, loading } = useAuth();
   
+  console.log('AppRoutes render - User:', !!user, 'Profile:', !!userProfile, 'Loading:', loading);
+  
   // Show loading while checking auth state
   if (loading) {
     return (
