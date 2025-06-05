@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ChevronLeft, Calendar, Clock, Check, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -125,6 +126,14 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
     setNotifyTeamMember(true);
   };
 
+  const handleCloseStep2 = () => {
+    // Clear the selected time to hide the SwipeUpPrompt
+    setSelectedTime('');
+    // Then close completely
+    handleClearData();
+    onClose();
+  };
+
   const handleClose = () => {
     handleClearData();
     onClose();
@@ -193,7 +202,7 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
             <span className="text-xs text-gray-500">Step {currentStep} of 3</span>
           </div>
           <button
-            onClick={handleClose}
+            onClick={handleCloseStep2}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
             <span className="text-gray-600 text-xl">×</span>
@@ -260,7 +269,7 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
           <SwipeUpPrompt 
             onContinue={nextStep}
             onBack={prevStep}
-            onClear={handleClearData}
+            onClear={() => setSelectedTime('')}
             message="Time selected!"
             buttonText="Continue to Confirmation"
             showBack={true}
