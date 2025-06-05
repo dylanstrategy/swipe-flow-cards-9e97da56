@@ -34,12 +34,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isImpersonating = impersonatedRole !== null;
   const canImpersonate = userProfile?.role === 'super_admin';
 
-  // Domain validation for operators
-  const isValidOperatorDomain = (email: string): boolean => {
-    const allowedDomains = ['@ironstate.com', '@applaudliving.com', '@meridian.com'];
-    return allowedDomains.some(domain => email.endsWith(domain));
-  };
-
   const fetchUserProfile = async (userId: string): Promise<AppUser | null> => {
     try {
       console.log('Fetching user profile for:', userId);
@@ -72,13 +66,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, session) => {
         if (!mounted) return;
         
-        console.log('Auth event:', event, 'Session:', !!session, 'User:', session?.user?.email);
+        console.log('Auth event:', event, 'Session exists:', !!session);
         
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user && event !== 'TOKEN_REFRESHED') {
-          console.log('Fetching user profile after auth event...');
+        if (session?.user) {
           try {
             const profile = await fetchUserProfile(session.user.id);
             if (mounted) {
@@ -87,9 +80,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } catch (error) {
             console.error('Error fetching user profile:', error);
           }
-        } else if (!session) {
+        } else {
           if (mounted) {
             setUserProfile(null);
+            setImpersonatedRole(null);
           }
         }
         
@@ -113,7 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         
-        console.log('Existing session found:', !!session, 'User:', session?.user?.email);
+        console.log('Session check result:', !!session);
         
         if (session?.user && mounted) {
           setSession(session);
@@ -201,13 +195,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUpWithEmail = async (email: string, password: string, userData: any) => {
     try {
       setLoading(true);
-
-      // Check domain restrictions for operators
-      if (userData.role && ['operator', 'senior_operator', 'leasing', 'maintenance'].includes(userData.role)) {
-        if (!isValidOperatorDomain(email)) {
-          throw new Error('Registration is only allowed for authorized company emails.');
-        }
-      }
 
       const { error } = await supabase.auth.signUp({
         email,

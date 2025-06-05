@@ -76,20 +76,16 @@ function AppRoutes() {
     );
   }
 
-  // If user is authenticated, redirect from login pages to appropriate dashboard
-  const shouldRedirectFromLogin = user && userProfile;
-  const defaultRoute = shouldRedirectFromLogin ? getDefaultRouteForRole(userProfile) : null;
-
   return (
     <Routes>
       <Route path="/login" element={
-        shouldRedirectFromLogin ? (
-          <Navigate to={defaultRoute!} replace />
+        user && userProfile ? (
+          <Navigate to={getDefaultRouteForRole(userProfile)} replace />
         ) : <Login />
       } />
       <Route path="/owner-login" element={
-        shouldRedirectFromLogin ? (
-          <Navigate to={defaultRoute!} replace />
+        user && userProfile ? (
+          <Navigate to={getDefaultRouteForRole(userProfile)} replace />
         ) : <OwnerLogin />
       } />
       <Route path="/unknown-role" element={
