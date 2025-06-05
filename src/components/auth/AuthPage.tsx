@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from './AuthProvider';
 import { useToast } from '@/hooks/use-toast';
+import { Crown } from 'lucide-react';
 
 const AuthPage = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -30,6 +31,62 @@ const AuthPage = () => {
     { email: 'test.operator@meridian.com', password: 'operator123', role: 'operator', firstName: 'Test', lastName: 'Operator' },
     { email: 'admin@applaud.com', password: 'admin123', role: 'super_admin', firstName: 'Super', lastName: 'Admin' },
   ];
+
+  // Super Admin direct login
+  const handleSuperAdminLogin = async () => {
+    setLoading(true);
+    setSignupError('');
+    
+    const superAdminAccount = {
+      email: 'owner@applaud.com',
+      password: 'owner2024!',
+      firstName: 'Owner',
+      lastName: 'Admin'
+    };
+    
+    try {
+      console.log('Attempting owner login:', superAdminAccount.email);
+      await signIn(superAdminAccount.email, superAdminAccount.password);
+      toast({
+        title: "Welcome back, Owner!",
+        description: "You are now logged in as Super Admin",
+      });
+    } catch (error: any) {
+      console.log('Owner login failed, creating owner account:', error.message);
+      // If login fails, try to create the owner account
+      try {
+        console.log('Creating owner account');
+        const result = await signUp(superAdminAccount.email, superAdminAccount.password, {
+          firstName: superAdminAccount.firstName,
+          lastName: superAdminAccount.lastName,
+          phone: '(555) 000-0001',
+          role: 'super_admin',
+          property: 'Applaud HQ',
+        });
+        
+        if (result.needsConfirmation) {
+          toast({
+            title: "Owner account created!",
+            description: "Check your email to confirm the account, then try logging in again.",
+          });
+        } else {
+          toast({
+            title: "Owner account created and logged in!",
+            description: "Welcome to your Super Admin dashboard!",
+          });
+        }
+      } catch (signUpError: any) {
+        console.error('Owner account creation failed:', signUpError);
+        toast({
+          title: "Error",
+          description: signUpError.message || "Failed to create owner account",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,6 +246,28 @@ const AuthPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
+        {/* Owner Super Admin Login */}
+        <Card className="border-2 border-red-200 bg-red-50">
+          <CardHeader>
+            <CardTitle className="text-center flex items-center justify-center gap-2 text-red-800">
+              <Crown className="w-5 h-5" />
+              Owner Access
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={handleSuperAdminLogin}
+              disabled={loading}
+              className="w-full bg-red-600 hover:bg-red-700"
+            >
+              {loading ? 'Please wait...' : 'Login as Owner (Super Admin)'}
+            </Button>
+            <p className="text-xs text-red-600 text-center mt-2">
+              Direct access for the app owner - no registration required
+            </p>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="text-center">
