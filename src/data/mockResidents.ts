@@ -1,7 +1,8 @@
 
 export interface ResidentProfile {
   id: string;
-  fullName: string;
+  firstName: string;
+  lastName: string;
   preferredName: string;
   email: string;
   phone: string;
@@ -38,7 +39,8 @@ export const mockResidents: ResidentProfile[] = [
   // Current Residents (90)
   {
     id: '1',
-    fullName: 'Sarah Johnson',
+    firstName: 'Sarah',
+    lastName: 'Johnson',
     preferredName: 'Sarah',
     email: 'sarah.johnson@email.com',
     phone: '(555) 123-4567',
@@ -67,7 +69,8 @@ export const mockResidents: ResidentProfile[] = [
   },
   {
     id: '2',
-    fullName: 'Michael Chen',
+    firstName: 'Michael',
+    lastName: 'Chen',
     preferredName: 'Mike',
     email: 'michael.chen@email.com',
     phone: '(555) 234-5678',
@@ -95,7 +98,8 @@ export const mockResidents: ResidentProfile[] = [
   },
   {
     id: '3',
-    fullName: 'Emily Rodriguez',
+    firstName: 'Emily',
+    lastName: 'Rodriguez',
     preferredName: 'Emily',
     email: 'emily.rodriguez@email.com',
     phone: '(555) 345-6789',
@@ -123,7 +127,8 @@ export const mockResidents: ResidentProfile[] = [
   },
   {
     id: '4',
-    fullName: 'David Thompson',
+    firstName: 'David',
+    lastName: 'Thompson',
     preferredName: 'Dave',
     email: 'david.thompson@email.com',
     phone: '(555) 456-7890',
@@ -152,7 +157,8 @@ export const mockResidents: ResidentProfile[] = [
   },
   {
     id: '5',
-    fullName: 'Jessica Parker',
+    firstName: 'Jessica',
+    lastName: 'Parker',
     preferredName: 'Jess',
     email: 'jessica.parker@email.com',
     phone: '(555) 567-8901',
@@ -181,7 +187,8 @@ export const mockResidents: ResidentProfile[] = [
   // Add 85 more current residents (abbreviated for space)
   ...Array.from({ length: 85 }, (_, index) => ({
     id: (index + 6).toString(),
-    fullName: `Resident ${index + 6}`,
+    firstName: `Resident`,
+    lastName: `${index + 6}`,
     preferredName: `Resident ${index + 6}`,
     email: `resident${index + 6}@email.com`,
     phone: `(555) ${(123 + index).toString().padStart(3, '0')}-${(4567 + index).toString().padStart(4, '0')}`,
@@ -211,7 +218,8 @@ export const mockResidents: ResidentProfile[] = [
   // Future Residents (5) - staggered move-in dates
   {
     id: '91',
-    fullName: 'April Chen',
+    firstName: 'April',
+    lastName: 'Chen',
     preferredName: 'April',
     email: 'april.chen@email.com',
     phone: '(555) 991-0001',
@@ -239,7 +247,8 @@ export const mockResidents: ResidentProfile[] = [
   },
   {
     id: '92',
-    fullName: 'Zhihan He',
+    firstName: 'Zhihan',
+    lastName: 'He',
     preferredName: 'Zhihan',
     email: 'zhihan.he@email.com',
     phone: '(555) 992-0002',
@@ -267,7 +276,8 @@ export const mockResidents: ResidentProfile[] = [
   },
   {
     id: '93',
-    fullName: 'Marcus Williams',
+    firstName: 'Marcus',
+    lastName: 'Williams',
     preferredName: 'Marcus',
     email: 'marcus.williams@email.com',
     phone: '(555) 993-0003',
@@ -295,7 +305,8 @@ export const mockResidents: ResidentProfile[] = [
   },
   {
     id: '94',
-    fullName: 'Amanda Garcia',
+    firstName: 'Amanda',
+    lastName: 'Garcia',
     preferredName: 'Amanda',
     email: 'amanda.garcia@email.com',
     phone: '(555) 994-0004',
@@ -323,7 +334,8 @@ export const mockResidents: ResidentProfile[] = [
   },
   {
     id: '95',
-    fullName: 'Kevin Zhang',
+    firstName: 'Kevin',
+    lastName: 'Zhang',
     preferredName: 'Kevin',
     email: 'kevin.zhang@email.com',
     phone: '(555) 995-0005',

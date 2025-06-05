@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 import { useResident } from '@/contexts/ResidentContext';
+import { getFullName } from '@/utils/nameUtils';
 
 const OperatorTodayTab = () => {
   const { toast } = useToast();
@@ -425,7 +426,7 @@ const OperatorTodayTab = () => {
         <p className="text-gray-600">The Meridian • Live Data</p>
       </div>
 
-      {/* Active Notices - Fixed to use correct property names */}
+      {/* Active Notices - Using standardized name utility */}
       {noticeResidents.length > 0 && (
         <div className="bg-orange-50 border border-orange-200 rounded-xl shadow-sm p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -436,7 +437,7 @@ const OperatorTodayTab = () => {
             {noticeResidents.map((resident) => (
               <div key={resident.id} className="bg-white rounded-lg p-4 flex items-center justify-between">
                 <div>
-                  <h3 className="font-medium text-gray-900">{resident.name}</h3>
+                  <h3 className="font-medium text-gray-900">{getFullName(resident.firstName, resident.lastName)}</h3>
                   <p className="text-sm text-gray-600">Unit {resident.unitNumber}</p>
                   <p className="text-xs text-orange-600">
                     Move-out: {resident.moveOutDate ? new Date(resident.moveOutDate).toLocaleDateString() : 'TBD'}
@@ -445,13 +446,13 @@ const OperatorTodayTab = () => {
                 <div className="flex gap-2">
                   <CancelNoticeButton 
                     residentId={resident.id} 
-                    residentName={resident.name}
+                    residentName={getFullName(resident.firstName, resident.lastName)}
                     variant="outline"
                     size="sm"
                   />
                   <CancelMoveOutButton 
                     residentId={resident.id} 
-                    residentName={resident.name}
+                    residentName={getFullName(resident.firstName, resident.lastName)}
                     variant="destructive"
                     size="sm"
                   />

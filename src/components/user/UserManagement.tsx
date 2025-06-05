@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { UserProfile, UserRole, ROLE_PERMISSIONS } from '@/types/users';
 import { Plus, Search, Users, Mail, Phone, Edit, Trash2 } from 'lucide-react';
 import CreateUserForm from './CreateUserForm';
 import UserProfileComponent from './UserProfile';
+import { getFullName } from '@/utils/nameUtils';
 
 const UserManagement = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -25,7 +25,8 @@ const UserManagement = () => {
   const [users, setUsers] = useState<UserProfile[]>([
     {
       id: '1',
-      name: 'John Smith',
+      firstName: 'John',
+      lastName: 'Smith',
       email: 'john.smith@meridian.com',
       phone: '(555) 123-4567',
       role: 'operator',
@@ -45,7 +46,8 @@ const UserManagement = () => {
     },
     {
       id: '2',
-      name: 'Mike Rodriguez',
+      firstName: 'Mike',
+      lastName: 'Rodriguez',
       email: 'mike.rodriguez@meridian.com',
       phone: '(555) 234-5678',
       role: 'maintenance',
@@ -61,7 +63,8 @@ const UserManagement = () => {
     },
     {
       id: '3',
-      name: 'Sarah Johnson',
+      firstName: 'Sarah',
+      lastName: 'Johnson',
       email: 'sarah.johnson@meridian.com',
       phone: '(555) 345-6789',
       role: 'leasing',
@@ -78,7 +81,8 @@ const UserManagement = () => {
   ]);
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const fullName = getFullName(user.firstName, user.lastName);
+    const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = selectedRole === 'all' || user.role === selectedRole;
     return matchesSearch && matchesRole;
@@ -232,7 +236,7 @@ const UserManagement = () => {
             </Card>
           </div>
 
-          {/* Users List */}
+          {/* Users List - Updated to use standardized name utility */}
           <div className="space-y-4 pb-24">
             {filteredUsers.map((user) => (
               <Card 
@@ -245,13 +249,13 @@ const UserManagement = () => {
                     <div className="flex items-center gap-4 flex-1 min-w-0">
                       <Avatar className="w-12 h-12 flex-shrink-0">
                         <AvatarFallback className="font-semibold">
-                          {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                          {user.firstName.charAt(0).toUpperCase()}{user.lastName.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
-                          <h3 className="font-semibold text-gray-900 truncate">{user.name}</h3>
+                          <h3 className="font-semibold text-gray-900 truncate">{getFullName(user.firstName, user.lastName)}</h3>
                           <Badge className={`${getRoleColor(user.role)} flex-shrink-0`}>
                             {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                           </Badge>

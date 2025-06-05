@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TabNavigation from '@/components/TabNavigation';
@@ -21,6 +20,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User, Settings, LogOut, Users, ArrowLeft } from 'lucide-react';
 import { UserProfile, ROLE_PERMISSIONS } from '@/types/users';
 import { Button } from '@/components/ui/button';
+import { getFullName } from '@/utils/nameUtils';
 
 const Operator = () => {
   const navigate = useNavigate();
@@ -30,10 +30,11 @@ const Operator = () => {
   const [showContactProfile, setShowContactProfile] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
-  // Mock current user profile - updated to senior_operator
+  // Mock current user profile - updated to use standardized naming
   const [currentUserProfile] = useState<UserProfile>({
     id: '1',
-    name: 'John Smith',
+    firstName: 'John',
+    lastName: 'Smith',
     email: 'john.smith@meridian.com',
     phone: '(555) 123-4567',
     role: 'senior_operator',
@@ -170,7 +171,7 @@ const Operator = () => {
               <button className="focus:outline-none">
                 <Avatar className="w-10 h-10 cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all">
                   <AvatarFallback className="bg-blue-600 text-white font-semibold">
-                    OP
+                    {currentUserProfile.firstName.charAt(0)}{currentUserProfile.lastName.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
               </button>
@@ -178,7 +179,7 @@ const Operator = () => {
             <DropdownMenuContent align="end" className="w-56 bg-white border shadow-lg">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{currentUserProfile.name}</p>
+                  <p className="text-sm font-medium leading-none">{getFullName(currentUserProfile.firstName, currentUserProfile.lastName)}</p>
                   <p className="text-xs leading-none text-muted-foreground">
                     Property Manager
                   </p>

@@ -1,4 +1,3 @@
-
 export interface ContactInfo {
   email: string;
   phone: string;
@@ -11,7 +10,8 @@ export interface ContactInfo {
 
 export interface UserProfile {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   role: UserRole;
@@ -35,7 +35,8 @@ export interface Permission {
 }
 
 export interface CreateUserRequest {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   role: UserRole;
