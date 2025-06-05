@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -44,12 +43,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Defer profile fetching to avoid recursive issues
           setTimeout(async () => {
             await fetchUserProfile(session.user.id);
+            
+            // Handle post-login redirects
+            if (event === 'SIGNED_IN') {
+              const { data: profile } = await supabase
+                .from('users')
+                .select('role')
+                .eq('id', session.user.id)
+                .single();
+              
+              if (profile?.role === 'super_admin') {
+                // Redirect super admins to super admin dashboard
+                if (window.location.pathname === '/login' || window.location.pathname === '/owner-login') {
+                  window.location.href = '/super-admin';
+                }
+              } else if (window.location.pathname === '/login') {
+                // Redirect other users to their default route
+                window.location.href = '/';
+              }
+            }
           }, 0);
-          
-          // If we just signed in and we're on the login page, redirect
-          if (event === 'SIGNED_IN' && window.location.pathname === '/login') {
-            window.location.href = '/';
-          }
         } else {
           setUserProfile(null);
         }
@@ -66,10 +79,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (session?.user) {
         fetchUserProfile(session.user.id);
-        // If user is already logged in and on login page, redirect
-        if (window.location.pathname === '/login') {
-          window.location.href = '/';
-        }
       }
       setLoading(false);
     });
@@ -101,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/owner-login`,
         }
       });
       
