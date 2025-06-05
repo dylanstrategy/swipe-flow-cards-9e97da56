@@ -16,7 +16,7 @@ const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading, user, userProfile, signOut } = useAuth();
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading, user, userProfile } = useAuth();
   const navigate = useNavigate();
 
   const handleForgotPassword = async () => {
@@ -136,30 +136,6 @@ const Login = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="text-gray-600 text-lg">Redirecting to your dashboard...</p>
           <p className="text-sm text-gray-500">Role: {userProfile.role}</p>
-        </div>
-      </div>
-    );
-  }
-
-  // If user exists but no profile, show profile creation message
-  if (user && !userProfile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 text-lg">Setting up your profile...</p>
-          <p className="text-sm text-gray-500">This will only take a moment</p>
-          <Button 
-            onClick={async () => {
-              console.log('🔄 Manual logout requested');
-              await signOut();
-              setError('');
-            }}
-            variant="outline"
-            className="mt-4"
-          >
-            Start Over
-          </Button>
         </div>
       </div>
     );
