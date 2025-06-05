@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { UserProfile, ROLE_PERMISSIONS } from '@/types/users';
+import { UserProfile, UserRole, ROLE_PERMISSIONS } from '@/types/users';
 import { Plus, Search, Users, Mail, Phone, Edit, Trash2 } from 'lucide-react';
 import CreateUserForm from './CreateUserForm';
 

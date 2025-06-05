@@ -17,9 +17,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { User, Settings, LogOut, Users } from 'lucide-react';
+import { User, Settings, LogOut, Users, ArrowLeft } from 'lucide-react';
 import { UserProfile, ROLE_PERMISSIONS } from '@/types/users';
-import { Button, ArrowLeft } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 
 const Operator = () => {
   const navigate = useNavigate();
