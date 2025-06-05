@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Database, Settings, TrendingUp, Calendar, DollarSign, Users, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
+import { Database, Settings, TrendingUp, Calendar, DollarSign, Users, AlertCircle, CheckCircle, RefreshCw, FileText, Bell } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,119 +15,112 @@ interface DataSourceManagerProps {
 }
 
 const DataSourceManager = ({ onBack }: DataSourceManagerProps) => {
-  const [dataSources, setDataSources] = useState({
-    tour_system: {
-      name: 'Tour Management System',
-      status: 'connected',
-      lastSync: '2 minutes ago',
-      apiEndpoint: 'https://api.tourmanager.com/v1',
-      apiKey: '***************',
-      syncFrequency: 'real-time',
-      dataPoints: ['tour_bookings', 'no_shows', 'conversions', 'agent_assignments']
-    },
+  // Internal data tracking status
+  const [internalDataSources, setInternalDataSources] = useState({
     lease_management: {
-      name: 'Lease Management System',
-      status: 'connected',
-      lastSync: '5 minutes ago',
-      apiEndpoint: 'https://api.leasemanager.com/v2',
-      apiKey: '***************',
-      syncFrequency: '15-minutes',
-      dataPoints: ['lease_expirations', 'renewals', 'move_outs', 'lease_terms']
+      name: 'Internal Lease Tracking',
+      status: 'active',
+      description: 'Tracks all lease signings, renewals, and amendments within our system',
+      dataPoints: ['new_leases', 'renewals', 'amendments', 'lease_terms', 'expiration_dates'],
+      lastUpdate: '2 minutes ago',
+      recordsToday: 8,
+      automatesData: ['PPF updates', 'Expiration curve', 'Occupancy tracking']
+    },
+    notice_management: {
+      name: 'Notice to Vacate Tracking',
+      status: 'active',
+      description: 'Automatically captures all NTV submissions and updates PPF',
+      dataPoints: ['notice_date', 'move_out_date', 'reason', 'unit_type'],
+      lastUpdate: '15 minutes ago',
+      recordsToday: 3,
+      automatesData: ['PPF adjustments', 'Vacancy projections', 'Pricing triggers']
     },
     pricing_engine: {
       name: 'Dynamic Pricing Engine',
-      status: 'connected',
-      lastSync: '1 minute ago',
-      apiEndpoint: 'internal://pricing-module',
-      apiKey: 'internal',
-      syncFrequency: 'real-time',
-      dataPoints: ['market_rents', 'suggested_pricing', 'competitor_rates', 'occupancy_adjustments']
+      status: 'active',
+      description: 'Our internal pricing algorithm with market comp integration',
+      dataPoints: ['market_rents', 'occupancy_adjustments', 'seasonal_factors', 'competitor_rates'],
+      lastUpdate: '5 minutes ago',
+      recordsToday: 156,
+      automatesData: ['Rent recommendations', 'Lease term restrictions', 'Market positioning']
     },
-    payment_system: {
-      name: 'Payment Processing',
-      status: 'warning',
-      lastSync: '2 hours ago',
-      apiEndpoint: 'https://api.payments.com/v1',
-      apiKey: '***************',
-      syncFrequency: 'hourly',
-      dataPoints: ['payment_status', 'late_fees', 'autopay_enrollment', 'collection_status']
-    },
-    maintenance_system: {
-      name: 'Maintenance Management',
-      status: 'connected',
-      lastSync: '3 minutes ago',
-      apiEndpoint: 'internal://maintenance-module',
-      apiKey: 'internal',
-      syncFrequency: 'real-time',
-      dataPoints: ['work_orders', 'completion_status', 'vendor_assignments', 'resident_satisfaction']
-    },
-    resident_portal: {
-      name: 'Resident Portal',
-      status: 'connected',
-      lastSync: '1 minute ago',
-      apiEndpoint: 'https://portal.residents.com/api',
-      apiKey: '***************',
-      syncFrequency: 'real-time',
-      dataPoints: ['portal_activity', 'communication_preferences', 'service_requests', 'feedback']
-    },
-    crm_system: {
-      name: 'CRM Integration',
-      status: 'disconnected',
-      lastSync: 'Never',
-      apiEndpoint: '',
-      apiKey: '',
-      syncFrequency: 'manual',
-      dataPoints: ['prospect_data', 'lead_scoring', 'communication_history', 'conversion_tracking']
+    occupancy_tracker: {
+      name: 'Real-time Occupancy',
+      status: 'active',
+      description: 'Live tracking of unit status, move-ins, and move-outs',
+      dataPoints: ['unit_status', 'move_in_date', 'move_out_date', 'vacancy_duration'],
+      lastUpdate: '1 minute ago',
+      recordsToday: 12,
+      automatesData: ['PPF occupancy targets', 'Pricing adjustments', 'Marketing triggers']
     }
   });
 
-  const [ppfSettings, setPpfSettings] = useState({
-    enabled: true,
-    forecastPeriod: 18,
-    occupancyTarget: 96,
-    expirationThresholds: {
-      green: 5,
-      yellow: 3,
-      red: 1
+  // External integrations (optional)
+  const [externalSources, setExternalSources] = useState({
+    market_data: {
+      name: 'RentSpree Market Data',
+      status: 'connected',
+      apiEndpoint: 'https://api.rentspree.com/v1/market',
+      syncFrequency: 'daily',
+      lastSync: '6 hours ago',
+      cost: '$299/month'
     },
-    autoAdjustPricing: true,
-    notificationTriggers: ['occupancy_drop', 'expiration_spike', 'renewal_decline']
+    competitor_intel: {
+      name: 'RentBerry Comp Analysis',
+      status: 'connected',
+      apiEndpoint: 'https://api.rentberry.com/comps',
+      syncFrequency: 'weekly',
+      lastSync: '2 days ago',
+      cost: '$199/month'
+    },
+    demographic_data: {
+      name: 'Census Bureau API',
+      status: 'connected',
+      apiEndpoint: 'https://api.census.gov/data',
+      syncFrequency: 'monthly',
+      lastSync: '1 week ago',
+      cost: 'Free'
+    }
   });
 
-  const [marketRentAdjustments, setMarketRentAdjustments] = useState([
+  // Data flow automation rules
+  const [automationRules, setAutomationRules] = useState([
     {
-      unitType: 'Studio',
-      currentMarket: 2550,
-      suggestedMarket: 2575,
-      adjustment: 25,
-      reason: 'Competitive analysis update',
-      effectiveDate: '2024-01-15',
-      approved: false
+      trigger: 'New lease signed',
+      conditions: ['lease_term >= 12 months'],
+      actions: ['Update PPF expiration curve', 'Check monthly allocation limits', 'Trigger pricing review'],
+      status: 'active',
+      lastTriggered: '45 minutes ago'
     },
     {
-      unitType: '1BR',
-      currentMarket: 3100,
-      suggestedMarket: 3125,
-      adjustment: 25,
-      reason: 'Occupancy above target',
-      effectiveDate: '2024-01-15',
-      approved: true
+      trigger: 'Notice to Vacate received',
+      conditions: ['move_out_date within 60 days'],
+      actions: ['Update vacancy projections', 'Trigger marketing workflow', 'Adjust occupancy targets'],
+      status: 'active',
+      lastTriggered: '2 hours ago'
     },
     {
-      unitType: '2BR',
-      currentMarket: 4350,
-      suggestedMarket: 4300,
-      adjustment: -50,
-      reason: 'High vacancy rate',
-      effectiveDate: '2024-01-15',
-      approved: false
+      trigger: 'Occupancy drops below target',
+      conditions: ['occupancy < 96%', 'trend > 3 days'],
+      actions: ['Reduce renewal rates', 'Increase marketing budget', 'Review pricing strategy'],
+      status: 'active',
+      lastTriggered: 'Never'
+    },
+    {
+      trigger: 'Monthly expiration limit exceeded',
+      conditions: ['projected_expirations > monthly_limit'],
+      actions: ['Restrict 12+ month lease terms', 'Notify leasing team', 'Adjust renewal incentives'],
+      status: 'active',
+      lastTriggered: '1 week ago'
     }
   ]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'active':
       case 'connected': return 'bg-green-100 text-green-800';
       case 'warning': return 'bg-yellow-100 text-yellow-800';
+      case 'error':
       case 'disconnected': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -135,21 +128,13 @@ const DataSourceManager = ({ onBack }: DataSourceManagerProps) => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
+      case 'active':
       case 'connected': return <CheckCircle className="w-4 h-4" />;
       case 'warning': return <AlertCircle className="w-4 h-4" />;
+      case 'error':
       case 'disconnected': return <AlertCircle className="w-4 h-4" />;
       default: return <Database className="w-4 h-4" />;
     }
-  };
-
-  const handleApproveAdjustment = (index: number) => {
-    setMarketRentAdjustments(prev => 
-      prev.map((adj, i) => i === index ? { ...adj, approved: true } : adj)
-    );
-  };
-
-  const handleRejectAdjustment = (index: number) => {
-    setMarketRentAdjustments(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -159,37 +144,107 @@ const DataSourceManager = ({ onBack }: DataSourceManagerProps) => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Data Source Management</h2>
-            <p className="text-gray-600">Configure data integrations, PPF settings, and market rent adjustments</p>
+            <p className="text-gray-600">Internal data tracking and external integrations that power PPF automation</p>
           </div>
-          <Button onClick={onBack} variant="outline">
-            Back to Setup
-          </Button>
+          <Button onClick={onBack} variant="outline">Back to Setup</Button>
         </div>
 
-        <Tabs defaultValue="sources" className="space-y-6">
+        <Tabs defaultValue="internal" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="sources" className="flex items-center gap-2">
+            <TabsTrigger value="internal" className="flex items-center gap-2">
               <Database className="w-4 h-4" />
-              Data Sources
+              Internal Tracking
             </TabsTrigger>
-            <TabsTrigger value="ppf" className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              PPF Settings
+            <TabsTrigger value="external" className="flex items-center gap-2">
+              <RefreshCw className="w-4 h-4" />
+              External Sources
             </TabsTrigger>
-            <TabsTrigger value="pricing" className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4" />
-              Market Rents
+            <TabsTrigger value="automation" className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              Automation Rules
             </TabsTrigger>
-            <TabsTrigger value="occupancy" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Occupancy
+            <TabsTrigger value="data-flow" className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              Data Flow
             </TabsTrigger>
           </TabsList>
 
-          {/* Data Sources Tab */}
-          <TabsContent value="sources" className="space-y-6">
+          {/* Internal Data Sources Tab */}
+          <TabsContent value="internal" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {Object.entries(dataSources).map(([key, source]) => (
+              {Object.entries(internalDataSources).map(([key, source]) => (
+                <Card key={key} className="border-l-4 border-l-blue-500">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">{source.name}</CardTitle>
+                      <Badge className={getStatusColor(source.status)}>
+                        {getStatusIcon(source.status)}
+                        <span className="ml-1 capitalize">{source.status}</span>
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-600">{source.description}</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <Label className="text-gray-600">Last Update</Label>
+                        <p className="font-medium">{source.lastUpdate}</p>
+                      </div>
+                      <div>
+                        <Label className="text-gray-600">Records Today</Label>
+                        <p className="font-medium text-blue-600">{source.recordsToday}</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-gray-600 text-sm">Data Points Captured</Label>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {source.dataPoints.map(point => (
+                          <Badge key={point} variant="outline" className="text-xs">
+                            {point.replace('_', ' ')}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-gray-600 text-sm">Automates</Label>
+                      <div className="space-y-1 mt-1">
+                        {source.automatesData.map(item => (
+                          <div key={item} className="text-sm text-green-700 flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3" />
+                            {item}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            
+            <Card className="bg-blue-50 border-blue-200">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <Database className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+                  <div>
+                    <h4 className="font-semibold text-blue-900 mb-2">Internal Data Source Benefits</h4>
+                    <ul className="text-sm text-blue-800 space-y-1">
+                      <li>• Real-time PPF updates as leases are signed and notices submitted</li>
+                      <li>• Automatic expiration curve management and lease term restrictions</li>
+                      <li>• Dynamic pricing adjustments based on actual occupancy and market conditions</li>
+                      <li>• Seamless integration with all property management workflows</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* External Sources Tab */}
+          <TabsContent value="external" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {Object.entries(externalSources).map(([key, source]) => (
                 <Card key={key}>
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
@@ -216,280 +271,193 @@ const DataSourceManager = ({ onBack }: DataSourceManagerProps) => {
                       <Label className="text-gray-600 text-sm">API Endpoint</Label>
                       <Input 
                         value={source.apiEndpoint} 
-                        className="mt-1 text-sm"
-                        readOnly={source.apiKey === 'internal'}
+                        className="mt-1 text-sm font-mono"
+                        readOnly
                       />
                     </div>
                     
-                    <div>
-                      <Label className="text-gray-600 text-sm">Data Points</Label>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {source.dataPoints.map(point => (
-                          <Badge key={point} variant="outline" className="text-xs">
-                            {point.replace('_', ' ')}
-                          </Badge>
-                        ))}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-gray-600 text-sm">Cost</Label>
+                        <p className="font-semibold">{source.cost}</p>
                       </div>
-                    </div>
-                    
-                    <div className="flex gap-2 pt-2">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <RefreshCw className="w-4 h-4 mr-1" />
-                        Sync Now
-                      </Button>
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <Settings className="w-4 h-4 mr-1" />
-                        Configure
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline">
+                          <RefreshCw className="w-4 h-4 mr-1" />
+                          Sync
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Settings className="w-4 h-4 mr-1" />
+                          Configure
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
-          </TabsContent>
-
-          {/* PPF Settings Tab */}
-          <TabsContent value="ppf" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
-                  Property Performance Forecast Configuration
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="ppf-enabled">Enable PPF Automation</Label>
-                      <Switch
-                        id="ppf-enabled"
-                        checked={ppfSettings.enabled}
-                        onCheckedChange={(checked) => 
-                          setPpfSettings(prev => ({ ...prev, enabled: checked }))
-                        }
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Forecast Period (weeks)</Label>
-                      <Input
-                        type="number"
-                        value={ppfSettings.forecastPeriod}
-                        onChange={(e) => 
-                          setPpfSettings(prev => ({ ...prev, forecastPeriod: parseInt(e.target.value) }))
-                        }
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Target Occupancy (%)</Label>
-                      <Input
-                        type="number"
-                        value={ppfSettings.occupancyTarget}
-                        onChange={(e) => 
-                          setPpfSettings(prev => ({ ...prev, occupancyTarget: parseInt(e.target.value) }))
-                        }
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-base font-medium">Expiration Thresholds</Label>
-                      <div className="space-y-3 mt-2">
-                        <div className="flex items-center gap-3">
-                          <Badge className="bg-green-100 text-green-800 w-16">Green</Badge>
-                          <Input
-                            type="number"
-                            value={ppfSettings.expirationThresholds.green}
-                            onChange={(e) => 
-                              setPpfSettings(prev => ({
-                                ...prev,
-                                expirationThresholds: { ...prev.expirationThresholds, green: parseInt(e.target.value) }
-                              }))
-                            }
-                            className="w-20"
-                          />
-                          <span className="text-sm text-gray-600">units remaining</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <Badge className="bg-yellow-100 text-yellow-800 w-16">Yellow</Badge>
-                          <Input
-                            type="number"
-                            value={ppfSettings.expirationThresholds.yellow}
-                            onChange={(e) => 
-                              setPpfSettings(prev => ({
-                                ...prev,
-                                expirationThresholds: { ...prev.expirationThresholds, yellow: parseInt(e.target.value) }
-                              }))
-                            }
-                            className="w-20"
-                          />
-                          <span className="text-sm text-gray-600">units remaining</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <Badge className="bg-red-100 text-red-800 w-16">Red</Badge>
-                          <Input
-                            type="number"
-                            value={ppfSettings.expirationThresholds.red}
-                            onChange={(e) => 
-                              setPpfSettings(prev => ({
-                                ...prev,
-                                expirationThresholds: { ...prev.expirationThresholds, red: parseInt(e.target.value) }
-                              }))
-                            }
-                            className="w-20"
-                          />
-                          <span className="text-sm text-gray-600">units remaining</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="border-t pt-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <Label>Auto-Adjust Pricing Based on PPF</Label>
-                    <Switch
-                      checked={ppfSettings.autoAdjustPricing}
-                      onCheckedChange={(checked) => 
-                        setPpfSettings(prev => ({ ...prev, autoAdjustPricing: checked }))
-                      }
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Market Rent Adjustments Tab */}
-          <TabsContent value="pricing" className="space-y-6">
+            
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5" />
-                    Pending Market Rent Adjustments
-                  </span>
+                  <span>Add New External Source</span>
                   <Button size="sm">
-                    <DollarSign className="w-4 h-4 mr-1" />
-                    Manual Adjustment
+                    <Database className="w-4 h-4 mr-1" />
+                    Connect Source
                   </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {marketRentAdjustments.map((adjustment, index) => (
-                    <div key={index} className="border rounded-lg p-4 bg-white">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <Badge variant="outline">{adjustment.unitType}</Badge>
-                          <span className="font-medium">${adjustment.currentMarket.toLocaleString()} → ${adjustment.suggestedMarket.toLocaleString()}</span>
-                          <Badge className={adjustment.adjustment > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                            {adjustment.adjustment > 0 ? '+' : ''}${adjustment.adjustment}
-                          </Badge>
-                        </div>
-                        <Badge className={adjustment.approved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
-                          {adjustment.approved ? 'Approved' : 'Pending'}
-                        </Badge>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm mb-3">
-                        <div>
-                          <Label className="text-gray-600">Reason</Label>
-                          <p>{adjustment.reason}</p>
-                        </div>
-                        <div>
-                          <Label className="text-gray-600">Effective Date</Label>
-                          <p>{adjustment.effectiveDate}</p>
-                        </div>
-                        <div>
-                          <Label className="text-gray-600">Impact</Label>
-                          <p>{adjustment.adjustment > 0 ? 'Revenue increase' : 'Occupancy improvement'}</p>
-                        </div>
-                      </div>
-                      
-                      {!adjustment.approved && (
-                        <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
-                            onClick={() => handleApproveAdjustment(index)}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            Approve
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleRejectAdjustment(index)}
-                          >
-                            Reject
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                <p className="text-sm text-gray-600">
+                  Connect additional market data sources, comp analysis tools, or demographic APIs to enhance pricing decisions.
+                </p>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Occupancy Tab */}
-          <TabsContent value="occupancy" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Current Occupancy Metrics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span>Physical Occupancy</span>
-                      <span className="font-bold text-green-600">96.7%</span>
+          {/* Automation Rules Tab */}
+          <TabsContent value="automation" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Data Flow Automation Rules</CardTitle>
+                <p className="text-sm text-gray-600">
+                  Configure how internal data automatically triggers PPF updates, pricing changes, and workflow actions
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {automationRules.map((rule, index) => (
+                    <div key={index} className="border rounded-lg p-4 bg-white">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold">{rule.trigger}</h4>
+                        <div className="flex items-center gap-2">
+                          <Badge className={rule.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                            {rule.status}
+                          </Badge>
+                          <Switch checked={rule.status === 'active'} />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <Label className="text-gray-600">Conditions</Label>
+                          <div className="space-y-1 mt-1">
+                            {rule.conditions.map((condition, i) => (
+                              <div key={i} className="font-mono text-xs bg-gray-50 p-2 rounded">
+                                {condition}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-gray-600">Automated Actions</Label>
+                          <div className="space-y-1 mt-1">
+                            {rule.actions.map((action, i) => (
+                              <div key={i} className="text-xs text-green-700 flex items-center gap-1">
+                                <CheckCircle className="w-3 h-3" />
+                                {action}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-gray-600">Last Triggered</Label>
+                          <p className="text-sm">{rule.lastTriggered}</p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span>Economic Occupancy</span>
-                      <span className="font-bold text-blue-600">94.2%</span>
+                  ))}
+                </div>
+                
+                <Button className="w-full mt-4">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Create New Automation Rule
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Data Flow Tab */}
+          <TabsContent value="data-flow" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Real-time Data Flow Visualization</CardTitle>
+                <p className="text-sm text-gray-600">
+                  Live view of how data flows from actions to PPF updates and pricing decisions
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Data flow visualization */}
+                  <div className="bg-gray-50 p-6 rounded-lg">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-semibold">Today's Data Flow</h4>
+                      <Badge className="bg-blue-100 text-blue-800">23 events processed</Badge>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span>Available Units</span>
-                      <span className="font-bold">5 units</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>Vacant Units</span>
-                      <span className="font-bold">8 units</span>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                          <FileText className="w-8 h-8 text-green-600" />
+                        </div>
+                        <p className="text-sm font-medium">8 Leases Signed</p>
+                        <p className="text-xs text-gray-600">Auto-updated PPF</p>
+                      </div>
+                      
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                          <Bell className="w-8 h-8 text-red-600" />
+                        </div>
+                        <p className="text-sm font-medium">3 Notices Received</p>
+                        <p className="text-xs text-gray-600">Updated vacancy projections</p>
+                      </div>
+                      
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                          <DollarSign className="w-8 h-8 text-blue-600" />
+                        </div>
+                        <p className="text-sm font-medium">12 Pricing Updates</p>
+                        <p className="text-xs text-gray-600">Based on occupancy</p>
+                      </div>
+                      
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                          <Calendar className="w-8 h-8 text-purple-600" />
+                        </div>
+                        <p className="text-sm font-medium">2 Term Restrictions</p>
+                        <p className="text-xs text-gray-600">May expiration limit</p>
+                      </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Expiration Schedule</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span>Next 30 days</span>
-                      <Badge className="bg-red-100 text-red-800">12 expirations</Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>31-60 days</span>
-                      <Badge className="bg-yellow-100 text-yellow-800">8 expirations</Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>61-90 days</span>
-                      <Badge className="bg-green-100 text-green-800">15 expirations</Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>90+ days</span>
-                      <Badge className="bg-blue-100 text-blue-800">22 expirations</Badge>
+                  
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-semibold mb-3">Recent Data Events</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-3 py-2 border-b">
+                        <Badge className="bg-green-100 text-green-800">Lease</Badge>
+                        <span>Unit 304A - 13-month lease signed → PPF updated, May 2025 expiration added</span>
+                        <span className="text-gray-500 ml-auto">2 min ago</span>
+                      </div>
+                      <div className="flex items-center gap-3 py-2 border-b">
+                        <Badge className="bg-blue-100 text-blue-800">Pricing</Badge>
+                        <span>1BR units increased $25/month → Occupancy above target (97.2%)</span>
+                        <span className="text-gray-500 ml-auto">15 min ago</span>
+                      </div>
+                      <div className="flex items-center gap-3 py-2 border-b">
+                        <Badge className="bg-red-100 text-red-800">Notice</Badge>
+                        <span>Unit 201B - NTV received → March 2025 vacancy projected</span>
+                        <span className="text-gray-500 ml-auto">32 min ago</span>
+                      </div>
+                      <div className="flex items-center gap-3 py-2">
+                        <Badge className="bg-purple-100 text-purple-800">Restriction</Badge>
+                        <span>12+ month terms restricted → May exceeds 90% expiration limit</span>
+                        <span className="text-gray-500 ml-auto">1 hour ago</span>
+                      </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
 
@@ -498,7 +466,7 @@ const DataSourceManager = ({ onBack }: DataSourceManagerProps) => {
             Back to Setup
           </Button>
           <Button className="flex-1">
-            Save All Changes
+            Save All Settings
           </Button>
         </div>
       </div>
