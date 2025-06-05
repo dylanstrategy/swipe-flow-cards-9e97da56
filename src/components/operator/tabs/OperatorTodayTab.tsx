@@ -426,44 +426,60 @@ const OperatorTodayTab = () => {
         <p className="text-gray-600">The Meridian • Live Data</p>
       </div>
 
-      {/* Active Notices - Redesigned */}
+      {/* Active Notices - Completely Redesigned */}
       {noticeResidents.length > 0 && (
-        <div className="bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-red-400 rounded-lg shadow-sm overflow-hidden">
-          <div className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-red-600" />
+        <div className="bg-white rounded-xl shadow-lg border border-red-200 overflow-hidden">
+          {/* Header Section */}
+          <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">Active Move-Out Notices</h2>
-                <p className="text-sm text-gray-600">{noticeResidents.length} resident{noticeResidents.length > 1 ? 's' : ''} with active notices</p>
+                <h2 className="text-xl font-bold text-white">Active Move-Out Notices</h2>
+                <p className="text-red-100 text-sm">
+                  {noticeResidents.length} resident{noticeResidents.length > 1 ? 's' : ''} requiring attention
+                </p>
               </div>
             </div>
-            
-            <div className="grid gap-3">
-              {noticeResidents.map((resident) => (
-                <div key={resident.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                        <User className="w-5 h-5 text-gray-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-gray-900">{getFullName(resident.firstName, resident.lastName)}</h3>
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
-                          <span className="flex items-center gap-1">
-                            <Home className="w-4 h-4" />
-                            Unit {resident.unitNumber}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-4 h-4" />
-                            Move-out: {resident.moveOutDate ? new Date(resident.moveOutDate).toLocaleDateString() : 'TBD'}
-                          </span>
+          </div>
+          
+          {/* Content Section */}
+          <div className="p-6">
+            <div className="space-y-4">
+              {noticeResidents.map((resident, index) => (
+                <div key={resident.id} className="bg-gray-50 rounded-lg border border-gray-200 p-5 hover:shadow-md transition-all duration-200">
+                  <div className="flex items-start justify-between">
+                    {/* Left Side - Resident Info */}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                          <User className="w-6 h-6 text-blue-600" />
                         </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {getFullName(resident.firstName, resident.lastName)}
+                          </h3>
+                          <div className="flex items-center gap-1 text-sm text-gray-600">
+                            <span className="font-medium">Unit {resident.unitNumber}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Move-out Date */}
+                      <div className="flex items-center gap-2 mb-4">
+                        <Clock className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm text-gray-600">
+                          Move-out Date: 
+                          <span className="font-medium text-gray-900 ml-1">
+                            {resident.moveOutDate ? new Date(resident.moveOutDate).toLocaleDateString() : 'TBD'}
+                          </span>
+                        </span>
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-2">
+                    {/* Right Side - Actions */}
+                    <div className="flex flex-col gap-2 ml-4">
                       <CancelNoticeButton 
                         residentId={resident.id} 
                         residentName={getFullName(resident.firstName, resident.lastName)}
@@ -476,6 +492,18 @@ const OperatorTodayTab = () => {
                         variant="destructive"
                         size="sm"
                       />
+                    </div>
+                  </div>
+                  
+                  {/* Bottom Status Bar */}
+                  <div className="mt-4 pt-3 border-t border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                        Active Notice
+                      </Badge>
+                      <span className="text-xs text-gray-500">
+                        Notice #{index + 1}
+                      </span>
                     </div>
                   </div>
                 </div>
