@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [impersonatedRole, setImpersonatedRole] = useState<AppRole | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   const { toast } = useToast();
 
   const isImpersonating = impersonatedRole !== null;
@@ -38,115 +39,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isValidOperatorDomain = (email: string): boolean => {
     const allowedDomains = ['@ironstate.com', '@applaudliving.com', '@meridian.com'];
     return allowedDomains.some(domain => email.endsWith(domain));
-  };
-
-  useEffect(() => {
-    let mounted = true;
-
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
-
-        console.log('Auth event:', event, session?.user?.email);
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user && event === 'SIGNED_IN') {
-          // Fetch user profile after sign in
-          try {
-            await fetchUserProfile(session.user.id);
-            
-            // Handle redirects based on current page and user role
-            setTimeout(() => {
-              if (!mounted) return;
-              handlePostLoginRedirect(session.user);
-            }, 500);
-          } catch (error) {
-            console.error('Error fetching profile after sign in:', error);
-            toast({
-              title: "Authentication Error",
-              description: "Failed to load user profile. Please try again.",
-              variant: "destructive",
-            });
-          }
-        } else if (!session) {
-          setUserProfile(null);
-        }
-        
-        setLoading(false);
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      
-      console.log('Existing session:', session?.user?.email);
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      }
-      setLoading(false);
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  const handlePostLoginRedirect = async (user: User) => {
-    try {
-      const { data: profile, error } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching user role for redirect:', error);
-        return;
-      }
-
-      console.log('User profile for redirect:', profile);
-      const currentPath = window.location.pathname;
-      
-      // Only redirect if we're on a login page
-      if (currentPath === '/login' || currentPath === '/owner-login') {
-        switch (profile?.role) {
-          case 'super_admin':
-            console.log('Redirecting super admin to /super-admin');
-            window.location.href = '/super-admin';
-            break;
-          case 'senior_operator':
-          case 'operator':
-          case 'leasing':
-            console.log('Redirecting operator to /operator');
-            window.location.href = '/operator';
-            break;
-          case 'maintenance':
-            console.log('Redirecting maintenance to /maintenance');
-            window.location.href = '/maintenance';
-            break;
-          case 'resident':
-            console.log('Redirecting resident to /');
-            window.location.href = '/';
-            break;
-          case 'prospect':
-            console.log('Redirecting prospect to /discovery');
-            window.location.href = '/discovery';
-            break;
-          default:
-            console.log('Unknown role, redirecting to /');
-            window.location.href = '/';
-        }
-      }
-    } catch (error) {
-      console.error('Error in handlePostLoginRedirect:', error);
-    }
   };
 
   const fetchUserProfile = async (userId: string) => {
@@ -160,24 +52,128 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         console.error('Error fetching user profile:', error);
-        return;
+        return null;
       }
       
       console.log('User profile fetched:', data);
-      setUserProfile(data as AppUser);
+      return data as AppUser;
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
+      return null;
     }
   };
+
+  const handlePostLoginRedirect = (userRole: AppRole) => {
+    const currentPath = window.location.pathname;
+    
+    // Only redirect if we're on a login page
+    if (currentPath === '/login' || currentPath === '/owner-login') {
+      console.log('Redirecting user with role:', userRole);
+      
+      switch (userRole) {
+        case 'super_admin':
+          window.location.href = '/super-admin';
+          break;
+        case 'senior_operator':
+        case 'operator':
+        case 'leasing':
+          window.location.href = '/operator';
+          break;
+        case 'maintenance':
+          window.location.href = '/maintenance';
+          break;
+        case 'resident':
+          window.location.href = '/';
+          break;
+        case 'prospect':
+          window.location.href = '/discovery';
+          break;
+        default:
+          window.location.href = '/';
+      }
+    }
+  };
+
+  useEffect(() => {
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        // Check for existing session first
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        console.log('Existing session check:', existingSession?.user?.email);
+        
+        if (existingSession?.user) {
+          setSession(existingSession);
+          setUser(existingSession.user);
+          
+          const profile = await fetchUserProfile(existingSession.user.id);
+          if (mounted && profile) {
+            setUserProfile(profile);
+          }
+        }
+        
+        setLoading(false);
+        setIsInitialized(true);
+        
+        // Set up auth state listener after initial check
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            if (!mounted) return;
+
+            console.log('Auth event:', event, session?.user?.email);
+            
+            setSession(session);
+            setUser(session?.user ?? null);
+            
+            if (session?.user && event === 'SIGNED_IN') {
+              const profile = await fetchUserProfile(session.user.id);
+              if (mounted && profile) {
+                setUserProfile(profile);
+                // Small delay to ensure state is set before redirect
+                setTimeout(() => {
+                  if (mounted) {
+                    handlePostLoginRedirect(profile.role);
+                  }
+                }, 100);
+              }
+            } else if (!session) {
+              setUserProfile(null);
+            }
+          }
+        );
+
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        if (mounted) {
+          setLoading(false);
+          setIsInitialized(true);
+        }
+      }
+    };
+
+    initializeAuth();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const signInWithGoogle = async () => {
     try {
       console.log('Starting Google sign in...');
       setLoading(true);
       
+      const currentUrl = window.location.origin;
       const redirectTo = window.location.pathname === '/owner-login' 
-        ? `${window.location.origin}/owner-login`
-        : `${window.location.origin}/login`;
+        ? `${currentUrl}/owner-login`
+        : `${currentUrl}/login`;
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -188,8 +184,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         console.error('Google sign in error:', error);
+        setLoading(false);
         throw error;
       }
+      
       console.log('Google sign in initiated successfully');
     } catch (error: any) {
       console.error('Google sign in error:', error);
@@ -211,7 +209,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        setLoading(false);
+        throw error;
+      }
     } catch (error: any) {
       setLoading(false);
       throw error;
@@ -237,7 +238,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        setLoading(false);
+        throw error;
+      }
     } catch (error: any) {
       setLoading(false);
       throw error;
@@ -290,7 +294,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     userProfile: userProfile ? { ...userProfile, role: effectiveRole || userProfile.role } : null,
-    loading,
+    loading: loading || !isInitialized,
     signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,
