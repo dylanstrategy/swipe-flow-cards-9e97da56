@@ -18,6 +18,7 @@ const AuthPage = () => {
   const [role, setRole] = useState('prospect');
   const [property, setProperty] = useState('');
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
@@ -37,11 +38,20 @@ const AuthPage = () => {
       
       if (isSignUp) {
         console.log('Attempting sign up with data:', { firstName, lastName, email, phone, role, property });
-        await signUp(email, password, { firstName, lastName, phone, role, property });
-        toast({
-          title: "Account created!",
-          description: "You have been automatically signed in.",
-        });
+        const result = await signUp(email, password, { firstName, lastName, phone, role, property });
+        
+        if (result.needsConfirmation) {
+          setEmailSent(true);
+          toast({
+            title: "Check your email!",
+            description: "We've sent you a confirmation link. Click it to complete your registration.",
+          });
+        } else {
+          toast({
+            title: "Account created!",
+            description: "You have been automatically signed in.",
+          });
+        }
       } else {
         console.log('Attempting sign in');
         await signIn(email, password);
@@ -76,18 +86,26 @@ const AuthPage = () => {
       // If login fails, try to create the test account
       try {
         console.log('Creating test account:', testAccount);
-        await signUp(testAccount.email, testAccount.password, {
+        const result = await signUp(testAccount.email, testAccount.password, {
           firstName: testAccount.firstName,
           lastName: testAccount.lastName,
           phone: '(555) 123-4567',
           role: testAccount.role,
           property: 'The Meridian',
         });
-        await signIn(testAccount.email, testAccount.password);
-        toast({
-          title: "Test account created and logged in!",
-          description: `Created and logged in as ${testAccount.role}`,
-        });
+        
+        if (result.needsConfirmation) {
+          toast({
+            title: "Test account created!",
+            description: "Check your email to confirm the account, then try logging in again.",
+          });
+        } else {
+          await signIn(testAccount.email, testAccount.password);
+          toast({
+            title: "Test account created and logged in!",
+            description: `Created and logged in as ${testAccount.role}`,
+          });
+        }
       } catch (signUpError: any) {
         console.error('Test account creation failed:', signUpError);
         toast({
@@ -100,6 +118,36 @@ const AuthPage = () => {
       setLoading(false);
     }
   };
+
+  if (emailSent) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-center">Check Your Email</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-gray-600">
+              We've sent a confirmation link to <strong>{email}</strong>
+            </p>
+            <p className="text-sm text-gray-500">
+              Click the link in your email to complete your registration, then come back here to sign in.
+            </p>
+            <Button 
+              onClick={() => {
+                setEmailSent(false);
+                setIsSignUp(false);
+              }}
+              variant="outline"
+              className="w-full"
+            >
+              Back to Sign In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">

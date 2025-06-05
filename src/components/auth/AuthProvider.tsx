@@ -9,7 +9,7 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, userData: any) => Promise<void>;
+  signUp: (email: string, password: string, userData: any) => Promise<{ needsConfirmation: boolean }>;
   signOut: () => Promise<void>;
   switchRole: (newRole: string) => Promise<void>;
 }
@@ -127,11 +127,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('Signing up:', email, userData);
     
     try {
-      // Test connectivity first
-      console.log('Testing Supabase connectivity...');
-      const connectivityTest = await supabase.from('user_profiles').select('count').limit(1);
-      console.log('Connectivity test result:', connectivityTest);
-      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -151,21 +146,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (error.message.includes('User already registered')) {
           throw new Error('An account with this email already exists. Please try signing in instead.');
         }
-        if (error.message.includes('Load failed')) {
-          throw new Error('Network connection failed. Please check your internet connection and try again.');
-        }
         throw error;
       }
 
       console.log('Sign up successful:', data);
       
-      // If the user was created but needs email confirmation
+      // Check if user was created but needs email confirmation
       if (data.user && !data.session) {
-        throw new Error('Please check your email and click the confirmation link to complete your registration.');
+        console.log('User created but needs email confirmation');
+        return { needsConfirmation: true };
       }
       
-      // The user profile will be created automatically by the database trigger
-      // No need to manually create it here
+      // User was created and automatically signed in
+      return { needsConfirmation: false };
+      
     } catch (error) {
       console.error('Sign up failed:', error);
       throw error;
