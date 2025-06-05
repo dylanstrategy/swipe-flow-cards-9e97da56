@@ -29,13 +29,15 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
     phone: profile.phone || '',
     emergencyContactName: profile.emergencyContact?.name || '',
     emergencyContactPhone: profile.emergencyContact?.phone || '',
-    emergencyContactRelationship: profile.emergencyContact?.relationship || 'Spouse',
-    // Privacy preferences
+    emergencyContactRelationship: profile.emergencyContact?.relationship || 'Spouse'
+  });
+
+  // Load privacy preferences from the shared localStorage key
+  const [privacyData, setPrivacyData] = useState({
     dataSharing: 'none',
     marketingEmails: false,
     analyticsTracking: true,
     locationTracking: false,
-    // Notification preferences
     emailNotifications: true,
     smsNotifications: true,
     pushNotifications: true,
@@ -48,8 +50,11 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
     try {
       setIsEditing(false);
       
-      // Save to localStorage
+      // Save identity data to localStorage
       localStorage.setItem('residentIdentity', JSON.stringify(formData));
+      
+      // Save privacy data to the shared localStorage key
+      localStorage.setItem('residentPrivacy', JSON.stringify(privacyData));
       
       // Update resident context with the correct structure
       updateProfile({
@@ -72,6 +77,7 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
       });
       
       console.log('Resident identity saved successfully:', formData);
+      console.log('Privacy preferences saved successfully:', privacyData);
     } catch (error) {
       console.error('Error saving resident identity:', error);
       toast({
@@ -85,20 +91,33 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
   const handleCancel = () => {
     setIsEditing(false);
     // Reset form data from localStorage if available
-    const saved = localStorage.getItem('residentIdentity');
-    if (saved) {
-      setFormData(JSON.parse(saved));
+    const savedIdentity = localStorage.getItem('residentIdentity');
+    if (savedIdentity) {
+      setFormData(JSON.parse(savedIdentity));
+    }
+    const savedPrivacy = localStorage.getItem('residentPrivacy');
+    if (savedPrivacy) {
+      setPrivacyData(JSON.parse(savedPrivacy));
     }
   };
 
   // Load saved data on mount
   useEffect(() => {
-    const saved = localStorage.getItem('residentIdentity');
-    if (saved) {
+    const savedIdentity = localStorage.getItem('residentIdentity');
+    if (savedIdentity) {
       try {
-        setFormData(JSON.parse(saved));
+        setFormData(JSON.parse(savedIdentity));
       } catch (error) {
         console.error('Error loading saved resident identity:', error);
+      }
+    }
+
+    const savedPrivacy = localStorage.getItem('residentPrivacy');
+    if (savedPrivacy) {
+      try {
+        setPrivacyData(JSON.parse(savedPrivacy));
+      } catch (error) {
+        console.error('Error loading saved privacy settings:', error);
       }
     }
   }, []);
@@ -297,8 +316,8 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
                 Data Sharing Preferences
               </Label>
               <Select 
-                value={formData.dataSharing} 
-                onValueChange={(value) => setFormData({ ...formData, dataSharing: value })}
+                value={privacyData.dataSharing} 
+                onValueChange={(value) => setPrivacyData({ ...privacyData, dataSharing: value })}
                 disabled={!isEditing}
               >
                 <SelectTrigger className={isEditing ? "bg-white" : "bg-gray-100"}>
@@ -319,8 +338,8 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
                   <div className="text-sm text-gray-600">Receive promotional and marketing communications</div>
                 </div>
                 <Switch 
-                  checked={formData.marketingEmails}
-                  onCheckedChange={(checked) => setFormData({ ...formData, marketingEmails: checked })}
+                  checked={privacyData.marketingEmails}
+                  onCheckedChange={(checked) => setPrivacyData({ ...privacyData, marketingEmails: checked })}
                   disabled={!isEditing}
                 />
               </div>
@@ -332,8 +351,8 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
                   <div className="text-sm text-gray-600">Allow analytics to improve user experience</div>
                 </div>
                 <Switch 
-                  checked={formData.analyticsTracking}
-                  onCheckedChange={(checked) => setFormData({ ...formData, analyticsTracking: checked })}
+                  checked={privacyData.analyticsTracking}
+                  onCheckedChange={(checked) => setPrivacyData({ ...privacyData, analyticsTracking: checked })}
                   disabled={!isEditing}
                 />
               </div>
@@ -345,8 +364,8 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
                   <div className="text-sm text-gray-600">Allow location services for enhanced features</div>
                 </div>
                 <Switch 
-                  checked={formData.locationTracking}
-                  onCheckedChange={(checked) => setFormData({ ...formData, locationTracking: checked })}
+                  checked={privacyData.locationTracking}
+                  onCheckedChange={(checked) => setPrivacyData({ ...privacyData, locationTracking: checked })}
                   disabled={!isEditing}
                 />
               </div>
@@ -370,8 +389,8 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
                   <div className="text-sm text-gray-600">Receive notifications via email</div>
                 </div>
                 <Switch 
-                  checked={formData.emailNotifications}
-                  onCheckedChange={(checked) => setFormData({ ...formData, emailNotifications: checked })}
+                  checked={privacyData.emailNotifications}
+                  onCheckedChange={(checked) => setPrivacyData({ ...privacyData, emailNotifications: checked })}
                   disabled={!isEditing}
                 />
               </div>
@@ -383,8 +402,8 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
                   <div className="text-sm text-gray-600">Receive notifications via text message</div>
                 </div>
                 <Switch 
-                  checked={formData.smsNotifications}
-                  onCheckedChange={(checked) => setFormData({ ...formData, smsNotifications: checked })}
+                  checked={privacyData.smsNotifications}
+                  onCheckedChange={(checked) => setPrivacyData({ ...privacyData, smsNotifications: checked })}
                   disabled={!isEditing}
                 />
               </div>
@@ -396,8 +415,8 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
                   <div className="text-sm text-gray-600">Receive push notifications on your device</div>
                 </div>
                 <Switch 
-                  checked={formData.pushNotifications}
-                  onCheckedChange={(checked) => setFormData({ ...formData, pushNotifications: checked })}
+                  checked={privacyData.pushNotifications}
+                  onCheckedChange={(checked) => setPrivacyData({ ...privacyData, pushNotifications: checked })}
                   disabled={!isEditing}
                 />
               </div>
@@ -409,8 +428,8 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
                   <div className="text-sm text-gray-600">Notifications about maintenance and repairs</div>
                 </div>
                 <Switch 
-                  checked={formData.maintenanceAlerts}
-                  onCheckedChange={(checked) => setFormData({ ...formData, maintenanceAlerts: checked })}
+                  checked={privacyData.maintenanceAlerts}
+                  onCheckedChange={(checked) => setPrivacyData({ ...privacyData, maintenanceAlerts: checked })}
                   disabled={!isEditing}
                 />
               </div>
@@ -422,8 +441,8 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
                   <div className="text-sm text-gray-600">Monthly rent payment reminders</div>
                 </div>
                 <Switch 
-                  checked={formData.rentReminders}
-                  onCheckedChange={(checked) => setFormData({ ...formData, rentReminders: checked })}
+                  checked={privacyData.rentReminders}
+                  onCheckedChange={(checked) => setPrivacyData({ ...privacyData, rentReminders: checked })}
                   disabled={!isEditing}
                 />
               </div>
@@ -435,8 +454,8 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
                   <div className="text-sm text-gray-600">News and updates about your community</div>
                 </div>
                 <Switch 
-                  checked={formData.communityUpdates}
-                  onCheckedChange={(checked) => setFormData({ ...formData, communityUpdates: checked })}
+                  checked={privacyData.communityUpdates}
+                  onCheckedChange={(checked) => setPrivacyData({ ...privacyData, communityUpdates: checked })}
                   disabled={!isEditing}
                 />
               </div>
