@@ -69,20 +69,6 @@ const Login = () => {
     }
   };
 
-  // Handle invalid auth state - force logout if user exists but no profile after reasonable time
-  useEffect(() => {
-    if (user && !userProfile && !loading) {
-      console.warn('🚨 Invalid state: user exists but no profile found');
-      const timer = setTimeout(async () => {
-        console.log('🔄 Forcing logout due to missing profile');
-        await signOut();
-        setError('Authentication issue detected. Please try logging in again.');
-      }, 10000); // Wait 10 seconds before forcing logout
-
-      return () => clearTimeout(timer);
-    }
-  }, [user, userProfile, loading, signOut]);
-
   // Handle role-based routing after successful login
   useEffect(() => {
     // Only redirect if we have both user and userProfile, and we're not currently loading
@@ -136,7 +122,7 @@ const Login = () => {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 text-lg">Initializing...</p>
+          <p className="text-gray-600 text-lg">Loading...</p>
         </div>
       </div>
     );
@@ -163,6 +149,17 @@ const Login = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="text-gray-600 text-lg">Setting up your profile...</p>
           <p className="text-sm text-gray-500">This will only take a moment</p>
+          <Button 
+            onClick={async () => {
+              console.log('🔄 Manual logout requested');
+              await signOut();
+              setError('');
+            }}
+            variant="outline"
+            className="mt-4"
+          >
+            Start Over
+          </Button>
         </div>
       </div>
     );

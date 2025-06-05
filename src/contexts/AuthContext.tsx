@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session, User } from '@supabase/supabase-js';
@@ -120,39 +121,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    console.log('🔄 AuthProvider useEffect triggered');
+    console.log('🔄 AuthProvider initializing...');
     
-    let mounted = true;
+    let isMounted = true;
 
-    // Initialize auth - get session and set up listener
     const initializeAuth = async () => {
       try {
-        console.log('🔑 Getting initial session');
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('🔑 Initial session result:', session ? 'found' : 'none');
+        console.log('🔑 Getting initial session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (mounted) {
-          // CRITICAL: Only set user if we have a valid session
-          if (session?.user) {
-            setUser(session.user);
-            console.log('👤 Fetching profile for initial user:', session.user.id);
-            const profile = await fetchProfile(session.user.id);
-            if (mounted) {
-              setUserProfile(profile);
-            }
-          } else {
-            // No session - clear everything
-            setUser(null);
-            setUserProfile(null);
+        if (error) {
+          console.error('❌ Error getting session:', error);
+          if (isMounted) {
+            setLoading(false);
           }
+          return;
+        }
+
+        console.log('🔑 Initial session:', session ? 'found' : 'none');
+        
+        if (session?.user && isMounted) {
+          console.log('👤 Setting user from session');
+          setUser(session.user);
           
+          // Fetch profile
+          const profile = await fetchProfile(session.user.id);
+          if (isMounted) {
+            setUserProfile(profile);
+          }
+        }
+        
+        if (isMounted) {
+          console.log('✅ Auth initialization complete, setting loading to false');
           setLoading(false);
         }
       } catch (error) {
         console.error('🔥 Error during auth initialization:', error);
-        if (mounted) {
-          setUser(null);
-          setUserProfile(null);
+        if (isMounted) {
           setLoading(false);
         }
       }
@@ -161,44 +166,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('👂 Auth state change event:', event, 'Session:', session ? 'present' : 'none');
+        console.log('👂 Auth state change:', event, 'Session:', session ? 'present' : 'none');
         
-        if (!mounted) return;
+        if (!isMounted) return;
 
-        // CRITICAL: Only set user if we have a valid session
         if (session?.user) {
           setUser(session.user);
           console.log('👤 Auth state change - fetching profile for:', session.user.id);
           try {
             const profile = await fetchProfile(session.user.id);
-            if (mounted) {
+            if (isMounted) {
               setUserProfile(profile);
             }
           } catch (error) {
             console.error('❌ Error fetching profile in auth state change:', error);
-            if (mounted) {
+            if (isMounted) {
               setUserProfile(null);
             }
           }
         } else {
-          // No session - clear everything including dev mode
-          if (mounted) {
-            console.log('🧹 Clearing user state - no session');
-            setUser(null);
-            setUserProfile(null);
-            setIsDevMode(false);
-            setDevModeRole(null);
-            setDevModeProperty(null);
-          }
+          // No session - clear everything
+          console.log('🧹 Clearing user state - no session');
+          setUser(null);
+          setUserProfile(null);
+          setIsDevMode(false);
+          setDevModeRole(null);
+          setDevModeProperty(null);
         }
       }
     );
 
+    // Initialize auth
     initializeAuth();
 
     return () => {
-      mounted = false;
-      console.log('🧹 AuthProvider useEffect cleanup');
+      isMounted = false;
+      console.log('🧹 AuthProvider cleanup');
       subscription?.unsubscribe();
     };
   }, []);
