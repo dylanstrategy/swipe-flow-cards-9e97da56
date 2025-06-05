@@ -11,7 +11,7 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUpWithEmail: (email: string, password: string, userData: any) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, userData: any) => Promise<{ needsConfirmation?: boolean }>;
   signOut: () => Promise<void>;
   impersonateRole: (role: AppRole) => void;
   stopImpersonation: () => void;
@@ -217,7 +217,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
 
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -228,6 +228,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         throw error;
       }
+
+      // Return whether email confirmation is needed
+      return {
+        needsConfirmation: !data.session && !!data.user
+      };
     } catch (error: any) {
       setLoading(false);
       throw error;
