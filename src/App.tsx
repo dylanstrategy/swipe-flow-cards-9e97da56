@@ -29,21 +29,38 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
   
   if (!user || !userProfile) {
-    return <Login />;
+    return <Navigate to="/login" replace />;
   }
   
   return <>{children}</>;
 }
 
 function AppRoutes() {
-  const { userProfile } = useAuth();
+  const { user, userProfile, loading } = useAuth();
   
-  if (!userProfile) {
-    return <Login />;
+  // Show loading while checking auth state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // If user is authenticated but on login page, redirect to dashboard
+  if (user && userProfile && window.location.pathname === '/login') {
+    return <Navigate to="/" replace />;
+  }
+
+  // If not authenticated and not on login page, redirect to login
+  if (!user && window.location.pathname !== '/login' && window.location.pathname !== '/owner-login') {
+    return <Navigate to="/login" replace />;
   }
 
   // Route based on user role
   const getDefaultRoute = () => {
+    if (!userProfile) return '/login';
+    
     switch (userProfile.role) {
       case 'super_admin':
         return '/super-admin';
@@ -65,45 +82,47 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={
+        user && userProfile ? <Navigate to={getDefaultRoute()} replace /> : <Login />
+      } />
       <Route path="/" element={
         <ProtectedRoute>
-          {userProfile.role === 'resident' ? <Index /> : <Navigate to={getDefaultRoute()} replace />}
+          {userProfile?.role === 'resident' ? <Index /> : <Navigate to={getDefaultRoute()} replace />}
         </ProtectedRoute>
       } />
       <Route path="/discovery" element={
         <ProtectedRoute>
-          {['prospect', 'super_admin'].includes(userProfile.role) ? <Discovery /> : <Navigate to={getDefaultRoute()} replace />}
+          {['prospect', 'super_admin'].includes(userProfile?.role || '') ? <Discovery /> : <Navigate to={getDefaultRoute()} replace />}
         </ProtectedRoute>
       } />
       <Route path="/matches" element={
         <ProtectedRoute>
-          {['prospect', 'super_admin'].includes(userProfile.role) ? <Matches /> : <Navigate to={getDefaultRoute()} replace />}
+          {['prospect', 'super_admin'].includes(userProfile?.role || '') ? <Matches /> : <Navigate to={getDefaultRoute()} replace />}
         </ProtectedRoute>
       } />
       <Route path="/movein" element={
         <ProtectedRoute>
-          {['resident', 'super_admin'].includes(userProfile.role) ? <MoveIn /> : <Navigate to={getDefaultRoute()} replace />}
+          {['resident', 'super_admin'].includes(userProfile?.role || '') ? <MoveIn /> : <Navigate to={getDefaultRoute()} replace />}
         </ProtectedRoute>
       } />
       <Route path="/movein/:homeId" element={
         <ProtectedRoute>
-          {['resident', 'super_admin'].includes(userProfile.role) ? <MoveIn /> : <Navigate to={getDefaultRoute()} replace />}
+          {['resident', 'super_admin'].includes(userProfile?.role || '') ? <MoveIn /> : <Navigate to={getDefaultRoute()} replace />}
         </ProtectedRoute>
       } />
       <Route path="/maintenance" element={
         <ProtectedRoute>
-          {['maintenance', 'super_admin'].includes(userProfile.role) ? <Maintenance /> : <Navigate to={getDefaultRoute()} replace />}
+          {['maintenance', 'super_admin'].includes(userProfile?.role || '') ? <Maintenance /> : <Navigate to={getDefaultRoute()} replace />}
         </ProtectedRoute>
       } />
       <Route path="/operator" element={
         <ProtectedRoute>
-          {['senior_operator', 'operator', 'leasing', 'super_admin'].includes(userProfile.role) ? <Operator /> : <Navigate to={getDefaultRoute()} replace />}
+          {['senior_operator', 'operator', 'leasing', 'super_admin'].includes(userProfile?.role || '') ? <Operator /> : <Navigate to={getDefaultRoute()} replace />}
         </ProtectedRoute>
       } />
       <Route path="/super-admin" element={
         <ProtectedRoute>
-          {userProfile.role === 'super_admin' ? <SuperAdmin /> : <Navigate to={getDefaultRoute()} replace />}
+          {userProfile?.role === 'super_admin' ? <SuperAdmin /> : <Navigate to={getDefaultRoute()} replace />}
         </ProtectedRoute>
       } />
       <Route path="/owner-login" element={<OwnerLogin />} />

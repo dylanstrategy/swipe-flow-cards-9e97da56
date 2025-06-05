@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const canImpersonate = userProfile?.role === 'super_admin';
 
   useEffect(() => {
-    // Set up auth state listener
+    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth event:', event, session?.user?.email);
@@ -41,7 +41,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await fetchUserProfile(session.user.id);
+          // Defer profile fetching to avoid recursive issues
+          setTimeout(async () => {
+            await fetchUserProfile(session.user.id);
+          }, 0);
+          
+          // If we just signed in and we're on the login page, redirect
+          if (event === 'SIGNED_IN' && window.location.pathname === '/login') {
+            window.location.href = '/';
+          }
         } else {
           setUserProfile(null);
         }
@@ -52,10 +60,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Existing session:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
+      
       if (session?.user) {
         fetchUserProfile(session.user.id);
+        // If user is already logged in and on login page, redirect
+        if (window.location.pathname === '/login') {
+          window.location.href = '/';
+        }
       }
       setLoading(false);
     });
@@ -93,6 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) throw error;
     } catch (error: any) {
+      console.error('Google sign in error:', error);
       toast({
         title: "Authentication Error",
         description: error.message,
@@ -107,6 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       setImpersonatedRole(null);
+      window.location.href = '/login';
     } catch (error: any) {
       toast({
         title: "Sign Out Error",
