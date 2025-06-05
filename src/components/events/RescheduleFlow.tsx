@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ChevronLeft, Calendar, Clock, Check, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -185,43 +184,17 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
     const availableSlots = getAvailableTimeSlots(selectedDate);
 
     return (
-      <div 
-        className="fixed inset-0 bg-white z-[9999] flex flex-col overflow-hidden"
-        onTouchMove={(e) => e.stopPropagation()}
-        onTouchStart={(e) => e.stopPropagation()}
-        style={{ 
-          width: '100vw', 
-          height: '100vh',
-          touchAction: 'none'
-        }}
+      <SwipeableScreen
+        title="Select Time"
+        currentStep={currentStep}
+        totalSteps={3}
+        onClose={handleCloseStep2}
+        onSwipeUp={canProceedFromCurrentStep() ? nextStep : undefined}
+        onSwipeLeft={prevStep}
+        canSwipeUp={canProceedFromCurrentStep()}
       >
-        {/* Header */}
-        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Select Time</h1>
-            <span className="text-xs text-gray-500">Step {currentStep} of 3</span>
-          </div>
-          <button
-            onClick={handleCloseStep2}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <span className="text-gray-600 text-xl">×</span>
-          </button>
-        </div>
-        
-        {/* Progress Bar */}
-        <div className="flex-shrink-0 px-4 py-2">
-          <div className="w-full bg-gray-200 rounded-full h-1.5">
-            <div 
-              className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
-              style={{ width: `${(currentStep / 3) * 100}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 flex flex-col p-4 overflow-hidden">
-          <div className="flex-shrink-0 mb-4">
+        <div className="h-full pb-32">
+          <div className="mb-4">
             <p className="text-gray-600 mb-1">Selected date: <strong>{formatDate(selectedDate)}</strong></p>
             {event.assignedTeamMember && (
               <p className="text-sm text-gray-500">
@@ -230,37 +203,35 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
             )}
           </div>
 
-          <div className="flex-1 min-h-0 pb-32">
-            <div 
-              className="h-full overflow-y-auto"
-              style={{ 
-                touchAction: 'pan-y',
-                overscrollBehavior: 'contain',
-                WebkitOverflowScrolling: 'touch'
-              }}
-              onTouchMove={(e) => e.stopPropagation()}
-            >
-              <div className="grid grid-cols-2 gap-3 pr-2">
-                {availableSlots.map((slot) => (
-                  <button
-                    key={slot.start}
-                    onClick={() => slot.available && setSelectedTime(slot.start)}
-                    disabled={!slot.available}
-                    className={`p-3 rounded-lg border text-center transition-colors ${
-                      selectedTime === slot.start
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : slot.available
-                        ? 'bg-white text-gray-900 border-gray-200 hover:border-blue-300'
-                        : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <Clock size={16} />
-                      {formatTime(slot.start)}
-                    </div>
-                  </button>
-                ))}
-              </div>
+          <div 
+            className="h-full overflow-y-auto"
+            style={{ 
+              touchAction: 'pan-y',
+              overscrollBehavior: 'contain',
+              WebkitOverflowScrolling: 'touch'
+            }}
+            onTouchMove={(e) => e.stopPropagation()}
+          >
+            <div className="grid grid-cols-2 gap-3 pr-2">
+              {availableSlots.map((slot) => (
+                <button
+                  key={slot.start}
+                  onClick={() => slot.available && setSelectedTime(slot.start)}
+                  disabled={!slot.available}
+                  className={`p-3 rounded-lg border text-center transition-colors ${
+                    selectedTime === slot.start
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : slot.available
+                      ? 'bg-white text-gray-900 border-gray-200 hover:border-blue-300'
+                      : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                  }`}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <Clock size={16} />
+                    {formatTime(slot.start)}
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -275,7 +246,7 @@ const RescheduleFlow = ({ event, onClose, onConfirm, userRole }: RescheduleFlowP
             showBack={true}
           />
         )}
-      </div>
+      </SwipeableScreen>
     );
   }
 
