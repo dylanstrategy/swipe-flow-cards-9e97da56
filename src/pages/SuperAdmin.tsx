@@ -10,9 +10,11 @@ import RoleImpersonation from '@/components/RoleImpersonation';
 import CreateUserModal from '@/components/admin/CreateUserModal';
 import CreatePropertyModal from '@/components/admin/CreatePropertyModal';
 import CreateUnitModal from '@/components/admin/CreateUnitModal';
-import { Users, Building, Home, Calendar, Settings, LogOut, Plus, Edit, Trash2 } from 'lucide-react';
+import PropertyDetailModal from '@/components/admin/PropertyDetailModal';
+import { Users, Building, Home, Calendar, Settings, LogOut, Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import type { Property } from '@/types/supabase';
 
 const SuperAdmin = () => {
   const { userProfile, signOut } = useAuth();
@@ -24,6 +26,8 @@ const SuperAdmin = () => {
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [showCreateProperty, setShowCreateProperty] = useState(false);
   const [showCreateUnit, setShowCreateUnit] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [showPropertyDetail, setShowPropertyDetail] = useState(false);
 
   const getRoleColor = (role: string) => {
     const colors = {
@@ -131,6 +135,22 @@ const SuperAdmin = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const getPropertyUnitCount = (propertyId: string) => {
+    return units.filter(unit => unit.property_id === propertyId).length;
+  };
+
+  const getPropertyOccupancyRate = (propertyId: string) => {
+    const propertyUnits = units.filter(unit => unit.property_id === propertyId);
+    if (propertyUnits.length === 0) return 0;
+    const occupied = propertyUnits.filter(unit => unit.status === 'occupied').length;
+    return Math.round((occupied / propertyUnits.length) * 100);
+  };
+
+  const handleViewProperty = (property: Property) => {
+    setSelectedProperty(property);
+    setShowPropertyDetail(true);
   };
 
   return (
@@ -250,8 +270,8 @@ const SuperAdmin = () => {
                     <Badge className="bg-green-100 text-green-800">Active</Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Google OAuth</span>
-                    <Badge className="bg-green-100 text-green-800">Configured</Badge>
+                    <span className="text-sm text-gray-600">Real-time Updates</span>
+                    <Badge className="bg-green-100 text-green-800">Synced</Badge>
                   </div>
                 </div>
               </CardContent>
@@ -334,33 +354,58 @@ const SuperAdmin = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {properties.map((property) => (
-                      <div key={property.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div>
-                          <h3 className="font-medium">{property.name}</h3>
-                          <p className="text-sm text-gray-600">{property.address}</p>
-                          <p className="text-xs text-gray-500">Created: {new Date(property.created_at).toLocaleDateString()}</p>
+                    {properties.map((property) => {
+                      const unitCount = getPropertyUnitCount(property.id);
+                      const occupancyRate = getPropertyOccupancyRate(property.id);
+                      
+                      return (
+                        <div key={property.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="font-medium">{property.name}</h3>
+                              <Badge className="bg-blue-100 text-blue-800">
+                                {unitCount} units
+                              </Badge>
+                              <Badge className={occupancyRate >= 90 ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}>
+                                {occupancyRate}% occupied
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-600">{property.address}</p>
+                            <p className="text-xs text-gray-500">
+                              Created: {new Date(property.created_at).toLocaleDateString()} • 
+                              Timezone: {property.timezone}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewProperty(property)}
+                              className="flex items-center gap-1"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View Details
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setShowCreateUnit(true)}
+                            >
+                              <Plus className="w-4 h-4 mr-1" />
+                              Add Unit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => handleDeleteProperty(property.id, property.name)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setShowCreateUnit(true)}
-                          >
-                            <Plus className="w-4 h-4 mr-1" />
-                            Add Unit
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700"
-                            onClick={() => handleDeleteProperty(property.id, property.name)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
@@ -477,12 +522,27 @@ const SuperAdmin = () => {
       <CreatePropertyModal 
         isOpen={showCreateProperty} 
         onClose={() => setShowCreateProperty(false)}
-        onPropertyCreated={refetchProperties}
+        onPropertyCreated={() => {
+          refetchProperties();
+          refetchUnits(); // Refresh units when property is created with units
+        }}
       />
       <CreateUnitModal 
         isOpen={showCreateUnit} 
         onClose={() => setShowCreateUnit(false)}
         onUnitCreated={refetchUnits}
+      />
+      <PropertyDetailModal
+        property={selectedProperty}
+        isOpen={showPropertyDetail}
+        onClose={() => {
+          setShowPropertyDetail(false);
+          setSelectedProperty(null);
+        }}
+        onPropertyUpdated={() => {
+          refetchProperties();
+          refetchUnits();
+        }}
       />
     </div>
   );
