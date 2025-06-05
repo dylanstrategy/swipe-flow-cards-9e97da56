@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -5,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, User, Phone, Mail, Home, Calendar, ChevronRight, ArrowLeft, Truck, FileText, Upload, Download, Eye, TruckIcon, RefreshCw, AlertTriangle, CheckCircle, XCircle, ArrowUpDown } from 'lucide-react';
 import MoveInTracker from '../MoveInTracker';
 import MoveOutTracker from '../MoveOutTracker';
@@ -78,7 +80,7 @@ const OperatorResidentsTab = () => {
       const matchesSearch = resident.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            resident.unitNumber.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = filterStatus === 'all' || resident.status === filterStatus;
-      const matchesUnitType = filterUnitType === 'all' || resident.unitType === filterUnitType;
+      const matchesUnitType = filterUnitType === 'all' || (resident.unitType || 'Unknown') === filterUnitType;
       return matchesSearch && matchesStatus && matchesUnitType;
     })
     .sort((a, b) => {
@@ -721,7 +723,7 @@ const OperatorResidentsTab = () => {
                         </div>
                         <div>
                           <h3 className="font-semibold text-gray-900">{resident.fullName}</h3>
-                          <p className="text-sm text-gray-600">Unit {resident.unitNumber} • {resident.unitType}</p>
+                          <p className="text-sm text-gray-600">Unit {resident.unitNumber} • {resident.unitType || 'Unknown'}</p>
                         </div>
                       </div>
                       <ChevronRight className="w-5 h-5 text-gray-400" />
@@ -847,7 +849,7 @@ const OperatorResidentsTab = () => {
                     </div>
                   </TableCell>
                   <TableCell>{resident.unitNumber}</TableCell>
-                  <TableCell>{resident.unitType}</TableCell>
+                  <TableCell>{resident.unitType || 'Unknown'}</TableCell>
                   <TableCell>
                     <Badge className={getResidentStatusColor(resident.status)}>
                       {resident.status}

@@ -2,17 +2,22 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { mockResidents, type ResidentProfile } from '@/data/mockResidents';
 
+// Extended ResidentProfile type to include unitType
+interface ExtendedResidentProfile extends ResidentProfile {
+  unitType?: string;
+}
+
 interface ResidentContextType {
-  profile: ResidentProfile;
-  allResidents: ResidentProfile[];
-  updateProfile: (updates: Partial<ResidentProfile>) => void;
+  profile: ExtendedResidentProfile;
+  allResidents: ExtendedResidentProfile[];
+  updateProfile: (updates: Partial<ExtendedResidentProfile>) => void;
   updateResidentStatus: (residentId: string, newStatus: ResidentProfile['status']) => void;
-  getResidentByUnit: (unitNumber: string) => ResidentProfile | undefined;
-  getCurrentResidents: () => ResidentProfile[];
-  getFutureResidents: () => ResidentProfile[];
+  getResidentByUnit: (unitNumber: string) => ExtendedResidentProfile | undefined;
+  getCurrentResidents: () => ExtendedResidentProfile[];
+  getFutureResidents: () => ExtendedResidentProfile[];
   getVacantUnits: () => string[];
   getOccupancyRate: () => number;
-  getNoticeResidents: () => ResidentProfile[];
+  getNoticeResidents: () => ExtendedResidentProfile[];
   getAvailableUnits: () => string[];
   getPPFProjections: (timeframe: number) => {
     expectedMoveOuts: number;
@@ -33,8 +38,23 @@ export const useResident = () => {
 };
 
 export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [allResidents, setAllResidents] = useState<ResidentProfile[]>(mockResidents);
-  const [profile, setProfile] = useState<ResidentProfile>(mockResidents[0]);
+  // Add unitType to existing residents
+  const enrichedResidents: ExtendedResidentProfile[] = mockResidents.map(resident => ({
+    ...resident,
+    unitType: getUnitType(resident.unitNumber)
+  }));
+
+  const [allResidents, setAllResidents] = useState<ExtendedResidentProfile[]>(enrichedResidents);
+  const [profile, setProfile] = useState<ExtendedResidentProfile>(enrichedResidents[0]);
+
+  // Helper function to determine unit type based on unit number
+  function getUnitType(unitNumber: string): string {
+    // Simple logic to assign unit types based on unit number
+    const num = parseInt(unitNumber);
+    if (num % 10 <= 2) return '1BR';
+    if (num % 10 <= 6) return '2BR';
+    return '3BR';
+  }
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -51,7 +71,7 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
-  const updateProfile = (updates: Partial<ResidentProfile>) => {
+  const updateProfile = (updates: Partial<ExtendedResidentProfile>) => {
     const updatedProfile = { ...profile, ...updates };
     setProfile(updatedProfile);
     localStorage.setItem('residentProfile', JSON.stringify(updatedProfile));
@@ -177,4 +197,4 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   );
 };
 
-export { type ResidentProfile };
+export { type ResidentProfile, type ExtendedResidentProfile };
