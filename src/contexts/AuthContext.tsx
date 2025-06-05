@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [impersonatedRole, setImpersonatedRole] = useState<AppRole | null>(null);
+  const [initialized, setInitialized] = useState(false);
   const { toast } = useToast();
 
   const isImpersonating = impersonatedRole !== null;
@@ -61,37 +62,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('🚀 AuthProvider initializing...');
     
     let mounted = true;
+    let isProcessing = false;
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('🔔 Auth state change:', event, 'Session exists:', !!session);
+        console.log('🔔 Auth state change:', event, 'Session exists:', !!session, 'Processing:', isProcessing);
         
-        if (!mounted) return;
+        if (!mounted || isProcessing) return;
         
-        if (session?.user) {
-          console.log('✅ User session found:', session.user.email);
-          setSession(session);
-          setUser(session.user);
-          
-          // Fetch profile
-          const profile = await fetchUserProfile(session.user.id);
-          if (mounted) {
-            setUserProfile(profile);
-            setLoading(false);
+        isProcessing = true;
+        
+        try {
+          if (session?.user) {
+            console.log('✅ User session found:', session.user.email);
+            setSession(session);
+            setUser(session.user);
+            
+            // Fetch profile
+            const profile = await fetchUserProfile(session.user.id);
+            if (mounted) {
+              setUserProfile(profile);
+            }
+          } else {
+            console.log('🚫 No session');
+            setSession(null);
+            setUser(null);
+            setUserProfile(null);
+            setImpersonatedRole(null);
           }
-        } else {
-          console.log('🚫 No session');
-          setSession(null);
-          setUser(null);
-          setUserProfile(null);
-          setImpersonatedRole(null);
+        } catch (error) {
+          console.error('❌ Error in auth state change:', error);
+        } finally {
           if (mounted) {
             setLoading(false);
+            setInitialized(true);
+            isProcessing = false;
           }
         }
       }
     );
+
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!mounted) return;
+        
+        if (!session) {
+          setLoading(false);
+          setInitialized(true);
+        }
+        // If there is a session, the auth state change will handle it
+      } catch (error) {
+        console.error('❌ Error getting initial session:', error);
+        if (mounted) {
+          setLoading(false);
+          setInitialized(true);
+        }
+      }
+    };
+
+    getInitialSession();
 
     return () => {
       mounted = false;
@@ -102,15 +134,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Debug logging
   useEffect(() => {
-    console.log('🔍 AuthContext state:', {
-      hasUser: !!user,
-      hasSession: !!session,
-      hasProfile: !!userProfile,
-      loading,
-      userEmail: user?.email,
-      profileRole: userProfile?.role
-    });
-  }, [user, session, userProfile, loading]);
+    if (initialized) {
+      console.log('🔍 AuthContext state:', {
+        hasUser: !!user,
+        hasSession: !!session,
+        hasProfile: !!userProfile,
+        loading,
+        userEmail: user?.email,
+        profileRole: userProfile?.role
+      });
+    }
+  }, [user, session, userProfile, loading, initialized]);
 
   const signInWithGoogle = async () => {
     try {
