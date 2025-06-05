@@ -379,13 +379,6 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
                     <option value="30">30 minutes</option>
                   </select>
                 </div>
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium">Allow Weekend Scheduling</div>
-                    <div className="text-sm text-gray-600">Enable scheduling on weekends</div>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
               </div>
             </div>
           </div>
