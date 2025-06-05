@@ -34,34 +34,34 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
   }
   
   if (allowedRoles && !allowedRoles.includes(userProfile.role)) {
-    // Redirect to appropriate dashboard based on role
-    const getDefaultRoute = () => {
-      // Special case for super admin email
-      if (userProfile.email === 'info@applaudliving.com') {
-        return '/super-admin';
-      }
-      
-      switch (userProfile.role) {
-        case 'super_admin':
-          return '/super-admin';
-        case 'senior_operator':
-        case 'operator':
-        case 'leasing':
-          return '/operator';
-        case 'maintenance':
-          return '/maintenance';
-        case 'resident':
-          return '/';
-        case 'prospect':
-          return '/discovery';
-        default:
-          return '/unknown-role';
-      }
-    };
-    return <Navigate to={getDefaultRoute()} replace />;
+    return <Navigate to={getDefaultRouteForRole(userProfile)} replace />;
   }
   
   return <>{children}</>;
+}
+
+function getDefaultRouteForRole(userProfile: any): string {
+  // Special case for super admin email
+  if (userProfile.email === 'info@applaudliving.com') {
+    return '/super-admin';
+  }
+  
+  switch (userProfile.role) {
+    case 'super_admin':
+      return '/super-admin';
+    case 'senior_operator':
+    case 'operator':
+    case 'leasing':
+      return '/operator';
+    case 'maintenance':
+      return '/maintenance';
+    case 'resident':
+      return '/';
+    case 'prospect':
+      return '/discovery';
+    default:
+      return '/unknown-role';
+  }
 }
 
 function AppRoutes() {
@@ -76,62 +76,20 @@ function AppRoutes() {
     );
   }
 
-  // If user is authenticated, redirect from login pages
-  if (user && userProfile) {
-    const getDefaultRoute = () => {
-      // Special case for super admin email
-      if (userProfile.email === 'info@applaudliving.com') {
-        return '/super-admin';
-      }
-      
-      switch (userProfile.role) {
-        case 'super_admin':
-          return '/super-admin';
-        case 'senior_operator':
-        case 'operator':
-        case 'leasing':
-          return '/operator';
-        case 'maintenance':
-          return '/maintenance';
-        case 'resident':
-          return '/';
-        case 'prospect':
-          return '/discovery';
-        default:
-          return '/unknown-role';
-      }
-    };
-
-    const defaultRoute = getDefaultRoute();
-    console.log('User authenticated, redirecting to:', defaultRoute, 'Role:', userProfile.role, 'Email:', userProfile.email);
-  }
+  // If user is authenticated, redirect from login pages to appropriate dashboard
+  const shouldRedirectFromLogin = user && userProfile;
+  const defaultRoute = shouldRedirectFromLogin ? getDefaultRouteForRole(userProfile) : null;
 
   return (
     <Routes>
       <Route path="/login" element={
-        user && userProfile ? (
-          <Navigate to={
-            userProfile.email === 'info@applaudliving.com' ? '/super-admin' :
-            userProfile.role === 'super_admin' ? '/super-admin' :
-            userProfile.role === 'resident' ? '/' :
-            ['senior_operator', 'operator', 'leasing'].includes(userProfile.role) ? '/operator' :
-            userProfile.role === 'maintenance' ? '/maintenance' :
-            userProfile.role === 'prospect' ? '/discovery' :
-            '/unknown-role'
-          } replace />
+        shouldRedirectFromLogin ? (
+          <Navigate to={defaultRoute!} replace />
         ) : <Login />
       } />
       <Route path="/owner-login" element={
-        user && userProfile ? (
-          <Navigate to={
-            userProfile.email === 'info@applaudliving.com' ? '/super-admin' :
-            userProfile.role === 'super_admin' ? '/super-admin' :
-            userProfile.role === 'resident' ? '/' :
-            ['senior_operator', 'operator', 'leasing'].includes(userProfile.role) ? '/operator' :
-            userProfile.role === 'maintenance' ? '/maintenance' :
-            userProfile.role === 'prospect' ? '/discovery' :
-            '/unknown-role'
-          } replace />
+        shouldRedirectFromLogin ? (
+          <Navigate to={defaultRoute!} replace />
         ) : <OwnerLogin />
       } />
       <Route path="/unknown-role" element={

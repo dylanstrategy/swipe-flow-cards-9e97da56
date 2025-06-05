@@ -62,79 +62,66 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Set up loading timeout
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (loading) {
-        console.error('Auth loading timeout reached');
-        setLoading(false);
-        toast({
-          title: "Login Timeout",
-          description: "Login is taking longer than expected. Please refresh or try again.",
-          variant: "destructive",
-        });
-      }
-    }, 10000); // 10 second timeout
-
-    return () => clearTimeout(timeout);
-  }, [loading, toast]);
-
   useEffect(() => {
     let mounted = true;
+    
+    console.log('Initializing auth...');
 
-    const initializeAuth = async () => {
-      try {
-        console.log('Initializing auth...');
-        
-        // Set up auth state listener first
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            if (!mounted) return;
-
-            console.log('Auth event:', event, 'User:', session?.user?.email, 'Session exists:', !!session);
-            
-            setSession(session);
-            setUser(session?.user ?? null);
-            
-            if (session?.user) {
-              // Use setTimeout to avoid blocking the auth state change
-              setTimeout(async () => {
-                if (!mounted) return;
-                try {
-                  const profile = await fetchUserProfile(session.user.id);
-                  if (mounted && profile) {
-                    setUserProfile(profile);
-                  }
-                } catch (error) {
-                  console.error('Error handling signed in user:', error);
-                }
-                if (mounted) {
-                  setLoading(false);
-                }
-              }, 0);
-            } else {
-              if (mounted) {
-                setUserProfile(null);
-                setLoading(false);
-              }
-            }
-          }
-        );
-
-        // Check for existing session
-        const { data: { session: existingSession } } = await supabase.auth.getSession();
-        
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
         if (!mounted) return;
         
-        console.log('Existing session check:', existingSession?.user?.email, 'Session exists:', !!existingSession);
+        console.log('Auth event:', event, 'Session:', !!session, 'User:', session?.user?.email);
         
-        if (existingSession?.user) {
-          setSession(existingSession);
-          setUser(existingSession.user);
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user && event !== 'TOKEN_REFRESHED') {
+          console.log('Fetching user profile after auth event...');
+          try {
+            const profile = await fetchUserProfile(session.user.id);
+            if (mounted) {
+              setUserProfile(profile);
+            }
+          } catch (error) {
+            console.error('Error fetching user profile:', error);
+          }
+        } else if (!session) {
+          if (mounted) {
+            setUserProfile(null);
+          }
+        }
+        
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    );
+
+    // Check for existing session
+    const checkSession = async () => {
+      try {
+        console.log('Checking for existing session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Session check error:', error);
+          if (mounted) {
+            setLoading(false);
+          }
+          return;
+        }
+        
+        console.log('Existing session found:', !!session, 'User:', session?.user?.email);
+        
+        if (session?.user && mounted) {
+          setSession(session);
+          setUser(session.user);
           
           try {
-            const profile = await fetchUserProfile(existingSession.user.id);
-            if (mounted && profile) {
+            const profile = await fetchUserProfile(session.user.id);
+            if (mounted) {
               setUserProfile(profile);
             }
           } catch (error) {
@@ -145,23 +132,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (mounted) {
           setLoading(false);
         }
-
-        return () => {
-          subscription.unsubscribe();
-        };
-        
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        console.error('Session check failed:', error);
         if (mounted) {
           setLoading(false);
         }
       }
     };
 
-    initializeAuth();
+    checkSession();
 
     return () => {
       mounted = false;
+      subscription.unsubscribe();
     };
   }, []);
 
@@ -246,10 +229,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      console.log('Signing out...');
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       setImpersonatedRole(null);
-      window.location.href = '/login';
+      setUserProfile(null);
+      setUser(null);
+      setSession(null);
     } catch (error: any) {
       toast({
         title: "Sign Out Error",
