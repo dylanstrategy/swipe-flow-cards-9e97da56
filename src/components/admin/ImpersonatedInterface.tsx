@@ -3,7 +3,7 @@ import React from 'react';
 import type { AppRole } from '@/types/supabase';
 
 // Import the page components
-import ResidentPreview from '@/components/admin/ResidentPreview';
+import Index from '@/pages/Index';
 import Discovery from '@/pages/Discovery';
 import Matches from '@/pages/Matches';
 import MoveIn from '@/pages/MoveIn';
@@ -16,7 +16,6 @@ interface ImpersonatedInterfaceProps {
 
 const ImpersonatedInterface: React.FC<ImpersonatedInterfaceProps> = ({ role }) => {
   console.log('🎭 ImpersonatedInterface rendering for role:', role);
-  console.log('🎭 ResidentPreview component loaded:', !!ResidentPreview);
 
   // Render the appropriate interface based on role
   const renderRoleInterface = () => {
@@ -24,12 +23,10 @@ const ImpersonatedInterface: React.FC<ImpersonatedInterfaceProps> = ({ role }) =
     try {
       switch (role) {
         case 'resident':
-          console.log('🏠 About to render ResidentPreview component');
-          const ResidentComponent = ResidentPreview;
-          console.log('🏠 ResidentComponent:', ResidentComponent);
+          console.log('🏠 Rendering resident interface (Index)');
           return (
             <div className="h-full">
-              <ResidentComponent />
+              <Index />
             </div>
           );
         case 'prospect':
@@ -56,17 +53,17 @@ const ImpersonatedInterface: React.FC<ImpersonatedInterfaceProps> = ({ role }) =
             </div>
           );
         case 'vendor':
-          console.log('🏪 Rendering vendor interface (ResidentPreview fallback)');
+          console.log('🏪 Rendering vendor interface (Index fallback)');
           return (
             <div className="h-full">
-              <ResidentPreview />
+              <Index />
             </div>
           );
         default:
-          console.log('❓ Unknown role, rendering default interface (ResidentPreview)');
+          console.log('❓ Unknown role, rendering default interface (Index)');
           return (
             <div className="h-full">
-              <ResidentPreview />
+              <Index />
             </div>
           );
       }
