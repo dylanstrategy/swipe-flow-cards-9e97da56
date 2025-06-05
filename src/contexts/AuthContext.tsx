@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -62,48 +61,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     let mounted = true;
 
-    // Handle auth state changes
-    const handleAuthChange = async (event: string, session: Session | null) => {
-      console.log('🔔 Auth state change:', event, 'Session exists:', !!session);
-      
-      if (!mounted) return;
-      
-      try {
-        if (session?.user) {
-          console.log('✅ User session found:', session.user.email);
-          setSession(session);
-          setUser(session.user);
-          
-          // Fetch profile
-          const profile = await fetchUserProfile(session.user.id);
-          if (mounted) {
-            setUserProfile(profile);
+    // Set up auth state listener - this will handle ALL auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('🔔 Auth state change:', event, 'Session exists:', !!session);
+        
+        if (!mounted) return;
+        
+        try {
+          if (session?.user) {
+            console.log('✅ User session found:', session.user.email);
+            setSession(session);
+            setUser(session.user);
+            
+            // Fetch profile
+            const profile = await fetchUserProfile(session.user.id);
+            if (mounted) {
+              setUserProfile(profile);
+            }
+          } else {
+            console.log('🚫 No session');
+            setSession(null);
+            setUser(null);
+            setUserProfile(null);
+            setImpersonatedRole(null);
           }
-        } else {
-          console.log('🚫 No session');
-          setSession(null);
-          setUser(null);
-          setUserProfile(null);
-          setImpersonatedRole(null);
-        }
-      } catch (error) {
-        console.error('❌ Error in auth state change:', error);
-      } finally {
-        if (mounted) {
-          setLoading(false);
+        } catch (error) {
+          console.error('❌ Error in auth state change:', error);
+        } finally {
+          if (mounted) {
+            setLoading(false);
+          }
         }
       }
-    };
+    );
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
-
-    // Get initial session
+    // Check for initial session - but don't manually trigger auth change
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (mounted && session) {
-        // Let the auth state change handler process this
-        handleAuthChange('INITIAL_SESSION', session);
-      } else if (mounted) {
+      if (mounted && !session) {
+        // Only set loading to false if there's no session
+        // If there is a session, the onAuthStateChange will handle it
         setLoading(false);
       }
     });
