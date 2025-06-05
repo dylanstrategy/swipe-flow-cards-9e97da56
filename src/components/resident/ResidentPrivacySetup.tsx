@@ -41,15 +41,47 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
   const handleToggleChange = async (key: keyof typeof currentSettings, value: boolean) => {
     console.log(`Toggling ${key} to ${value}`);
     const newData = { ...currentSettings, [key]: value };
+    
+    // Update local state immediately for instant UI feedback
     setCurrentSettings(newData);
-    await saveSettings(newData);
+    
+    // Save to storage/database
+    try {
+      await saveSettings(newData);
+      console.log(`Successfully saved ${key} setting:`, value);
+    } catch (error) {
+      console.error(`Error saving ${key} setting:`, error);
+      // Revert the local state if save failed
+      setCurrentSettings(currentSettings);
+      toast({
+        title: "Save Failed",
+        description: `Failed to save ${key} setting. Please try again.`,
+        duration: 3000,
+      });
+    }
   };
 
   const handleSelectChange = async (key: keyof typeof currentSettings, value: string) => {
     console.log(`Changing ${key} to ${value}`);
     const newData = { ...currentSettings, [key]: value };
+    
+    // Update local state immediately
     setCurrentSettings(newData);
-    await saveSettings(newData);
+    
+    // Save to storage/database
+    try {
+      await saveSettings(newData);
+      console.log(`Successfully saved ${key} setting:`, value);
+    } catch (error) {
+      console.error(`Error saving ${key} setting:`, error);
+      // Revert the local state if save failed
+      setCurrentSettings(currentSettings);
+      toast({
+        title: "Save Failed",
+        description: `Failed to save ${key} setting. Please try again.`,
+        duration: 3000,
+      });
+    }
   };
 
   const handleSave = async () => {
