@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from '@supabase/supabase-js';
@@ -57,7 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const canImpersonate = userProfile?.role === 'super_admin';
 
   const fetchUserProfile = async (userId: string) => {
-    console.log('Fetching user profile for:', userId);
+    console.log('🔍 Fetching user profile for:', userId);
     try {
       const { data, error } = await supabase
         .from("users")
@@ -66,35 +65,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (error) {
-        console.error('Error fetching user profile:', error);
+        console.error('❌ Error fetching user profile:', error);
+        // If no profile exists, let's check auth.users to see what data we have
+        console.log('🔍 Checking auth.users table for missing profile...');
+        const { data: authData } = await supabase.auth.getUser();
+        console.log('🔍 Auth user data:', authData);
         return null;
       }
 
-      console.log('User profile fetched:', data);
+      console.log('✅ User profile fetched successfully:', data);
       return data;
     } catch (error) {
-      console.error('Exception fetching user profile:', error);
+      console.error('💥 Exception fetching user profile:', error);
       return null;
     }
   };
 
   useEffect(() => {
-    console.log('AuthContext initializing...');
+    console.log('🔄 AuthContext initializing...');
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state change:', event, session?.user?.email);
+      console.log('🔔 Auth state change:', event, 'User:', session?.user?.email);
       
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        // Defer profile fetch to avoid blocking
+      if (event === 'SIGNED_IN' && session?.user) {
+        console.log('🎉 User signed in, fetching profile...');
+        setUser(session.user);
+        
+        // Give a small delay to allow triggers to complete
         setTimeout(async () => {
           const profile = await fetchUserProfile(session.user.id);
           setUserProfile(profile);
           setLoading(false);
-        }, 0);
-      } else {
+          
+          console.log('📊 Auth Context State Update:');
+          console.log('  - User:', session.user.email);
+          console.log('  - Profile:', profile);
+          console.log('  - Role:', profile?.role);
+          console.log('  - Loading:', false);
+        }, 1000);
+      } else if (event === 'SIGNED_OUT') {
+        console.log('👋 User signed out');
+        setUser(null);
         setUserProfile(null);
         setIsImpersonating(false);
         setImpersonatedRole(null);
@@ -102,22 +114,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsDevMode(false);
         setDevModeRole(null);
         setLoading(false);
+      } else {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          const profile = await fetchUserProfile(session.user.id);
+          setUserProfile(profile);
+        } else {
+          setUserProfile(null);
+        }
+        setLoading(false);
       }
     });
 
     // Check for existing session
     const initializeAuth = async () => {
       try {
+        console.log('🔍 Checking for existing session...');
         const { data: { session } } = await supabase.auth.getSession();
-        console.log('Initial session check:', session?.user?.email);
         
         if (session?.user) {
-          const profile = await fetchUserProfile(session.user.id);
+          console.log('✅ Found existing session for:', session.user.email);
           setUser(session.user);
+          const profile = await fetchUserProfile(session.user.id);
           setUserProfile(profile);
+          
+          console.log('📊 Initial Auth State:');
+          console.log('  - User:', session.user.email);
+          console.log('  - Profile:', profile);
+          console.log('  - Role:', profile?.role);
+        } else {
+          console.log('❌ No existing session found');
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
+        console.error('💥 Error initializing auth:', error);
       } finally {
         setLoading(false);
       }
