@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X, Database, MessageSquare, Palette, FileText, Users, Wrench, Home, TrendingUp, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -82,6 +81,10 @@ const PropertySetupModule = ({ onClose }: PropertySetupModuleProps) => {
     const module = modules.find(m => m.id === activeModule);
     if (module) {
       const Component = module.component;
+      // PPFManager expects onClose, others expect onBack
+      if (module.id === 'ppf-management') {
+        return <Component onClose={() => setActiveModule(null)} />;
+      }
       return <Component onBack={() => setActiveModule(null)} />;
     }
   }
