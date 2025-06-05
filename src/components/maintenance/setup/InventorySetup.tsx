@@ -49,12 +49,12 @@ const InventorySetup = () => {
           <CardTitle className="text-base">Add Inventory Item</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label htmlFor="item-name">Item Name</Label>
               <Input id="item-name" placeholder="Air Filter 16x20" />
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="item-category">Category</Label>
               <Select>
                 <SelectTrigger>
@@ -68,31 +68,31 @@ const InventorySetup = () => {
               </Select>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-2">
               <Label htmlFor="current-stock">Current Stock</Label>
               <Input id="current-stock" type="number" placeholder="0" />
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="min-stock">Minimum Stock</Label>
               <Input id="min-stock" type="number" placeholder="5" />
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="max-stock">Maximum Stock</Label>
               <Input id="max-stock" type="number" placeholder="50" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label htmlFor="item-cost">Unit Cost</Label>
               <Input id="item-cost" placeholder="$12.99" />
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="supplier">Supplier</Label>
               <Input id="supplier" placeholder="Supplier name" />
             </div>
           </div>
-          <Button>Add Item</Button>
+          <Button className="w-full sm:w-auto">Add Item</Button>
         </CardContent>
       </Card>
 
@@ -100,9 +100,9 @@ const InventorySetup = () => {
         {items.map(item => (
           <Card key={item.id}>
             <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Package className="w-4 h-4 text-gray-500" />
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Package className="w-4 h-4 text-gray-500 flex-shrink-0" />
                   <h3 className="font-medium">{item.name}</h3>
                   <Badge variant="outline">{item.category}</Badge>
                   {item.currentStock <= item.minStock && (
@@ -112,13 +112,13 @@ const InventorySetup = () => {
                     </Badge>
                   )}
                 </div>
-                <Button variant="outline" size="sm">Edit</Button>
+                <Button variant="outline" size="sm" className="self-start sm:self-center">Edit</Button>
               </div>
-              <div className="grid grid-cols-4 gap-4 text-sm text-gray-600">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm text-gray-600">
                 <div>Stock: {item.currentStock}</div>
                 <div>Min: {item.minStock}</div>
                 <div>Cost: {item.cost}</div>
-                <div>Supplier: {item.supplier}</div>
+                <div className="col-span-2 sm:col-span-1">Supplier: {item.supplier}</div>
               </div>
             </CardContent>
           </Card>
