@@ -477,7 +477,7 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
                         value={formData.petType}
                         onChange={(e) => setFormData({ ...formData, petType: e.target.value })}
                         disabled={!isEditing}
-                        className="w-full px-3 py-2 border rounded-md text-sm bg-white disabled:bg-gray-100"
+                        className={`w-full px-3 py-2 border rounded-md text-sm ${isEditing ? 'bg-white' : 'bg-gray-100'} disabled:bg-gray-100`}
                       >
                         <option value="">Select pet type</option>
                         <option value="dog">Dog</option>
@@ -967,7 +967,7 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
                   <span className="font-medium">Default Meeting Duration</span>
                   <select className="px-2 py-1 border rounded text-sm w-full sm:w-auto">
                     <option value="15">15 minutes</option>
-                    <option value="30" defaultValue="">30 minutes</option>
+                    <option value="30" selected>30 minutes</option>
                     <option value="45">45 minutes</option>
                     <option value="60">1 hour</option>
                     <option value="90">1.5 hours</option>
@@ -979,8 +979,8 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
                   <select className="px-2 py-1 border rounded text-sm w-full sm:w-auto">
                     <option value="0">No buffer</option>
                     <option value="5">5 minutes</option>
-                    <option value="10">10 minutes</option>
-                    <option value="15" defaultValue="">15 minutes</option>
+                    <option value="10" selected>10 minutes</option>
+                    <option value="15">15 minutes</option>
                     <option value="30">30 minutes</option>
                   </select>
                 </div>
