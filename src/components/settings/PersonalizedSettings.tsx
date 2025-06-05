@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import ResidentIdentitySetup from '@/components/resident/ResidentIdentitySetup';
 
 interface PersonalizedSettingsProps {
@@ -8,21 +8,13 @@ interface PersonalizedSettingsProps {
 }
 
 const PersonalizedSettings = ({ onClose }: PersonalizedSettingsProps) => {
-  const [showIdentitySetup, setShowIdentitySetup] = useState(true);
-
   const handleBack = () => {
-    setShowIdentitySetup(false);
     if (onClose) {
       onClose();
     }
   };
 
-  if (showIdentitySetup) {
-    return <ResidentIdentitySetup onBack={handleBack} />;
-  }
-
-  // This fallback shouldn't be reached since we're redirecting to ResidentIdentitySetup
-  return null;
+  return <ResidentIdentitySetup onBack={handleBack} />;
 };
 
 export default PersonalizedSettings;
