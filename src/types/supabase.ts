@@ -75,6 +75,22 @@ export interface Property {
   address: string;
   senior_operator_id?: string;
   timezone?: string;
+  website?: string;
+  management_company?: string;
+  property_manager_name?: string;
+  property_manager_email?: string;
+  property_manager_phone?: string;
+  emergency_contact?: string;
+  emergency_phone?: string;
+  maintenance_company?: string;
+  maintenance_contact?: string;
+  maintenance_phone?: string;
+  leasing_office_hours?: string;
+  amenities?: string;
+  parking_info?: string;
+  pet_policy?: string;
+  smoking_policy?: string;
+  special_instructions?: string;
   created_at: string;
   updated_at: string;
 }

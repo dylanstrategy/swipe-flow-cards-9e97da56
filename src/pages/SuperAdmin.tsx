@@ -1,548 +1,341 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUsers, useProperties, useUnits } from '@/hooks/useSupabaseData';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import RoleImpersonation from '@/components/RoleImpersonation';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  Users, 
+  Building2, 
+  Home, 
+  Plus, 
+  Eye,
+  Settings,
+  BarChart3
+} from 'lucide-react';
+import { useUsers, useProperties } from '@/hooks/useSupabaseData';
 import CreateUserModal from '@/components/admin/CreateUserModal';
 import CreatePropertyModal from '@/components/admin/CreatePropertyModal';
-import CreateUnitModal from '@/components/admin/CreateUnitModal';
 import PropertyDetailModal from '@/components/admin/PropertyDetailModal';
-import { Users, Building, Home, Calendar, Settings, LogOut, Plus, Edit, Trash2, Eye } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import RoleImpersonation from '@/components/RoleImpersonation';
 import type { Property } from '@/types/supabase';
 
 const SuperAdmin = () => {
-  const { userProfile, signOut } = useAuth();
+  const { userProfile } = useAuth();
   const { users, loading: usersLoading, refetch: refetchUsers } = useUsers();
   const { properties, loading: propertiesLoading, refetch: refetchProperties } = useProperties();
-  const { units, loading: unitsLoading, refetch: refetchUnits } = useUnits();
-  const { toast } = useToast();
-
-  const [showCreateUser, setShowCreateUser] = useState(false);
-  const [showCreateProperty, setShowCreateProperty] = useState(false);
-  const [showCreateUnit, setShowCreateUnit] = useState(false);
+  
+  const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
+  const [isCreatePropertyModalOpen, setIsCreatePropertyModalOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-  const [showPropertyDetail, setShowPropertyDetail] = useState(false);
+  const [isPropertyDetailModalOpen, setIsPropertyDetailModalOpen] = useState(false);
 
-  const getRoleColor = (role: string) => {
-    const colors = {
-      super_admin: 'bg-red-100 text-red-800',
-      senior_operator: 'bg-purple-100 text-purple-800',
-      operator: 'bg-blue-100 text-blue-800',
-      maintenance: 'bg-orange-100 text-orange-800',
-      leasing: 'bg-green-100 text-green-800',
-      resident: 'bg-indigo-100 text-indigo-800',
-      prospect: 'bg-gray-100 text-gray-800',
-      former_resident: 'bg-yellow-100 text-yellow-800',
-      vendor: 'bg-cyan-100 text-cyan-800'
-    };
-    return colors[role as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  // Calculate stats from real data
+  const totalUsers = users.length;
+  const totalProperties = properties.length;
+  const activeResidents = users.filter(user => user.role === 'resident').length;
+  const operatorStaff = users.filter(user => 
+    ['senior_operator', 'operator', 'maintenance', 'leasing'].includes(user.role)
+  ).length;
+
+  const handlePropertyClick = (property: Property) => {
+    setSelectedProperty(property);
+    setIsPropertyDetailModalOpen(true);
   };
 
-  const formatRoleName = (role: string) => {
+  const formatRole = (role: string) => {
     return role.split('_').map(word => 
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
   };
 
-  const handleDeleteUser = async (userId: string, userName: string) => {
-    if (!window.confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
-      return;
-    }
-
-    try {
-      const { error } = await supabase.auth.admin.deleteUser(userId);
-      if (error) throw error;
-
-      toast({
-        title: "User Deleted",
-        description: `${userName} has been deleted successfully.`,
-      });
-      refetchUsers();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete user",
-        variant: "destructive",
-      });
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case 'super_admin':
+        return 'bg-red-100 text-red-800';
+      case 'senior_operator':
+        return 'bg-purple-100 text-purple-800';
+      case 'operator':
+        return 'bg-blue-100 text-blue-800';
+      case 'maintenance':
+        return 'bg-orange-100 text-orange-800';
+      case 'leasing':
+        return 'bg-green-100 text-green-800';
+      case 'resident':
+        return 'bg-emerald-100 text-emerald-800';
+      case 'prospect':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const handleDeleteProperty = async (propertyId: string, propertyName: string) => {
-    if (!window.confirm(`Are you sure you want to delete ${propertyName}? This will also delete all associated units.`)) {
-      return;
-    }
-
-    try {
-      // First delete all units in the property
-      const { error: unitsError } = await supabase
-        .from('units')
-        .delete()
-        .eq('property_id', propertyId);
-
-      if (unitsError) throw unitsError;
-
-      // Then delete the property
-      const { error: propertyError } = await supabase
-        .from('properties')
-        .delete()
-        .eq('id', propertyId);
-
-      if (propertyError) throw propertyError;
-
-      toast({
-        title: "Property Deleted",
-        description: `${propertyName} has been deleted successfully.`,
-      });
-      refetchProperties();
-      refetchUnits();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete property",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteUnit = async (unitId: string, unitNumber: string) => {
-    if (!window.confirm(`Are you sure you want to delete Unit ${unitNumber}?`)) {
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('units')
-        .delete()
-        .eq('id', unitId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Unit Deleted",
-        description: `Unit ${unitNumber} has been deleted successfully.`,
-      });
-      refetchUnits();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete unit",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const getPropertyUnitCount = (propertyId: string) => {
-    return units.filter(unit => unit.property_id === propertyId).length;
-  };
-
-  const getPropertyOccupancyRate = (propertyId: string) => {
-    const propertyUnits = units.filter(unit => unit.property_id === propertyId);
-    if (propertyUnits.length === 0) return 0;
-    const occupied = propertyUnits.filter(unit => unit.status === 'occupied').length;
-    return Math.round((occupied / propertyUnits.length) * 100);
-  };
-
-  const handleViewProperty = (property: Property) => {
-    setSelectedProperty(property);
-    setShowPropertyDetail(true);
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Applaud Super Admin</h1>
-              <p className="text-sm text-gray-600">Complete system overview and control</p>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <RoleImpersonation />
-              
-              <div className="flex items-center gap-2">
-                <Badge variant="destructive">Super Admin</Badge>
-                <span className="text-sm text-gray-600">
-                  {userProfile?.first_name} {userProfile?.last_name}
-                </span>
-              </div>
-              
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={signOut}
-                className="flex items-center gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </Button>
-            </div>
-          </div>
+  if (!userProfile || userProfile.role !== 'super_admin') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+          <p className="text-gray-600">You don't have permission to access this page.</p>
         </div>
       </div>
+    );
+  }
 
-      {/* Main Content */}
-      <div className="p-6">
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
-            <TabsTrigger value="properties">Properties</TabsTrigger>
-            <TabsTrigger value="units">Units</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
+  return (
+    <div className="container mx-auto px-4 py-6 max-w-7xl">
+      {/* Header with Role Impersonation */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Super Admin Dashboard</h1>
+          <p className="text-gray-600">Manage users, properties, and system configuration</p>
+        </div>
+        <RoleImpersonation />
+      </div>
 
-          <TabsContent value="overview" className="space-y-6">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{users.length}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {users.filter(u => u.role === 'resident').length} residents
-                  </p>
-                </CardContent>
-              </Card>
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardContent className="p-6 text-center">
+            <Users className="w-8 h-8 mx-auto mb-3 text-blue-600" />
+            <div className="text-3xl font-bold text-gray-900">{totalUsers}</div>
+            <div className="text-sm text-gray-600">Total Users</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6 text-center">
+            <Building2 className="w-8 h-8 mx-auto mb-3 text-green-600" />
+            <div className="text-3xl font-bold text-gray-900">{totalProperties}</div>
+            <div className="text-sm text-gray-600">Properties</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6 text-center">
+            <Home className="w-8 h-8 mx-auto mb-3 text-purple-600" />
+            <div className="text-3xl font-bold text-gray-900">{activeResidents}</div>
+            <div className="text-sm text-gray-600">Active Residents</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6 text-center">
+            <Settings className="w-8 h-8 mx-auto mb-3 text-orange-600" />
+            <div className="text-3xl font-bold text-gray-900">{operatorStaff}</div>
+            <div className="text-sm text-gray-600">Staff Members</div>
+          </CardContent>
+        </Card>
+      </div>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Properties</CardTitle>
-                  <Building className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{properties.length}</div>
-                  <p className="text-xs text-muted-foreground">Active properties</p>
-                </CardContent>
-              </Card>
+      {/* Main Content Tabs */}
+      <Tabs defaultValue="users" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="users">Users Management</TabsTrigger>
+          <TabsTrigger value="properties">Properties</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Units</CardTitle>
-                  <Home className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{units.length}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {units.filter(u => u.status === 'occupied').length} occupied
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Occupancy Rate</CardTitle>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {units.length > 0 ? Math.round((units.filter(u => u.status === 'occupied').length / units.length) * 100) : 0}%
-                  </div>
-                  <p className="text-xs text-muted-foreground">Current occupancy</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Recent Activity */}
-            <Card>
-              <CardHeader>
-                <CardTitle>System Status</CardTitle>
-                <CardDescription>Current system overview</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Database Connection</span>
-                    <Badge className="bg-green-100 text-green-800">Connected</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Authentication System</span>
-                    <Badge className="bg-green-100 text-green-800">Active</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Real-time Updates</span>
-                    <Badge className="bg-green-100 text-green-800">Synced</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="users" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>User Management</CardTitle>
-                    <CardDescription>Manage all system users and their roles</CardDescription>
-                  </div>
-                  <Button onClick={() => setShowCreateUser(true)} className="flex items-center gap-2">
-                    <Plus className="w-4 h-4" />
-                    Add User
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
+        {/* Users Tab */}
+        <TabsContent value="users">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Users ({totalUsers})
+              </CardTitle>
+              <Button 
+                onClick={() => setIsCreateUserModalOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add User
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-96">
                 {usersLoading ? (
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                   </div>
-                ) : (
-                  <ScrollArea className="h-96">
-                    <div className="space-y-4">
-                      {users.map((user) => (
-                        <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div>
-                            <h3 className="font-medium">{user.first_name} {user.last_name}</h3>
-                            <p className="text-sm text-gray-600">{user.email}</p>
-                            <p className="text-xs text-gray-500">Created: {new Date(user.created_at).toLocaleDateString()}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge className={getRoleColor(user.role)}>
-                              {formatRoleName(user.role)}
-                            </Badge>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-red-600 hover:text-red-700"
-                              onClick={() => handleDeleteUser(user.id, `${user.first_name} ${user.last_name}`)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="properties" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Property Management</CardTitle>
-                    <CardDescription>Overview of all properties in the system</CardDescription>
+                ) : users.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    No users found
                   </div>
-                  <Button onClick={() => setShowCreateProperty(true)} className="flex items-center gap-2">
-                    <Plus className="w-4 h-4" />
-                    Add Property
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
+                ) : (
+                  <div className="space-y-3">
+                    {users.map((user) => (
+                      <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                        <div>
+                          <h3 className="font-medium">{user.first_name} {user.last_name}</h3>
+                          <p className="text-sm text-gray-600">{user.email}</p>
+                          {user.phone && (
+                            <p className="text-sm text-gray-500">{user.phone}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className={getRoleBadgeColor(user.role)}>
+                            {formatRole(user.role)}
+                          </Badge>
+                          <span className="text-xs text-gray-500">
+                            {new Date(user.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Properties Tab */}
+        <TabsContent value="properties">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="w-5 h-5" />
+                Properties ({totalProperties})
+              </CardTitle>
+              <Button 
+                onClick={() => setIsCreatePropertyModalOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add Property
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-96">
                 {propertiesLoading ? (
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                   </div>
                 ) : properties.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
-                    No properties configured yet
+                    No properties found
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {properties.map((property) => {
-                      const unitCount = getPropertyUnitCount(property.id);
-                      const occupancyRate = getPropertyOccupancyRate(property.id);
-                      
-                      return (
-                        <div key={property.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h3 className="font-medium">{property.name}</h3>
-                              <Badge className="bg-blue-100 text-blue-800">
-                                {unitCount} units
-                              </Badge>
-                              <Badge className={occupancyRate >= 90 ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}>
-                                {occupancyRate}% occupied
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-gray-600">{property.address}</p>
-                            <p className="text-xs text-gray-500">
-                              Created: {new Date(property.created_at).toLocaleDateString()} • 
-                              Timezone: {property.timezone}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {properties.map((property) => (
+                      <Card key={property.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="font-medium text-lg">{property.name}</h3>
                             <Button
-                              variant="outline"
+                              variant="ghost"
                               size="sm"
-                              onClick={() => handleViewProperty(property)}
+                              onClick={() => handlePropertyClick(property)}
                               className="flex items-center gap-1"
                             >
                               <Eye className="w-4 h-4" />
-                              View Details
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setShowCreateUnit(true)}
-                            >
-                              <Plus className="w-4 h-4 mr-1" />
-                              Add Unit
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-red-600 hover:text-red-700"
-                              onClick={() => handleDeleteProperty(property.id, property.name)}
-                            >
-                              <Trash2 className="w-4 h-4" />
+                              View
                             </Button>
                           </div>
-                        </div>
-                      );
-                    })}
+                          <p className="text-sm text-gray-600 mb-2">{property.address}</p>
+                          {property.website && (
+                            <p className="text-sm text-blue-600 mb-2">{property.website}</p>
+                          )}
+                          <div className="flex items-center justify-between text-xs text-gray-500">
+                            <span>Timezone: {property.timezone}</span>
+                            <span>{new Date(property.created_at).toLocaleDateString()}</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          <TabsContent value="units" className="space-y-6">
+        {/* Analytics Tab */}
+        <TabsContent value="analytics">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Unit Management</CardTitle>
-                    <CardDescription>Overview of all units across properties</CardDescription>
-                  </div>
-                  <Button onClick={() => setShowCreateUnit(true)} className="flex items-center gap-2">
-                    <Plus className="w-4 h-4" />
-                    Add Unit
-                  </Button>
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5" />
+                  User Role Distribution
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                {unitsLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  </div>
-                ) : units.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    No units configured yet
-                  </div>
-                ) : (
-                  <ScrollArea className="h-96">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {units.map((unit) => (
-                        <div key={unit.id} className="p-4 border rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-medium">Unit {unit.unit_number}</h3>
-                            <div className="flex items-center gap-1">
-                              <Badge className={
-                                unit.status === 'occupied' ? 'bg-green-100 text-green-800' :
-                                unit.status === 'available' ? 'bg-blue-100 text-blue-800' :
-                                unit.status === 'maintenance' ? 'bg-orange-100 text-orange-800' :
-                                'bg-gray-100 text-gray-800'
-                              }>
-                                {unit.status}
-                              </Badge>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-red-600 hover:text-red-700 ml-1"
-                                onClick={() => handleDeleteUnit(unit.id, unit.unit_number)}
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
-                            </div>
-                          </div>
-                          <p className="text-sm text-gray-600">
-                            {unit.bedroom_type || 'N/A'} bed, {unit.bath_type || 'N/A'} bath
-                          </p>
-                          {unit.sq_ft && (
-                            <p className="text-xs text-gray-500">{unit.sq_ft} sq ft</p>
-                          )}
-                          {unit.lease_start && unit.lease_end && (
-                            <p className="text-xs text-gray-500">
-                              Lease: {new Date(unit.lease_start).toLocaleDateString()} - {new Date(unit.lease_end).toLocaleDateString()}
-                            </p>
-                          )}
+                <div className="space-y-3">
+                  {Object.entries(
+                    users.reduce((acc, user) => {
+                      acc[user.role] = (acc[user.role] || 0) + 1;
+                      return acc;
+                    }, {} as Record<string, number>)
+                  ).map(([role, count]) => (
+                    <div key={role} className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{formatRole(role)}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full" 
+                            style={{ width: `${(count / totalUsers) * 100}%` }}
+                          />
                         </div>
-                      ))}
+                        <span className="text-sm text-gray-600 w-8">{count}</span>
+                      </div>
                     </div>
-                  </ScrollArea>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="settings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>System Settings</CardTitle>
-                <CardDescription>Configure system-wide settings and preferences</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="p-4 border rounded-lg">
-                    <h3 className="font-medium mb-2">Authentication</h3>
-                    <p className="text-sm text-gray-600 mb-2">Google OAuth is configured and active</p>
-                    <Button variant="outline" size="sm">Configure OAuth</Button>
-                  </div>
-                  
-                  <div className="p-4 border rounded-lg">
-                    <h3 className="font-medium mb-2">Database</h3>
-                    <p className="text-sm text-gray-600 mb-2">All tables and relationships are configured</p>
-                    <Button variant="outline" size="sm">View Schema</Button>
-                  </div>
-                  
-                  <div className="p-4 border rounded-lg">
-                    <h3 className="font-medium mb-2">Role Impersonation</h3>
-                    <p className="text-sm text-gray-600 mb-2">Dev Mode allows testing all user roles</p>
-                    <Badge className="bg-green-100 text-green-800">Active</Badge>
-                  </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {users
+                    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                    .slice(0, 5)
+                    .map((user) => (
+                      <div key={user.id} className="flex items-center justify-between text-sm">
+                        <div>
+                          <span className="font-medium">{user.first_name} {user.last_name}</span>
+                          <span className="text-gray-500"> joined as </span>
+                          <span className="font-medium">{formatRole(user.role)}</span>
+                        </div>
+                        <span className="text-gray-500">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Modals */}
-      <CreateUserModal 
-        isOpen={showCreateUser} 
-        onClose={() => setShowCreateUser(false)}
+      <CreateUserModal
+        isOpen={isCreateUserModalOpen}
+        onClose={() => setIsCreateUserModalOpen(false)}
         onUserCreated={refetchUsers}
       />
-      <CreatePropertyModal 
-        isOpen={showCreateProperty} 
-        onClose={() => setShowCreateProperty(false)}
-        onPropertyCreated={() => {
-          refetchProperties();
-          refetchUnits(); // Refresh units when property is created with units
-        }}
+      
+      <CreatePropertyModal
+        isOpen={isCreatePropertyModalOpen}
+        onClose={() => setIsCreatePropertyModalOpen(false)}
+        onPropertyCreated={refetchProperties}
       />
-      <CreateUnitModal 
-        isOpen={showCreateUnit} 
-        onClose={() => setShowCreateUnit(false)}
-        onUnitCreated={refetchUnits}
-      />
+      
       <PropertyDetailModal
         property={selectedProperty}
-        isOpen={showPropertyDetail}
+        isOpen={isPropertyDetailModalOpen}
         onClose={() => {
-          setShowPropertyDetail(false);
+          setIsPropertyDetailModalOpen(false);
           setSelectedProperty(null);
         }}
-        onPropertyUpdated={() => {
-          refetchProperties();
-          refetchUnits();
-        }}
+        onPropertyUpdated={refetchProperties}
       />
     </div>
   );

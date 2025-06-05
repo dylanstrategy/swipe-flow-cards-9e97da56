@@ -344,30 +344,78 @@ export type Database = {
       properties: {
         Row: {
           address: string
+          amenities: string | null
           created_at: string
+          emergency_contact: string | null
+          emergency_phone: string | null
           id: string
+          leasing_office_hours: string | null
+          maintenance_company: string | null
+          maintenance_contact: string | null
+          maintenance_phone: string | null
+          management_company: string | null
           name: string
+          parking_info: string | null
+          pet_policy: string | null
+          property_manager_email: string | null
+          property_manager_name: string | null
+          property_manager_phone: string | null
           senior_operator_id: string | null
+          smoking_policy: string | null
+          special_instructions: string | null
           timezone: string | null
           updated_at: string
+          website: string | null
         }
         Insert: {
           address: string
+          amenities?: string | null
           created_at?: string
+          emergency_contact?: string | null
+          emergency_phone?: string | null
           id?: string
+          leasing_office_hours?: string | null
+          maintenance_company?: string | null
+          maintenance_contact?: string | null
+          maintenance_phone?: string | null
+          management_company?: string | null
           name: string
+          parking_info?: string | null
+          pet_policy?: string | null
+          property_manager_email?: string | null
+          property_manager_name?: string | null
+          property_manager_phone?: string | null
           senior_operator_id?: string | null
+          smoking_policy?: string | null
+          special_instructions?: string | null
           timezone?: string | null
           updated_at?: string
+          website?: string | null
         }
         Update: {
           address?: string
+          amenities?: string | null
           created_at?: string
+          emergency_contact?: string | null
+          emergency_phone?: string | null
           id?: string
+          leasing_office_hours?: string | null
+          maintenance_company?: string | null
+          maintenance_contact?: string | null
+          maintenance_phone?: string | null
+          management_company?: string | null
           name?: string
+          parking_info?: string | null
+          pet_policy?: string | null
+          property_manager_email?: string | null
+          property_manager_name?: string | null
+          property_manager_phone?: string | null
           senior_operator_id?: string | null
+          smoking_policy?: string | null
+          special_instructions?: string | null
           timezone?: string | null
           updated_at?: string
+          website?: string | null
         }
         Relationships: [
           {
