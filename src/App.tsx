@@ -53,7 +53,7 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode;
 
 // App routes component that uses auth context - moved inside AuthProvider
 function AppRoutes() {
-  const { loading, user, userProfile } = useAuth();
+  const { loading } = useAuth();
 
   // Show loading screen while auth is initializing
   if (loading) {
@@ -72,7 +72,7 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
       
-      {/* Main app routes - these need authentication but role-based routing happens in Login component */}
+      {/* Main app routes - these need authentication but allow role switching */}
       <Route path="/" element={
         <ProtectedRoute>
           <Index />

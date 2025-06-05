@@ -274,6 +274,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       return;
     }
+    
+    console.log('🎭 Impersonating role:', role);
     setImpersonatedRole(role);
     toast({
       title: "Role Switched",
@@ -282,6 +284,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const stopImpersonation = () => {
+    console.log('🎭 Stopping impersonation');
     setImpersonatedRole(null);
     toast({
       title: "Impersonation Stopped",
@@ -289,12 +292,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const effectiveRole = impersonatedRole || userProfile?.role;
+  // Create the effective user profile with the impersonated role
+  const effectiveUserProfile = userProfile ? {
+    ...userProfile,
+    role: impersonatedRole || userProfile.role
+  } : null;
 
   const value = {
     user,
     session,
-    userProfile: userProfile ? { ...userProfile, role: effectiveRole || userProfile.role } : null,
+    userProfile: effectiveUserProfile,
     loading,
     signInWithGoogle,
     signInWithEmail,
