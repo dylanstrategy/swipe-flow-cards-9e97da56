@@ -59,7 +59,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      console.log("Session:", session);
       setUser(session?.user ?? null);
 
       if (session?.user) {
@@ -69,9 +68,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq("id", session.user.id)
           .single();
 
-        console.log("User profile:", data);
-        console.log("Error:", error);
-        
         if (!error) setUserProfile(data);
       }
 
@@ -81,7 +77,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchUser();
 
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log("Auth state change - Session:", session);
       setUser(session?.user ?? null);
       if (!session) {
         setUserProfile(null);
@@ -97,9 +92,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .select("*")
           .eq("id", session.user.id)
           .single();
-
-        console.log("Auth state change - User profile:", data);
-        console.log("Auth state change - Error:", error);
 
         if (!error) setUserProfile(data);
       }
