@@ -109,61 +109,61 @@ const PropertySetupModule = ({ onClose }: PropertySetupModuleProps) => {
         return <CRMSetup onBack={() => setCurrentSection('overview')} />;
       default:
         return (
-          <div className="space-y-4 max-w-4xl mx-auto">
-            <div className="flex items-center gap-3 mb-4">
-              <Building className="w-6 h-6 text-blue-600 flex-shrink-0" />
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Property Setup</h1>
-                <p className="text-sm text-gray-600">Configure your property management settings</p>
+          <div className="max-w-full overflow-hidden">
+            <div className="p-4 space-y-6 pb-24 max-w-2xl mx-auto">
+              <div className="flex items-center gap-3 mb-6">
+                <Building className="w-6 h-6 text-blue-600 flex-shrink-0" />
+                <div>
+                  <h1 className="text-xl font-bold text-gray-900">Property Setup</h1>
+                  <p className="text-sm text-gray-600">Configure your property management settings</p>
+                </div>
               </div>
-            </div>
 
-            <div className="grid gap-3">
-              {setupSections.map((section) => {
-                const Icon = section.icon;
-                const completionPercentage = Math.round((section.completedItems / section.totalItems) * 100);
-                
-                return (
-                  <Card 
-                    key={section.id}
-                    className="cursor-pointer hover:shadow-md transition-shadow shadow-sm"
-                    onClick={() => setCurrentSection(section.id)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className="p-2 bg-blue-50 rounded-lg flex-shrink-0">
-                            <Icon className="w-5 h-5 text-blue-600" />
+              <div className="space-y-4">
+                {setupSections.map((section) => {
+                  const Icon = section.icon;
+                  const completionPercentage = Math.round((section.completedItems / section.totalItems) * 100);
+                  
+                  return (
+                    <Card 
+                      key={section.id}
+                      className="cursor-pointer hover:shadow-md transition-shadow shadow-sm"
+                      onClick={() => setCurrentSection(section.id)}
+                    >
+                      <CardContent className="p-6">
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 bg-blue-50 rounded-lg flex-shrink-0">
+                            <Icon className="w-6 h-6 text-blue-600" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="text-sm font-semibold text-gray-900 truncate">{section.title}</h3>
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="text-lg font-semibold text-gray-900">{section.title}</h3>
                               <Badge className={`${getStatusColor(section.status)} text-xs`}>
                                 {section.status === 'complete' ? 'Complete' : 'Incomplete'}
                               </Badge>
                             </div>
-                            <p className="text-xs text-gray-600 mb-2 truncate">{section.description}</p>
-                            <div className="flex items-center gap-2">
-                              <div className="flex-1 bg-gray-200 rounded-full h-1.5">
+                            <p className="text-sm text-gray-600 mb-4">{section.description}</p>
+                            <div className="flex items-center gap-3">
+                              <div className="flex-1 bg-gray-200 rounded-full h-2">
                                 <div 
-                                  className="bg-blue-600 h-1.5 rounded-full transition-all"
+                                  className="bg-blue-600 h-2 rounded-full transition-all"
                                   style={{ width: `${completionPercentage}%` }}
                                 />
                               </div>
-                              <span className="text-xs text-gray-500 flex-shrink-0">
+                              <span className="text-sm text-gray-500 flex-shrink-0 font-medium">
                                 {section.completedItems}/{section.totalItems}
                               </span>
+                              <Button variant="outline" size="sm" className="text-sm px-4 py-2">
+                                Configure
+                              </Button>
                             </div>
                           </div>
                         </div>
-                        <Button variant="outline" size="sm" className="text-xs px-3 py-1 flex-shrink-0">
-                          Configure
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
             </div>
           </div>
         );
@@ -174,7 +174,7 @@ const PropertySetupModule = ({ onClose }: PropertySetupModuleProps) => {
     <div className="fixed inset-0 bg-white z-50 overflow-hidden">
       <div className="h-full flex flex-col">
         {/* Header */}
-        <div className="flex-shrink-0 flex items-center justify-between p-3 border-b border-gray-200 bg-white">
+        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200 bg-white">
           <Button
             variant="ghost"
             size="sm"
@@ -187,7 +187,7 @@ const PropertySetupModule = ({ onClose }: PropertySetupModuleProps) => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-3">
+        <div className="flex-1 overflow-y-auto">
           {renderCurrentSection()}
         </div>
       </div>
