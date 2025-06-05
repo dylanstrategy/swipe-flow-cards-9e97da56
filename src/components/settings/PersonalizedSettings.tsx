@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, User, Bell, Shield, Palette, ChevronRight, Calendar, CreditCard, Globe, HelpCircle, Upload, Edit } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
+import { ArrowLeft, User, Bell, Shield, Palette, ChevronRight, Calendar, CreditCard, Globe, HelpCircle, Upload, Edit, Save, Mail, Phone, Home, CheckCircle, Building2, Target } from 'lucide-react';
 
 type SettingsSection = 'data' | 'notifications' | 'privacy' | 'theme' | 'language' | 'help' | 'identity' | 'calendar' | 'property';
 
@@ -15,6 +17,43 @@ interface PersonalizedSettingsProps {
 
 const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, userRole }) => {
   const [activeSection, setActiveSection] = useState<SettingsSection | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  
+  // Form data state
+  const [formData, setFormData] = useState({
+    fullName: 'John Doe',
+    preferredName: 'John',
+    email: 'john.doe@example.com',
+    phone: '(555) 123-4567',
+    emergencyContactName: 'Jane Doe',
+    emergencyContactPhone: '(555) 987-6543',
+    emergencyContactRelationship: 'Spouse',
+    minBudget: '',
+    maxBudget: '',
+    budgetNotes: '',
+    hasPets: false,
+    petType: '',
+    petBreed: '',
+    petName: '',
+    petWeight: '',
+    petNotes: ''
+  });
+
+  // Payment and preferences state
+  const [paymentPreferences, setPaymentPreferences] = useState({
+    preferredMethod: 'ach',
+    achAccountNumber: '****1234',
+    achRoutingNumber: '021000021',
+    creditCardLast4: '4567'
+  });
+
+  const [adPreferences, setAdPreferences] = useState({
+    emailMarketing: true,
+    smsMarketing: false,
+    personalizedAds: true,
+    communityUpdates: true
+  });
+
   const [weeklySchedule, setWeeklySchedule] = useState({
     monday: { enabled: true, start: '09:00', end: '17:00' },
     tuesday: { enabled: true, start: '09:00', end: '17:00' },
@@ -24,6 +63,25 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
     saturday: { enabled: false, start: '10:00', end: '14:00' },
     sunday: { enabled: false, start: '10:00', end: '14:00' }
   });
+
+  const handleSave = () => {
+    setIsEditing(false);
+    console.log('Profile updated with new data:', formData);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+  };
+
+  const handleScheduleChange = (day: string, field: string, value: string | boolean) => {
+    setWeeklySchedule(prev => ({
+      ...prev,
+      [day]: {
+        ...prev[day as keyof typeof prev],
+        [field]: value
+      }
+    }));
+  };
 
   const getSettingsForRole = () => {
     const baseSettings = [
@@ -120,205 +178,528 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
   const personalSettings = settings.filter(s => s.category === 'personal');
   const appearanceSettings = settings.filter(s => s.category === 'appearance');
 
-  const handleScheduleChange = (day: string, field: string, value: string | boolean) => {
-    setWeeklySchedule(prev => ({
-      ...prev,
-      [day]: {
-        ...prev[day as keyof typeof prev],
-        [field]: value
-      }
-    }));
-  };
-
   const renderSettingDetail = (section: SettingsSection) => {
     switch (section) {
       case 'data':
         return (
           <div className="space-y-6 max-w-full overflow-hidden">
-            {/* Profile Photo Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Profile Photo</h3>
-              <div className="flex flex-col sm:flex-row items-start gap-4 p-4 border rounded-lg">
-                <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                  <User className="w-8 h-8 text-gray-500" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-600 mb-3">Upload a profile photo to personalize your account</p>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Button variant="outline" size="sm" className="flex items-center gap-2">
-                      <Upload className="w-4 h-4" />
-                      Upload Photo
-                    </Button>
-                    <Button variant="outline" size="sm">Remove</Button>
+            {/* Profile Header - matching ResidentIdentitySetup style */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <Avatar className="w-20 h-20 flex-shrink-0">
+                    <AvatarFallback className="text-2xl font-bold bg-blue-600 text-white">
+                      {formData.preferredName.charAt(0)}{formData.fullName.split(' ')[1]?.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1">{formData.preferredName}</h2>
+                    <div className="flex items-center gap-2 text-gray-600 mb-2">
+                      <Home className="w-4 h-4" />
+                      <span>The Meridian • Apt 204</span>
+                    </div>
+                    <div className="flex gap-2">
+                      {!isEditing ? (
+                        <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit Profile
+                        </Button>
+                      ) : (
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={handleCancel}>
+                            Cancel
+                          </Button>
+                          <Button size="sm" onClick={handleSave}>
+                            <Save className="w-4 h-4 mr-2" />
+                            Save Changes
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
+
+            {/* Profile Photo Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Upload className="w-5 h-5" />
+                  Profile Photo
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-col sm:flex-row items-start gap-4 p-4 border rounded-lg">
+                  <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="w-8 h-8 text-gray-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-600 mb-3">Upload a profile photo to personalize your account</p>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button variant="outline" size="sm" className="flex items-center gap-2">
+                        <Upload className="w-4 h-4" />
+                        Upload Photo
+                      </Button>
+                      <Button variant="outline" size="sm">Remove</Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Contact Information - Primary Section - matching ResidentIdentitySetup style */}
+            <Card className="border-blue-200 bg-blue-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-blue-900">
+                  <Phone className="w-5 h-5" />
+                  Primary Contact Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="preferredName" className="text-sm font-medium text-gray-700 mb-2 block">
+                    Preferred Name *
+                  </Label>
+                  <Input
+                    id="preferredName"
+                    value={formData.preferredName}
+                    onChange={(e) => setFormData({ ...formData, preferredName: e.target.value })}
+                    disabled={!isEditing}
+                    placeholder="What you'd like to be called"
+                    className={isEditing ? "bg-white" : "bg-gray-100"}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="email" className="text-sm font-medium text-gray-700 mb-2 block">
+                    Email Address *
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    disabled={!isEditing}
+                    placeholder="your.email@example.com"
+                    className={isEditing ? "bg-white" : "bg-gray-100"}
+                  />
+                  <p className="text-xs text-gray-600 mt-1">
+                    Used for notifications and important updates
+                  </p>
+                </div>
+                
+                <div>
+                  <Label htmlFor="phone" className="text-sm font-medium text-gray-700 mb-2 block">
+                    Cell Phone Number *
+                  </Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    disabled={!isEditing}
+                    placeholder="(555) 123-4567"
+                    className={isEditing ? "bg-white" : "bg-gray-100"}
+                  />
+                  <p className="text-xs text-gray-600 mt-1">
+                    Used for urgent notifications and two-factor authentication
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Personal Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Personal Information</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Personal Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input id="fullName" defaultValue="John Doe" />
+                  <Label htmlFor="fullName" className="text-sm font-medium text-gray-700 mb-2 block">
+                    Full Legal Name
+                  </Label>
+                  <Input
+                    id="fullName"
+                    value={formData.fullName}
+                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                    disabled={!isEditing}
+                    placeholder="Your full legal name"
+                    className={isEditing ? "bg-white" : "bg-gray-100"}
+                  />
                 </div>
-                <div>
-                  <Label htmlFor="preferredName">Preferred Name</Label>
-                  <Input id="preferredName" defaultValue="John" />
-                </div>
-                <div>
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input id="email" type="email" defaultValue="john.doe@example.com" />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" type="tel" defaultValue="(555) 123-4567" />
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
             {/* Emergency Contact */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Emergency Contact</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="w-5 h-5" />
+                  Emergency Contact
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="emergencyName" className="text-sm font-medium text-gray-700 mb-2 block">
+                      Contact Name
+                    </Label>
+                    <Input
+                      id="emergencyName"
+                      value={formData.emergencyContactName}
+                      onChange={(e) => setFormData({ ...formData, emergencyContactName: e.target.value })}
+                      disabled={!isEditing}
+                      placeholder="Emergency contact name"
+                      className={isEditing ? "bg-white" : "bg-gray-100"}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="emergencyRelationship" className="text-sm font-medium text-gray-700 mb-2 block">
+                      Relationship
+                    </Label>
+                    <Input
+                      id="emergencyRelationship"
+                      value={formData.emergencyContactRelationship}
+                      onChange={(e) => setFormData({ ...formData, emergencyContactRelationship: e.target.value })}
+                      disabled={!isEditing}
+                      placeholder="e.g., Spouse, Parent, Sibling"
+                      className={isEditing ? "bg-white" : "bg-gray-100"}
+                    />
+                  </div>
+                </div>
+                
                 <div>
-                  <Label htmlFor="emergencyName">Contact Name</Label>
-                  <Input id="emergencyName" placeholder="Emergency contact name" />
+                  <Label htmlFor="emergencyPhone" className="text-sm font-medium text-gray-700 mb-2 block">
+                    Contact Phone
+                  </Label>
+                  <Input
+                    id="emergencyPhone"
+                    type="tel"
+                    value={formData.emergencyContactPhone}
+                    onChange={(e) => setFormData({ ...formData, emergencyContactPhone: e.target.value })}
+                    disabled={!isEditing}
+                    placeholder="(555) 987-6543"
+                    className={isEditing ? "bg-white" : "bg-gray-100"}
+                  />
                 </div>
-                <div>
-                  <Label htmlFor="emergencyPhone">Contact Phone</Label>
-                  <Input id="emergencyPhone" type="tel" placeholder="Emergency contact phone" />
-                </div>
-                <div className="sm:col-span-2">
-                  <Label htmlFor="emergencyRelation">Relationship</Label>
-                  <Input id="emergencyRelation" placeholder="e.g., Spouse, Parent, Sibling" />
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
             {/* Budget Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Budget Preferences</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="minBudget">Minimum Budget</Label>
-                  <Input id="minBudget" type="number" placeholder="$1,000" />
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="w-5 h-5" />
+                  Budget Preferences
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="minBudget" className="text-sm font-medium text-gray-700 mb-2 block">
+                      Minimum Budget
+                    </Label>
+                    <Input
+                      id="minBudget"
+                      type="number"
+                      value={formData.minBudget}
+                      onChange={(e) => setFormData({ ...formData, minBudget: e.target.value })}
+                      disabled={!isEditing}
+                      placeholder="$1,000"
+                      className={isEditing ? "bg-white" : "bg-gray-100"}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="maxBudget" className="text-sm font-medium text-gray-700 mb-2 block">
+                      Maximum Budget
+                    </Label>
+                    <Input
+                      id="maxBudget"
+                      type="number"
+                      value={formData.maxBudget}
+                      onChange={(e) => setFormData({ ...formData, maxBudget: e.target.value })}
+                      disabled={!isEditing}
+                      placeholder="$3,000"
+                      className={isEditing ? "bg-white" : "bg-gray-100"}
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="budgetNotes" className="text-sm font-medium text-gray-700 mb-2 block">
+                      Budget Notes
+                    </Label>
+                    <Input
+                      id="budgetNotes"
+                      value={formData.budgetNotes}
+                      onChange={(e) => setFormData({ ...formData, budgetNotes: e.target.value })}
+                      disabled={!isEditing}
+                      placeholder="Any specific budget considerations..."
+                      className={isEditing ? "bg-white" : "bg-gray-100"}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="maxBudget">Maximum Budget</Label>
-                  <Input id="maxBudget" type="number" placeholder="$3,000" />
-                </div>
-                <div className="sm:col-span-2">
-                  <Label htmlFor="budgetNotes">Budget Notes</Label>
-                  <Input id="budgetNotes" placeholder="Any specific budget considerations..." />
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
             {/* Pet/Animal Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Pet Information</h3>
-              <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Pet Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="min-w-0 flex-1">
                     <div className="font-medium">Do you have pets?</div>
                     <div className="text-sm text-gray-600">Let us know about your furry friends</div>
                   </div>
-                  <Switch />
+                  <Switch 
+                    checked={formData.hasPets}
+                    onCheckedChange={(checked) => setFormData({ ...formData, hasPets: checked })}
+                    disabled={!isEditing}
+                  />
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="petType">Pet Type</Label>
-                    <select id="petType" className="w-full px-3 py-2 border rounded-md text-sm">
-                      <option value="">Select pet type</option>
-                      <option value="dog">Dog</option>
-                      <option value="cat">Cat</option>
-                      <option value="bird">Bird</option>
-                      <option value="fish">Fish</option>
-                      <option value="other">Other</option>
-                    </select>
+                {formData.hasPets && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="petType" className="text-sm font-medium text-gray-700 mb-2 block">
+                        Pet Type
+                      </Label>
+                      <select 
+                        id="petType" 
+                        value={formData.petType}
+                        onChange={(e) => setFormData({ ...formData, petType: e.target.value })}
+                        disabled={!isEditing}
+                        className="w-full px-3 py-2 border rounded-md text-sm bg-white disabled:bg-gray-100"
+                      >
+                        <option value="">Select pet type</option>
+                        <option value="dog">Dog</option>
+                        <option value="cat">Cat</option>
+                        <option value="bird">Bird</option>
+                        <option value="fish">Fish</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label htmlFor="petBreed" className="text-sm font-medium text-gray-700 mb-2 block">
+                        Breed
+                      </Label>
+                      <Input
+                        id="petBreed"
+                        value={formData.petBreed}
+                        onChange={(e) => setFormData({ ...formData, petBreed: e.target.value })}
+                        disabled={!isEditing}
+                        placeholder="Pet breed"
+                        className={isEditing ? "bg-white" : "bg-gray-100"}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="petName" className="text-sm font-medium text-gray-700 mb-2 block">
+                        Pet Name
+                      </Label>
+                      <Input
+                        id="petName"
+                        value={formData.petName}
+                        onChange={(e) => setFormData({ ...formData, petName: e.target.value })}
+                        disabled={!isEditing}
+                        placeholder="Pet's name"
+                        className={isEditing ? "bg-white" : "bg-gray-100"}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="petWeight" className="text-sm font-medium text-gray-700 mb-2 block">
+                        Weight (lbs)
+                      </Label>
+                      <Input
+                        id="petWeight"
+                        type="number"
+                        value={formData.petWeight}
+                        onChange={(e) => setFormData({ ...formData, petWeight: e.target.value })}
+                        disabled={!isEditing}
+                        placeholder="Pet weight"
+                        className={isEditing ? "bg-white" : "bg-gray-100"}
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="petNotes" className="text-sm font-medium text-gray-700 mb-2 block">
+                        Additional Pet Information
+                      </Label>
+                      <Input
+                        id="petNotes"
+                        value={formData.petNotes}
+                        onChange={(e) => setFormData({ ...formData, petNotes: e.target.value })}
+                        disabled={!isEditing}
+                        placeholder="Vaccinations, special needs, etc."
+                        className={isEditing ? "bg-white" : "bg-gray-100"}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="petBreed">Breed</Label>
-                    <Input id="petBreed" placeholder="Pet breed" />
-                  </div>
-                  <div>
-                    <Label htmlFor="petName">Pet Name</Label>
-                    <Input id="petName" placeholder="Pet's name" />
-                  </div>
-                  <div>
-                    <Label htmlFor="petWeight">Weight (lbs)</Label>
-                    <Input id="petWeight" type="number" placeholder="Pet weight" />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <Label htmlFor="petNotes">Additional Pet Information</Label>
-                    <Input id="petNotes" placeholder="Vaccinations, special needs, etc." />
-                  </div>
-                </div>
-              </div>
-            </div>
+                )}
+              </CardContent>
+            </Card>
 
-            {/* Account Security */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Account Security</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium">Password</div>
-                    <div className="text-sm text-gray-600">Last updated 3 months ago</div>
+            {/* Payment Methods - matching ResidentIdentitySetup style */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="w-5 h-5" />
+                  Payment Methods
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* ACH Bank Transfer */}
+                <div className="border rounded-lg p-4 bg-green-50 border-green-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <Building2 className="w-5 h-5 text-green-600" />
+                      <div>
+                        <div className="font-medium text-green-900">ACH Bank Transfer</div>
+                        <div className="text-sm text-green-700">Account ending in {paymentPreferences.achAccountNumber.slice(-4)}</div>
+                      </div>
+                    </div>
+                    <div className="bg-green-600 text-white text-xs px-2 py-1 rounded">Primary</div>
                   </div>
-                  <Button variant="outline" size="sm">
-                    <Edit className="w-4 h-4 mr-2" />
-                    Change
-                  </Button>
-                </div>
-                <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium">Two-Factor Authentication</div>
-                    <div className="text-sm text-gray-600">Add an extra layer of security</div>
+                  <div className="text-sm text-green-800">
+                    Routing: {paymentPreferences.achRoutingNumber} • No fees • Auto-pay enabled
                   </div>
-                  <Button variant="outline" size="sm">Setup</Button>
                 </div>
-              </div>
-            </div>
 
-            {/* Payment Methods */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Payment Methods</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium">Primary Card</div>
-                    <div className="text-sm text-gray-600">Visa ending in 4567</div>
+                {/* Credit Card */}
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <CreditCard className="w-5 h-5 text-gray-600" />
+                      <div>
+                        <div className="font-medium">Credit Card</div>
+                        <div className="text-sm text-gray-600">Visa ending in {paymentPreferences.creditCardLast4}</div>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm">Edit</Button>
                   </div>
-                  <Button variant="outline" size="sm">
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit
-                  </Button>
-                </div>
-                <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium">Bank Account</div>
-                    <div className="text-sm text-gray-600">Account ending in 1234</div>
+                  <div className="text-sm text-gray-600">
+                    Backup payment method • 2.9% processing fee
                   </div>
-                  <Button variant="outline" size="sm">
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit
-                  </Button>
                 </div>
+
                 <Button variant="outline" className="w-full">
                   <CreditCard className="w-4 h-4 mr-2" />
                   Add Payment Method
                 </Button>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            {/* Save Button */}
-            <div className="pt-4 border-t">
-              <Button className="w-full">Save Changes</Button>
-            </div>
+            {/* Account Security */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="w-5 h-5" />
+                  Account Security
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 border rounded-lg">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium">Password</div>
+                      <div className="text-sm text-gray-600">Last updated 3 months ago</div>
+                    </div>
+                    <Button variant="outline" size="sm">
+                      <Edit className="w-4 h-4 mr-2" />
+                      Change
+                    </Button>
+                  </div>
+                  <div className="flex justify-between items-center p-3 border rounded-lg">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium">Two-Factor Authentication</div>
+                      <div className="text-sm text-gray-600">Add an extra layer of security</div>
+                    </div>
+                    <Button variant="outline" size="sm">Setup</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Advertisement Preferences - matching ResidentIdentitySetup style */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="w-5 h-5" />
+                  Advertisement Preferences
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="font-medium">Email Marketing</div>
+                    <div className="text-sm text-gray-600">Receive promotional emails and updates</div>
+                  </div>
+                  <Switch 
+                    checked={adPreferences.emailMarketing}
+                    onCheckedChange={(checked) => setAdPreferences({ ...adPreferences, emailMarketing: checked })}
+                  />
+                </div>
+                <Separator />
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="font-medium">SMS Marketing</div>
+                    <div className="text-sm text-gray-600">Receive promotional text messages</div>
+                  </div>
+                  <Switch 
+                    checked={adPreferences.smsMarketing}
+                    onCheckedChange={(checked) => setAdPreferences({ ...adPreferences, smsMarketing: checked })}
+                  />
+                </div>
+                <Separator />
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="font-medium">Personalized Ads</div>
+                    <div className="text-sm text-gray-600">Show ads based on your preferences</div>
+                  </div>
+                  <Switch 
+                    checked={adPreferences.personalizedAds}
+                    onCheckedChange={(checked) => setAdPreferences({ ...adPreferences, personalizedAds: checked })}
+                  />
+                </div>
+                <Separator />
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="font-medium">Community Updates</div>
+                    <div className="text-sm text-gray-600">Receive updates about community events and news</div>
+                  </div>
+                  <Switch 
+                    checked={adPreferences.communityUpdates}
+                    onCheckedChange={(checked) => setAdPreferences({ ...adPreferences, communityUpdates: checked })}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Privacy Notice - matching ResidentIdentitySetup style */}
+            <Card className="bg-blue-50 border-blue-200">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-semibold text-blue-900 mb-2">Privacy & Security</h3>
+                    <p className="text-sm text-blue-800">
+                      Your personal information is securely stored and only used for property management, 
+                      emergency situations, and service delivery. We never share your information with 
+                      third parties without your consent.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         );
 
