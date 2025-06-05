@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, User, Bell, Shield, Palette, ChevronRight, Calendar, CreditCard, Globe, HelpCircle } from 'lucide-react';
 
 type SettingsSection = 'data' | 'notifications' | 'privacy' | 'theme' | 'language' | 'help' | 'identity' | 'calendar' | 'property';
@@ -280,30 +281,30 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
 
       case 'calendar':
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 max-w-full overflow-hidden">
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Calendar Integration</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="font-medium">Google Calendar</div>
                     <div className="text-sm text-gray-600">Sync with your Google Calendar</div>
                   </div>
-                  <Button variant="outline" size="sm">Connect</Button>
+                  <Button variant="outline" size="sm" className="flex-shrink-0">Connect</Button>
                 </div>
                 <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="font-medium">Outlook Calendar</div>
                     <div className="text-sm text-gray-600">Sync with Microsoft Outlook</div>
                   </div>
-                  <Button variant="outline" size="sm">Connect</Button>
+                  <Button variant="outline" size="sm" className="flex-shrink-0">Connect</Button>
                 </div>
                 <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="font-medium">Apple Calendar</div>
                     <div className="text-sm text-gray-600">Sync with iCloud Calendar</div>
                   </div>
-                  <Button variant="outline" size="sm">Connect</Button>
+                  <Button variant="outline" size="sm" className="flex-shrink-0">Connect</Button>
                 </div>
               </div>
             </div>
@@ -311,16 +312,14 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Weekly Schedule Setup</h3>
               <p className="text-sm text-gray-600 mb-4">Configure your available hours for each day of the week</p>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {Object.entries(weeklySchedule).map(([day, schedule]) => (
                   <div key={day} className="p-4 border rounded-lg space-y-3">
-                    <div className="flex justify-between items-center">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <input
-                          type="checkbox"
+                        <Switch
                           checked={schedule.enabled}
-                          onChange={(e) => handleScheduleChange(day, 'enabled', e.target.checked)}
-                          className="h-4 w-4"
+                          onCheckedChange={(checked) => handleScheduleChange(day, 'enabled', checked)}
                         />
                         <span className="font-medium capitalize">{day}</span>
                       </div>
@@ -330,23 +329,23 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
                     </div>
                     
                     {schedule.enabled && (
-                      <div className="flex gap-4 ml-7">
+                      <div className="flex flex-col sm:flex-row gap-3 ml-7">
                         <div className="flex items-center gap-2">
-                          <label className="text-sm text-gray-600">Start:</label>
+                          <label className="text-sm text-gray-600 whitespace-nowrap">Start:</label>
                           <input
                             type="time"
                             value={schedule.start}
                             onChange={(e) => handleScheduleChange(day, 'start', e.target.value)}
-                            className="px-2 py-1 border rounded text-sm"
+                            className="px-2 py-1 border rounded text-sm w-full sm:w-auto"
                           />
                         </div>
                         <div className="flex items-center gap-2">
-                          <label className="text-sm text-gray-600">End:</label>
+                          <label className="text-sm text-gray-600 whitespace-nowrap">End:</label>
                           <input
                             type="time"
                             value={schedule.end}
                             onChange={(e) => handleScheduleChange(day, 'end', e.target.value)}
-                            className="px-2 py-1 border rounded text-sm"
+                            className="px-2 py-1 border rounded text-sm w-full sm:w-auto"
                           />
                         </div>
                       </div>
@@ -359,40 +358,33 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Scheduling Preferences</h3>
               <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <span>Default Meeting Duration</span>
-                  <select className="px-2 py-1 border rounded text-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 border rounded-lg">
+                  <span className="font-medium">Default Meeting Duration</span>
+                  <select className="px-2 py-1 border rounded text-sm w-full sm:w-auto">
                     <option value="15">15 minutes</option>
-                    <option value="30" selected>30 minutes</option>
+                    <option value="30" defaultValue="">30 minutes</option>
                     <option value="45">45 minutes</option>
                     <option value="60">1 hour</option>
                     <option value="90">1.5 hours</option>
                     <option value="120">2 hours</option>
                   </select>
                 </div>
-                <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <span>Buffer Time Between Appointments</span>
-                  <select className="px-2 py-1 border rounded text-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 border rounded-lg">
+                  <span className="font-medium">Buffer Time Between Appointments</span>
+                  <select className="px-2 py-1 border rounded text-sm w-full sm:w-auto">
                     <option value="0">No buffer</option>
                     <option value="5">5 minutes</option>
                     <option value="10">10 minutes</option>
-                    <option value="15" selected>15 minutes</option>
+                    <option value="15" defaultValue="">15 minutes</option>
                     <option value="30">30 minutes</option>
                   </select>
                 </div>
-                <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <div>
-                    <div className="font-medium">Auto-accept Invites</div>
-                    <div className="text-sm text-gray-600">Automatically accept calendar invites during available hours</div>
-                  </div>
-                  <input type="checkbox" className="h-4 w-4" />
-                </div>
-                <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <div>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="min-w-0 flex-1">
                     <div className="font-medium">Allow Weekend Scheduling</div>
                     <div className="text-sm text-gray-600">Enable scheduling on weekends</div>
                   </div>
-                  <input type="checkbox" defaultChecked className="h-4 w-4" />
+                  <Switch defaultChecked />
                 </div>
               </div>
             </div>
