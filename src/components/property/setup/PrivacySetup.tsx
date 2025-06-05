@@ -33,7 +33,6 @@ const PrivacySetup: React.FC<PrivacySetupProps> = ({ onBack }) => {
     toast({
       title: "Privacy Settings Updated",
       description: "Your security and privacy preferences have been saved successfully.",
-      duration: 3000,
     });
     console.log('Privacy settings updated:', privacySettings);
   };

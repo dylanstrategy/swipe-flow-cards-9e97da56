@@ -33,7 +33,6 @@ const PersonalIdentitySetup: React.FC<PersonalIdentitySetupProps> = ({ onBack })
     toast({
       title: "Identity Updated",
       description: "Your personal information has been saved successfully.",
-      duration: 3000,
     });
     console.log('Identity updated:', formData);
   };

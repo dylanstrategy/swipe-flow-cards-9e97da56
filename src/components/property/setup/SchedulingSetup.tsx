@@ -41,7 +41,6 @@ const SchedulingSetup: React.FC<SchedulingSetupProps> = ({ onBack }) => {
     toast({
       title: "Schedule Updated",
       description: "Your scheduling preferences have been saved successfully.",
-      duration: 3000,
     });
     console.log('Schedule updated:', scheduleData);
   };
