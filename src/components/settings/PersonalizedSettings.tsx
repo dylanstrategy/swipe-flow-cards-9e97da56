@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ChevronLeft, User, Mail, Phone, Home, Heart, Shield, Bell, Calendar, Settings, CreditCard, Building } from 'lucide-react';
 import PropertySetupModule from '@/components/property/PropertySetupModule';
 
@@ -490,24 +491,41 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
               <CardContent className="space-y-6">
                 {/* Availability Hours */}
                 <div>
-                  <h4 className="font-medium mb-3">Available Hours</h4>
+                  <h4 className="font-medium mb-4">Available Hours</h4>
                   <div className="space-y-3">
                     {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
-                      <div key={day} className="flex items-center gap-4">
-                        <div className="w-20 text-sm font-medium">{day}</div>
-                        <Switch defaultChecked={!['Saturday', 'Sunday'].includes(day)} />
-                        <div className="flex items-center gap-2 text-sm">
-                          <select className="px-2 py-1 border rounded text-sm">
-                            <option value="09:00">9:00 AM</option>
-                            <option value="10:00">10:00 AM</option>
-                            <option value="11:00">11:00 AM</option>
-                          </select>
-                          <span>to</span>
-                          <select className="px-2 py-1 border rounded text-sm">
-                            <option value="17:00">5:00 PM</option>
-                            <option value="18:00">6:00 PM</option>
-                            <option value="19:00">7:00 PM</option>
-                          </select>
+                      <div key={day} className="bg-gray-50 p-3 rounded-lg border">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <Switch defaultChecked={!['Saturday', 'Sunday'].includes(day)} />
+                            <Label className="font-medium text-sm min-w-[80px]">{day}</Label>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm ml-auto">
+                            <Select defaultValue="09:00">
+                              <SelectTrigger className="w-[100px] h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="08:00">8:00 AM</SelectItem>
+                                <SelectItem value="09:00">9:00 AM</SelectItem>
+                                <SelectItem value="10:00">10:00 AM</SelectItem>
+                                <SelectItem value="11:00">11:00 AM</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <span className="text-gray-500 px-1">to</span>
+                            <Select defaultValue="17:00">
+                              <SelectTrigger className="w-[100px] h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="15:00">3:00 PM</SelectItem>
+                                <SelectItem value="16:00">4:00 PM</SelectItem>
+                                <SelectItem value="17:00">5:00 PM</SelectItem>
+                                <SelectItem value="18:00">6:00 PM</SelectItem>
+                                <SelectItem value="19:00">7:00 PM</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -516,27 +534,37 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
 
                 {/* Default Settings */}
                 <div className="border-t pt-6">
-                  <h4 className="font-medium mb-3">Default Settings</h4>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">Default Meeting Duration</span>
-                      <select className="px-2 py-1 border rounded text-sm w-full sm:w-auto">
-                        <option value="15">15 minutes</option>
-                        <option value="30" selected>30 minutes</option>
-                        <option value="45">45 minutes</option>
-                        <option value="60">1 hour</option>
-                        <option value="90">1.5 hours</option>
-                      </select>
+                  <h4 className="font-medium mb-4">Default Settings</h4>
+                  <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <Label className="font-medium">Default Meeting Duration</Label>
+                      <Select defaultValue="30">
+                        <SelectTrigger className="w-full sm:w-[140px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="15">15 minutes</SelectItem>
+                          <SelectItem value="30">30 minutes</SelectItem>
+                          <SelectItem value="45">45 minutes</SelectItem>
+                          <SelectItem value="60">1 hour</SelectItem>
+                          <SelectItem value="90">1.5 hours</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">Buffer Time Between Appointments</span>
-                      <select className="px-2 py-1 border rounded text-sm w-full sm:w-auto">
-                        <option value="0">No buffer</option>
-                        <option value="5">5 minutes</option>
-                        <option value="10" selected>10 minutes</option>
-                        <option value="15">15 minutes</option>
-                        <option value="30">30 minutes</option>
-                      </select>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <Label className="font-medium">Buffer Time Between Appointments</Label>
+                      <Select defaultValue="10">
+                        <SelectTrigger className="w-full sm:w-[140px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">No buffer</SelectItem>
+                          <SelectItem value="5">5 minutes</SelectItem>
+                          <SelectItem value="10">10 minutes</SelectItem>
+                          <SelectItem value="15">15 minutes</SelectItem>
+                          <SelectItem value="30">30 minutes</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </div>
