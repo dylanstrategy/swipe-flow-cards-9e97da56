@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ResidentProvider } from "@/contexts/ResidentContext";
 import Index from "./pages/Index";
 import Discovery from "./pages/Discovery";
 import Matches from "./pages/Matches";
@@ -29,23 +30,25 @@ const App = () => (
       <Toaster />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/owner-login" element={<OwnerLogin />} />
-            <Route path="/unknown-role" element={<UnknownRole />} />
-            
-            {/* Temporarily bypass auth for all routes */}
-            <Route path="/" element={<BypassRoute><Index /></BypassRoute>} />
-            <Route path="/discovery" element={<BypassRoute><Discovery /></BypassRoute>} />
-            <Route path="/matches" element={<BypassRoute><Matches /></BypassRoute>} />
-            <Route path="/movein" element={<BypassRoute><MoveIn /></BypassRoute>} />
-            <Route path="/movein/:homeId" element={<BypassRoute><MoveIn /></BypassRoute>} />
-            <Route path="/maintenance" element={<BypassRoute><Maintenance /></BypassRoute>} />
-            <Route path="/operator" element={<BypassRoute><Operator /></BypassRoute>} />
-            <Route path="/super-admin" element={<BypassRoute><SuperAdmin /></BypassRoute>} />
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <ResidentProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/owner-login" element={<OwnerLogin />} />
+              <Route path="/unknown-role" element={<UnknownRole />} />
+              
+              {/* Temporarily bypass auth for all routes */}
+              <Route path="/" element={<BypassRoute><Index /></BypassRoute>} />
+              <Route path="/discovery" element={<BypassRoute><Discovery /></BypassRoute>} />
+              <Route path="/matches" element={<BypassRoute><Matches /></BypassRoute>} />
+              <Route path="/movein" element={<BypassRoute><MoveIn /></BypassRoute>} />
+              <Route path="/movein/:homeId" element={<BypassRoute><MoveIn /></BypassRoute>} />
+              <Route path="/maintenance" element={<BypassRoute><Maintenance /></BypassRoute>} />
+              <Route path="/operator" element={<BypassRoute><Operator /></BypassRoute>} />
+              <Route path="/super-admin" element={<BypassRoute><SuperAdmin /></BypassRoute>} />
+              
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </ResidentProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
