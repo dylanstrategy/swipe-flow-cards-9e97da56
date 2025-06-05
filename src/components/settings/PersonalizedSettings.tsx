@@ -1,15 +1,17 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, Bell, Shield, Palette, Database, Globe, HelpCircle, ChevronRight, Calendar } from 'lucide-react';
+import { ArrowLeft, User, Bell, Shield, Palette, Database, Globe, HelpCircle, ChevronRight, Calendar, Building } from 'lucide-react';
 import ResidentIdentitySetup from '@/components/resident/ResidentIdentitySetup';
+import PropertySetupModule from '@/components/property/PropertySetupModule';
 
 interface PersonalizedSettingsProps {
   onClose?: () => void;
   userRole?: string;
 }
 
-type SettingsSection = 'overview' | 'identity' | 'notifications' | 'privacy' | 'theme' | 'language' | 'calendar' | 'data' | 'help';
+type SettingsSection = 'overview' | 'identity' | 'notifications' | 'privacy' | 'theme' | 'language' | 'calendar' | 'data' | 'help' | 'property';
 
 const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) => {
   const [currentSection, setCurrentSection] = useState<SettingsSection>('overview');
@@ -30,6 +32,10 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
 
   if (currentSection === 'identity') {
     return <ResidentIdentitySetup onBack={handleBack} />;
+  }
+
+  if (currentSection === 'property') {
+    return <PropertySetupModule onClose={handleBack} />;
   }
 
   const renderSectionContent = () => {
@@ -385,6 +391,31 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
               </CardContent>
             </Card>
 
+            {/* Property Management (for operators) */}
+            {(userRole === 'operator' || userRole === 'senior_operator') && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Property Management</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-between h-auto min-h-[3rem] px-4 py-3"
+                    onClick={() => handleSectionSelect('property')}
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <Building className="w-5 h-5 text-gray-600 flex-shrink-0" />
+                      <div className="text-left min-w-0 flex-1">
+                        <div className="font-medium truncate">Property Setup</div>
+                        <div className="text-sm text-gray-600 truncate">Configure property settings, branding, and amenities</div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Data & Storage */}
             <Card>
               <CardHeader>
@@ -453,6 +484,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                currentSection === 'language' ? 'Language & Region' :
                currentSection === 'calendar' ? 'Calendar Settings' :
                currentSection === 'data' ? 'Data Management' :
+               currentSection === 'property' ? 'Property Setup' :
                currentSection === 'help' ? 'Getting Started' : 'Setup & Configuration'}
             </h1>
             <p className="text-sm text-gray-600">
