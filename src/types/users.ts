@@ -1,3 +1,4 @@
+
 export interface ContactInfo {
   email: string;
   phone: string;
@@ -10,22 +11,20 @@ export interface ContactInfo {
 
 export interface UserProfile {
   id: string;
-  first_name: string;
-  last_name: string;
+  name: string;
   email: string;
   phone: string;
   role: UserRole;
   permissions: Permission[];
   contactInfo: ContactInfo;
   avatar?: string;
-  unit_number?: string;
   status: 'active' | 'inactive' | 'pending';
   createdAt: Date;
   lastLogin?: Date;
   createdBy?: string; // ID of operator who created this user
 }
 
-export type UserRole = 'resident' | 'prospect' | 'operator' | 'senior_operator' | 'maintenance' | 'leasing' | 'management' | 'super_admin';
+export type UserRole = 'resident' | 'prospect' | 'operator' | 'senior_operator' | 'maintenance' | 'leasing' | 'management';
 
 export interface Permission {
   id: string;
@@ -84,12 +83,5 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   ],
   management: [
     { id: 'full_access', name: 'Full Access', description: 'Complete system access', category: 'management', level: 'admin' }
-  ],
-  super_admin: [
-    { id: 'full_system_access', name: 'Full System Access', description: 'Complete access to all system features', category: 'management', level: 'admin' },
-    { id: 'manage_companies', name: 'Manage Companies', description: 'Create, edit, and delete companies', category: 'management', level: 'admin' },
-    { id: 'manage_properties', name: 'Manage Properties', description: 'Manage all properties across companies', category: 'management', level: 'admin' },
-    { id: 'manage_all_users', name: 'Manage All Users', description: 'Manage users across all companies', category: 'user_management', level: 'admin' },
-    { id: 'system_analytics', name: 'System Analytics', description: 'View system-wide analytics and reports', category: 'management', level: 'admin' }
   ]
 };

@@ -34,8 +34,7 @@ const Maintenance = () => {
   // Mock current user profile
   const [currentUserProfile] = useState<UserProfile>({
     id: '2',
-    first_name: 'Mike',
-    last_name: 'Rodriguez',
+    name: 'Mike Rodriguez',
     email: 'mike.rodriguez@meridian.com',
     phone: '(555) 234-5678',
     role: 'maintenance',
@@ -135,8 +134,6 @@ const Maintenance = () => {
     }
   };
 
-  const fullName = `${currentUserProfile.first_name} ${currentUserProfile.last_name}`;
-
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
@@ -177,7 +174,7 @@ const Maintenance = () => {
               >
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{fullName}</p>
+                    <p className="text-sm font-medium leading-none">{currentUserProfile.name}</p>
                     <p className="text-xs leading-none text-muted-foreground">
                       Maintenance Technician
                     </p>

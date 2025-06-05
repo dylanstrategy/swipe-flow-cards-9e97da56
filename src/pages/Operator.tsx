@@ -33,8 +33,7 @@ const Operator = () => {
   // Mock current user profile - updated to senior_operator
   const [currentUserProfile] = useState<UserProfile>({
     id: '1',
-    first_name: 'John',
-    last_name: 'Smith',
+    name: 'John Smith',
     email: 'john.smith@meridian.com',
     phone: '(555) 123-4567',
     role: 'senior_operator',
@@ -156,8 +155,6 @@ const Operator = () => {
     }
   };
 
-  const fullName = `${currentUserProfile.first_name} ${currentUserProfile.last_name}`;
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -181,7 +178,7 @@ const Operator = () => {
             <DropdownMenuContent align="end" className="w-56 bg-white border shadow-lg">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{fullName}</p>
+                  <p className="text-sm font-medium leading-none">{currentUserProfile.name}</p>
                   <p className="text-xs leading-none text-muted-foreground">
                     Property Manager
                   </p>

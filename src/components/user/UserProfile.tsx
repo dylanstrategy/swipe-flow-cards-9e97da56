@@ -21,8 +21,7 @@ interface UserProfileProps {
 const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelete, currentUserRole }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: user.first_name,
-    lastName: user.last_name,
+    name: user.name,
     email: user.email,
     phone: user.phone,
     role: user.role,
@@ -40,8 +39,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
     
     const updatedUser: UserProfileType = {
       ...user,
-      first_name: formData.firstName,
-      last_name: formData.lastName,
+      name: formData.name,
       email: formData.email,
       phone: formData.phone,
       role: formData.role,
@@ -54,8 +52,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
 
   const handleCancel = () => {
     setFormData({
-      firstName: user.first_name,
-      lastName: user.last_name,
+      name: user.name,
       email: user.email,
       phone: user.phone,
       role: user.role,
@@ -112,8 +109,6 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
       array.findIndex(p => p.id === permission.id) === index
     );
 
-  const fullName = `${formData.firstName} ${formData.lastName}`;
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto p-4 space-y-6">
@@ -161,11 +156,11 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
             <div className="flex items-center gap-4">
               <Avatar className="w-16 h-16 flex-shrink-0">
                 <AvatarFallback className="text-xl font-bold bg-blue-600 text-white">
-                  {fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  {formData.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <h2 className="text-xl font-bold text-gray-900 mb-2">{fullName}</h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">{formData.name}</h2>
                 <div className="flex flex-wrap gap-2 mb-3">
                   <Badge className={`${getRoleColor(formData.role)}`}>
                     {formData.role === 'senior_operator' ? 'Senior Operator' : formData.role.charAt(0).toUpperCase() + formData.role.slice(1)}
@@ -198,26 +193,14 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="firstName" className="text-sm font-medium text-gray-700 mb-2 block">First Name</Label>
-                <Input
-                  id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  disabled={!isEditing}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="lastName" className="text-sm font-medium text-gray-700 mb-2 block">Last Name</Label>
-                <Input
-                  id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  disabled={!isEditing}
-                />
-              </div>
+            <div>
+              <Label htmlFor="name" className="text-sm font-medium text-gray-700 mb-2 block">Full Name</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                disabled={!isEditing}
+              />
             </div>
             
             <div>

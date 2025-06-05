@@ -1,64 +1,163 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '@/components/auth/AuthProvider';
+
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import TabNavigation from '@/components/TabNavigation';
+import TodayTab from '@/components/tabs/TodayTab';
+import ScheduleTab from '@/components/tabs/ScheduleTab';
+import MessagesTab from '@/components/tabs/MessagesTab';
+import AccountTab from '@/components/tabs/AccountTab';
+import PersonalizedSettings from '@/components/settings/PersonalizedSettings';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { User, Settings, LogOut } from 'lucide-react';
 
 const Index = () => {
-  const { user, userProfile } = useAuth();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('today');
+  const [showSettings, setShowSettings] = useState(false);
+
+  const tabs = [
+    { id: 'today', label: 'Today', icon: '🏠' },
+    { id: 'schedule', label: 'Schedule', icon: '📅' },
+    { id: 'messages', label: 'Messages', icon: '💬' },
+    { id: 'account', label: 'Account', icon: '👤' }
+  ];
+
+  const handleRoleSwitch = (role: string) => {
+    switch (role) {
+      case 'prospect':
+        navigate('/discovery');
+        break;
+      case 'resident':
+        // Already in resident view
+        break;
+      case 'operator':
+        navigate('/operator');
+        break;
+      default:
+        break;
+    }
+  };
+
+  if (showSettings) {
+    return <PersonalizedSettings onClose={() => setShowSettings(false)} userRole="resident" />;
+  }
+
+  const renderActiveTab = () => {
+    switch (activeTab) {
+      case 'today':
+        return <TodayTab />;
+      case 'schedule':
+        return <ScheduleTab />;
+      case 'messages':
+        return <MessagesTab />;
+      case 'account':
+        return <AccountTab />;
+      default:
+        return <TodayTab />;
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to Applaud</h1>
-          <p className="text-gray-600">Property management made simple</p>
-          {userProfile && (
-            <p className="text-sm text-gray-500 mt-2">
-              Logged in as {userProfile.first_name} {userProfile.last_name} ({userProfile.role})
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-3">
-          {userProfile?.role === 'super_admin' && (
-            <Link 
-              to="/super-admin" 
-              className="block w-full bg-red-600 hover:bg-red-700 text-white text-center py-3 px-4 rounded-lg font-medium transition-colors"
-            >
-              Super Admin Dashboard
-            </Link>
-          )}
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm px-4 py-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Applaud Living</h1>
+            <p className="text-sm text-gray-600">The Meridian • Apt 204</p>
+          </div>
           
-          {(userProfile?.role === 'operator' || userProfile?.role === 'senior_operator') && (
-            <Link 
-              to="/operator" 
-              className="block w-full bg-purple-600 hover:bg-purple-700 text-white text-center py-3 px-4 rounded-lg font-medium transition-colors"
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="focus:outline-none">
+                <Avatar className="w-10 h-10 cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all">
+                  <AvatarFallback className="bg-blue-600 text-white font-semibold">
+                    JD
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="end" 
+              className="w-56 bg-white border shadow-lg z-[100] max-h-[calc(100vh-200px)] overflow-y-auto mb-32"
+              sideOffset={8}
             >
-              Operator Dashboard
-            </Link>
-          )}
-
-          <Link 
-            to="/discovery" 
-            className="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-3 px-4 rounded-lg font-medium transition-colors"
-          >
-            Find Your Home
-          </Link>
-
-          <Link 
-            to="/matches" 
-            className="block w-full bg-green-600 hover:bg-green-700 text-white text-center py-3 px-4 rounded-lg font-medium transition-colors"
-          >
-            View Matches
-          </Link>
-
-          <Link 
-            to="/maintenance" 
-            className="block w-full bg-orange-600 hover:bg-orange-700 text-white text-center py-3 px-4 rounded-lg font-medium transition-colors"
-          >
-            Maintenance Requests
-          </Link>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">John Doe</p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    Resident • Apt 204
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuItem 
+                className="cursor-pointer"
+                onClick={() => setShowSettings(true)}
+              >
+                <User className="mr-2 h-4 w-4" />
+                <span>Setup</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem className="cursor-pointer focus:bg-accent">
+                <div className="flex items-center w-full">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Role</span>
+                </div>
+              </DropdownMenuItem>
+              
+              {/* Role submenu items */}
+              <div className="ml-6 space-y-1">
+                <DropdownMenuItem 
+                  className="cursor-pointer text-sm"
+                  onClick={() => handleRoleSwitch('prospect')}
+                >
+                  Prospect View
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="cursor-pointer text-sm bg-blue-50"
+                  onClick={() => handleRoleSwitch('resident')}
+                >
+                  Resident View (Current)
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="cursor-pointer text-sm"
+                  onClick={() => handleRoleSwitch('operator')}
+                >
+                  Operator View
+                </DropdownMenuItem>
+              </div>
+              
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="cursor-pointer text-red-600">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Logout</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
+
+      {/* Content */}
+      <main className="relative">
+        {renderActiveTab()}
+      </main>
+
+      {/* Tab Navigation */}
+      <TabNavigation 
+        tabs={tabs} 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+      />
     </div>
   );
 };
