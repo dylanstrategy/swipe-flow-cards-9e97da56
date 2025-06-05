@@ -1,5 +1,4 @@
-
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -30,14 +29,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [impersonatedRole, setImpersonatedRole] = useState<AppRole | null>(null);
   const { toast } = useToast();
+  
+  // Use ref to prevent multiple simultaneous profile fetches
+  const fetchingProfile = useRef(false);
+  const currentUserId = useRef<string | null>(null);
 
   const isImpersonating = impersonatedRole !== null;
   const canImpersonate = userProfile?.role === 'super_admin';
 
   // Function to fetch user profile from the database
   const fetchUserProfile = async (userId: string) => {
+    // Prevent multiple simultaneous fetches for the same user
+    if (fetchingProfile.current || currentUserId.current === userId) {
+      console.log('🔄 Profile fetch already in progress or user unchanged, skipping...');
+      return;
+    }
+
     try {
       console.log('🔍 Fetching user profile for:', userId);
+      fetchingProfile.current = true;
+      currentUserId.current = userId;
       
       const { data, error } = await supabase
         .from('users')
@@ -61,6 +72,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('❌ Exception fetching user profile:', error);
       setUserProfile(null);
+    } finally {
+      fetchingProfile.current = false;
     }
   };
 
@@ -68,46 +81,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.log('🚀 AuthProvider initializing...');
     
-    // Listen for auth changes FIRST (CRITICAL: Use non-async callback)
+    // Listen for auth changes FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('🔔 Auth state change:', event, 'Session:', !!session);
         
-        // Only synchronous state updates here
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Defer any Supabase calls with setTimeout to prevent deadlock
         if (session?.user) {
-          console.log('👤 User signed in, will fetch profile...');
-          setTimeout(() => {
-            fetchUserProfile(session.user.id).finally(() => {
-              setLoading(false);
-            });
-          }, 0);
+          console.log('👤 User signed in, scheduling profile fetch...');
+          // Only fetch if it's a different user or we don't have a profile yet
+          if (currentUserId.current !== session.user.id || !userProfile) {
+            setTimeout(() => {
+              fetchUserProfile(session.user.id).finally(() => {
+                if (!fetchingProfile.current) {
+                  setLoading(false);
+                }
+              });
+            }, 100); // Slightly longer delay to ensure state is settled
+          } else {
+            console.log('👤 Same user, keeping existing profile');
+            setLoading(false);
+          }
         } else {
           console.log('🚫 User signed out, clearing profile...');
           setUserProfile(null);
           setImpersonatedRole(null);
+          fetchingProfile.current = false;
+          currentUserId.current = null;
           setLoading(false);
         }
       }
     );
 
-    // THEN check for existing session
+    // Check for existing session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       console.log('🔍 Initial session check:', !!session, 'Error:', error);
       
       if (session?.user) {
-        console.log('👤 Initial session found, will fetch profile...');
+        console.log('👤 Initial session found');
         setSession(session);
         setUser(session.user);
-        // Use setTimeout here too for consistency
         setTimeout(() => {
           fetchUserProfile(session.user.id).finally(() => {
-            setLoading(false);
+            if (!fetchingProfile.current) {
+              setLoading(false);
+            }
           });
-        }, 0);
+        }, 100);
       } else {
         console.log('🚫 No initial session found');
         setLoading(false);
@@ -117,7 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, []); // Empty dependency array is critical
 
   const signInWithGoogle = async () => {
     try {
@@ -138,7 +160,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       console.log('✅ Google sign in initiated');
-      // Don't set loading to false here - let the auth state change handler do it
     } catch (error: any) {
       console.error('❌ Google sign in error:', error);
       setLoading(false);
@@ -164,8 +185,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
         throw error;
       }
-      
-      // Don't set loading to false here - let the auth state change handler do it
     } catch (error: any) {
       setLoading(false);
       throw error;
@@ -189,7 +208,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
 
-      // Don't set loading to false here - let the auth state change handler do it
       return {
         needsConfirmation: !data.session && !!data.user
       };
@@ -206,6 +224,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       
       setImpersonatedRole(null);
+      fetchingProfile.current = false;
+      currentUserId.current = null;
       console.log('✅ Signed out successfully');
     } catch (error: any) {
       console.error('❌ Sign out error:', error);
