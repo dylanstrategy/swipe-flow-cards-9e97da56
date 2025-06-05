@@ -44,25 +44,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTimeout(async () => {
             await fetchUserProfile(session.user.id);
             
-            // Handle post-login redirects
+            // Handle post-login redirects - only for successful sign-ins
             if (event === 'SIGNED_IN') {
-              const { data: profile } = await supabase
-                .from('users')
-                .select('role')
-                .eq('id', session.user.id)
-                .single();
+              console.log('User signed in, checking redirect logic...');
               
-              if (profile?.role === 'super_admin') {
-                // Redirect super admins to super admin dashboard
-                if (window.location.pathname === '/login' || window.location.pathname === '/owner-login') {
-                  window.location.href = '/super-admin';
+              try {
+                const { data: profile, error } = await supabase
+                  .from('users')
+                  .select('role')
+                  .eq('id', session.user.id)
+                  .single();
+                
+                console.log('User profile from DB:', profile, 'Error:', error);
+                
+                if (profile?.role === 'super_admin') {
+                  console.log('Redirecting super admin to /super-admin');
+                  // Only redirect if we're on login pages
+                  if (window.location.pathname === '/login' || window.location.pathname === '/owner-login') {
+                    window.location.href = '/super-admin';
+                  }
+                } else if (window.location.pathname === '/login') {
+                  console.log('Redirecting regular user to /');
+                  window.location.href = '/';
                 }
-              } else if (window.location.pathname === '/login') {
-                // Redirect other users to their default route
-                window.location.href = '/';
+              } catch (error) {
+                console.error('Error checking user role for redirect:', error);
               }
             }
-          }, 0);
+          }, 100); // Slight delay to ensure profile is fetched
         } else {
           setUserProfile(null);
         }
@@ -88,6 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log('Fetching user profile for:', userId);
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -99,6 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       
+      console.log('User profile fetched:', data);
       setUserProfile(data as AppUser);
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
@@ -107,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
+      console.log('Starting Google sign in...');
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -114,7 +126,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Google sign in error:', error);
+        throw error;
+      }
+      console.log('Google sign in initiated successfully');
     } catch (error: any) {
       console.error('Google sign in error:', error);
       toast({
