@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Save, Clock, Calendar, Globe, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,15 +38,26 @@ const SchedulingSetup: React.FC<SchedulingSetupProps> = ({ onBack }) => {
   });
 
   const handleSave = () => {
-    // Simulate actual save operation
-    localStorage.setItem('schedulingPreferences', JSON.stringify(scheduleData));
-    
-    toast({
-      title: "✅ Schedule Updated",
-      description: "Your scheduling preferences have been saved successfully.",
-      duration: 4000,
-    });
-    console.log('Schedule updated and saved to localStorage:', scheduleData);
+    try {
+      // Save to localStorage
+      localStorage.setItem('schedulingPreferences', JSON.stringify(scheduleData));
+      
+      // Show success toast
+      toast({
+        title: "✅ Schedule Updated",
+        description: "Your scheduling preferences have been saved successfully.",
+        duration: 4000,
+      });
+      
+      console.log('Scheduling preferences saved successfully:', scheduleData);
+    } catch (error) {
+      console.error('Error saving scheduling preferences:', error);
+      toast({
+        title: "❌ Save Failed",
+        description: "Failed to save scheduling preferences. Please try again.",
+        duration: 4000,
+      });
+    }
   };
 
   const handleWorkDayChange = (day: keyof typeof scheduleData.workDays, checked: boolean) => {
@@ -58,6 +69,18 @@ const SchedulingSetup: React.FC<SchedulingSetupProps> = ({ onBack }) => {
       }
     });
   };
+
+  // Load saved data on mount
+  React.useEffect(() => {
+    const saved = localStorage.getItem('schedulingPreferences');
+    if (saved) {
+      try {
+        setScheduleData(JSON.parse(saved));
+      } catch (error) {
+        console.error('Error loading saved scheduling preferences:', error);
+      }
+    }
+  }, []);
 
   return (
     <>

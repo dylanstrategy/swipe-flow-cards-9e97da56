@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ChevronLeft, Save, Edit, User, Mail, Phone, Shield } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronLeft, Save, Edit, User, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -29,22 +29,50 @@ const PersonalIdentitySetup: React.FC<PersonalIdentitySetupProps> = ({ onBack })
   });
 
   const handleSave = () => {
-    setIsEditing(false);
-    
-    // Simulate actual save operation
-    localStorage.setItem('personalIdentity', JSON.stringify(formData));
-    
-    toast({
-      title: "✅ Identity Updated",
-      description: "Your personal information has been saved successfully.",
-      duration: 4000,
-    });
-    console.log('Identity updated and saved to localStorage:', formData);
+    try {
+      setIsEditing(false);
+      
+      // Save to localStorage
+      localStorage.setItem('personalIdentity', JSON.stringify(formData));
+      
+      // Show success toast
+      toast({
+        title: "✅ Identity Updated",
+        description: "Your personal information has been saved successfully.",
+        duration: 4000,
+      });
+      
+      console.log('Personal identity saved successfully:', formData);
+    } catch (error) {
+      console.error('Error saving personal identity:', error);
+      toast({
+        title: "❌ Save Failed",
+        description: "Failed to save your personal information. Please try again.",
+        duration: 4000,
+      });
+    }
   };
 
   const handleCancel = () => {
     setIsEditing(false);
+    // Reset form data from localStorage if available
+    const saved = localStorage.getItem('personalIdentity');
+    if (saved) {
+      setFormData(JSON.parse(saved));
+    }
   };
+
+  // Load saved data on mount
+  React.useEffect(() => {
+    const saved = localStorage.getItem('personalIdentity');
+    if (saved) {
+      try {
+        setFormData(JSON.parse(saved));
+      } catch (error) {
+        console.error('Error loading saved personal identity:', error);
+      }
+    }
+  }, []);
 
   return (
     <>

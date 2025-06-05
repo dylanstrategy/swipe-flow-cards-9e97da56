@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ChevronLeft, Save, Shield, Lock, Eye, Key, Smartphone } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronLeft, Save, Shield, Lock, Eye, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -30,16 +30,39 @@ const PrivacySetup: React.FC<PrivacySetupProps> = ({ onBack }) => {
   });
 
   const handleSave = () => {
-    // Simulate actual save operation
-    localStorage.setItem('privacySettings', JSON.stringify(privacySettings));
-    
-    toast({
-      title: "✅ Privacy Settings Updated",
-      description: "Your security and privacy preferences have been saved successfully.",
-      duration: 4000,
-    });
-    console.log('Privacy settings updated and saved to localStorage:', privacySettings);
+    try {
+      // Save to localStorage
+      localStorage.setItem('privacySettings', JSON.stringify(privacySettings));
+      
+      // Show success toast
+      toast({
+        title: "✅ Privacy Settings Updated",
+        description: "Your security and privacy preferences have been saved successfully.",
+        duration: 4000,
+      });
+      
+      console.log('Privacy settings saved successfully:', privacySettings);
+    } catch (error) {
+      console.error('Error saving privacy settings:', error);
+      toast({
+        title: "❌ Save Failed",
+        description: "Failed to save privacy settings. Please try again.",
+        duration: 4000,
+      });
+    }
   };
+
+  // Load saved data on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('privacySettings');
+    if (saved) {
+      try {
+        setPrivacySettings(JSON.parse(saved));
+      } catch (error) {
+        console.error('Error loading saved privacy settings:', error);
+      }
+    }
+  }, []);
 
   return (
     <>
