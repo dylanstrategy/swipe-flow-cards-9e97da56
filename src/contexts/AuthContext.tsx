@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,25 +31,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [impersonatedRole, setImpersonatedRole] = useState<AppRole | null>(null);
   const { toast } = useToast();
   
-  // Use ref to prevent multiple simultaneous profile fetches
-  const fetchingProfile = useRef(false);
-  const currentUserId = useRef<string | null>(null);
+  // Use ref to prevent multiple simultaneous operations
+  const initializingRef = useRef(false);
+  const currentUserIdRef = useRef<string | null>(null);
 
   const isImpersonating = impersonatedRole !== null;
   const canImpersonate = userProfile?.role === 'super_admin';
 
   // Function to fetch user profile from the database
-  const fetchUserProfile = async (userId: string) => {
-    // Prevent multiple simultaneous fetches for the same user
-    if (fetchingProfile.current || currentUserId.current === userId) {
-      console.log('🔄 Profile fetch already in progress or user unchanged, skipping...');
-      return;
-    }
-
+  const fetchUserProfile = async (userId: string): Promise<AppUser | null> => {
     try {
       console.log('🔍 Fetching user profile for:', userId);
-      fetchingProfile.current = true;
-      currentUserId.current = userId;
       
       const { data, error } = await supabase
         .from('users')
@@ -58,86 +51,91 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('❌ Error fetching user profile:', error);
-        setUserProfile(null);
-        return;
+        return null;
       }
 
       if (data) {
         console.log('✅ User profile fetched:', data);
-        setUserProfile(data);
+        return data;
       } else {
         console.log('⚠️ No user profile found for user:', userId);
-        setUserProfile(null);
+        return null;
       }
     } catch (error) {
       console.error('❌ Exception fetching user profile:', error);
-      setUserProfile(null);
-    } finally {
-      fetchingProfile.current = false;
+      return null;
     }
   };
 
-  // Auth initialization and state management
+  // Handle auth state changes
+  const handleAuthStateChange = async (event: string, session: Session | null) => {
+    console.log('🔔 Auth state change:', event, 'Session:', !!session);
+    
+    // Prevent multiple simultaneous initializations
+    if (initializingRef.current) {
+      console.log('⏳ Auth initialization already in progress, skipping...');
+      return;
+    }
+
+    initializingRef.current = true;
+    
+    try {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        // Only fetch profile if it's a different user or we don't have one yet
+        if (currentUserIdRef.current !== session.user.id || !userProfile) {
+          console.log('👤 User signed in, fetching profile...');
+          currentUserIdRef.current = session.user.id;
+          const profile = await fetchUserProfile(session.user.id);
+          setUserProfile(profile);
+        } else {
+          console.log('👤 Same user, keeping existing profile');
+        }
+      } else {
+        console.log('🚫 User signed out, clearing profile...');
+        setUserProfile(null);
+        setImpersonatedRole(null);
+        currentUserIdRef.current = null;
+      }
+    } catch (error) {
+      console.error('❌ Error handling auth state change:', error);
+    } finally {
+      setLoading(false);
+      initializingRef.current = false;
+      console.log('✅ Auth initialization complete, loading set to false');
+    }
+  };
+
+  // Auth initialization
   useEffect(() => {
     console.log('🚀 AuthProvider initializing...');
     
-    // Listen for auth changes FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('🔔 Auth state change:', event, 'Session:', !!session);
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          console.log('👤 User signed in, scheduling profile fetch...');
-          // Only fetch if it's a different user or we don't have a profile yet
-          if (currentUserId.current !== session.user.id || !userProfile) {
-            setTimeout(() => {
-              fetchUserProfile(session.user.id).finally(() => {
-                if (!fetchingProfile.current) {
-                  setLoading(false);
-                }
-              });
-            }, 100); // Slightly longer delay to ensure state is settled
-          } else {
-            console.log('👤 Same user, keeping existing profile');
-            setLoading(false);
-          }
-        } else {
-          console.log('🚫 User signed out, clearing profile...');
-          setUserProfile(null);
-          setImpersonatedRole(null);
-          fetchingProfile.current = false;
-          currentUserId.current = null;
-          setLoading(false);
-        }
-      }
-    );
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      console.log('🔍 Initial session check:', !!session, 'Error:', error);
-      
-      if (session?.user) {
-        console.log('👤 Initial session found');
-        setSession(session);
-        setUser(session.user);
-        setTimeout(() => {
-          fetchUserProfile(session.user.id).finally(() => {
-            if (!fetchingProfile.current) {
-              setLoading(false);
-            }
-          });
-        }, 100);
-      } else {
-        console.log('🚫 No initial session found');
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('🔍 Initial session check:', !!session, 'Error:', error);
+        
+        if (!initializingRef.current) {
+          await handleAuthStateChange('INITIAL_SESSION', session);
+        }
+      } catch (error) {
+        console.error('❌ Error getting initial session:', error);
         setLoading(false);
+        initializingRef.current = false;
       }
-    });
+    };
+
+    initializeAuth();
 
     return () => {
       subscription.unsubscribe();
+      initializingRef.current = false;
     };
   }, []); // Empty dependency array is critical
 
@@ -149,7 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: 'https://preview--swipe-flow-cards.lovable.app/',
         }
       });
       
@@ -224,8 +222,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       
       setImpersonatedRole(null);
-      fetchingProfile.current = false;
-      currentUserId.current = null;
+      currentUserIdRef.current = null;
+      initializingRef.current = false;
       console.log('✅ Signed out successfully');
     } catch (error: any) {
       console.error('❌ Sign out error:', error);

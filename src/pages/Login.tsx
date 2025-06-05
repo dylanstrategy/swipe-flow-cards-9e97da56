@@ -1,11 +1,13 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Login = () => {
-  const { signInWithGoogle, loading } = useAuth();
+  const { signInWithGoogle, loading, user, userProfile } = useAuth();
+  const navigate = useNavigate();
 
   const handleGoogleSignIn = async () => {
     try {
@@ -16,6 +18,36 @@ const Login = () => {
     }
   };
 
+  // Handle redirects after successful login
+  useEffect(() => {
+    if (user && userProfile && !loading) {
+      console.log('✅ User logged in with role:', userProfile.role);
+      
+      // Redirect based on user role
+      switch (userProfile.role) {
+        case 'super_admin':
+          navigate('/super-admin');
+          break;
+        case 'operator':
+        case 'senior_operator':
+          navigate('/operator');
+          break;
+        case 'maintenance':
+          navigate('/maintenance');
+          break;
+        case 'resident':
+          navigate('/');
+          break;
+        case 'prospect':
+          navigate('/discovery');
+          break;
+        default:
+          navigate('/unknown-role');
+          break;
+      }
+    }
+  }, [user, userProfile, loading, navigate]);
+
   // Show loading while auth is being processed
   if (loading) {
     return (
@@ -23,6 +55,18 @@ const Login = () => {
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
           <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If user is already logged in, show loading (redirect will happen via useEffect)
+  if (user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-gray-600">Redirecting...</p>
         </div>
       </div>
     );
