@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 import type { User as AppUser, AppRole } from '@/types/supabase';
 
 interface AuthContextType {
@@ -245,15 +246,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       console.log('🔄 Signing out...');
+      
+      // Clear impersonation state first
+      setImpersonatedRole(null);
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      setImpersonatedRole(null);
       console.log('✅ Signed out successfully');
       toast({
         title: "Signed out",
         description: "You have been signed out successfully",
       });
+      
+      // Force redirect to login page
+      window.location.href = '/login';
     } catch (error: any) {
       console.error('❌ Sign out error:', error);
       toast({
