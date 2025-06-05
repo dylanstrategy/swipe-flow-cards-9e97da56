@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ChevronLeft, Building, Upload, Palette, MessageSquare, TrendingUp } from 'lucide-react';
+import { ChevronLeft, Building, Upload, Palette, MessageSquare, TrendingUp, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,12 +8,13 @@ import DocumentsSetup from './setup/DocumentsSetup';
 import BrandingSetup from './setup/BrandingSetup';
 import MessagingSetup from './setup/MessagingSetup';
 import CRMSetup from './setup/CRMSetup';
+import AmenitiesSetup from './setup/AmenitiesSetup';
 
 interface PropertySetupModuleProps {
   onClose: () => void;
 }
 
-type SetupSection = 'overview' | 'documents' | 'branding' | 'messaging' | 'crm';
+type SetupSection = 'overview' | 'documents' | 'branding' | 'messaging' | 'crm' | 'amenities';
 
 const PropertySetupModule = ({ onClose }: PropertySetupModuleProps) => {
   const [currentSection, setCurrentSection] = useState<SetupSection>('overview');
@@ -36,6 +37,15 @@ const PropertySetupModule = ({ onClose }: PropertySetupModuleProps) => {
       status: 'complete',
       completedItems: 4,
       totalItems: 4
+    },
+    {
+      id: 'amenities' as const,
+      title: 'Amenities & Booking',
+      description: 'Configure amenities, hours, booking requirements, pricing',
+      icon: Calendar,
+      status: 'incomplete',
+      completedItems: 1,
+      totalItems: 3
     },
     {
       id: 'messaging' as const,
@@ -67,6 +77,8 @@ const PropertySetupModule = ({ onClose }: PropertySetupModuleProps) => {
         return <DocumentsSetup onBack={() => setCurrentSection('overview')} />;
       case 'branding':
         return <BrandingSetup onBack={() => setCurrentSection('overview')} />;
+      case 'amenities':
+        return <AmenitiesSetup onBack={() => setCurrentSection('overview')} />;
       case 'messaging':
         return <MessagingSetup onBack={() => setCurrentSection('overview')} />;
       case 'crm':
