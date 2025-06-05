@@ -38,7 +38,16 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
       push: true,
       email: true,
       inApp: true
-    }
+    },
+    payment: {
+      method: 'ach', // 'ach' or 'card'
+      achRouting: '',
+      achAccount: '',
+      cardNumber: '',
+      cardExpiry: '',
+      cardCvc: ''
+    },
+    adPreferences: 'both' // 'both', 'building', 'none'
   });
 
   const settingsSections = [
@@ -52,7 +61,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
     {
       id: 'identity' as const,
       title: 'Identity & Access',
-      description: 'Profile photo, banking details, permissions',
+      description: 'Profile photo, payment details, preferences',
       icon: User,
       status: 'incomplete'
     },
@@ -281,7 +290,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
             
             <Card>
               <CardContent className="p-6">
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div>
                     <Label>Profile Photo</Label>
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
@@ -294,13 +303,134 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                   </div>
                   
                   <div>
-                    <Label>Banking Details</Label>
-                    <Input placeholder="Account information for payments/reimbursements" />
+                    <Label className="text-lg font-semibold">Payment Information</Label>
+                    <p className="text-sm text-gray-500 mb-4">For payments and reimbursements</p>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Payment Method</Label>
+                        <select
+                          value={settings.payment.method}
+                          onChange={(e) => setSettings(prev => ({
+                            ...prev,
+                            payment: { ...prev.payment, method: e.target.value as 'ach' | 'card' }
+                          }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md mt-1"
+                        >
+                          <option value="ach">ACH Bank Transfer</option>
+                          <option value="card">Credit/Debit Card</option>
+                        </select>
+                      </div>
+                      
+                      {settings.payment.method === 'ach' ? (
+                        <>
+                          <div>
+                            <Label>Routing Number</Label>
+                            <Input
+                              placeholder="9-digit routing number"
+                              value={settings.payment.achRouting}
+                              onChange={(e) => setSettings(prev => ({
+                                ...prev,
+                                payment: { ...prev.payment, achRouting: e.target.value }
+                              }))}
+                            />
+                          </div>
+                          <div>
+                            <Label>Account Number</Label>
+                            <Input
+                              placeholder="Bank account number"
+                              value={settings.payment.achAccount}
+                              onChange={(e) => setSettings(prev => ({
+                                ...prev,
+                                payment: { ...prev.payment, achAccount: e.target.value }
+                              }))}
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div>
+                            <Label>Card Number</Label>
+                            <Input
+                              placeholder="1234 5678 9012 3456"
+                              value={settings.payment.cardNumber}
+                              onChange={(e) => setSettings(prev => ({
+                                ...prev,
+                                payment: { ...prev.payment, cardNumber: e.target.value }
+                              }))}
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label>Expiry Date</Label>
+                              <Input
+                                placeholder="MM/YY"
+                                value={settings.payment.cardExpiry}
+                                onChange={(e) => setSettings(prev => ({
+                                  ...prev,
+                                  payment: { ...prev.payment, cardExpiry: e.target.value }
+                                }))}
+                              />
+                            </div>
+                            <div>
+                              <Label>CVC</Label>
+                              <Input
+                                placeholder="123"
+                                value={settings.payment.cardCvc}
+                                onChange={(e) => setSettings(prev => ({
+                                  ...prev,
+                                  payment: { ...prev.payment, cardCvc: e.target.value }
+                                }))}
+                              />
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                   
                   <div>
-                    <Label>Ad Personalization</Label>
-                    <Textarea placeholder="Preferences for personalized content..." rows={3} />
+                    <Label className="text-lg font-semibold">Advertisement Preferences</Label>
+                    <p className="text-sm text-gray-500 mb-4">Choose what type of ads you'd like to see</p>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="radio"
+                          id="ads-both"
+                          name="adPreferences"
+                          value="both"
+                          checked={settings.adPreferences === 'both'}
+                          onChange={(e) => setSettings(prev => ({ ...prev, adPreferences: e.target.value as any }))}
+                          className="w-4 h-4 text-blue-600"
+                        />
+                        <Label htmlFor="ads-both">Building & Third-party ads</Label>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="radio"
+                          id="ads-building"
+                          name="adPreferences"
+                          value="building"
+                          checked={settings.adPreferences === 'building'}
+                          onChange={(e) => setSettings(prev => ({ ...prev, adPreferences: e.target.value as any }))}
+                          className="w-4 h-4 text-blue-600"
+                        />
+                        <Label htmlFor="ads-building">Building ads only</Label>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="radio"
+                          id="ads-none"
+                          name="adPreferences"
+                          value="none"
+                          checked={settings.adPreferences === 'none'}
+                          onChange={(e) => setSettings(prev => ({ ...prev, adPreferences: e.target.value as any }))}
+                          className="w-4 h-4 text-blue-600"
+                        />
+                        <Label htmlFor="ads-none">No advertisements</Label>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>
