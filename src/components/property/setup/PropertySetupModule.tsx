@@ -1,141 +1,194 @@
 
 import React, { useState } from 'react';
-import { X, Database, MessageSquare, Palette, FileText, Users, Wrench, Home, TrendingUp, DollarSign } from 'lucide-react';
+import { ChevronLeft, Building, Upload, Palette, MessageSquare, TrendingUp, Calendar, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import DataSourceManager from './DataSourceManager';
-import MessagingSetup from './MessagingSetup';
-import BrandingSetup from './BrandingSetup';
+import { Badge } from '@/components/ui/badge';
 import DocumentsSetup from './DocumentsSetup';
+import BrandingSetup from './BrandingSetup';
+import MessagingSetup from './MessagingSetup';
 import CRMSetup from './CRMSetup';
 import AmenitiesSetup from './AmenitiesSetup';
+import UnitDirectory from './UnitDirectory';
 import PricingDashboard from './PricingDashboard';
 
 interface PropertySetupModuleProps {
   onClose: () => void;
 }
 
-const PropertySetupModule = ({ onClose }: PropertySetupModuleProps) => {
-  const [activeModule, setActiveModule] = useState<string | null>(null);
+type SetupSection = 'overview' | 'units' | 'pricing' | 'documents' | 'branding' | 'messaging' | 'crm' | 'amenities';
 
-  const modules = [
+const PropertySetupModule = ({ onClose }: PropertySetupModuleProps) => {
+  const [currentSection, setCurrentSection] = useState<SetupSection>('overview');
+
+  const setupSections = [
     {
-      id: 'data-sources',
-      title: 'Data Source Management',
-      description: 'Configure lease tracking, renewals, and notices to automate PPF',
-      icon: Database,
-      component: DataSourceManager
-    },
-    {
-      id: 'pricing-dashboard',
-      title: 'Dynamic Pricing Dashboard',
-      description: 'Real-time pricing engine with occupancy, comps, and expiration controls',
-      icon: DollarSign,
-      component: PricingDashboard
-    },
-    {
-      id: 'messaging',
-      title: 'Message Automations',
-      description: 'Set up automated messaging templates and workflows',
-      icon: MessageSquare,
-      component: MessagingSetup
-    },
-    {
-      id: 'branding',
-      title: 'Branding & Design',
-      description: 'Customize your property branding and visual identity',
-      icon: Palette,
-      component: BrandingSetup
-    },
-    {
-      id: 'amenities',
-      title: 'Amenities Setup',
-      description: 'Configure amenities, hours of operation, and booking requirements',
+      id: 'units' as const,
+      title: 'Unit Directory',
+      description: 'Manage unit types, floor plans, premiums and base pricing',
       icon: Home,
-      component: AmenitiesSetup
+      status: 'complete',
+      completedItems: 3,
+      totalItems: 3
     },
     {
-      id: 'documents',
-      title: 'Documents & Forms',
-      description: 'Manage lease agreements, applications, and legal documents',
-      icon: FileText,
-      component: DocumentsSetup
+      id: 'pricing' as const,
+      title: 'Dynamic Pricing',
+      description: 'Configure pricing based on comp analysis and occupancy',
+      icon: TrendingUp,
+      status: 'incomplete',
+      completedItems: 1,
+      totalItems: 4
     },
     {
-      id: 'crm',
-      title: 'CRM Integration',
-      description: 'Connect with external CRM systems and manage lead workflows',
-      icon: Users,
-      component: CRMSetup
+      id: 'documents' as const,
+      title: 'Document Management',
+      description: 'Upload W-9s, COIs, vendor contracts, lease files',
+      icon: Upload,
+      status: 'incomplete',
+      completedItems: 2,
+      totalItems: 5
+    },
+    {
+      id: 'branding' as const,
+      title: 'White-Label Branding',
+      description: 'Logo, colors, favicon, domain branding',
+      icon: Palette,
+      status: 'complete',
+      completedItems: 4,
+      totalItems: 4
+    },
+    {
+      id: 'amenities' as const,
+      title: 'Amenities & Booking',
+      description: 'Configure amenities, hours, booking requirements, pricing',
+      icon: Calendar,
+      status: 'incomplete',
+      completedItems: 1,
+      totalItems: 3
+    },
+    {
+      id: 'messaging' as const,
+      title: 'Message Automations',
+      description: 'Templates for tours, move-ins, renewals',
+      icon: MessageSquare,
+      status: 'incomplete',
+      completedItems: 1,
+      totalItems: 6
+    },
+    {
+      id: 'crm' as const,
+      title: 'CRM & Follow-ups',
+      description: 'Lead tracking, conversion, follow-up timing',
+      icon: Building,
+      status: 'incomplete',
+      completedItems: 0,
+      totalItems: 4
     }
   ];
 
-  if (activeModule) {
-    const module = modules.find(m => m.id === activeModule);
-    if (module) {
-      const Component = module.component;
-      
-      // Handle different prop requirements for each component
-      if (module.id === 'data-sources' || module.id === 'pricing-dashboard') {
-        return <Component onBack={() => setActiveModule(null)} />;
-      }
-      // All other components expect onBack
-      return <Component onBack={() => setActiveModule(null)} />;
+  const getStatusColor = (status: string) => {
+    return status === 'complete' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800';
+  };
+
+  const renderCurrentSection = () => {
+    switch (currentSection) {
+      case 'units':
+        return <UnitDirectory onBack={() => setCurrentSection('overview')} />;
+      case 'pricing':
+        return <PricingDashboard onBack={() => setCurrentSection('overview')} />;
+      case 'documents':
+        return <DocumentsSetup onBack={() => setCurrentSection('overview')} />;
+      case 'branding':
+        return <BrandingSetup onBack={() => setCurrentSection('overview')} />;
+      case 'amenities':
+        return <AmenitiesSetup onBack={() => setCurrentSection('overview')} />;
+      case 'messaging':
+        return <MessagingSetup onBack={() => setCurrentSection('overview')} />;
+      case 'crm':
+        return <CRMSetup onBack={() => setCurrentSection('overview')} />;
+      default:
+        return (
+          <div className="space-y-4 max-w-4xl mx-auto">
+            <div className="flex items-center gap-3 mb-4">
+              <Building className="w-6 h-6 text-blue-600 flex-shrink-0" />
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">Property Setup</h1>
+                <p className="text-sm text-gray-600">Configure your property management settings</p>
+              </div>
+            </div>
+
+            <div className="grid gap-3">
+              {setupSections.map((section) => {
+                const Icon = section.icon;
+                const completionPercentage = Math.round((section.completedItems / section.totalItems) * 100);
+                
+                return (
+                  <Card 
+                    key={section.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow shadow-sm"
+                    onClick={() => setCurrentSection(section.id)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="p-2 bg-blue-50 rounded-lg flex-shrink-0">
+                            <Icon className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="text-sm font-semibold text-gray-900 truncate">{section.title}</h3>
+                              <Badge className={`${getStatusColor(section.status)} text-xs`}>
+                                {section.status === 'complete' ? 'Complete' : 'Incomplete'}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-gray-600 mb-2 truncate">{section.description}</p>
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 bg-gray-200 rounded-full h-1.5">
+                                <div 
+                                  className="bg-blue-600 h-1.5 rounded-full transition-all"
+                                  style={{ width: `${completionPercentage}%` }}
+                                />
+                              </div>
+                              <span className="text-xs text-gray-500 flex-shrink-0">
+                                {section.completedItems}/{section.totalItems}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <Button variant="outline" size="sm" className="text-xs px-3 py-1 flex-shrink-0">
+                          Configure
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        );
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b px-6 py-4">
-        <div className="flex items-center justify-between max-w-6xl mx-auto">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Property Setup</h1>
-            <p className="text-gray-600">Configure your property management system</p>
-          </div>
-          <Button onClick={onClose} variant="outline" size="sm">
-            <X className="w-4 h-4" />
+    <div className="fixed inset-0 bg-white z-50 overflow-hidden">
+      <div className="h-full flex flex-col">
+        {/* Header */}
+        <div className="flex-shrink-0 flex items-center justify-between p-3 border-b border-gray-200 bg-white">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={currentSection === 'overview' ? onClose : () => setCurrentSection('overview')}
+            className="flex items-center gap-2 text-sm"
+          >
+            <ChevronLeft size={18} />
+            {currentSection === 'overview' ? 'Back to Settings' : 'Back to Overview'}
           </Button>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {modules.map((module) => {
-            const IconComponent = module.icon;
-            return (
-              <Card
-                key={module.id}
-                className="cursor-pointer hover:shadow-lg transition-shadow duration-200 border-2 hover:border-blue-200"
-                onClick={() => setActiveModule(module.id)}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <IconComponent className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <CardTitle className="text-lg">{module.title}</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    {module.description}
-                  </p>
-                  <Button 
-                    className="w-full mt-4" 
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveModule(module.id);
-                    }}
-                  >
-                    Configure
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-3">
+          {renderCurrentSection()}
         </div>
       </div>
     </div>

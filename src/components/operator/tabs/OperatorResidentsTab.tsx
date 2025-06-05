@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,8 +10,10 @@ import MoveInTracker from '../MoveInTracker';
 import MoveOutTracker from '../MoveOutTracker';
 import RenewalForm from '../../forms/RenewalForm';
 import NoticeToVacateForm from '../../forms/NoticeToVacateForm';
+import { useResident } from '@/contexts/ResidentContext';
 
 const OperatorResidentsTab = () => {
+  const { allResidents } = useResident();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedResident, setSelectedResident] = useState<any>(null);
@@ -22,201 +23,6 @@ const OperatorResidentsTab = () => {
   const [moveOutResidentId, setMoveOutResidentId] = useState<string>('');
   const [showRenewalForm, setShowRenewalForm] = useState(false);
   const [showNoticeForm, setShowNoticeForm] = useState(false);
-
-  const residents = [
-    {
-      id: 1,
-      name: 'Sarah Johnson',
-      unit: 'A204',
-      phone: '(555) 123-4567',
-      email: 'sarah.johnson@email.com',
-      birthdate: '1985-03-15',
-      leaseStatus: 'active',
-      status: 'current',
-      moveInDate: '2023-06-15',
-      balance: 0,
-      workOrders: 2,
-      renewalStatus: 'pending',
-      hasMoveInProgress: false,
-      hasMoveOutProgress: false,
-      currentRent: 1800,
-      documents: [
-        { id: 1, name: 'Lease Agreement.pdf', type: 'lease', uploadDate: '2023-06-10', size: '2.3 MB' },
-        { id: 2, name: 'Driver License.jpg', type: 'id', uploadDate: '2023-06-10', size: '1.1 MB' },
-        { id: 3, name: 'Application.pdf', type: 'application', uploadDate: '2023-06-08', size: '850 KB' }
-      ]
-    },
-    {
-      id: 2,
-      name: 'Michael Chen',
-      unit: 'B156',
-      phone: '(555) 234-5678',
-      email: 'michael.chen@email.com',
-      birthdate: '1990-11-22',
-      leaseStatus: 'expiring',
-      status: 'notice',
-      moveInDate: '2022-08-20',
-      balance: 150.00,
-      workOrders: 0,
-      renewalStatus: 'offered',
-      hasMoveInProgress: false,
-      hasMoveOutProgress: true,
-      currentRent: 1650,
-      documents: [
-        { id: 4, name: 'Lease Agreement.pdf', type: 'lease', uploadDate: '2022-08-15', size: '2.1 MB' },
-        { id: 5, name: 'Background Check.pdf', type: 'application', uploadDate: '2022-08-10', size: '450 KB' }
-      ]
-    },
-    {
-      id: 3,
-      name: 'Emily Rodriguez',
-      unit: 'C302',
-      phone: '(555) 345-6789',
-      email: 'emily.rodriguez@email.com',
-      birthdate: '1988-07-08',
-      leaseStatus: 'active',
-      status: 'current',
-      moveInDate: '2023-11-10',
-      balance: 0,
-      workOrders: 1,
-      renewalStatus: 'not_due',
-      hasMoveInProgress: false,
-      hasMoveOutProgress: false,
-      currentRent: 1950,
-      documents: [
-        { id: 6, name: 'Lease Agreement.pdf', type: 'lease', uploadDate: '2023-11-05', size: '2.2 MB' },
-        { id: 7, name: 'Emergency Contact Form.pdf', type: 'legal', uploadDate: '2023-11-05', size: '320 KB' }
-      ]
-    },
-    {
-      id: 4,
-      name: 'David Thompson',
-      unit: 'A108',
-      phone: '(555) 456-7890',
-      email: 'david.thompson@email.com',
-      birthdate: '1982-12-03',
-      leaseStatus: 'delinquent',
-      status: 'current',
-      moveInDate: '2023-03-05',
-      balance: 850.00,
-      workOrders: 3,
-      renewalStatus: 'not_due',
-      hasMoveInProgress: false,
-      hasMoveOutProgress: false,
-      currentRent: 1750,
-      documents: [
-        { id: 8, name: 'Lease Agreement.pdf', type: 'lease', uploadDate: '2023-03-01', size: '2.4 MB' },
-        { id: 9, name: 'Late Notice.pdf', type: 'legal', uploadDate: '2024-01-15', size: '180 KB' },
-        { id: 10, name: 'Payment Plan Agreement.pdf', type: 'legal', uploadDate: '2024-02-01', size: '220 KB' }
-      ]
-    },
-    {
-      id: 5,
-      name: 'April Chen',
-      unit: '424-3',
-      phone: '(555) 567-8901',
-      email: 'aprilchen@email.com',
-      birthdate: '1995-04-12',
-      leaseStatus: 'move_in_progress',
-      status: 'future',
-      moveInDate: '2025-03-21',
-      balance: 0,
-      workOrders: 0,
-      renewalStatus: 'not_due',
-      hasMoveInProgress: true,
-      hasMoveOutProgress: false,
-      currentRent: 1900,
-      documents: [
-        { id: 11, name: 'Application.pdf', type: 'application', uploadDate: '2025-02-15', size: '1.2 MB' },
-        { id: 12, name: 'ID Copy.jpg', type: 'id', uploadDate: '2025-02-15', size: '980 KB' }
-      ]
-    },
-    {
-      id: 6,
-      name: 'Zhihan He',
-      unit: '518',
-      phone: '(555) 678-9012',
-      email: 'zhihan@email.com',
-      birthdate: '1992-09-28',
-      leaseStatus: 'move_in_progress',
-      status: 'future',
-      moveInDate: '2025-03-10',
-      balance: 0,
-      workOrders: 0,
-      renewalStatus: 'not_due',
-      hasMoveInProgress: true,
-      hasMoveOutProgress: false,
-      currentRent: 2100,
-      documents: [
-        { id: 13, name: 'Application.pdf', type: 'application', uploadDate: '2025-02-20', size: '1.1 MB' },
-        { id: 14, name: 'Passport Copy.jpg', type: 'id', uploadDate: '2025-02-20', size: '1.5 MB' },
-        { id: 15, name: 'Employment Letter.pdf', type: 'application', uploadDate: '2025-02-22', size: '650 KB' }
-      ]
-    },
-    {
-      id: 7,
-      name: 'Jennifer Smith',
-      unit: 'N/A',
-      phone: '(555) 789-0123',
-      email: 'jennifer.smith@email.com',
-      birthdate: '1991-06-14',
-      leaseStatus: 'prospect',
-      status: 'prospect',
-      moveInDate: '',
-      balance: 0,
-      workOrders: 0,
-      renewalStatus: 'not_due',
-      hasMoveInProgress: false,
-      hasMoveOutProgress: false,
-      currentRent: 0,
-      documents: [
-        { id: 16, name: 'Application.pdf', type: 'application', uploadDate: '2025-03-01', size: '900 KB' }
-      ]
-    },
-    {
-      id: 8,
-      name: 'Robert Martinez',
-      unit: 'D401',
-      phone: '(555) 890-1234',
-      email: 'robert.martinez@email.com',
-      birthdate: '1979-01-17',
-      leaseStatus: 'expired',
-      status: 'past',
-      moveInDate: '2021-09-01',
-      moveOutDate: '2024-08-31',
-      balance: 0,
-      workOrders: 0,
-      renewalStatus: 'not_due',
-      hasMoveInProgress: false,
-      hasMoveOutProgress: false,
-      currentRent: 0,
-      documents: [
-        { id: 17, name: 'Final Statement.pdf', type: 'legal', uploadDate: '2024-09-01', size: '420 KB' },
-        { id: 18, name: 'Security Deposit Return.pdf', type: 'legal', uploadDate: '2024-09-05', size: '180 KB' }
-      ]
-    },
-    {
-      id: 9,
-      name: 'Lisa Wang',
-      unit: 'E205',
-      phone: '(555) 901-2345',
-      email: 'lisa.wang@email.com',
-      birthdate: '1993-05-30',
-      leaseStatus: 'expired',
-      status: 'past',
-      moveInDate: '2022-04-15',
-      moveOutDate: '2024-12-15',
-      balance: 0,
-      workOrders: 0,
-      renewalStatus: 'not_due',
-      hasMoveInProgress: false,
-      hasMoveOutProgress: false,
-      currentRent: 0,
-      documents: [
-        { id: 19, name: 'Move Out Inspection.pdf', type: 'legal', uploadDate: '2024-12-16', size: '650 KB' }
-      ]
-    }
-  ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -258,9 +64,9 @@ const OperatorResidentsTab = () => {
     }
   };
 
-  const filteredResidents = residents.filter(resident => {
-    const matchesSearch = resident.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         resident.unit.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredResidents = allResidents.filter(resident => {
+    const matchesSearch = resident.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         resident.unitNumber.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || resident.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
@@ -315,8 +121,8 @@ const OperatorResidentsTab = () => {
               <ArrowLeft size={20} />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{selectedResident.name}</h1>
-              <p className="text-gray-600">Unit {selectedResident.unit}</p>
+              <h1 className="text-2xl font-bold text-gray-900">{selectedResident.fullName}</h1>
+              <p className="text-gray-600">Unit {selectedResident.unitNumber}</p>
             </div>
           </div>
         </div>
@@ -358,6 +164,10 @@ const OperatorResidentsTab = () => {
                   <p className="font-medium">{selectedResident.moveInDate ? new Date(selectedResident.moveInDate).toLocaleDateString() : 'N/A'}</p>
                 </div>
                 <div>
+                  <span className="text-sm text-gray-600">Lease End Date</span>
+                  <p className="font-medium">{selectedResident.leaseEndDate ? new Date(selectedResident.leaseEndDate).toLocaleDateString() : 'N/A'}</p>
+                </div>
+                <div>
                   <span className="text-sm text-gray-600">Lease Status</span>
                   <div className="mt-1">
                     <Badge className={getStatusColor(selectedResident.leaseStatus)}>
@@ -375,7 +185,7 @@ const OperatorResidentsTab = () => {
                 </div>
                 <div>
                   <span className="text-sm text-gray-600">Current Rent</span>
-                  <p className="font-medium">${selectedResident.currentRent?.toFixed(2) || '0.00'}</p>
+                  <p className="font-medium">${selectedResident.currentRent?.toLocaleString() || '0'}</p>
                 </div>
                 <div>
                   <span className="text-sm text-gray-600">Balance</span>
@@ -386,6 +196,14 @@ const OperatorResidentsTab = () => {
                 <div>
                   <span className="text-sm text-gray-600">Open Work Orders</span>
                   <p className="font-medium">{selectedResident.workOrders}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-600">Renewal Status</span>
+                  <div className="mt-1">
+                    <Badge className={getRenewalColor(selectedResident.renewalStatus)}>
+                      {selectedResident.renewalStatus.replace('_', ' ')}
+                    </Badge>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -582,19 +400,19 @@ const OperatorResidentsTab = () => {
 
   // Get summary stats by resident status
   const statusCounts = {
-    total: residents.length,
-    current: residents.filter(r => r.status === 'current').length,
-    notice: residents.filter(r => r.status === 'notice').length,
-    future: residents.filter(r => r.status === 'future').length,
-    prospect: residents.filter(r => r.status === 'prospect').length,
-    past: residents.filter(r => r.status === 'past').length
+    total: allResidents.length,
+    current: allResidents.filter(r => r.status === 'current').length,
+    notice: allResidents.filter(r => r.status === 'notice').length,
+    future: allResidents.filter(r => r.status === 'future').length,
+    prospect: allResidents.filter(r => r.status === 'prospect').length,
+    past: allResidents.filter(r => r.status === 'past').length
   };
 
   return (
     <div className="px-4 py-6 pb-24">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Complete Resident Directory</h1>
-        <p className="text-gray-600">All residents across all statuses ({residents.length} total)</p>
+        <p className="text-gray-600">All residents across all statuses ({allResidents.length} total)</p>
       </div>
 
       {/* Summary Stats */}
@@ -668,10 +486,8 @@ const OperatorResidentsTab = () => {
                         <User className="w-5 h-5 text-blue-600" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900">{resident.name}</h3>
-                        <p className="text-sm text-gray-600">
-                          {resident.unit !== 'N/A' ? `Unit ${resident.unit}` : 'No Unit Assigned'}
-                        </p>
+                        <h3 className="font-semibold text-gray-900">{resident.fullName}</h3>
+                        <p className="text-sm text-gray-600">Unit {resident.unitNumber}</p>
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-gray-400" />
@@ -688,7 +504,7 @@ const OperatorResidentsTab = () => {
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
                       <Calendar className="w-4 h-4" />
-                      <span>Born {new Date(resident.birthdate).toLocaleDateString()}</span>
+                      <span>${resident.currentRent.toLocaleString()}/mo</span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
                       <Home className="w-4 h-4" />
@@ -704,6 +520,11 @@ const OperatorResidentsTab = () => {
                       {resident.leaseStatus === 'delinquent' && (
                         <Badge className="bg-red-100 text-red-800">
                           Delinquent
+                        </Badge>
+                      )}
+                      {resident.status === 'future' && (
+                        <Badge className="bg-blue-100 text-blue-800">
+                          Move-in: {new Date(resident.moveInDate).toLocaleDateString()}
                         </Badge>
                       )}
                     </div>
