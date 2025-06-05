@@ -1,5 +1,4 @@
 
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,18 +9,20 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { UserProfile, UserRole, ROLE_PERMISSIONS } from '@/types/users';
 import { Plus, Search, Users, Mail, Phone, Edit, Trash2 } from 'lucide-react';
 import CreateUserForm from './CreateUserForm';
+import UserProfileComponent from './UserProfile';
 
 const UserManagement = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('all');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [showUserProfile, setShowUserProfile] = useState(false);
 
   // Mock current user role - in real app this would come from auth context
   const currentUserRole: UserRole = 'senior_operator';
 
   // Mock data - in real app this would come from backend
-  const [users] = useState<UserProfile[]>([
+  const [users, setUsers] = useState<UserProfile[]>([
     {
       id: '1',
       name: 'John Smith',
@@ -111,15 +112,46 @@ const UserManagement = () => {
 
   const handleUserClick = (userId: string) => {
     setSelectedUserId(userId);
+    setShowUserProfile(true);
     console.log('Opening profile for user:', userId);
-    // In real app, this would open a user profile modal or navigate to profile page
   };
+
+  const handleSaveUser = (updatedUser: UserProfile) => {
+    setUsers(users.map(user => user.id === updatedUser.id ? updatedUser : user));
+    setShowUserProfile(false);
+    setSelectedUserId(null);
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    if (window.confirm('Are you sure you want to delete this user?')) {
+      setUsers(users.filter(user => user.id !== userId));
+      setShowUserProfile(false);
+      setSelectedUserId(null);
+    }
+  };
+
+  const selectedUser = selectedUserId ? users.find(u => u.id === selectedUserId) : null;
 
   if (showCreateForm) {
     return (
       <CreateUserForm
         onSubmit={handleCreateUser}
         onCancel={handleBackToManagement}
+        currentUserRole={currentUserRole}
+      />
+    );
+  }
+
+  if (showUserProfile && selectedUser) {
+    return (
+      <UserProfileComponent
+        user={selectedUser}
+        onBack={() => {
+          setShowUserProfile(false);
+          setSelectedUserId(null);
+        }}
+        onSave={handleSaveUser}
+        onDelete={handleDeleteUser}
         currentUserRole={currentUserRole}
       />
     );
@@ -166,36 +198,36 @@ const UserManagement = () => {
             </select>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-4 gap-4">
+          {/* Stats - Fixed overflow */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-blue-600">{users.length}</div>
-                <div className="text-sm text-gray-600">Total Users</div>
+              <CardContent className="p-3 text-center">
+                <div className="text-xl md:text-2xl font-bold text-blue-600 truncate">{users.length}</div>
+                <div className="text-xs md:text-sm text-gray-600">Total Users</div>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-green-600">
+              <CardContent className="p-3 text-center">
+                <div className="text-xl md:text-2xl font-bold text-green-600 truncate">
                   {users.filter(u => u.status === 'active').length}
                 </div>
-                <div className="text-sm text-gray-600">Active</div>
+                <div className="text-xs md:text-sm text-gray-600">Active</div>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-orange-600">
+              <CardContent className="p-3 text-center">
+                <div className="text-xl md:text-2xl font-bold text-orange-600 truncate">
                   {users.filter(u => u.role === 'maintenance').length}
                 </div>
-                <div className="text-sm text-gray-600">Maintenance</div>
+                <div className="text-xs md:text-sm text-gray-600">Maintenance</div>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-purple-600">
+              <CardContent className="p-3 text-center">
+                <div className="text-xl md:text-2xl font-bold text-purple-600 truncate">
                   {users.filter(u => u.role === 'operator').length}
                 </div>
-                <div className="text-sm text-gray-600">Operators</div>
+                <div className="text-xs md:text-sm text-gray-600">Operators</div>
               </CardContent>
             </Card>
           </div>
@@ -205,37 +237,35 @@ const UserManagement = () => {
             {filteredUsers.map((user) => (
               <Card 
                 key={user.id} 
-                className={`hover:shadow-md transition-shadow cursor-pointer ${
-                  selectedUserId === user.id ? 'ring-2 ring-blue-500' : ''
-                }`}
+                className="hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => handleUserClick(user.id)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <Avatar className="w-12 h-12">
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <Avatar className="w-12 h-12 flex-shrink-0">
                         <AvatarFallback className="font-semibold">
                           {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
-                          <h3 className="font-semibold text-gray-900">{user.name}</h3>
-                          <Badge className={getRoleColor(user.role)}>
+                          <h3 className="font-semibold text-gray-900 truncate">{user.name}</h3>
+                          <Badge className={`${getRoleColor(user.role)} flex-shrink-0`}>
                             {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                           </Badge>
-                          <Badge className={getStatusColor(user.status)}>
+                          <Badge className={`${getStatusColor(user.status)} flex-shrink-0`}>
                             {user.status}
                           </Badge>
                         </div>
                         
                         <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
-                          <div className="flex items-center gap-1">
-                            <Mail className="w-4 h-4" />
-                            <span className="break-all">{user.email}</span>
+                          <div className="flex items-center gap-1 min-w-0">
+                            <Mail className="w-4 h-4 flex-shrink-0" />
+                            <span className="truncate">{user.email}</span>
                           </div>
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 flex-shrink-0">
                             <Phone className="w-4 h-4" />
                             {user.phone}
                           </div>
@@ -248,11 +278,16 @@ const UserManagement = () => {
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                      <Button variant="outline" size="sm">
+                    <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <Button variant="outline" size="sm" onClick={() => handleUserClick(user.id)}>
                         <Edit className="w-4 h-4" />
                       </Button>
-                      <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-red-600 hover:text-red-700"
+                        onClick={() => handleDeleteUser(user.id)}
+                      >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
