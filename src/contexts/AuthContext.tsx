@@ -29,7 +29,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [impersonatedRole, setImpersonatedRole] = useState<AppRole | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [hasRedirected, setHasRedirected] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
   const isImpersonating = impersonatedRole !== null;
@@ -41,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return allowedDomains.some(domain => email.endsWith(domain));
   };
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = async (userId: string): Promise<AppUser | null> => {
     try {
       console.log('Fetching user profile for:', userId);
       const { data, error } = await supabase
@@ -63,43 +64,131 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handlePostLoginRedirect = (userRole: AppRole) => {
-    const currentPath = window.location.pathname;
+  const getRoleBasedRedirect = (userProfile: AppUser): string => {
+    // Special case for super admin email
+    if (userProfile.email === 'info@applaudliving.com') {
+      return '/super-admin';
+    }
     
-    // Only redirect if we're on a login page
-    if (currentPath === '/login' || currentPath === '/owner-login') {
-      console.log('Redirecting user with role:', userRole);
-      
-      switch (userRole) {
-        case 'super_admin':
-          window.location.href = '/super-admin';
-          break;
-        case 'senior_operator':
-        case 'operator':
-        case 'leasing':
-          window.location.href = '/operator';
-          break;
-        case 'maintenance':
-          window.location.href = '/maintenance';
-          break;
-        case 'resident':
-          window.location.href = '/';
-          break;
-        case 'prospect':
-          window.location.href = '/discovery';
-          break;
-        default:
-          window.location.href = '/';
-      }
+    // Role-based redirects
+    switch (userProfile.role) {
+      case 'super_admin':
+        return '/super-admin';
+      case 'senior_operator':
+      case 'operator':
+      case 'leasing':
+        return '/operator';
+      case 'maintenance':
+        return '/maintenance';
+      case 'resident':
+        return '/';
+      case 'prospect':
+        return '/discovery';
+      default:
+        return '/unknown-role';
     }
   };
 
+  const handlePostLoginRedirect = (userProfile: AppUser) => {
+    const currentPath = window.location.pathname;
+    
+    // Only redirect if we're on a login page and haven't already redirected
+    if ((currentPath === '/login' || currentPath === '/owner-login') && !hasRedirected) {
+      console.log('Redirecting user with profile:', userProfile);
+      setHasRedirected(true);
+      
+      const redirectPath = getRoleBasedRedirect(userProfile);
+      console.log('Redirecting to:', redirectPath);
+      
+      // Use setTimeout to ensure state updates are complete
+      setTimeout(() => {
+        window.location.href = redirectPath;
+      }, 100);
+    }
+  };
+
+  // Set up loading timeout
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (loading) {
+        console.error('Auth loading timeout reached');
+        setLoading(false);
+        toast({
+          title: "Login Timeout",
+          description: "Login is taking longer than expected. Please refresh or try again.",
+          variant: "destructive",
+        });
+      }
+    }, 10000); // 10 second timeout
+
+    setLoadingTimeout(timeout);
+
+    return () => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
+  }, [loading, toast]);
+
   useEffect(() => {
     let mounted = true;
+    let authSubscription: any = null;
 
     const initializeAuth = async () => {
       try {
-        // Check for existing session first
+        console.log('Initializing auth...');
+        
+        // Set up auth state listener first
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            if (!mounted) return;
+
+            console.log('Auth event:', event, session?.user?.email);
+            
+            // Clear loading timeout when we get an auth event
+            if (loadingTimeout) {
+              clearTimeout(loadingTimeout);
+              setLoadingTimeout(null);
+            }
+            
+            setSession(session);
+            setUser(session?.user ?? null);
+            
+            if (session?.user && event === 'SIGNED_IN') {
+              try {
+                const profile = await fetchUserProfile(session.user.id);
+                if (mounted && profile) {
+                  setUserProfile(profile);
+                  setLoading(false);
+                  
+                  // Handle redirect after profile is loaded
+                  setTimeout(() => {
+                    if (mounted) {
+                      handlePostLoginRedirect(profile);
+                    }
+                  }, 200);
+                } else if (mounted) {
+                  setLoading(false);
+                }
+              } catch (error) {
+                console.error('Error handling signed in user:', error);
+                if (mounted) {
+                  setLoading(false);
+                }
+              }
+            } else if (!session) {
+              if (mounted) {
+                setUserProfile(null);
+                setLoading(false);
+                setHasRedirected(false);
+              }
+            }
+          }
+        );
+
+        authSubscription = subscription;
+
+        // Check for existing session after setting up listener
         const { data: { session: existingSession } } = await supabase.auth.getSession();
         
         if (!mounted) return;
@@ -113,47 +202,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const profile = await fetchUserProfile(existingSession.user.id);
           if (mounted && profile) {
             setUserProfile(profile);
+            setLoading(false);
+            
+            // Handle redirect for existing session
+            setTimeout(() => {
+              if (mounted) {
+                handlePostLoginRedirect(profile);
+              }
+            }, 200);
+          } else if (mounted) {
+            setLoading(false);
           }
+        } else if (mounted) {
+          setLoading(false);
         }
         
-        setLoading(false);
-        setIsInitialized(true);
-        
-        // Set up auth state listener after initial check
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            if (!mounted) return;
-
-            console.log('Auth event:', event, session?.user?.email);
-            
-            setSession(session);
-            setUser(session?.user ?? null);
-            
-            if (session?.user && event === 'SIGNED_IN') {
-              const profile = await fetchUserProfile(session.user.id);
-              if (mounted && profile) {
-                setUserProfile(profile);
-                // Small delay to ensure state is set before redirect
-                setTimeout(() => {
-                  if (mounted) {
-                    handlePostLoginRedirect(profile.role);
-                  }
-                }, 100);
-              }
-            } else if (!session) {
-              setUserProfile(null);
-            }
-          }
-        );
-
-        return () => {
-          subscription.unsubscribe();
-        };
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
           setLoading(false);
-          setIsInitialized(true);
         }
       }
     };
@@ -162,13 +229,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false;
+      if (authSubscription) {
+        authSubscription.unsubscribe();
+      }
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+      }
     };
-  }, []);
+  }, []); // Empty dependency array to run only once
 
   const signInWithGoogle = async () => {
     try {
       console.log('Starting Google sign in...');
       setLoading(true);
+      setHasRedirected(false);
       
       const currentUrl = window.location.origin;
       const redirectTo = window.location.pathname === '/owner-login' 
@@ -204,6 +278,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithEmail = async (email: string, password: string) => {
     try {
       setLoading(true);
+      setHasRedirected(false);
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -253,6 +329,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       setImpersonatedRole(null);
+      setHasRedirected(false);
       window.location.href = '/login';
     } catch (error: any) {
       toast({
@@ -294,7 +371,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     userProfile: userProfile ? { ...userProfile, role: effectiveRole || userProfile.role } : null,
-    loading: loading || !isInitialized,
+    loading,
     signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,

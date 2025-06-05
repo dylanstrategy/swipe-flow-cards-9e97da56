@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Settings, Eye, EyeOff } from 'lucide-react';
+import { Settings, Eye, EyeOff, TestTube } from 'lucide-react';
 import type { AppRole } from '@/types/supabase';
 
 const RoleImpersonation = () => {
@@ -26,13 +26,13 @@ const RoleImpersonation = () => {
 
   if (!canImpersonate) return null;
 
-  const availableRoles: AppRole[] = [
-    'senior_operator',
-    'operator', 
-    'maintenance',
-    'leasing',
-    'resident',
-    'prospect'
+  const availableRoles: { role: AppRole; label: string; description: string }[] = [
+    { role: 'resident', label: 'Resident', description: 'Current tenant view' },
+    { role: 'prospect', label: 'Prospect', description: 'Potential tenant view' },
+    { role: 'operator', label: 'Operator', description: 'Property management staff' },
+    { role: 'leasing', label: 'Leasing', description: 'Leasing specialist view' },
+    { role: 'maintenance', label: 'Maintenance', description: 'Maintenance staff view' },
+    { role: 'senior_operator', label: 'Senior Operator', description: 'Senior management view' }
   ];
 
   const formatRoleName = (role: AppRole) => {
@@ -44,9 +44,9 @@ const RoleImpersonation = () => {
   return (
     <div className="flex items-center gap-2">
       {isImpersonating && (
-        <Badge variant="destructive" className="flex items-center gap-1">
-          <Eye className="w-3 h-3" />
-          Viewing as {formatRoleName(impersonatedRole!)}
+        <Badge variant="destructive" className="flex items-center gap-1 animate-pulse">
+          <TestTube className="w-3 h-3" />
+          Testing as {formatRoleName(impersonatedRole!)}
         </Badge>
       )}
       
@@ -58,12 +58,13 @@ const RoleImpersonation = () => {
             className="flex items-center gap-2"
           >
             <Settings className="w-4 h-4" />
-            Dev Mode
+            {isImpersonating ? 'Exit Dev Mode' : 'Dev Mode'}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel>
-            Super Admin - Role Impersonation
+        <DropdownMenuContent align="end" className="w-64">
+          <DropdownMenuLabel className="flex items-center gap-2">
+            <TestTube className="w-4 h-4" />
+            Role Testing Mode
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           
@@ -71,35 +72,47 @@ const RoleImpersonation = () => {
             <>
               <DropdownMenuItem 
                 onClick={stopImpersonation}
-                className="text-red-600 cursor-pointer"
+                className="text-red-600 cursor-pointer font-medium"
               >
                 <EyeOff className="mr-2 h-4 w-4" />
-                Stop Impersonation
+                Stop Role Testing
               </DropdownMenuItem>
               <DropdownMenuSeparator />
             </>
           )}
           
-          <DropdownMenuLabel className="text-xs text-gray-500">
-            Switch to Role:
+          <DropdownMenuLabel className="text-xs text-gray-500 font-normal">
+            Test user experiences:
           </DropdownMenuLabel>
           
-          {availableRoles.map((role) => (
+          {availableRoles.map(({ role, label, description }) => (
             <DropdownMenuItem
               key={role}
               onClick={() => impersonateRole(role)}
-              className="cursor-pointer"
+              className="cursor-pointer flex-col items-start py-2"
               disabled={impersonatedRole === role}
             >
-              <Eye className="mr-2 h-4 w-4" />
-              {formatRoleName(role)}
-              {impersonatedRole === role && (
-                <Badge variant="secondary" className="ml-auto text-xs">
-                  Current
-                </Badge>
-              )}
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center">
+                  <Eye className="mr-2 h-4 w-4" />
+                  <span className="font-medium">{label}</span>
+                </div>
+                {impersonatedRole === role && (
+                  <Badge variant="secondary" className="text-xs">
+                    Active
+                  </Badge>
+                )}
+              </div>
+              <span className="text-xs text-gray-500 mt-1">{description}</span>
             </DropdownMenuItem>
           ))}
+          
+          <DropdownMenuSeparator />
+          <div className="px-2 py-1">
+            <p className="text-xs text-gray-500">
+              Test different user flows without creating separate accounts
+            </p>
+          </div>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

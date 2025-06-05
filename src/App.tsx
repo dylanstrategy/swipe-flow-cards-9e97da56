@@ -14,6 +14,7 @@ import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import SuperAdmin from "./pages/SuperAdmin";
 import OwnerLogin from "./pages/OwnerLogin";
+import UnknownRole from "./pages/UnknownRole";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,11 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
   if (allowedRoles && !allowedRoles.includes(userProfile.role)) {
     // Redirect to appropriate dashboard based on role
     const getDefaultRoute = () => {
+      // Special case for super admin email
+      if (userProfile.email === 'info@applaudliving.com') {
+        return '/super-admin';
+      }
+      
       switch (userProfile.role) {
         case 'super_admin':
           return '/super-admin';
@@ -49,7 +55,7 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
         case 'prospect':
           return '/discovery';
         default:
-          return '/';
+          return '/unknown-role';
       }
     };
     return <Navigate to={getDefaultRoute()} replace />;
@@ -70,6 +76,35 @@ function AppRoutes() {
     );
   }
 
+  // If user is authenticated, redirect them away from login pages
+  if (user && userProfile) {
+    const currentPath = window.location.pathname;
+    if (currentPath === '/login' || currentPath === '/owner-login') {
+      // Special case for super admin email
+      if (userProfile.email === 'info@applaudliving.com') {
+        return <Navigate to="/super-admin" replace />;
+      }
+      
+      // Role-based redirect
+      switch (userProfile.role) {
+        case 'super_admin':
+          return <Navigate to="/super-admin" replace />;
+        case 'senior_operator':
+        case 'operator':
+        case 'leasing':
+          return <Navigate to="/operator" replace />;
+        case 'maintenance':
+          return <Navigate to="/maintenance" replace />;
+        case 'resident':
+          return <Navigate to="/" replace />;
+        case 'prospect':
+          return <Navigate to="/discovery" replace />;
+        default:
+          return <Navigate to="/unknown-role" replace />;
+      }
+    }
+  }
+
   return (
     <Routes>
       <Route path="/login" element={
@@ -77,6 +112,11 @@ function AppRoutes() {
       } />
       <Route path="/owner-login" element={
         user && userProfile ? <Navigate to="/" replace /> : <OwnerLogin />
+      } />
+      <Route path="/unknown-role" element={
+        <ProtectedRoute>
+          <UnknownRole />
+        </ProtectedRoute>
       } />
       <Route path="/" element={
         <ProtectedRoute allowedRoles={['resident', 'super_admin']}>
