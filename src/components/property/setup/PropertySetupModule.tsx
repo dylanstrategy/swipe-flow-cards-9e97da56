@@ -11,6 +11,10 @@ import CRMSetup from './CRMSetup';
 import AmenitiesSetup from './AmenitiesSetup';
 import UnitDirectory from './UnitDirectory';
 import PricingDashboard from './PricingDashboard';
+import PersonalIdentitySetup from './PersonalIdentitySetup';
+import SchedulingSetup from './SchedulingSetup';
+import NotificationSetup from './NotificationSetup';
+import PrivacySetup from './PrivacySetup';
 
 interface PropertySetupModuleProps {
   onClose: () => void;
@@ -162,73 +166,13 @@ const PropertySetupModule = ({ onClose }: PropertySetupModuleProps) => {
       case 'crm':
         return <CRMSetup onBack={() => setCurrentSection('overview')} />;
       case 'identity':
-        return (
-          <div className="p-6 space-y-6">
-            <div className="flex items-center gap-3 mb-6">
-              <Button variant="outline" size="sm" onClick={() => setCurrentSection('overview')}>
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Identity & Profile Setup</h2>
-                <p className="text-sm text-gray-600">Manage your personal information and contact details</p>
-              </div>
-            </div>
-            <div className="text-center py-12 text-gray-500">
-              Identity setup interface coming soon...
-            </div>
-          </div>
-        );
+        return <PersonalIdentitySetup onBack={() => setCurrentSection('overview')} />;
       case 'schedule':
-        return (
-          <div className="p-6 space-y-6">
-            <div className="flex items-center gap-3 mb-6">
-              <Button variant="outline" size="sm" onClick={() => setCurrentSection('overview')}>
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Scheduling Preferences</h2>
-                <p className="text-sm text-gray-600">Configure your work hours and availability</p>
-              </div>
-            </div>
-            <div className="text-center py-12 text-gray-500">
-              Scheduling preferences interface coming soon...
-            </div>
-          </div>
-        );
+        return <SchedulingSetup onBack={() => setCurrentSection('overview')} />;
       case 'notifications':
-        return (
-          <div className="p-6 space-y-6">
-            <div className="flex items-center gap-3 mb-6">
-              <Button variant="outline" size="sm" onClick={() => setCurrentSection('overview')}>
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Notification Settings</h2>
-                <p className="text-sm text-gray-600">Manage your notification preferences</p>
-              </div>
-            </div>
-            <div className="text-center py-12 text-gray-500">
-              Notification settings interface coming soon...
-            </div>
-          </div>
-        );
+        return <NotificationSetup onBack={() => setCurrentSection('overview')} />;
       case 'privacy':
-        return (
-          <div className="p-6 space-y-6">
-            <div className="flex items-center gap-3 mb-6">
-              <Button variant="outline" size="sm" onClick={() => setCurrentSection('overview')}>
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Privacy & Security</h2>
-                <p className="text-sm text-gray-600">Manage your security settings and data preferences</p>
-              </div>
-            </div>
-            <div className="text-center py-12 text-gray-500">
-              Privacy & security interface coming soon...
-            </div>
-          </div>
-        );
+        return <PrivacySetup onBack={() => setCurrentSection('overview')} />;
       default:
         return (
           <div className="max-w-full overflow-hidden">
