@@ -55,41 +55,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const completeSessionLoad = async (currentSession: Session | null) => {
-    console.log('🔄 Completing session load for:', currentSession?.user?.email || 'no user');
-    
-    if (currentSession?.user) {
-      // Set session and user first
-      setSession(currentSession);
-      setUser(currentSession.user);
-      
-      // Then fetch profile
-      const profile = await fetchUserProfile(currentSession.user.id);
-      setUserProfile(profile);
-      
-      console.log('✅ Session and profile loaded:', {
-        session: !!currentSession,
-        profile: !!profile,
-        email: currentSession.user.email
-      });
-    } else {
-      console.log('🚫 No session to load');
-      setSession(null);
-      setUser(null);
-      setUserProfile(null);
-    }
-    
-    // CRITICAL: Only set loading false after everything is complete
-    console.log('✅ Setting loading to false');
-    setLoading(false);
-  };
-
+  // Initialize auth state on mount
   useEffect(() => {
     console.log('🚀 AuthProvider initializing...');
     
     let mounted = true;
 
-    // Step 1: Initialize auth state on mount
     const initializeAuth = async () => {
       try {
         console.log('📍 Getting initial session...');
@@ -103,10 +74,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        console.log('📍 Initial session check:', !!currentSession);
+        console.log('📍 Initial session check:', {
+          hasSession: !!currentSession,
+          userEmail: currentSession?.user?.email
+        });
         
-        if (mounted) {
-          await completeSessionLoad(currentSession);
+        if (currentSession?.user && mounted) {
+          // We have a session, fetch everything
+          setSession(currentSession);
+          setUser(currentSession.user);
+          
+          console.log('🔄 Fetching user profile...');
+          const profile = await fetchUserProfile(currentSession.user.id);
+          
+          if (mounted) {
+            setUserProfile(profile);
+            console.log('✅ Auth initialization complete:', {
+              session: !!currentSession,
+              profile: !!profile,
+              email: currentSession.user.email
+            });
+            setLoading(false);
+          }
+        } else {
+          // No session
+          console.log('🚫 No session found');
+          if (mounted) {
+            setSession(null);
+            setUser(null);
+            setUserProfile(null);
+            setLoading(false);
+          }
         }
       } catch (error) {
         console.error('❌ Auth initialization error:', error);
@@ -116,14 +114,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    // Step 2: Set up auth state listener (separate from loading logic)
+    // Set up auth state listener (separate from initialization)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('🔔 Auth state change:', event, 'Session exists:', !!session);
         
         if (!mounted) return;
         
-        // Handle different auth events but DON'T interfere with initial loading
         if (event === 'SIGNED_IN' && session) {
           console.log('✅ User signed in via auth state change:', session.user.email);
           setSession(session);
