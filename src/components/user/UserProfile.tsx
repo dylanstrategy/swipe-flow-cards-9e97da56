@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { UserProfile as UserProfileType, UserRole, ROLE_PERMISSIONS } from '@/types/users';
+import { Checkbox } from '@/components/ui/checkbox';
+import { UserProfile as UserProfileType, UserRole, ROLE_PERMISSIONS, Permission } from '@/types/users';
 import { ArrowLeft, Edit, Save, X, Trash2, User, Mail, Phone, Shield } from 'lucide-react';
 
 interface UserProfileProps {
@@ -25,10 +26,18 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
     email: user.email,
     phone: user.phone,
     role: user.role,
-    status: user.status
+    status: user.status,
+    permissions: user.permissions.map(p => p.id)
   });
 
   const handleSave = () => {
+    const allPermissions = Object.values(ROLE_PERMISSIONS).flat()
+      .filter((permission, index, array) =>
+        array.findIndex(p => p.id === permission.id) === index
+      );
+    
+    const selectedPermissions = allPermissions.filter(p => formData.permissions.includes(p.id));
+    
     const updatedUser: UserProfileType = {
       ...user,
       name: formData.name,
@@ -36,7 +45,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
       phone: formData.phone,
       role: formData.role,
       status: formData.status,
-      permissions: ROLE_PERMISSIONS[formData.role]
+      permissions: selectedPermissions
     };
     onSave(updatedUser);
     setIsEditing(false);
@@ -48,9 +57,24 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
       email: user.email,
       phone: user.phone,
       role: user.role,
-      status: user.status
+      status: user.status,
+      permissions: user.permissions.map(p => p.id)
     });
     setIsEditing(false);
+  };
+
+  const handlePermissionChange = (permissionId: string, checked: boolean) => {
+    if (checked) {
+      setFormData({
+        ...formData,
+        permissions: [...formData.permissions, permissionId]
+      });
+    } else {
+      setFormData({
+        ...formData,
+        permissions: formData.permissions.filter(id => id !== permissionId)
+      });
+    }
   };
 
   const getRoleColor = (role: string) => {
@@ -70,27 +94,41 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
     return status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
   };
 
+  const getPermissionLevelColor = (level: string) => {
+    const colors = {
+      basic: 'bg-gray-100 text-gray-700',
+      advanced: 'bg-blue-100 text-blue-700',
+      admin: 'bg-red-100 text-red-700'
+    };
+    return colors[level as keyof typeof colors] || 'bg-gray-100 text-gray-700';
+  };
+
   const availableRoles: UserRole[] = ['maintenance', 'leasing', 'operator', 'senior_operator'];
+
+  const allPermissions = Object.values(ROLE_PERMISSIONS).flat()
+    .filter((permission, index, array) =>
+      array.findIndex(p => p.id === permission.id) === index
+    );
 
   return (
     <div className="min-h-screen bg-gray-50">
       <ScrollArea className="h-screen">
         <div className="p-4 pb-20">
-          <Card className="max-w-4xl mx-auto">
-            <CardHeader className="space-y-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-4 min-w-0 flex-1">
-                  <Button variant="outline" size="sm" onClick={onBack} className="flex-shrink-0 mt-1">
+          <Card className="max-w-2xl mx-auto">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Button variant="outline" size="sm" onClick={onBack}>
                     <ArrowLeft className="w-4 h-4" />
                   </Button>
-                  <Avatar className="w-16 h-16 flex-shrink-0">
-                    <AvatarFallback className="text-lg font-semibold">
+                  <Avatar className="w-12 h-12">
+                    <AvatarFallback className="text-lg font-semibold bg-blue-600 text-white">
                       {formData.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <CardTitle className="text-xl truncate">User Profile</CardTitle>
-                    <div className="flex flex-wrap gap-2 mt-2">
+                  <div>
+                    <CardTitle className="text-lg">User Profile</CardTitle>
+                    <div className="flex items-center gap-2 mt-1">
                       <Badge className={`${getRoleColor(formData.role)} text-xs`}>
                         {formData.role === 'senior_operator' ? 'Senior Operator' : formData.role.charAt(0).toUpperCase() + formData.role.slice(1)}
                       </Badge>
@@ -101,7 +139,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
                   </div>
                 </div>
                 
-                <div className="flex gap-2 flex-shrink-0">
+                <div className="flex gap-2">
                   {!isEditing ? (
                     <>
                       <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
@@ -137,7 +175,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
                   Basic Information
                 </h3>
                 
-                <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-3">
                   <div>
                     <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>
                     <Input
@@ -180,7 +218,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
                   Role & Status
                 </h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="role" className="text-sm font-medium">Role</Label>
                     {isEditing ? (
@@ -227,32 +265,55 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
               {/* Permissions */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Permissions</h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="space-y-3">
-                    {ROLE_PERMISSIONS[formData.role].map((permission) => (
-                      <div key={permission.id} className="flex items-center justify-between flex-wrap gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Badge variant="outline" className="text-xs flex-shrink-0">
-                            {permission.name}
-                          </Badge>
-                          <Badge className={`text-xs flex-shrink-0 ${
-                            permission.level === 'admin' ? 'bg-red-100 text-red-700' :
-                            permission.level === 'advanced' ? 'bg-blue-100 text-blue-700' :
-                            'bg-gray-100 text-gray-700'
-                          }`}>
-                            {permission.level}
-                          </Badge>
+                {isEditing ? (
+                  <div className="space-y-3 max-h-64 overflow-y-auto border rounded-lg p-3">
+                    {allPermissions.map((permission) => (
+                      <div key={permission.id} className="flex items-start gap-3">
+                        <Checkbox
+                          id={permission.id}
+                          checked={formData.permissions.includes(permission.id)}
+                          onCheckedChange={(checked) => 
+                            handlePermissionChange(permission.id, checked as boolean)
+                          }
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <Label htmlFor={permission.id} className="text-sm font-medium cursor-pointer">
+                              {permission.name}
+                            </Label>
+                            <Badge className={`${getPermissionLevelColor(permission.level)} text-xs`}>
+                              {permission.level}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-gray-600">{permission.description}</p>
                         </div>
                       </div>
                     ))}
                   </div>
-                </div>
+                ) : (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="space-y-3">
+                      {user.permissions.map((permission) => (
+                        <div key={permission.id} className="flex items-center justify-between flex-wrap gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Badge variant="outline" className="text-xs flex-shrink-0">
+                              {permission.name}
+                            </Badge>
+                            <Badge className={`text-xs flex-shrink-0 ${getPermissionLevelColor(permission.level)}`}>
+                              {permission.level}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Account Info */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Account Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <Label className="text-sm font-medium">Created</Label>
                     <p className="text-gray-600 mt-1">{user.createdAt.toLocaleDateString()}</p>
