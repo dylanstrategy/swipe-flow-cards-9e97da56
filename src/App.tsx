@@ -76,35 +76,6 @@ function AppRoutes() {
     );
   }
 
-  // If user is authenticated, redirect them away from login pages
-  if (user && userProfile) {
-    const currentPath = window.location.pathname;
-    if (currentPath === '/login' || currentPath === '/owner-login') {
-      // Special case for super admin email
-      if (userProfile.email === 'info@applaudliving.com') {
-        return <Navigate to="/super-admin" replace />;
-      }
-      
-      // Role-based redirect
-      switch (userProfile.role) {
-        case 'super_admin':
-          return <Navigate to="/super-admin" replace />;
-        case 'senior_operator':
-        case 'operator':
-        case 'leasing':
-          return <Navigate to="/operator" replace />;
-        case 'maintenance':
-          return <Navigate to="/maintenance" replace />;
-        case 'resident':
-          return <Navigate to="/" replace />;
-        case 'prospect':
-          return <Navigate to="/discovery" replace />;
-        default:
-          return <Navigate to="/unknown-role" replace />;
-      }
-    }
-  }
-
   return (
     <Routes>
       <Route path="/login" element={
@@ -165,14 +136,14 @@ function AppRoutes() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <BrowserRouter>
+    <TooltipProvider>
+      <Toaster />
+      <BrowserRouter>
+        <AuthProvider>
           <AppRoutes />
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 
