@@ -27,9 +27,9 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
     preferredName: profile.preferredName || '',
     email: profile.email || '',
     phone: profile.phone || '',
-    emergencyContactName: profile.emergencyContactName || '',
-    emergencyContactPhone: profile.emergencyContactPhone || '',
-    emergencyContactRelationship: profile.emergencyContactRelationship || 'Spouse',
+    emergencyContactName: profile.emergencyContact?.name || '',
+    emergencyContactPhone: profile.emergencyContact?.phone || '',
+    emergencyContactRelationship: profile.emergencyContact?.relationship || 'Spouse',
     // Privacy preferences
     dataSharing: 'none',
     marketingEmails: false,
@@ -51,15 +51,17 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
       // Save to localStorage
       localStorage.setItem('residentIdentity', JSON.stringify(formData));
       
-      // Update resident context
+      // Update resident context with the correct structure
       updateProfile({
         fullName: formData.fullName,
         preferredName: formData.preferredName,
         email: formData.email,
         phone: formData.phone,
-        emergencyContactName: formData.emergencyContactName,
-        emergencyContactPhone: formData.emergencyContactPhone,
-        emergencyContactRelationship: formData.emergencyContactRelationship
+        emergencyContact: {
+          name: formData.emergencyContactName,
+          phone: formData.emergencyContactPhone,
+          relationship: formData.emergencyContactRelationship
+        }
       });
       
       // Show success toast
