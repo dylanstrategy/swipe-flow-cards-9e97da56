@@ -5,7 +5,6 @@ import { mockResidents, type ResidentProfile } from '@/data/mockResidents';
 interface ExtendedResidentProfile extends ResidentProfile {
   unitType?: string;
   leaseStartDate?: string;
-  balance?: number;
   moveInChecklistComplete?: boolean;
   moveOutChecklistComplete?: boolean;
   noticeToVacateSubmitted?: boolean;
@@ -71,7 +70,6 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     ...resident,
     unitType: getUnitType(resident.unitNumber),
     leaseStartDate: '2025-06-15', // Sample lease start date
-    balance: resident.status === 'current' ? 0 : 1550, // Current residents have paid balance
     moveInChecklistComplete: resident.status === 'current',
     moveOutChecklistComplete: false,
     noticeToVacateSubmitted: resident.status === 'notice',
@@ -245,7 +243,7 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     // Check if balance is fully paid
-    if ((resident.balance || 0) > 0) {
+    if (resident.balance > 0) {
       blockers.push('Outstanding balance must be paid in full');
     }
 
@@ -285,7 +283,7 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     // Check if final balance is paid
-    if ((resident.balance || 0) > 0) {
+    if (resident.balance > 0) {
       blockers.push('Final balance must be paid in full');
     }
 
