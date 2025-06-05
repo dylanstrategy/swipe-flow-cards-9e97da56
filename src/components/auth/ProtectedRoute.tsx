@@ -22,20 +22,21 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
     );
   }
 
-  if (!user || !userProfile) {
-    return <AuthPage />;
-  }
+  // Temporarily disable authentication requirement
+  // if (!user || !userProfile) {
+  //   return <AuthPage />;
+  // }
 
-  if (requiredRole && userProfile.role !== requiredRole) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center p-8">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h2>
-          <p className="text-gray-600">You don't have permission to access this page.</p>
-        </div>
-      </div>
-    );
-  }
+  // if (requiredRole && userProfile?.role !== requiredRole) {
+  //   return (
+  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+  //       <div className="text-center p-8">
+  //         <h2 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h2>
+  //         <p className="text-gray-600">You don't have permission to access this page.</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return <>{children}</>;
 };
