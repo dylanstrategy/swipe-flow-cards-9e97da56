@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,20 +9,6 @@ import { ArrowLeft, Save, Edit, User, Mail, Phone, Home, CheckCircle } from 'luc
 import { useToast } from '@/hooks/use-toast';
 import { useResident } from '@/contexts/ResidentContext';
 
-interface ResidentProfile {
-  id: string;
-  fullName: string;
-  preferredName: string;
-  email: string;
-  phone: string;
-  unitNumber: string;
-  emergencyContact: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
-}
-
 interface ResidentIdentitySetupProps {
   onBack: () => void;
 }
@@ -31,7 +18,6 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
   const { profile, updateProfile } = useResident();
   const [isEditing, setIsEditing] = useState(false);
   
-  // Mock resident data - in real app this would come from context/API
   const [formData, setFormData] = useState({
     fullName: profile.fullName,
     preferredName: profile.preferredName,
@@ -43,6 +29,7 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
   });
 
   const handleSave = () => {
+    // Update the profile in context
     updateProfile({
       fullName: formData.fullName,
       preferredName: formData.preferredName,
@@ -63,10 +50,16 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
       duration: 3000,
     });
     
-    console.log('Profile updated:', profile);
+    console.log('Profile updated with new data:', {
+      fullName: formData.fullName,
+      preferredName: formData.preferredName,
+      email: formData.email,
+      phone: formData.phone
+    });
   };
 
   const handleCancel = () => {
+    // Reset form data to current profile values
     setFormData({
       fullName: profile.fullName,
       preferredName: profile.preferredName,
@@ -78,6 +71,19 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
     });
     setIsEditing(false);
   };
+
+  // Update form data when profile changes (in case it's updated elsewhere)
+  React.useEffect(() => {
+    setFormData({
+      fullName: profile.fullName,
+      preferredName: profile.preferredName,
+      email: profile.email,
+      phone: profile.phone,
+      emergencyContactName: profile.emergencyContact.name,
+      emergencyContactPhone: profile.emergencyContact.phone,
+      emergencyContactRelationship: profile.emergencyContact.relationship
+    });
+  }, [profile]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -103,7 +109,7 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">{profile.preferredName}</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-1">{formData.preferredName}</h2>
                 <div className="flex items-center gap-2 text-gray-600 mb-2">
                   <Home className="w-4 h-4" />
                   <span>The Meridian • Apt {profile.unitNumber}</span>
