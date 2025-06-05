@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { useSettings } from '@/hooks/useSettings';
 
 interface ResidentPrivacySetupProps {
   onBack: () => void;
@@ -15,8 +16,10 @@ interface ResidentPrivacySetupProps {
 
 const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) => {
   const { toast } = useToast();
+  const { settings: privacyData, saveSettings, loading } = useSettings('privacy');
   
-  const [privacyData, setPrivacyData] = useState({
+  // Default privacy settings
+  const defaultSettings = {
     dataSharing: 'none',
     marketingEmails: false,
     analyticsTracking: true,
@@ -24,50 +27,42 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
     profileVisibility: 'private',
     shareContactInfo: false,
     allowDirectMessages: true
-  });
+  };
 
-  // Function to save data immediately and trigger storage event
-  const savePrivacyData = (newData: typeof privacyData) => {
-    try {
-      localStorage.setItem('residentPrivacy', JSON.stringify(newData));
-      console.log('Privacy data saved:', newData);
-      // Trigger storage event for other components to sync
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'residentPrivacy',
-        newValue: JSON.stringify(newData),
-        oldValue: localStorage.getItem('residentPrivacy')
-      }));
-    } catch (error) {
-      console.error('Error saving privacy data:', error);
+  const [currentSettings, setCurrentSettings] = useState(defaultSettings);
+
+  // Update local state when settings load
+  useEffect(() => {
+    if (!loading) {
+      setCurrentSettings({ ...defaultSettings, ...privacyData });
     }
-  };
+  }, [privacyData, loading]);
 
-  const handleToggleChange = (key: keyof typeof privacyData, value: boolean) => {
+  const handleToggleChange = async (key: keyof typeof currentSettings, value: boolean) => {
     console.log(`Toggling ${key} to ${value}`);
-    const newData = { ...privacyData, [key]: value };
-    setPrivacyData(newData);
-    savePrivacyData(newData);
+    const newData = { ...currentSettings, [key]: value };
+    setCurrentSettings(newData);
+    await saveSettings(newData);
   };
 
-  const handleSelectChange = (key: keyof typeof privacyData, value: string) => {
+  const handleSelectChange = async (key: keyof typeof currentSettings, value: string) => {
     console.log(`Changing ${key} to ${value}`);
-    const newData = { ...privacyData, [key]: value };
-    setPrivacyData(newData);
-    savePrivacyData(newData);
+    const newData = { ...currentSettings, [key]: value };
+    setCurrentSettings(newData);
+    await saveSettings(newData);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     try {
-      savePrivacyData(privacyData);
+      await saveSettings(currentSettings);
       
-      // Show success toast
       toast({
         title: "✅ Privacy Settings Updated",
         description: "Your privacy preferences have been saved successfully.",
         duration: 4000,
       });
       
-      console.log('Resident privacy settings saved successfully:', privacyData);
+      console.log('Resident privacy settings saved successfully:', currentSettings);
     } catch (error) {
       console.error('Error saving resident privacy settings:', error);
       toast({
@@ -78,40 +73,13 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
     }
   };
 
-  // Load saved data on mount and listen for storage changes
-  useEffect(() => {
-    const loadPrivacyData = () => {
-      const saved = localStorage.getItem('residentPrivacy');
-      console.log('Loading privacy data:', saved);
-      if (saved) {
-        try {
-          const parsedData = JSON.parse(saved);
-          console.log('Parsed privacy data:', parsedData);
-          setPrivacyData(parsedData);
-        } catch (error) {
-          console.error('Error loading saved resident privacy settings:', error);
-        }
-      }
-    };
-
-    loadPrivacyData();
-
-    // Listen for localStorage changes from other components
-    const handleStorageChange = (e: StorageEvent) => {
-      console.log('Storage change detected:', e.key, e.newValue);
-      if (e.key === 'residentPrivacy' && e.newValue) {
-        try {
-          const parsedData = JSON.parse(e.newValue);
-          setPrivacyData(parsedData);
-        } catch (error) {
-          console.error('Error parsing storage change:', error);
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center">
+        <div className="text-gray-600">Loading privacy settings...</div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -140,7 +108,7 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
                 Data Sharing Preferences
               </label>
               <Select 
-                value={privacyData.dataSharing} 
+                value={currentSettings.dataSharing} 
                 onValueChange={(value) => handleSelectChange('dataSharing', value)}
               >
                 <SelectTrigger>
@@ -164,7 +132,7 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
                   <div className="text-sm text-gray-600">Receive promotional and marketing communications</div>
                 </div>
                 <Switch 
-                  checked={privacyData.marketingEmails}
+                  checked={currentSettings.marketingEmails}
                   onCheckedChange={(checked) => handleToggleChange('marketingEmails', checked)}
                 />
               </div>
@@ -176,7 +144,7 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
                   <div className="text-sm text-gray-600">Allow analytics and personalized advertising</div>
                 </div>
                 <Switch 
-                  checked={privacyData.analyticsTracking}
+                  checked={currentSettings.analyticsTracking}
                   onCheckedChange={(checked) => handleToggleChange('analyticsTracking', checked)}
                 />
               </div>
@@ -188,7 +156,7 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
                   <div className="text-sm text-gray-600">Allow location services for enhanced features</div>
                 </div>
                 <Switch 
-                  checked={privacyData.locationTracking}
+                  checked={currentSettings.locationTracking}
                   onCheckedChange={(checked) => handleToggleChange('locationTracking', checked)}
                 />
               </div>
@@ -210,7 +178,7 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
                 Profile Visibility
               </label>
               <Select 
-                value={privacyData.profileVisibility} 
+                value={currentSettings.profileVisibility} 
                 onValueChange={(value) => handleSelectChange('profileVisibility', value)}
               >
                 <SelectTrigger>
@@ -231,7 +199,7 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
                   <div className="text-sm text-gray-600">Allow other residents to see your contact info</div>
                 </div>
                 <Switch 
-                  checked={privacyData.shareContactInfo}
+                  checked={currentSettings.shareContactInfo}
                   onCheckedChange={(checked) => handleToggleChange('shareContactInfo', checked)}
                 />
               </div>
@@ -243,7 +211,7 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
                   <div className="text-sm text-gray-600">Let other residents send you direct messages</div>
                 </div>
                 <Switch 
-                  checked={privacyData.allowDirectMessages}
+                  checked={currentSettings.allowDirectMessages}
                   onCheckedChange={(checked) => handleToggleChange('allowDirectMessages', checked)}
                 />
               </div>
