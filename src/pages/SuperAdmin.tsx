@@ -7,7 +7,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { 
+import ClientIntakeForm from '@/components/forms/ClientIntakeForm';
+import LeadIntakeForm from '@/components/forms/LeadIntakeForm';
+import {
   Building, 
   Users, 
   Search, 
@@ -56,6 +58,8 @@ const SuperAdmin = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState('overview');
+  const [showClientForm, setShowClientForm] = useState(false);
+  const [showLeadForm, setShowLeadForm] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -69,13 +73,12 @@ const SuperAdmin = () => {
       const storedCompanies = localStorage.getItem('applaud_companies');
       const storedProperties = localStorage.getItem('applaud_properties');
       const storedOperators = localStorage.getItem('applaud_operators');
+      const storedLeads = localStorage.getItem('applaud_leads');
 
       setCompanies(storedCompanies ? JSON.parse(storedCompanies) : []);
       setProperties(storedProperties ? JSON.parse(storedProperties) : []);
       setOperators(storedOperators ? JSON.parse(storedOperators) : []);
-      
-      // Mock leads data
-      setLeads([
+      setLeads(storedLeads ? JSON.parse(storedLeads) : [
         { id: '1', name: 'Meridian Properties', email: 'contact@meridianprops.com', status: 'contract_sent', units: 150, created_at: new Date() },
         { id: '2', name: 'Sunset Management', email: 'info@sunsetmgmt.com', status: 'call_scheduled', units: 75, created_at: new Date() },
         { id: '3', name: 'Urban Living Co', email: 'hello@urbanliving.com', status: 'interest', units: 200, created_at: new Date() },
@@ -146,21 +149,92 @@ const SuperAdmin = () => {
     }
   };
 
-  const handleAddClient = async () => {
-    try {
-      const registrationLink = `${window.location.origin}/owner-login`;
-      await navigator.clipboard.writeText(registrationLink);
-      
-      toast({
-        title: "Registration Link Generated",
-        description: "Client registration link copied to clipboard",
-      });
-    } catch (error) {
-      toast({
-        title: "Registration Link",
-        description: `Share this link with new clients: ${window.location.origin}/owner-login`,
-      });
-    }
+  const handleAddClient = () => {
+    setShowClientForm(true);
+  };
+
+  const handleAddLead = () => {
+    setShowLeadForm(true);
+  };
+
+  const handleClientSubmit = (clientData: any) => {
+    const updatedCompanies = [...companies, clientData];
+    setCompanies(updatedCompanies);
+    localStorage.setItem('applaud_companies', JSON.stringify(updatedCompanies));
+    
+    // Also create a property entry for this client
+    const propertyData = {
+      id: `prop_${clientData.id}`,
+      company_id: clientData.id,
+      name: `${clientData.name} - Main Property`,
+      address: clientData.address,
+      city: clientData.city,
+      state: clientData.state,
+      zip_code: clientData.zip_code,
+      unit_count: clientData.unit_count,
+      property_type: clientData.property_type,
+      status: 'active',
+      created_at: clientData.created_at
+    };
+    
+    const updatedProperties = [...properties, propertyData];
+    setProperties(updatedProperties);
+    localStorage.setItem('applaud_properties', JSON.stringify(updatedProperties));
+  };
+
+  const handleLeadSubmit = (leadData: any) => {
+    const updatedLeads = [...leads, leadData];
+    setLeads(updatedLeads);
+    localStorage.setItem('applaud_leads', JSON.stringify(updatedLeads));
+  };
+
+  const handleSendContract = (leadId: string) => {
+    const updatedLeads = leads.map(lead => 
+      lead.id === leadId 
+        ? { ...lead, status: 'contract_sent' }
+        : lead
+    );
+    setLeads(updatedLeads);
+    localStorage.setItem('applaud_leads', JSON.stringify(updatedLeads));
+    
+    toast({
+      title: "Contract Sent",
+      description: "Contract has been sent to the client for review and signature",
+    });
+  };
+
+  const handleConvertLeadToClient = (leadId: string) => {
+    const lead = leads.find(l => l.id === leadId);
+    if (!lead) return;
+
+    const clientData = {
+      id: `client_${leadId}`,
+      name: lead.company_name || lead.name,
+      contact_email: lead.email,
+      contact_phone: lead.phone || '',
+      contact_name: lead.name,
+      unit_count: lead.units,
+      property_type: lead.property_type || 'apartment',
+      plan_type: 'standard',
+      status: 'active',
+      created_at: new Date().toISOString()
+    };
+
+    handleClientSubmit(clientData);
+
+    // Update lead status to won
+    const updatedLeads = leads.map(l => 
+      l.id === leadId 
+        ? { ...l, status: 'won' }
+        : l
+    );
+    setLeads(updatedLeads);
+    localStorage.setItem('applaud_leads', JSON.stringify(updatedLeads));
+
+    toast({
+      title: "Lead Converted",
+      description: `${lead.name} has been converted to a client!`,
+    });
   };
 
   const handleAddOperator = async () => {
@@ -178,13 +252,6 @@ const SuperAdmin = () => {
         description: `Share this link with new operators: ${window.location.origin}/`,
       });
     }
-  };
-
-  const handleSendContract = (leadId: string) => {
-    toast({
-      title: "Contract Sent",
-      description: "Contract has been sent to the client for review and signature",
-    });
   };
 
   const handleCreateInvoice = () => {
@@ -367,7 +434,7 @@ const SuperAdmin = () => {
                     <div className="ml-4">
                       <p className="text-xs font-medium text-gray-600">Total Units</p>
                       <p className="text-xl font-bold text-gray-900">
-                        {properties.reduce((sum, prop) => sum + (prop.unit_count || 0), 0)}
+                        {companies.reduce((sum, company) => sum + (company.unit_count || 0), 0)}
                       </p>
                     </div>
                   </div>
@@ -392,7 +459,9 @@ const SuperAdmin = () => {
                     <DollarSign className="h-8 w-8 text-green-600" />
                     <div className="ml-4">
                       <p className="text-xs font-medium text-gray-600">Monthly Revenue</p>
-                      <p className="text-xl font-bold text-gray-900">$47.2K</p>
+                      <p className="text-xl font-bold text-gray-900">
+                        ${companies.reduce((sum, company) => sum + ((company.unit_count || 0) * 45), 0).toLocaleString()}
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -486,7 +555,7 @@ const SuperAdmin = () => {
             </div>
 
             <div className="grid gap-4">
-              {filteredCompanies.length === 0 ? (
+              {companies.length === 0 ? (
                 <Card>
                   <CardContent className="p-8 text-center">
                     <Building className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -499,7 +568,9 @@ const SuperAdmin = () => {
                   </CardContent>
                 </Card>
               ) : (
-                filteredCompanies.map((company) => (
+                companies.filter(company =>
+                  company.name?.toLowerCase().includes(searchTerm.toLowerCase())
+                ).map((company) => (
                   <Card key={company.id}>
                     <CardContent className="p-6">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -516,8 +587,13 @@ const SuperAdmin = () => {
                               </Badge>
                               <Badge variant="outline">{company.plan_type || 'standard'}</Badge>
                               <span className="text-sm text-gray-500">
-                                {properties.filter(p => p.company_id === company.id).reduce((sum, p) => sum + (p.unit_count || 0), 0)} units
+                                {company.unit_count || 0} units
                               </span>
+                              {company.total_rent_roll && (
+                                <span className="text-sm text-green-600 font-medium">
+                                  ${company.total_rent_roll.toLocaleString()}/mo
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -566,7 +642,7 @@ const SuperAdmin = () => {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">CRM & Sales Pipeline</h2>
-              <Button>
+              <Button onClick={handleAddLead}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Lead
               </Button>
@@ -576,32 +652,40 @@ const SuperAdmin = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <Card>
                 <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600">3</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {leads.filter(l => l.status === 'interest').length}
+                  </div>
                   <div className="text-sm text-gray-600">New Interest</div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-purple-600">2</div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {leads.filter(l => l.status === 'call_scheduled').length}
+                  </div>
                   <div className="text-sm text-gray-600">Call Scheduled</div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-orange-600">1</div>
+                  <div className="text-2xl font-bold text-orange-600">
+                    {leads.filter(l => l.status === 'contract_sent').length}
+                  </div>
                   <div className="text-sm text-gray-600">Contract Sent</div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">5</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {leads.filter(l => l.status === 'won').length}
+                  </div>
                   <div className="text-sm text-gray-600">Signed</div>
                 </CardContent>
               </Card>
             </div>
 
             <div className="grid gap-4">
-              {filteredLeads.map((lead) => (
+              {leads.map((lead) => (
                 <Card key={lead.id}>
                   <CardContent className="p-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -617,15 +701,26 @@ const SuperAdmin = () => {
                               {lead.status.replace('_', ' ')}
                             </Badge>
                             <span className="text-sm text-gray-500">{lead.units} units</span>
+                            {lead.price_range && (
+                              <span className="text-sm text-blue-600">{lead.price_range}</span>
+                            )}
                           </div>
                         </div>
                       </div>
                       
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={() => handleSendContract(lead.id)}>
-                          <FileText className="w-4 h-4 mr-2" />
-                          Send Contract
-                        </Button>
+                        {lead.status !== 'won' && lead.status !== 'contract_sent' && (
+                          <Button variant="outline" size="sm" onClick={() => handleSendContract(lead.id)}>
+                            <FileText className="w-4 h-4 mr-2" />
+                            Send Contract
+                          </Button>
+                        )}
+                        {lead.status === 'contract_sent' && (
+                          <Button size="sm" onClick={() => handleConvertLeadToClient(lead.id)}>
+                            <Building className="w-4 h-4 mr-2" />
+                            Convert to Client
+                          </Button>
+                        )}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon">
@@ -967,6 +1062,21 @@ const SuperAdmin = () => {
           </div>
         )}
       </div>
+
+      {/* Intake Forms */}
+      {showClientForm && (
+        <ClientIntakeForm
+          onClose={() => setShowClientForm(false)}
+          onSubmit={handleClientSubmit}
+        />
+      )}
+
+      {showLeadForm && (
+        <LeadIntakeForm
+          onClose={() => setShowLeadForm(false)}
+          onSubmit={handleLeadSubmit}
+        />
+      )}
     </div>
   );
 };
