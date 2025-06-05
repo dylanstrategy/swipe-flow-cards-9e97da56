@@ -28,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
   const [impersonatedRole, setImpersonatedRole] = useState<AppRole | null>(null);
   const { toast } = useToast();
 
@@ -36,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserProfile = async (userId: string): Promise<AppUser | null> => {
     try {
-      console.log('Fetching user profile for:', userId);
+      console.log('📋 Fetching user profile for:', userId);
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -44,85 +45,78 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
       
       if (error) {
-        console.error('Error fetching user profile:', error);
+        console.error('❌ Error fetching user profile:', error);
         return null;
       }
       
-      console.log('User profile fetched:', data);
+      console.log('✅ User profile fetched:', data);
       return data as AppUser;
     } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
+      console.error('❌ Error in fetchUserProfile:', error);
       return null;
     }
   };
 
   const updateAuthState = async (session: Session | null) => {
-    console.log('Updating auth state with session:', !!session);
+    console.log('🔄 Updating auth state - Session exists:', !!session);
     
     setSession(session);
     setUser(session?.user ?? null);
     
     if (session?.user) {
+      console.log('👤 Fetching profile for user:', session.user.email);
       const profile = await fetchUserProfile(session.user.id);
       setUserProfile(profile);
+      console.log('✅ Profile set:', profile?.role);
     } else {
+      console.log('🚫 No session, clearing profile');
       setUserProfile(null);
       setImpersonatedRole(null);
     }
   };
 
   useEffect(() => {
-    let mounted = true;
+    console.log('🚀 AuthProvider initializing...');
     
-    const initialize = async () => {
+    const initializeAuth = async () => {
       try {
-        console.log('🔄 Initializing auth...');
-        
-        // Check for existing session
+        // Get initial session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('❌ Session check error:', error);
         } else {
-          console.log('✅ Initial session found:', !!session);
-          if (session && mounted) {
-            await updateAuthState(session);
-          }
+          console.log('📍 Initial session check - Session exists:', !!session);
+          await updateAuthState(session);
         }
       } catch (error) {
         console.error('❌ Auth initialization error:', error);
       } finally {
-        if (mounted) {
-          console.log('✅ Auth initialization complete');
-          setLoading(false);
-        }
+        setInitialized(true);
+        setLoading(false);
+        console.log('✅ Auth initialization complete');
       }
     };
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!mounted) return;
+        console.log('🔔 Auth state change:', event, 'Session exists:', !!session);
         
-        console.log('🔄 Auth state change:', event, 'Session:', !!session);
-        
-        // Only update state for meaningful events
-        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+        // Only process meaningful events after initialization
+        if (initialized && (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED')) {
           await updateAuthState(session);
         }
-        
-        // Ensure loading is false after any auth event
-        setLoading(false);
       }
     );
 
-    initialize();
+    initializeAuth();
 
     return () => {
-      mounted = false;
+      console.log('🧹 Cleaning up auth subscription');
       subscription.unsubscribe();
     };
-  }, []);
+  }, [initialized]);
 
   const signInWithGoogle = async () => {
     try {
@@ -138,7 +132,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         console.error('❌ Google sign in error:', error);
-        setLoading(false);
         throw error;
       }
       
@@ -165,7 +158,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        setLoading(false);
         throw error;
       }
     } catch (error: any) {
@@ -187,7 +179,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        setLoading(false);
         throw error;
       }
     } catch (error: any) {
@@ -203,10 +194,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       
       setImpersonatedRole(null);
-      setUserProfile(null);
-      setUser(null);
-      setSession(null);
-      
       console.log('✅ Signed out successfully');
     } catch (error: any) {
       console.error('❌ Sign out error:', error);
