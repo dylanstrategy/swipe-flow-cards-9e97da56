@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useResident } from '@/contexts/ResidentContext';
 import { Calendar, AlertTriangle, FileText } from 'lucide-react';
 
 interface NoticeToVacateFormProps {
@@ -27,6 +27,7 @@ interface NoticeFormData {
 const NoticeToVacateForm = ({ residentName, isOperator = false, onClose }: NoticeToVacateFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { submitNoticeToVacate, generateMoveOutChecklist, profile } = useResident();
   
   const form = useForm<NoticeFormData>({
     defaultValues: {
@@ -44,9 +45,13 @@ const NoticeToVacateForm = ({ residentName, isOperator = false, onClose }: Notic
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
+    // Submit notice to vacate and generate move-out checklist
+    submitNoticeToVacate(profile.id, data);
+    generateMoveOutChecklist(profile.id);
+    
     toast({
       title: "Notice to Vacate Submitted",
-      description: `Notice ${isOperator ? 'sent' : 'submitted'} successfully for ${residentName || 'resident'}.`,
+      description: `Notice ${isOperator ? 'sent' : 'submitted'} successfully. Move-out checklist has been created.`,
     });
     
     setIsSubmitting(false);
@@ -80,6 +85,13 @@ const NoticeToVacateForm = ({ residentName, isOperator = false, onClose }: Notic
         </CardTitle>
         {residentName && (
           <p className="text-sm text-gray-600">For: {residentName}</p>
+        )}
+        {!isOperator && (
+          <div className="bg-blue-50 p-3 rounded-lg">
+            <p className="text-sm text-blue-800">
+              Submitting this notice will create a move-out checklist to guide you through the process.
+            </p>
+          </div>
         )}
       </CardHeader>
       <CardContent>

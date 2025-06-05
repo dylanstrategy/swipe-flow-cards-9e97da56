@@ -1,10 +1,30 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { mockResidents, type ResidentProfile } from '@/data/mockResidents';
 
 // Extended ResidentProfile type to include unitType
 interface ExtendedResidentProfile extends ResidentProfile {
   unitType?: string;
+  leaseStartDate?: string;
+  balance?: number;
+  moveInChecklistComplete?: boolean;
+  moveOutChecklistComplete?: boolean;
+  noticeToVacateSubmitted?: boolean;
+  forwardingAddress?: string;
+  finalInspectionComplete?: boolean;
+  moveInChecklist?: {
+    [key: string]: {
+      completed: boolean;
+      completedBy?: string;
+      completedDate?: string;
+    };
+  };
+  moveOutChecklist?: {
+    [key: string]: {
+      completed: boolean;
+      completedBy?: string;
+      completedDate?: string;
+    };
+  };
 }
 
 interface ResidentContextType {
@@ -25,6 +45,14 @@ interface ResidentContextType {
     projectedOccupancy: number;
     requiredLeases: number;
   };
+  canMoveIn: (residentId: string) => { canMove: boolean; blockers: string[] };
+  canMoveOut: (residentId: string) => { canMove: boolean; blockers: string[] };
+  updateMoveInDate: (residentId: string, newDate: string) => void;
+  submitNoticeToVacate: (residentId: string, data: any) => void;
+  completeInspection: (residentId: string, type: 'moveIn' | 'moveOut', completedBy: string) => void;
+  updateChecklistItem: (residentId: string, type: 'moveIn' | 'moveOut', itemId: string, completed: boolean, completedBy?: string) => void;
+  generateMoveOutChecklist: (residentId: string) => void;
+  markAsMoved: (residentId: string, type: 'in' | 'out') => { success: boolean; message: string };
 }
 
 const ResidentContext = createContext<ResidentContextType | undefined>(undefined);
@@ -38,10 +66,37 @@ export const useResident = () => {
 };
 
 export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Add unitType to existing residents
+  // Add unitType and move-in/out data to existing residents
   const enrichedResidents: ExtendedResidentProfile[] = mockResidents.map(resident => ({
     ...resident,
-    unitType: getUnitType(resident.unitNumber)
+    unitType: getUnitType(resident.unitNumber),
+    leaseStartDate: '2025-06-15', // Sample lease start date
+    balance: resident.status === 'current' ? 0 : 1550, // Current residents have paid balance
+    moveInChecklistComplete: resident.status === 'current',
+    moveOutChecklistComplete: false,
+    noticeToVacateSubmitted: resident.status === 'notice',
+    forwardingAddress: resident.status === 'notice' ? '123 New Address St, New City, NY' : '',
+    finalInspectionComplete: resident.status === 'current',
+    moveInChecklist: {
+      'sign-lease': { completed: resident.status === 'current', completedBy: 'resident', completedDate: '2025-06-01' },
+      'payment': { completed: resident.status === 'current', completedBy: 'resident', completedDate: '2025-06-01' },
+      'renters-insurance': { completed: resident.status === 'current', completedBy: 'resident', completedDate: '2025-06-02' },
+      'book-movers': { completed: resident.status === 'current', completedBy: 'resident', completedDate: '2025-06-03' },
+      'utilities': { completed: resident.status === 'current', completedBy: 'resident', completedDate: '2025-06-04' },
+      'inspection': { completed: resident.status === 'current', completedBy: 'maintenance', completedDate: '2025-06-14' },
+      'community-guidelines': { completed: resident.status === 'current', completedBy: 'resident', completedDate: '2025-06-14' },
+      'move-in': { completed: resident.status === 'current', completedBy: 'leasing', completedDate: '2025-06-15' }
+    },
+    moveOutChecklist: resident.status === 'notice' ? {
+      'notice-to-vacate': { completed: true, completedBy: 'resident', completedDate: new Date().toISOString().split('T')[0] },
+      'forwarding-address': { completed: true, completedBy: 'resident', completedDate: new Date().toISOString().split('T')[0] },
+      'final-inspection': { completed: false },
+      'exit-survey': { completed: false },
+      'key-return': { completed: false },
+      'final-balance': { completed: false },
+      'deposit-release': { completed: false },
+      'move-out-confirmation': { completed: false }
+    } : undefined
   }));
 
   const [allResidents, setAllResidents] = useState<ExtendedResidentProfile[]>(enrichedResidents);
@@ -49,7 +104,6 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Helper function to determine unit type based on unit number
   function getUnitType(unitNumber: string): string {
-    // Simple logic to assign unit types based on unit number
     const num = parseInt(unitNumber);
     if (num % 10 <= 2) return '1BR';
     if (num % 10 <= 6) return '2BR';
@@ -177,6 +231,255 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   };
 
+  const canMoveIn = (residentId: string) => {
+    const resident = allResidents.find(r => r.id === residentId);
+    if (!resident) return { canMove: false, blockers: ['Resident not found'] };
+
+    const blockers: string[] = [];
+    const today = new Date();
+    const leaseStart = new Date(resident.leaseStartDate || '');
+
+    // Check if lease start date is on or before today
+    if (leaseStart > today) {
+      blockers.push('Lease start date has not arrived yet');
+    }
+
+    // Check if balance is fully paid
+    if ((resident.balance || 0) > 0) {
+      blockers.push('Outstanding balance must be paid in full');
+    }
+
+    // Check if move-in checklist is 100% complete
+    if (!resident.moveInChecklistComplete) {
+      const checklist = resident.moveInChecklist;
+      if (checklist) {
+        const incompleteItems = Object.entries(checklist)
+          .filter(([_, item]) => !item.completed)
+          .map(([key, _]) => key);
+        
+        if (incompleteItems.length > 0) {
+          blockers.push('Move-in checklist must be 100% complete');
+        }
+      } else {
+        blockers.push('Move-in checklist must be 100% complete');
+      }
+    }
+
+    return { canMove: blockers.length === 0, blockers };
+  };
+
+  const canMoveOut = (residentId: string) => {
+    const resident = allResidents.find(r => r.id === residentId);
+    if (!resident) return { canMove: false, blockers: ['Resident not found'] };
+
+    const blockers: string[] = [];
+
+    // Check if Notice to Vacate is submitted
+    if (!resident.noticeToVacateSubmitted) {
+      blockers.push('Signed Notice to Vacate must be submitted');
+    }
+
+    // Check if forwarding address is provided
+    if (!resident.forwardingAddress || resident.forwardingAddress.trim() === '') {
+      blockers.push('Forwarding address must be provided');
+    }
+
+    // Check if final balance is paid
+    if ((resident.balance || 0) > 0) {
+      blockers.push('Final balance must be paid in full');
+    }
+
+    // Check if move-out checklist is complete
+    if (!resident.moveOutChecklistComplete) {
+      const checklist = resident.moveOutChecklist;
+      if (checklist) {
+        const incompleteItems = Object.entries(checklist)
+          .filter(([_, item]) => !item.completed)
+          .map(([key, _]) => key);
+        
+        if (incompleteItems.length > 0) {
+          blockers.push('Move-out checklist must be 100% complete');
+        }
+      } else {
+        blockers.push('Move-out checklist must be created and completed');
+      }
+    }
+
+    // Check if final inspection is complete
+    if (!resident.finalInspectionComplete) {
+      blockers.push('Final inspection must be completed');
+    }
+
+    return { canMove: blockers.length === 0, blockers };
+  };
+
+  const updateMoveInDate = (residentId: string, newDate: string) => {
+    setAllResidents(prevResidents => 
+      prevResidents.map(resident => {
+        if (resident.id === residentId) {
+          return {
+            ...resident,
+            leaseStartDate: newDate,
+            // Reset required items when move-in date changes
+            moveInChecklist: {
+              ...resident.moveInChecklist,
+              'sign-lease': { completed: false },
+              'payment': { completed: false },
+              'renters-insurance': { completed: false }
+            },
+            moveInChecklistComplete: false,
+            balance: 1550 // Reset balance when date changes
+          };
+        }
+        return resident;
+      })
+    );
+
+    console.log(`Move-in date updated for resident ${residentId}. Lease re-signing and balance recalculation required.`);
+  };
+
+  const submitNoticeToVacate = (residentId: string, data: any) => {
+    setAllResidents(prevResidents => 
+      prevResidents.map(resident => {
+        if (resident.id === residentId) {
+          return {
+            ...resident,
+            status: 'notice' as ResidentProfile['status'],
+            noticeToVacateSubmitted: true,
+            moveOutDate: data.moveOutDate,
+            forwardingAddress: data.forwardingAddress || '',
+            moveOutChecklist: {
+              'notice-to-vacate': { completed: true, completedBy: 'resident', completedDate: new Date().toISOString().split('T')[0] },
+              'forwarding-address': { completed: !!data.forwardingAddress, completedBy: 'resident', completedDate: data.forwardingAddress ? new Date().toISOString().split('T')[0] : undefined },
+              'final-inspection': { completed: false },
+              'exit-survey': { completed: false },
+              'key-return': { completed: false },
+              'final-balance': { completed: false },
+              'deposit-release': { completed: false },
+              'move-out-confirmation': { completed: false }
+            }
+          };
+        }
+        return resident;
+      })
+    );
+
+    console.log(`Notice to Vacate submitted for resident ${residentId}`);
+  };
+
+  const generateMoveOutChecklist = (residentId: string) => {
+    setAllResidents(prevResidents => 
+      prevResidents.map(resident => {
+        if (resident.id === residentId && !resident.moveOutChecklist) {
+          return {
+            ...resident,
+            moveOutChecklist: {
+              'notice-to-vacate': { completed: resident.noticeToVacateSubmitted || false },
+              'forwarding-address': { completed: !!resident.forwardingAddress },
+              'final-inspection': { completed: false },
+              'exit-survey': { completed: false },
+              'key-return': { completed: false },
+              'final-balance': { completed: false },
+              'deposit-release': { completed: false },
+              'move-out-confirmation': { completed: false }
+            }
+          };
+        }
+        return resident;
+      })
+    );
+  };
+
+  const completeInspection = (residentId: string, type: 'moveIn' | 'moveOut', completedBy: string) => {
+    setAllResidents(prevResidents => 
+      prevResidents.map(resident => {
+        if (resident.id === residentId) {
+          const updates: any = {
+            finalInspectionComplete: true
+          };
+
+          if (type === 'moveIn' && resident.moveInChecklist) {
+            updates.moveInChecklist = {
+              ...resident.moveInChecklist,
+              'inspection': { completed: true, completedBy, completedDate: new Date().toISOString().split('T')[0] }
+            };
+          } else if (type === 'moveOut' && resident.moveOutChecklist) {
+            updates.moveOutChecklist = {
+              ...resident.moveOutChecklist,
+              'final-inspection': { completed: true, completedBy, completedDate: new Date().toISOString().split('T')[0] }
+            };
+          }
+
+          return { ...resident, ...updates };
+        }
+        return resident;
+      })
+    );
+
+    console.log(`${type} inspection completed for resident ${residentId} by ${completedBy}`);
+  };
+
+  const updateChecklistItem = (residentId: string, type: 'moveIn' | 'moveOut', itemId: string, completed: boolean, completedBy?: string) => {
+    setAllResidents(prevResidents => 
+      prevResidents.map(resident => {
+        if (resident.id === residentId) {
+          const checklistKey = type === 'moveIn' ? 'moveInChecklist' : 'moveOutChecklist';
+          const currentChecklist = resident[checklistKey];
+
+          if (currentChecklist) {
+            const updatedChecklist = {
+              ...currentChecklist,
+              [itemId]: {
+                completed,
+                completedBy: completed ? (completedBy || 'system') : undefined,
+                completedDate: completed ? new Date().toISOString().split('T')[0] : undefined
+              }
+            };
+
+            // Check if all items are complete
+            const allComplete = Object.values(updatedChecklist).every(item => item.completed);
+            const completeKey = type === 'moveIn' ? 'moveInChecklistComplete' : 'moveOutChecklistComplete';
+
+            return {
+              ...resident,
+              [checklistKey]: updatedChecklist,
+              [completeKey]: allComplete
+            };
+          }
+        }
+        return resident;
+      })
+    );
+  };
+
+  const markAsMoved = (residentId: string, type: 'in' | 'out') => {
+    const canMoveCheck = type === 'in' ? canMoveIn(residentId) : canMoveOut(residentId);
+    
+    if (!canMoveCheck.canMove) {
+      return {
+        success: false,
+        message: "Move-in cannot be completed until all required steps are fulfilled and the lease has begun."
+      };
+    }
+
+    setAllResidents(prevResidents => 
+      prevResidents.map(resident => {
+        if (resident.id === residentId) {
+          return {
+            ...resident,
+            status: type === 'in' ? 'current' : 'moved_out' as ResidentProfile['status']
+          };
+        }
+        return resident;
+      })
+    );
+
+    return {
+      success: true,
+      message: `Resident successfully marked as moved ${type}`
+    };
+  };
+
   return (
     <ResidentContext.Provider value={{ 
       profile, 
@@ -190,7 +493,15 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       getVacantUnits,
       getAvailableUnits,
       getOccupancyRate,
-      getPPFProjections
+      getPPFProjections,
+      canMoveIn,
+      canMoveOut,
+      updateMoveInDate,
+      submitNoticeToVacate,
+      completeInspection,
+      updateChecklistItem,
+      generateMoveOutChecklist,
+      markAsMoved
     }}>
       {children}
     </ResidentContext.Provider>
