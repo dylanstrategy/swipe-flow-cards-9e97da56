@@ -7,7 +7,6 @@ import ScheduleTab from '@/components/tabs/ScheduleTab';
 import MessagesTab from '@/components/tabs/MessagesTab';
 import AccountTab from '@/components/tabs/AccountTab';
 import { useAuth } from '@/contexts/AuthContext';
-import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 
 interface IndexProps {
   isImpersonated?: boolean;
@@ -18,17 +17,6 @@ const Index: React.FC<IndexProps> = ({ isImpersonated = false }) => {
   const { user, userProfile, loading, impersonatedUser, isDevMode, devModeRole } = useAuth();
   const [activeTab, setActiveTab] = useState('today');
   
-  const isReady = useProtectedRoute();
-  
-  // Don't render if not ready (either loading or redirecting)
-  if (!isReady) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
   // Create stable dev profile to avoid hydration issues
   const devProfile = {
     id: 'dev-mode-profile',
