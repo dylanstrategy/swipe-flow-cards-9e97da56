@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,8 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { useAuth } from '@/components/auth/AuthProvider';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -42,7 +39,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const SuperAdmin = () => {
-  const { userProfile, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [companies, setCompanies] = useState<any[]>([]);
@@ -61,42 +57,16 @@ const SuperAdmin = () => {
     try {
       setLoading(true);
       
-      // Load companies
-      const { data: companiesData, error: companiesError } = await supabase
-        .from('companies')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Load from localStorage
+      const storedCompanies = localStorage.getItem('applaud_companies');
+      const storedProperties = localStorage.getItem('applaud_properties');
+      const storedOperators = localStorage.getItem('applaud_operators');
 
-      if (companiesError && companiesError.code !== 'PGRST116') {
-        console.error('Error loading companies:', companiesError);
-      }
-
-      // Load properties
-      const { data: propertiesData, error: propertiesError } = await supabase
-        .from('properties')
-        .select('*, companies(name)')
-        .order('created_at', { ascending: false });
-
-      if (propertiesError && propertiesError.code !== 'PGRST116') {
-        console.error('Error loading properties:', propertiesError);
-      }
-
-      // Load operators
-      const { data: operatorsData, error: operatorsError } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .in('role', ['operator', 'senior_operator'])
-        .order('created_at', { ascending: false });
-
-      if (operatorsError && operatorsError.code !== 'PGRST116') {
-        console.error('Error loading operators:', operatorsError);
-      }
-
-      setCompanies(companiesData || []);
-      setProperties(propertiesData || []);
-      setOperators(operatorsData || []);
+      setCompanies(storedCompanies ? JSON.parse(storedCompanies) : []);
+      setProperties(storedProperties ? JSON.parse(storedProperties) : []);
+      setOperators(storedOperators ? JSON.parse(storedOperators) : []);
       
-      // Mock leads data for now
+      // Mock leads data
       setLeads([
         { id: '1', name: 'Meridian Properties', email: 'contact@meridianprops.com', status: 'contract_sent', units: 150, created_at: new Date() },
         { id: '2', name: 'Sunset Management', email: 'info@sunsetmgmt.com', status: 'call_scheduled', units: 75, created_at: new Date() },
@@ -106,7 +76,7 @@ const SuperAdmin = () => {
       console.error('Error loading data:', error);
       toast({
         title: "Error",
-        description: "Failed to load dashboard data. Some features may not be available.",
+        description: "Failed to load dashboard data.",
         variant: "destructive",
       });
     } finally {
@@ -153,9 +123,8 @@ const SuperAdmin = () => {
     return colors[role as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
-  const handleImpersonate = async (operatorId: string) => {
+  const handleImpersonate = async (userId: string) => {
     try {
-      // In a real implementation, this would switch user context
       toast({
         title: "Impersonation Feature",
         description: "This would allow you to view the dashboard as the selected user. Feature coming soon.",
@@ -171,9 +140,7 @@ const SuperAdmin = () => {
 
   const handleAddClient = async () => {
     try {
-      // In a real implementation, this would open a form or send a registration link
       const registrationLink = `${window.location.origin}/owner-login`;
-      
       await navigator.clipboard.writeText(registrationLink);
       
       toast({
@@ -191,7 +158,6 @@ const SuperAdmin = () => {
   const handleAddOperator = async () => {
     try {
       const registrationLink = `${window.location.origin}/`;
-      
       await navigator.clipboard.writeText(registrationLink);
       
       toast({
@@ -225,6 +191,11 @@ const SuperAdmin = () => {
       title: "Campaign Creation",
       description: "Marketing campaign builder coming soon",
     });
+  };
+
+  const handleSignOut = () => {
+    localStorage.clear();
+    navigate('/owner-login');
   };
 
   if (loading) {
@@ -262,12 +233,8 @@ const SuperAdmin = () => {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {userProfile?.first_name} {userProfile?.last_name}
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      Super Administrator
-                    </p>
+                    <p className="text-sm font-medium leading-none">Super Admin</p>
+                    <p className="text-xs leading-none text-muted-foreground">admin@applaud.com</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -285,7 +252,7 @@ const SuperAdmin = () => {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   className="cursor-pointer text-red-600"
-                  onClick={signOut}
+                  onClick={handleSignOut}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Sign Out</span>
@@ -961,10 +928,10 @@ const SuperAdmin = () => {
                         </div>
                       </div>
                     </CardContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            )}
+                  </Card>
+                ))
+              )}
+            </div>
           </div>
         )}
       </div>
