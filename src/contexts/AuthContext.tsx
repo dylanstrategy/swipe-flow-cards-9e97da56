@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session, User } from '@supabase/supabase-js';
@@ -55,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [devModeRole, setDevModeRole] = useState<AppRole | null>(null);
   const [devModeProperty, setDevModeProperty] = useState<string | null>(null);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string): Promise<UserProfile | null> => {
     console.log('👤 Fetching user profile for:', userId);
     try {
       const { data: profile, error } = await supabase
@@ -86,15 +85,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('🔑 Getting initial session');
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (mounted) {
-          if (session?.user) {
-            setUser(session.user);
-            const profile = await fetchProfile(session.user.id);
+        if (mounted && session?.user) {
+          console.log('👤 Found existing session, fetching profile');
+          setUser(session.user);
+          const profile = await fetchProfile(session.user.id);
+          if (mounted) {
             setUserProfile(profile);
-          } else {
-            setUser(null);
-            setUserProfile(null);
           }
+        }
+        
+        if (mounted) {
           setLoading(false);
         }
       } catch (error) {
@@ -109,18 +109,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Subscribe to auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('👂 Auth state change event:', event);
         
         if (!mounted) return;
 
+        // Handle auth state changes synchronously
         if (session?.user) {
           setUser(session.user);
-          // Only fetch profile if we don't have one or if it's a different user
-          if (!userProfile || userProfile.id !== session.user.id) {
-            const profile = await fetchProfile(session.user.id);
-            setUserProfile(profile);
-          }
+          // Defer profile fetching to avoid blocking the auth flow
+          setTimeout(async () => {
+            if (mounted) {
+              const profile = await fetchProfile(session.user.id);
+              if (mounted) {
+                setUserProfile(profile);
+              }
+            }
+          }, 0);
         } else {
           setUser(null);
           setUserProfile(null);
@@ -139,7 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('🧹 AuthProvider useEffect cleanup');
       subscription?.unsubscribe();
     };
-  }, []); // Empty dependency array
+  }, []); // Keep empty dependency array
 
   const signInWithEmail = async (email: string, password: string) => {
     console.log('🔑 Signing in with email:', email);
