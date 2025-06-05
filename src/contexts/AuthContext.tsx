@@ -31,9 +31,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [impersonatedRole, setImpersonatedRole] = useState<AppRole | null>(null);
   const { toast } = useToast();
   
-  // Use ref to prevent multiple simultaneous operations
+  // Use refs to prevent multiple operations and track state
   const initializingRef = useRef(false);
   const currentUserIdRef = useRef<string | null>(null);
+  const profileFetchedRef = useRef(false);
 
   const isImpersonating = impersonatedRole !== null;
   const canImpersonate = userProfile?.role === 'super_admin';
@@ -80,28 +81,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializingRef.current = true;
     
     try {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        // Only fetch profile if it's a different user or we don't have one yet
-        if (currentUserIdRef.current !== session.user.id || !userProfile) {
+      // Only update state if values have actually changed
+      if (session?.user?.id !== currentUserIdRef.current) {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
           console.log('👤 User signed in, fetching profile...');
           currentUserIdRef.current = session.user.id;
+          profileFetchedRef.current = false;
+          
           const profile = await fetchUserProfile(session.user.id);
           setUserProfile(profile);
+          profileFetchedRef.current = true;
         } else {
-          console.log('👤 Same user, keeping existing profile');
+          console.log('🚫 User signed out, clearing profile...');
+          setUserProfile(null);
+          setImpersonatedRole(null);
+          currentUserIdRef.current = null;
+          profileFetchedRef.current = false;
+          
+          // Clear localStorage on logout
+          localStorage.removeItem('supabase.auth.token');
         }
-      } else {
-        console.log('🚫 User signed out, clearing profile...');
-        setUserProfile(null);
-        setImpersonatedRole(null);
-        currentUserIdRef.current = null;
       }
     } catch (error) {
       console.error('❌ Error handling auth state change:', error);
     } finally {
+      // Only set loading to false after everything is resolved
       setLoading(false);
       initializingRef.current = false;
       console.log('✅ Auth initialization complete, loading set to false');
@@ -147,7 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://preview--swipe-flow-cards.lovable.app/',
+          redirectTo: 'https://preview--swipe-flow-cards.lovable.app',
         }
       });
       
@@ -221,9 +228,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
+      // Clear all state and localStorage
       setImpersonatedRole(null);
       currentUserIdRef.current = null;
+      profileFetchedRef.current = false;
       initializingRef.current = false;
+      localStorage.removeItem('supabase.auth.token');
+      
       console.log('✅ Signed out successfully');
     } catch (error: any) {
       console.error('❌ Sign out error:', error);

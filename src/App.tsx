@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ResidentProvider } from "@/contexts/ResidentContext";
 import Index from "./pages/Index";
 import Discovery from "./pages/Discovery";
@@ -19,9 +19,46 @@ import UnknownRole from "./pages/UnknownRole";
 
 const queryClient = new QueryClient();
 
-// Temporary: Bypass authentication for debugging
-function BypassRoute({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+// Loading component
+function LoadingScreen() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="text-center space-y-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="text-gray-600 text-lg">Initializing...</p>
+      </div>
+    </div>
+  );
+}
+
+// App routes component that uses auth context
+function AppRoutes() {
+  const { loading } = useAuth();
+
+  // Show loading screen while auth is initializing
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/owner-login" element={<OwnerLogin />} />
+      <Route path="/unknown-role" element={<UnknownRole />} />
+      
+      {/* Main app routes */}
+      <Route path="/" element={<Index />} />
+      <Route path="/discovery" element={<Discovery />} />
+      <Route path="/matches" element={<Matches />} />
+      <Route path="/movein" element={<MoveIn />} />
+      <Route path="/movein/:homeId" element={<MoveIn />} />
+      <Route path="/maintenance" element={<Maintenance />} />
+      <Route path="/operator" element={<Operator />} />
+      <Route path="/super-admin" element={<SuperAdmin />} />
+      
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
 }
 
 const App = () => (
@@ -31,23 +68,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <ResidentProvider>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/owner-login" element={<OwnerLogin />} />
-              <Route path="/unknown-role" element={<UnknownRole />} />
-              
-              {/* Temporarily bypass auth for all routes */}
-              <Route path="/" element={<BypassRoute><Index /></BypassRoute>} />
-              <Route path="/discovery" element={<BypassRoute><Discovery /></BypassRoute>} />
-              <Route path="/matches" element={<BypassRoute><Matches /></BypassRoute>} />
-              <Route path="/movein" element={<BypassRoute><MoveIn /></BypassRoute>} />
-              <Route path="/movein/:homeId" element={<BypassRoute><MoveIn /></BypassRoute>} />
-              <Route path="/maintenance" element={<BypassRoute><Maintenance /></BypassRoute>} />
-              <Route path="/operator" element={<BypassRoute><Operator /></BypassRoute>} />
-              <Route path="/super-admin" element={<BypassRoute><SuperAdmin /></BypassRoute>} />
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <AppRoutes />
           </ResidentProvider>
         </AuthProvider>
       </BrowserRouter>
