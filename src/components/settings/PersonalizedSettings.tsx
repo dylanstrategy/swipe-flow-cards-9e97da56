@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,15 @@ interface PersonalizedSettingsProps {
 
 const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, userRole }) => {
   const [activeSection, setActiveSection] = useState<SettingsSection | null>(null);
+  const [weeklySchedule, setWeeklySchedule] = useState({
+    monday: { enabled: true, start: '09:00', end: '17:00' },
+    tuesday: { enabled: true, start: '09:00', end: '17:00' },
+    wednesday: { enabled: true, start: '09:00', end: '17:00' },
+    thursday: { enabled: true, start: '09:00', end: '17:00' },
+    friday: { enabled: true, start: '09:00', end: '17:00' },
+    saturday: { enabled: false, start: '10:00', end: '14:00' },
+    sunday: { enabled: false, start: '10:00', end: '14:00' }
+  });
 
   const getSettingsForRole = () => {
     const baseSettings = [
@@ -108,6 +116,16 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
   const settings = getSettingsForRole();
   const personalSettings = settings.filter(s => s.category === 'personal');
   const appearanceSettings = settings.filter(s => s.category === 'appearance');
+
+  const handleScheduleChange = (day: string, field: string, value: string | boolean) => {
+    setWeeklySchedule(prev => ({
+      ...prev,
+      [day]: {
+        ...prev[day as keyof typeof prev],
+        [field]: value
+      }
+    }));
+  };
 
   const renderSettingDetail = (section: SettingsSection) => {
     switch (section) {
@@ -291,22 +309,90 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
             </div>
 
             <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Weekly Schedule Setup</h3>
+              <p className="text-sm text-gray-600 mb-4">Configure your available hours for each day of the week</p>
+              <div className="space-y-4">
+                {Object.entries(weeklySchedule).map(([day, schedule]) => (
+                  <div key={day} className="p-4 border rounded-lg space-y-3">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={schedule.enabled}
+                          onChange={(e) => handleScheduleChange(day, 'enabled', e.target.checked)}
+                          className="h-4 w-4"
+                        />
+                        <span className="font-medium capitalize">{day}</span>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {schedule.enabled ? `${schedule.start} - ${schedule.end}` : 'Unavailable'}
+                      </div>
+                    </div>
+                    
+                    {schedule.enabled && (
+                      <div className="flex gap-4 ml-7">
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm text-gray-600">Start:</label>
+                          <input
+                            type="time"
+                            value={schedule.start}
+                            onChange={(e) => handleScheduleChange(day, 'start', e.target.value)}
+                            className="px-2 py-1 border rounded text-sm"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm text-gray-600">End:</label>
+                          <input
+                            type="time"
+                            value={schedule.end}
+                            onChange={(e) => handleScheduleChange(day, 'end', e.target.value)}
+                            className="px-2 py-1 border rounded text-sm"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
               <h3 className="text-lg font-semibold">Scheduling Preferences</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <span>Default Meeting Duration</span>
-                  <span className="text-gray-600">30 minutes</span>
+                  <select className="px-2 py-1 border rounded text-sm">
+                    <option value="15">15 minutes</option>
+                    <option value="30" selected>30 minutes</option>
+                    <option value="45">45 minutes</option>
+                    <option value="60">1 hour</option>
+                    <option value="90">1.5 hours</option>
+                    <option value="120">2 hours</option>
+                  </select>
                 </div>
                 <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <span>Available Hours</span>
-                  <span className="text-gray-600">9 AM - 5 PM</span>
+                  <span>Buffer Time Between Appointments</span>
+                  <select className="px-2 py-1 border rounded text-sm">
+                    <option value="0">No buffer</option>
+                    <option value="5">5 minutes</option>
+                    <option value="10">10 minutes</option>
+                    <option value="15" selected>15 minutes</option>
+                    <option value="30">30 minutes</option>
+                  </select>
                 </div>
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">Auto-accept Invites</div>
-                    <div className="text-sm text-gray-600">Automatically accept calendar invites</div>
+                    <div className="text-sm text-gray-600">Automatically accept calendar invites during available hours</div>
                   </div>
                   <input type="checkbox" className="h-4 w-4" />
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div>
+                    <div className="font-medium">Allow Weekend Scheduling</div>
+                    <div className="text-sm text-gray-600">Enable scheduling on weekends</div>
+                  </div>
+                  <input type="checkbox" defaultChecked className="h-4 w-4" />
                 </div>
               </div>
             </div>
