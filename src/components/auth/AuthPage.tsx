@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from './AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,6 +19,7 @@ const AuthPage = () => {
   const [property, setProperty] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [signupError, setSignupError] = useState('');
   
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
@@ -32,21 +33,27 @@ const AuthPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setSignupError('');
 
     try {
       console.log('Starting registration/login process:', { email, role, isSignUp });
       
       if (isSignUp) {
         console.log('Attempting sign up with data:', { firstName, lastName, email, phone, role, property });
+        
         const result = await signUp(email, password, { firstName, lastName, phone, role, property });
         
+        console.log('Signup result:', result);
+        
         if (result.needsConfirmation) {
+          console.log('Email confirmation needed');
           setEmailSent(true);
           toast({
             title: "Check your email!",
-            description: "We've sent you a confirmation link. Click it to complete your registration.",
+            description: `We've sent a confirmation link to ${email}. Click it to complete your registration.`,
           });
         } else {
+          console.log('User was automatically signed in');
           toast({
             title: "Account created!",
             description: "You have been automatically signed in.",
@@ -62,9 +69,23 @@ const AuthPage = () => {
       }
     } catch (error: any) {
       console.error('Auth error:', error);
+      
+      let errorMessage = error.message || "Something went wrong";
+      
+      // Handle specific error cases
+      if (error.message?.includes('Invalid login credentials')) {
+        errorMessage = "Invalid email or password. Please check your credentials and try again.";
+      } else if (error.message?.includes('Email not confirmed')) {
+        errorMessage = "Please check your email and click the confirmation link before signing in.";
+      } else if (error.message?.includes('User already registered')) {
+        errorMessage = "An account with this email already exists. Please try signing in instead.";
+        setIsSignUp(false); // Switch to sign in mode
+      }
+      
+      setSignupError(errorMessage);
       toast({
         title: "Error",
-        description: error.message || "Something went wrong",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -74,6 +95,8 @@ const AuthPage = () => {
 
   const handleTestLogin = async (testAccount: typeof testAccounts[0]) => {
     setLoading(true);
+    setSignupError('');
+    
     try {
       console.log('Attempting test login:', testAccount.email);
       await signIn(testAccount.email, testAccount.password);
@@ -100,7 +123,6 @@ const AuthPage = () => {
             description: "Check your email to confirm the account, then try logging in again.",
           });
         } else {
-          await signIn(testAccount.email, testAccount.password);
           toast({
             title: "Test account created and logged in!",
             description: `Created and logged in as ${testAccount.role}`,
@@ -127,22 +149,36 @@ const AuthPage = () => {
             <CardTitle className="text-center">Check Your Email</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <p className="text-gray-600">
-              We've sent a confirmation link to <strong>{email}</strong>
-            </p>
+            <Alert>
+              <AlertDescription>
+                We've sent a confirmation link to <strong>{email}</strong>
+              </AlertDescription>
+            </Alert>
             <p className="text-sm text-gray-500">
               Click the link in your email to complete your registration, then come back here to sign in.
             </p>
-            <Button 
-              onClick={() => {
-                setEmailSent(false);
-                setIsSignUp(false);
-              }}
-              variant="outline"
-              className="w-full"
-            >
-              Back to Sign In
-            </Button>
+            <div className="space-y-2">
+              <Button 
+                onClick={() => {
+                  setEmailSent(false);
+                  setIsSignUp(false);
+                }}
+                variant="outline"
+                className="w-full"
+              >
+                Back to Sign In
+              </Button>
+              <Button 
+                onClick={() => {
+                  setEmailSent(false);
+                  // Keep the same form data for retry
+                }}
+                variant="ghost"
+                className="w-full text-sm"
+              >
+                Didn't receive email? Try again
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -158,12 +194,20 @@ const AuthPage = () => {
               {isSignUp ? 'Create Account' : 'Sign In'}
             </CardTitle>
             {isSignUp && (
-              <p className="text-sm text-center text-gray-600">
-                Available for prospects and operators only
-              </p>
+              <Alert>
+                <AlertDescription>
+                  You'll receive an email to confirm your account after registration.
+                </AlertDescription>
+              </Alert>
             )}
           </CardHeader>
           <CardContent>
+            {signupError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{signupError}</AlertDescription>
+              </Alert>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="email">Email</Label>
@@ -184,6 +228,7 @@ const AuthPage = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  minLength={6}
                 />
               </div>
 
@@ -256,7 +301,10 @@ const AuthPage = () => {
             <div className="mt-4 text-center">
               <button
                 type="button"
-                onClick={() => setIsSignUp(!isSignUp)}
+                onClick={() => {
+                  setIsSignUp(!isSignUp);
+                  setSignupError('');
+                }}
                 className="text-blue-600 hover:underline"
               >
                 {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}

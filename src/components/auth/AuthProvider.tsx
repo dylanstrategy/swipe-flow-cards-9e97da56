@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -143,13 +142,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) {
         console.error('Sign up error:', error);
-        if (error.message.includes('User already registered')) {
-          throw new Error('An account with this email already exists. Please try signing in instead.');
-        }
         throw error;
       }
 
-      console.log('Sign up successful:', data);
+      console.log('Sign up response data:', data);
       
       // Check if user was created but needs email confirmation
       if (data.user && !data.session) {
@@ -158,6 +154,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       // User was created and automatically signed in
+      console.log('User created and automatically signed in');
       return { needsConfirmation: false };
       
     } catch (error) {
