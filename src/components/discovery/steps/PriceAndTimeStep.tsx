@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { MapPin } from 'lucide-react';
-import SwipeUpPrompt from '@/components/ui/swipe-up-prompt';
 
 interface PriceAndTimeStepProps {
   priceRange: [number, number];
@@ -202,18 +201,6 @@ const PriceAndTimeStep = ({
           </div>
         )}
       </div>
-
-      {/* Show SwipeUpPrompt when ready */}
-      {canContinue && (
-        <div className="fixed bottom-0 left-0 right-0 z-50">
-          <SwipeUpPrompt 
-            onContinue={onContinue}
-            onClear={handleClearData}
-            message="Ready to find your perfect home!"
-            buttonText="Continue"
-          />
-        </div>
-      )}
     </div>
   );
 };
