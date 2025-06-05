@@ -6,71 +6,27 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Login = () => {
-  const { signInWithGoogle, loading, user, userProfile } = useAuth();
+  const { signInWithGoogle, loading, user } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already authenticated
+  // Simple redirect logic
   useEffect(() => {
-    console.log('🔍 Login page - checking auth state:', { 
-      hasUser: !!user, 
-      hasProfile: !!userProfile, 
-      email: user?.email,
-      role: userProfile?.role,
-      loading
-    });
-    
-    // Only redirect if we have both user AND profile, OR if we're not loading and have a user
-    if (user && (userProfile || !loading)) {
-      console.log('🔄 User authenticated, determining redirect...');
-      
-      // If we have a profile, use it for routing
-      if (userProfile) {
-        const defaultRoute = getDefaultRouteForUser(userProfile);
-        console.log('📍 Redirecting to:', defaultRoute);
-        navigate(defaultRoute, { replace: true });
-      } else {
-        // If no profile but user exists and we're not loading, redirect to a safe default
-        console.log('📍 No profile but user exists, redirecting to home');
-        navigate('/', { replace: true });
-      }
+    if (user) {
+      console.log('✅ User authenticated, redirecting to home');
+      navigate('/', { replace: true });
     }
-  }, [user, userProfile, loading, navigate]);
-
-  const getDefaultRouteForUser = (profile: any) => {
-    console.log('🎯 Getting default route for:', profile.email, profile.role);
-    
-    if (profile.email === 'info@applaudliving.com') {
-      return '/super-admin';
-    }
-    
-    switch (profile.role) {
-      case 'super_admin':
-        return '/super-admin';
-      case 'senior_operator':
-      case 'operator':
-      case 'leasing':
-        return '/operator';
-      case 'maintenance':
-        return '/maintenance';
-      case 'resident':
-        return '/';
-      case 'prospect':
-        return '/discovery';
-      default:
-        return '/unknown-role';
-    }
-  };
+  }, [user, navigate]);
 
   const handleGoogleSignIn = async () => {
     try {
-      console.log('🔄 Initiating Google sign in from Login page...');
+      console.log('🔄 Initiating Google sign in...');
       await signInWithGoogle();
     } catch (error) {
       console.error('❌ Login error:', error);
     }
   };
 
-  // Show loading while checking auth state
+  // Show loading while auth is being processed
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -82,7 +38,7 @@ const Login = () => {
     );
   }
 
-  // Don't render login form if already authenticated and redirecting
+  // Don't show login form if user is already authenticated
   if (user) {
     return (
       <div className="min-h-screen flex items-center justify-center">

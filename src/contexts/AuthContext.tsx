@@ -56,74 +56,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Separate effect for profile fetching to avoid race conditions
-  useEffect(() => {
-    if (user && !userProfile) {
-      console.log('🔄 User exists but no profile, fetching...');
-      fetchUserProfile(user.id).then(profile => {
-        console.log('📋 Profile fetch result:', profile);
-        setUserProfile(profile);
-      });
-    } else if (!user && userProfile) {
-      console.log('🧹 No user but profile exists, clearing...');
-      setUserProfile(null);
-      setImpersonatedRole(null);
-    }
-  }, [user, userProfile]);
-
-  // Initialize auth state
+  // Single effect to handle all auth state
   useEffect(() => {
     console.log('🚀 AuthProvider initializing...');
     
-    let mounted = true;
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('🔍 Initial session:', !!session);
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
-    // Set up auth state listener
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('🔔 Auth state change:', event, 'Session exists:', !!session);
-        
-        if (!mounted) return;
-        
+      async (event, session) => {
+        console.log('🔔 Auth state change:', event, 'Session:', !!session);
         setSession(session);
         setUser(session?.user ?? null);
-        
-        // Always set loading to false after any auth state change
         setLoading(false);
       }
     );
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error('❌ Error getting initial session:', error);
-      }
-      
-      if (mounted) {
-        console.log('🔍 Initial session check:', !!session);
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    });
-
     return () => {
-      mounted = false;
-      console.log('🧹 Cleaning up auth subscription');
       subscription.unsubscribe();
     };
-  }, []); // Empty dependency array to run only once
+  }, []);
 
-  // Debug logging
+  // Separate effect for profile fetching
   useEffect(() => {
-    console.log('🔍 AuthContext state:', {
-      hasUser: !!user,
-      hasSession: !!session,
-      hasProfile: !!userProfile,
-      loading,
-      userEmail: user?.email,
-      profileRole: userProfile?.role
-    });
-  }, [user, session, userProfile, loading]);
+    if (user && !userProfile) {
+      console.log('👤 Fetching profile for user:', user.id);
+      fetchUserProfile(user.id).then(setUserProfile);
+    } else if (!user && userProfile) {
+      console.log('🧹 Clearing profile');
+      setUserProfile(null);
+      setImpersonatedRole(null);
+    }
+  }, [user]);
 
   const signInWithGoogle = async () => {
     try {
@@ -187,7 +157,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
 
-      // Return whether email confirmation is needed
       return {
         needsConfirmation: !data.session && !!data.user
       };
