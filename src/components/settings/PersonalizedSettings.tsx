@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, User, Calendar, Smartphone, Bell, Building } from 'lucide-react';
+import { ChevronLeft, User, Calendar, Smartphone, Bell, Building, Wrench, Home, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,7 @@ interface PersonalizedSettingsProps {
   userRole: 'operator' | 'resident' | 'maintenance' | 'prospect';
 }
 
-type SettingsSection = 'overview' | 'calendar' | 'swipes' | 'notifications' | 'identity' | 'property';
+type SettingsSection = 'overview' | 'calendar' | 'swipes' | 'notifications' | 'identity' | 'property' | 'maintenance' | 'resident' | 'prospect';
 
 const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) => {
   const [currentSection, setCurrentSection] = useState<SettingsSection>('overview');
@@ -55,43 +55,85 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
     adPreferences: 'both' // 'both', 'building', 'none'
   });
 
-  const settingsSections = [
-    {
-      id: 'calendar' as const,
-      title: 'Calendar Preferences',
-      description: 'Set your availability and working hours',
-      icon: Calendar,
-      status: 'incomplete'
-    },
-    {
-      id: 'identity' as const,
-      title: 'Identity & Access',
-      description: 'Profile photo, payment details, preferences',
-      icon: User,
-      status: 'incomplete'
-    },
-    {
-      id: 'swipes' as const,
-      title: 'Swipe Gestures',
-      description: 'Customize swipe actions for different event types',
-      icon: Smartphone,
-      status: 'complete'
-    },
-    {
-      id: 'notifications' as const,
-      title: 'Notifications',
-      description: 'Push, email, and in-app alert preferences',
-      icon: Bell,
-      status: 'complete'
-    },
-    ...(userRole === 'operator' ? [{
-      id: 'property' as const,
-      title: 'Property Setup',
-      description: 'Documents, branding, messaging, and CRM settings',
-      icon: Building,
-      status: 'incomplete'
-    }] : [])
-  ];
+  const getSettingsSections = () => {
+    const baseSections = [
+      {
+        id: 'calendar' as const,
+        title: 'Calendar Preferences',
+        description: 'Set your availability and working hours',
+        icon: Calendar,
+        status: 'incomplete'
+      },
+      {
+        id: 'identity' as const,
+        title: 'Identity & Access',
+        description: 'Profile photo, payment details, preferences',
+        icon: User,
+        status: 'incomplete'
+      },
+      {
+        id: 'swipes' as const,
+        title: 'Swipe Gestures',
+        description: 'Customize swipe actions for different event types',
+        icon: Smartphone,
+        status: 'complete'
+      },
+      {
+        id: 'notifications' as const,
+        title: 'Notifications',
+        description: 'Push, email, and in-app alert preferences',
+        icon: Bell,
+        status: 'complete'
+      }
+    ];
+
+    // Role-specific sections
+    const roleSpecificSections = [];
+
+    if (userRole === 'operator') {
+      roleSpecificSections.push({
+        id: 'property' as const,
+        title: 'Property Setup',
+        description: 'Documents, branding, messaging, and CRM settings',
+        icon: Building,
+        status: 'incomplete'
+      });
+    }
+
+    if (userRole === 'maintenance') {
+      roleSpecificSections.push({
+        id: 'maintenance' as const,
+        title: 'Maintenance Setup',
+        description: 'Tools, inventory, schedules, and work order preferences',
+        icon: Wrench,
+        status: 'incomplete'
+      });
+    }
+
+    if (userRole === 'resident') {
+      roleSpecificSections.push({
+        id: 'resident' as const,
+        title: 'Resident Setup',
+        description: 'Lease details, services, community preferences',
+        icon: Home,
+        status: 'incomplete'
+      });
+    }
+
+    if (userRole === 'prospect') {
+      roleSpecificSections.push({
+        id: 'prospect' as const,
+        title: 'Prospect Setup',
+        description: 'Search preferences, tour scheduling, application tracking',
+        icon: Search,
+        status: 'incomplete'
+      });
+    }
+
+    return [...baseSections, ...roleSpecificSections];
+  };
+
+  const settingsSections = getSettingsSections();
 
   const updateDayAvailability = (day: string, field: string, value: string | boolean) => {
     setSettings(prev => ({
@@ -124,12 +166,138 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
       case 'property':
         return <PropertySetupModule onClose={() => setCurrentSection('overview')} />;
       
+      case 'maintenance':
+        return (
+          <div className="space-y-4 max-w-4xl mx-auto">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Maintenance Setup</h2>
+              <p className="text-gray-600">Configure your maintenance tools and preferences</p>
+            </div>
+            
+            <div className="grid gap-4">
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Tool & Equipment Setup</h3>
+                  <p className="text-sm text-gray-600 mb-3">Manage your tools, equipment, and inventory</p>
+                  <Button variant="outline" size="sm">Configure Tools</Button>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Work Order Preferences</h3>
+                  <p className="text-sm text-gray-600 mb-3">Set default priorities, categories, and scheduling</p>
+                  <Button variant="outline" size="sm">Configure Preferences</Button>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Vendor & Contractor Setup</h3>
+                  <p className="text-sm text-gray-600 mb-3">Manage vendor contacts and preferred contractors</p>
+                  <Button variant="outline" size="sm">Manage Vendors</Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="pt-4">
+              <Button onClick={() => setCurrentSection('overview')} variant="outline" className="w-full">
+                Back to Overview
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'resident':
+        return (
+          <div className="space-y-4 max-w-4xl mx-auto">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Resident Setup</h2>
+              <p className="text-gray-600">Configure your living preferences and services</p>
+            </div>
+            
+            <div className="grid gap-4">
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Lease & Unit Details</h3>
+                  <p className="text-sm text-gray-600 mb-3">Update lease information and unit preferences</p>
+                  <Button variant="outline" size="sm">Update Details</Button>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Service Preferences</h3>
+                  <p className="text-sm text-gray-600 mb-3">Set preferences for maintenance, delivery, and services</p>
+                  <Button variant="outline" size="sm">Configure Services</Button>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Community Participation</h3>
+                  <p className="text-sm text-gray-600 mb-3">Manage event preferences and community involvement</p>
+                  <Button variant="outline" size="sm">Set Preferences</Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="pt-4">
+              <Button onClick={() => setCurrentSection('overview')} variant="outline" className="w-full">
+                Back to Overview
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'prospect':
+        return (
+          <div className="space-y-4 max-w-4xl mx-auto">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Prospect Setup</h2>
+              <p className="text-gray-600">Configure your search and application preferences</p>
+            </div>
+            
+            <div className="grid gap-4">
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Search Preferences</h3>
+                  <p className="text-sm text-gray-600 mb-3">Set your preferred locations, price range, and amenities</p>
+                  <Button variant="outline" size="sm">Update Search</Button>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Tour Scheduling</h3>
+                  <p className="text-sm text-gray-600 mb-3">Set availability for property tours and viewings</p>
+                  <Button variant="outline" size="sm">Set Availability</Button>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Application Tracking</h3>
+                  <p className="text-sm text-gray-600 mb-3">Monitor application status and requirements</p>
+                  <Button variant="outline" size="sm">View Applications</Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="pt-4">
+              <Button onClick={() => setCurrentSection('overview')} variant="outline" className="w-full">
+                Back to Overview
+              </Button>
+            </div>
+          </div>
+        );
+
       case 'calendar':
         return (
           <div className="space-y-4 max-w-4xl mx-auto">
-            <div className="bg-white pb-4 border-b">
-              <h2 className="text-xl font-bold text-gray-900">Calendar Preferences</h2>
-              <p className="text-sm text-gray-600">Set your availability and working hours</p>
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Calendar Preferences</h2>
+              <p className="text-gray-600">Set your availability and working hours</p>
             </div>
             
             <Card className="shadow-sm">
@@ -179,7 +347,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
               </CardContent>
             </Card>
 
-            <div className="bg-white pt-4 border-t">
+            <div className="pt-4">
               <Button onClick={() => setCurrentSection('overview')} variant="outline" className="w-full">
                 Back to Overview
               </Button>
