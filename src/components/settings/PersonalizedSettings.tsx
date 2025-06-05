@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -245,44 +244,6 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                     <Button variant="outline" size="sm" className="bg-blue-50 border-blue-300">12 Hour</Button>
                     <Button variant="outline" size="sm">24 Hour</Button>
                   </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 'calendar':
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                Calendar Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium mb-2">Start of Week</h4>
-                  <select className="w-full p-2 border rounded">
-                    <option>Sunday</option>
-                    <option>Monday</option>
-                  </select>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">Default View</h4>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Button variant="outline" size="sm">Day</Button>
-                    <Button variant="outline" size="sm" className="bg-blue-50 border-blue-300">Week</Button>
-                    <Button variant="outline" size="sm">Month</Button>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Show Weekends</h4>
-                    <p className="text-sm text-gray-600">Display weekends in calendar view</p>
-                  </div>
-                  <input type="checkbox" className="rounded" defaultChecked />
                 </div>
               </div>
             </CardContent>
