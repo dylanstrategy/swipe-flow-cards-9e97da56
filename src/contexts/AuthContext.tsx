@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -56,12 +55,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const completeSessionLoad = async (currentSession: Session | null) => {
+    console.log('🔄 Completing session load for:', currentSession?.user?.email || 'no user');
+    
+    if (currentSession?.user) {
+      // Set session and user first
+      setSession(currentSession);
+      setUser(currentSession.user);
+      
+      // Then fetch profile
+      const profile = await fetchUserProfile(currentSession.user.id);
+      setUserProfile(profile);
+      
+      console.log('✅ Session and profile loaded:', {
+        session: !!currentSession,
+        profile: !!profile,
+        email: currentSession.user.email
+      });
+    } else {
+      console.log('🚫 No session to load');
+      setSession(null);
+      setUser(null);
+      setUserProfile(null);
+    }
+    
+    // CRITICAL: Only set loading false after everything is complete
+    console.log('✅ Setting loading to false');
+    setLoading(false);
+  };
+
   useEffect(() => {
     console.log('🚀 AuthProvider initializing...');
     
     let mounted = true;
 
-    // Initialize auth state
+    // Step 1: Initialize auth state on mount
     const initializeAuth = async () => {
       try {
         console.log('📍 Getting initial session...');
@@ -77,24 +105,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         console.log('📍 Initial session check:', !!currentSession);
         
-        if (currentSession?.user && mounted) {
-          console.log('👤 Found existing session for:', currentSession.user.email);
-          setSession(currentSession);
-          setUser(currentSession.user);
-          
-          // Fetch user profile
-          const profile = await fetchUserProfile(currentSession.user.id);
-          
-          if (mounted) {
-            setUserProfile(profile);
-            console.log('✅ Session and profile loaded. Setting loading to false.');
-            setLoading(false);
-          }
-        } else {
-          console.log('🚫 No existing session found');
-          if (mounted) {
-            setLoading(false);
-          }
+        if (mounted) {
+          await completeSessionLoad(currentSession);
         }
       } catch (error) {
         console.error('❌ Auth initialization error:', error);
@@ -104,14 +116,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    // Set up auth state listener (but don't set loading here)
+    // Step 2: Set up auth state listener (separate from loading logic)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('🔔 Auth state change:', event, 'Session exists:', !!session);
         
         if (!mounted) return;
         
-        // Only handle auth state changes, don't interfere with initial loading
+        // Handle different auth events but DON'T interfere with initial loading
         if (event === 'SIGNED_IN' && session) {
           console.log('✅ User signed in via auth state change:', session.user.email);
           setSession(session);
@@ -121,11 +133,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const profile = await fetchUserProfile(session.user.id);
           if (mounted) {
             setUserProfile(profile);
-            // Only set loading false if we're currently loading
-            if (loading) {
-              console.log('✅ New sign-in complete. Setting loading to false.');
-              setLoading(false);
-            }
           }
         } else if (event === 'SIGNED_OUT') {
           console.log('🚫 User signed out');
@@ -133,7 +140,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
           setUserProfile(null);
           setImpersonatedRole(null);
-          // Don't set loading false on sign out
         } else if (event === 'TOKEN_REFRESHED' && session) {
           console.log('🔄 Token refreshed');
           setSession(session);
@@ -150,12 +156,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('🧹 Cleaning up auth subscription');
       subscription.unsubscribe();
     };
-  }, []); // Remove loading from dependency array to prevent loops
+  }, []); // Empty dependency array to run only once
+
+  // Debug logging
+  useEffect(() => {
+    console.log('🔍 AuthContext state:', {
+      hasUser: !!user,
+      hasSession: !!session,
+      hasProfile: !!userProfile,
+      loading,
+      userEmail: user?.email,
+      profileRole: userProfile?.role
+    });
+  }, [user, session, userProfile, loading]);
 
   const signInWithGoogle = async () => {
     try {
       console.log('🔄 Starting Google sign in...');
-      setLoading(true);
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -166,14 +183,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         console.error('❌ Google sign in error:', error);
-        setLoading(false);
         throw error;
       }
       
       console.log('✅ Google sign in initiated');
     } catch (error: any) {
       console.error('❌ Google sign in error:', error);
-      setLoading(false);
       toast({
         title: "Authentication Error",
         description: error.message || "Failed to sign in with Google",
@@ -266,16 +281,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const effectiveRole = impersonatedRole || userProfile?.role;
-
-  // Add console logs for debugging
-  console.log('🔍 AuthContext state:', {
-    hasUser: !!user,
-    hasSession: !!session,
-    hasProfile: !!userProfile,
-    loading,
-    userEmail: user?.email,
-    profileRole: userProfile?.role
-  });
 
   const value = {
     user,
