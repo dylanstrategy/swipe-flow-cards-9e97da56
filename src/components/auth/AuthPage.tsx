@@ -24,10 +24,11 @@ const AuthPage = () => {
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
 
-  // Quick test accounts
+  // Quick test accounts - now includes super_admin
   const testAccounts = [
     { email: 'test.prospect@meridian.com', password: 'prospect123', role: 'prospect', firstName: 'Test', lastName: 'Prospect' },
     { email: 'test.operator@meridian.com', password: 'operator123', role: 'operator', firstName: 'Test', lastName: 'Operator' },
+    { email: 'admin@applaud.com', password: 'admin123', role: 'super_admin', firstName: 'Super', lastName: 'Admin' },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -114,7 +115,7 @@ const AuthPage = () => {
           lastName: testAccount.lastName,
           phone: '(555) 123-4567',
           role: testAccount.role,
-          property: 'The Meridian',
+          property: testAccount.role === 'super_admin' ? 'Applaud HQ' : 'The Meridian',
         });
         
         if (result.needsConfirmation) {
@@ -274,18 +275,19 @@ const AuthPage = () => {
                       <SelectContent>
                         <SelectItem value="prospect">Prospect</SelectItem>
                         <SelectItem value="operator">Operator</SelectItem>
+                        <SelectItem value="super_admin">Super Admin</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
-                  {role === 'operator' && (
+                  {(role === 'operator' || role === 'super_admin') && (
                     <div>
-                      <Label htmlFor="property">Property</Label>
+                      <Label htmlFor="property">Property/Company</Label>
                       <Input
                         id="property"
                         value={property}
                         onChange={(e) => setProperty(e.target.value)}
-                        placeholder="e.g., The Meridian"
+                        placeholder={role === 'super_admin' ? 'e.g., Applaud HQ' : 'e.g., The Meridian'}
                         required
                       />
                     </div>
@@ -327,7 +329,7 @@ const AuthPage = () => {
                 onClick={() => handleTestLogin(account)}
                 disabled={loading}
               >
-                Login as {account.role}
+                Login as {account.role === 'super_admin' ? 'Super Admin' : account.role}
               </Button>
             ))}
           </CardContent>

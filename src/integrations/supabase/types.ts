@@ -9,9 +9,102 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      companies: {
+        Row: {
+          address: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          domain: string | null
+          id: string
+          name: string
+          plan_type: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          domain?: string | null
+          id?: string
+          name: string
+          plan_type?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          domain?: string | null
+          id?: string
+          name?: string
+          plan_type?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          address: string | null
+          city: string | null
+          company_id: string
+          created_at: string
+          id: string
+          name: string
+          property_type: string | null
+          state: string | null
+          status: string
+          unit_count: number | null
+          updated_at: string
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          name: string
+          property_type?: string | null
+          state?: string | null
+          status?: string
+          unit_count?: number | null
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          property_type?: string | null
+          state?: string | null
+          status?: string
+          unit_count?: number | null
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "properties_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_profiles: {
         Row: {
           avatar_url: string | null
+          company_id: string | null
           created_at: string | null
           email: string
           first_name: string
@@ -20,6 +113,7 @@ export type Database = {
           last_name: string
           phone: string | null
           property: string | null
+          property_id: string | null
           role: string
           status: string
           unit_number: string | null
@@ -27,6 +121,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          company_id?: string | null
           created_at?: string | null
           email: string
           first_name: string
@@ -35,6 +130,7 @@ export type Database = {
           last_name: string
           phone?: string | null
           property?: string | null
+          property_id?: string | null
           role?: string
           status?: string
           unit_number?: string | null
@@ -42,6 +138,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          company_id?: string | null
           created_at?: string | null
           email?: string
           first_name?: string
@@ -50,12 +147,28 @@ export type Database = {
           last_name?: string
           phone?: string | null
           property?: string | null
+          property_id?: string | null
           role?: string
           status?: string
           unit_number?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_profiles_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_settings: {
         Row: {
