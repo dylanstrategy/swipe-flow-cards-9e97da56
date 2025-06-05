@@ -194,23 +194,25 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel, cur
                   
                   <div>
                     <Label>Select Role</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
                       {availableRoles.map((role) => (
                         <button
                           key={role}
                           type="button"
                           onClick={() => handleRoleChange(role)}
-                          className={`p-3 border rounded-lg text-left transition-colors ${
+                          className={`p-4 border rounded-lg text-left transition-colors min-h-[80px] flex flex-col justify-between ${
                             formData.role === role
                               ? 'border-blue-500 bg-blue-50'
                               : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
-                          <Badge className={getRoleColor(role)}>
-                            {role === 'senior_operator' ? 'Senior Operator' : role.charAt(0).toUpperCase() + role.slice(1)}
-                          </Badge>
-                          <div className="text-xs text-gray-600 mt-1">
-                            {ROLE_PERMISSIONS[role].length} permissions
+                          <div className="w-full">
+                            <Badge className={`${getRoleColor(role)} text-xs px-2 py-1 mb-2 inline-block`}>
+                              {role === 'senior_operator' ? 'Senior Operator' : role.charAt(0).toUpperCase() + role.slice(1)}
+                            </Badge>
+                            <div className="text-xs text-gray-600">
+                              {ROLE_PERMISSIONS[role].length} permissions
+                            </div>
                           </div>
                         </button>
                       ))}
@@ -224,11 +226,11 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel, cur
                       <div className="space-y-2">
                         {ROLE_PERMISSIONS[formData.role].map((permission) => (
                           <div key={permission.id} className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <Badge variant="outline" className="text-xs">
                                 {permission.name}
                               </Badge>
-                              <Badge className={getPermissionLevelColor(permission.level)}>
+                              <Badge className={`${getPermissionLevelColor(permission.level)} text-xs`}>
                                 {permission.level}
                               </Badge>
                             </div>
@@ -254,11 +256,11 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel, cur
                             }
                           />
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <Label htmlFor={permission.id} className="text-sm font-medium cursor-pointer">
                                 {permission.name}
                               </Label>
-                              <Badge className={getPermissionLevelColor(permission.level)}>
+                              <Badge className={`${getPermissionLevelColor(permission.level)} text-xs`}>
                                 {permission.level}
                               </Badge>
                             </div>

@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ const UserManagement = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('all');
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   // Mock current user role - in real app this would come from auth context
   const currentUserRole: UserRole = 'senior_operator';
@@ -107,6 +109,12 @@ const UserManagement = () => {
     setShowCreateForm(false);
   };
 
+  const handleUserClick = (userId: string) => {
+    setSelectedUserId(userId);
+    console.log('Opening profile for user:', userId);
+    // In real app, this would open a user profile modal or navigate to profile page
+  };
+
   if (showCreateForm) {
     return (
       <CreateUserForm
@@ -195,7 +203,13 @@ const UserManagement = () => {
           {/* Users List */}
           <div className="space-y-4 pb-24">
             {filteredUsers.map((user) => (
-              <Card key={user.id} className="hover:shadow-md transition-shadow">
+              <Card 
+                key={user.id} 
+                className={`hover:shadow-md transition-shadow cursor-pointer ${
+                  selectedUserId === user.id ? 'ring-2 ring-blue-500' : ''
+                }`}
+                onClick={() => handleUserClick(user.id)}
+              >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -206,7 +220,7 @@ const UserManagement = () => {
                       </Avatar>
                       
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
+                        <div className="flex items-center gap-3 mb-2 flex-wrap">
                           <h3 className="font-semibold text-gray-900">{user.name}</h3>
                           <Badge className={getRoleColor(user.role)}>
                             {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
@@ -216,10 +230,10 @@ const UserManagement = () => {
                           </Badge>
                         </div>
                         
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
                           <div className="flex items-center gap-1">
                             <Mail className="w-4 h-4" />
-                            {user.email}
+                            <span className="break-all">{user.email}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Phone className="w-4 h-4" />
@@ -234,7 +248,7 @@ const UserManagement = () => {
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                       <Button variant="outline" size="sm">
                         <Edit className="w-4 h-4" />
                       </Button>
