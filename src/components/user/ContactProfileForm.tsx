@@ -23,7 +23,8 @@ const ContactProfileForm: React.FC<ContactProfileFormProps> = ({
   isEditing = false
 }) => {
   const [formData, setFormData] = useState({
-    name: userProfile.name,
+    firstName: userProfile.first_name,
+    lastName: userProfile.last_name,
     email: userProfile.email,
     phone: userProfile.phone,
     emergencyContactName: userProfile.contactInfo.emergencyContact?.name || '',
@@ -36,7 +37,8 @@ const ContactProfileForm: React.FC<ContactProfileFormProps> = ({
     
     const updatedProfile: UserProfile = {
       ...userProfile,
-      name: formData.name,
+      first_name: formData.firstName,
+      last_name: formData.lastName,
       email: formData.email,
       phone: formData.phone,
       contactInfo: {
@@ -66,6 +68,8 @@ const ContactProfileForm: React.FC<ContactProfileFormProps> = ({
     return colors[role as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
+  const fullName = `${formData.firstName} ${formData.lastName}`;
+
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
@@ -73,7 +77,7 @@ const ContactProfileForm: React.FC<ContactProfileFormProps> = ({
           <div className="flex items-center gap-4">
             <Avatar className="w-16 h-16">
               <AvatarFallback className="text-lg font-semibold">
-                {formData.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                {fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
@@ -103,16 +107,29 @@ const ContactProfileForm: React.FC<ContactProfileFormProps> = ({
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="firstName">First Name</Label>
                 <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  id="firstName"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                   disabled={!isEditing}
                   required
                 />
               </div>
-              
+
+              <div>
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  disabled={!isEditing}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="phone">Phone Number</Label>
                 <Input
@@ -124,18 +141,18 @@ const ContactProfileForm: React.FC<ContactProfileFormProps> = ({
                   required
                 />
               </div>
-            </div>
 
-            <div>
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                disabled={!isEditing}
-                required
-              />
+              <div>
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  disabled={!isEditing}
+                  required
+                />
+              </div>
             </div>
           </div>
 

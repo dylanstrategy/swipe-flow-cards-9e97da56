@@ -25,7 +25,8 @@ const UserManagement = () => {
   const [users, setUsers] = useState<UserProfile[]>([
     {
       id: '1',
-      name: 'John Smith',
+      first_name: 'John',
+      last_name: 'Smith',
       email: 'john.smith@meridian.com',
       phone: '(555) 123-4567',
       role: 'operator',
@@ -45,7 +46,8 @@ const UserManagement = () => {
     },
     {
       id: '2',
-      name: 'Mike Rodriguez',
+      first_name: 'Mike',
+      last_name: 'Rodriguez',
       email: 'mike.rodriguez@meridian.com',
       phone: '(555) 234-5678',
       role: 'maintenance',
@@ -61,7 +63,8 @@ const UserManagement = () => {
     },
     {
       id: '3',
-      name: 'Sarah Johnson',
+      first_name: 'Sarah',
+      last_name: 'Johnson',
       email: 'sarah.johnson@meridian.com',
       phone: '(555) 345-6789',
       role: 'leasing',
@@ -78,7 +81,8 @@ const UserManagement = () => {
   ]);
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const fullName = `${user.first_name} ${user.last_name}`;
+    const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = selectedRole === 'all' || user.role === selectedRole;
     return matchesSearch && matchesRole;
@@ -234,83 +238,86 @@ const UserManagement = () => {
 
           {/* Users List */}
           <div className="space-y-4 pb-24">
-            {filteredUsers.map((user) => (
-              <Card 
-                key={user.id} 
-                className="hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => handleUserClick(user.id)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 flex-1 min-w-0">
-                      <Avatar className="w-12 h-12 flex-shrink-0">
-                        <AvatarFallback className="font-semibold">
-                          {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+            {filteredUsers.map((user) => {
+              const fullName = `${user.first_name} ${user.last_name}`;
+              return (
+                <Card 
+                  key={user.id} 
+                  className="hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => handleUserClick(user.id)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <Avatar className="w-12 h-12 flex-shrink-0">
+                          <AvatarFallback className="font-semibold">
+                            {fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-2 flex-wrap">
+                            <h3 className="font-semibold text-gray-900 truncate">{fullName}</h3>
+                            <Badge className={`${getRoleColor(user.role)} flex-shrink-0`}>
+                              {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                            </Badge>
+                            <Badge className={`${getStatusColor(user.status)} flex-shrink-0`}>
+                              {user.status}
+                            </Badge>
+                          </div>
+                          
+                          <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
+                            <div className="flex items-center gap-1 min-w-0">
+                              <Mail className="w-4 h-4 flex-shrink-0" />
+                              <span className="truncate">{user.email}</span>
+                            </div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <Phone className="w-4 h-4" />
+                              {user.phone}
+                            </div>
+                          </div>
+                          
+                          <div className="mt-2 text-xs text-gray-500">
+                            Created: {user.createdAt.toLocaleDateString()} • 
+                            Last login: {user.lastLogin?.toLocaleDateString() || 'Never'}
+                          </div>
+                        </div>
+                      </div>
                       
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2 flex-wrap">
-                          <h3 className="font-semibold text-gray-900 truncate">{user.name}</h3>
-                          <Badge className={`${getRoleColor(user.role)} flex-shrink-0`}>
-                            {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                          </Badge>
-                          <Badge className={`${getStatusColor(user.status)} flex-shrink-0`}>
-                            {user.status}
-                          </Badge>
-                        </div>
-                        
-                        <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
-                          <div className="flex items-center gap-1 min-w-0">
-                            <Mail className="w-4 h-4 flex-shrink-0" />
-                            <span className="truncate">{user.email}</span>
-                          </div>
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            <Phone className="w-4 h-4" />
-                            {user.phone}
-                          </div>
-                        </div>
-                        
-                        <div className="mt-2 text-xs text-gray-500">
-                          Created: {user.createdAt.toLocaleDateString()} • 
-                          Last login: {user.lastLogin?.toLocaleDateString() || 'Never'}
-                        </div>
+                      <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <Button variant="outline" size="sm" onClick={() => handleUserClick(user.id)}>
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => handleDeleteUser(user.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <Button variant="outline" size="sm" onClick={() => handleUserClick(user.id)}>
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="text-red-600 hover:text-red-700"
-                        onClick={() => handleDeleteUser(user.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <div className="text-sm text-gray-600 mb-2">Permissions:</div>
+                      <div className="flex flex-wrap gap-1">
+                        {user.permissions.slice(0, 3).map((permission) => (
+                          <Badge key={permission.id} variant="outline" className="text-xs">
+                            {permission.name}
+                          </Badge>
+                        ))}
+                        {user.permissions.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{user.permissions.length - 3} more
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="mt-3 pt-3 border-t border-gray-100">
-                    <div className="text-sm text-gray-600 mb-2">Permissions:</div>
-                    <div className="flex flex-wrap gap-1">
-                      {user.permissions.slice(0, 3).map((permission) => (
-                        <Badge key={permission.id} variant="outline" className="text-xs">
-                          {permission.name}
-                        </Badge>
-                      ))}
-                      {user.permissions.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{user.permissions.length - 3} more
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </ScrollArea>
