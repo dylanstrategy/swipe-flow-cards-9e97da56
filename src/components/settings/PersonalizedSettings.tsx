@@ -2,9 +2,9 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, Bell, Shield, Palette, ChevronRight } from 'lucide-react';
+import { ArrowLeft, User, Bell, Shield, Palette, ChevronRight, Calendar, CreditCard, Globe, HelpCircle } from 'lucide-react';
 
-type SettingsSection = 'data' | 'notifications' | 'privacy' | 'theme' | 'language' | 'help';
+type SettingsSection = 'data' | 'notifications' | 'privacy' | 'theme' | 'language' | 'help' | 'identity' | 'calendar' | 'property';
 
 interface PersonalizedSettingsProps {
   onClose: () => void;
@@ -38,6 +38,13 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
         category: 'personal'
       },
       {
+        id: 'calendar' as SettingsSection,
+        title: 'Calendar Integration',
+        description: 'Sync with external calendars and manage scheduling preferences',
+        icon: Calendar,
+        category: 'personal'
+      },
+      {
         id: 'theme' as SettingsSection,
         title: 'Theme & Display',
         description: 'Customize colors, fonts, and layout preferences',
@@ -55,14 +62,21 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
           id: 'language' as SettingsSection,
           title: 'Language & Region',
           description: 'Set your preferred language and regional settings',
-          icon: Palette,
+          icon: Globe,
           category: 'appearance'
         },
         {
           id: 'help' as SettingsSection,
           title: 'Advanced Settings',
           description: 'Configure advanced system preferences and integrations',
-          icon: Shield,
+          icon: HelpCircle,
+          category: 'appearance'
+        },
+        {
+          id: 'property' as SettingsSection,
+          title: 'Property Management',
+          description: 'Configure property-specific settings and integrations',
+          icon: CreditCard,
           category: 'appearance'
         }
       );
@@ -72,7 +86,7 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
           id: 'language' as SettingsSection,
           title: 'Work Preferences',
           description: 'Set your work schedule and maintenance preferences',
-          icon: Palette,
+          icon: Globe,
           category: 'appearance'
         }
       );
@@ -82,7 +96,7 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
           id: 'language' as SettingsSection,
           title: 'Communication',
           description: 'Configure prospect communication and follow-up settings',
-          icon: Palette,
+          icon: Globe,
           category: 'appearance'
         }
       );
@@ -131,6 +145,26 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
                 </div>
               </div>
             </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Payment Methods</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div>
+                    <div className="font-medium">Primary Card</div>
+                    <div className="text-sm text-gray-600">Visa ending in 4567</div>
+                  </div>
+                  <Button variant="outline" size="sm">Edit</Button>
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div>
+                    <div className="font-medium">Bank Account</div>
+                    <div className="text-sm text-gray-600">Account ending in 1234</div>
+                  </div>
+                  <Button variant="outline" size="sm">Edit</Button>
+                </div>
+              </div>
+            </div>
           </div>
         );
 
@@ -163,6 +197,20 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
                 </div>
               </div>
             </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Notification Timing</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <span>Quiet Hours</span>
+                  <span className="text-gray-600">10 PM - 8 AM</span>
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <span>Maintenance Alerts</span>
+                  <span className="text-gray-600">Immediate</span>
+                </div>
+              </div>
+            </div>
           </div>
         );
 
@@ -185,6 +233,80 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
                     <div className="text-sm text-gray-600">Choose what activity to track</div>
                   </div>
                   <input type="checkbox" defaultChecked className="h-4 w-4" />
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div>
+                    <div className="font-medium">Location Services</div>
+                    <div className="text-sm text-gray-600">Allow location-based features</div>
+                  </div>
+                  <input type="checkbox" defaultChecked className="h-4 w-4" />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Data Management</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <span>Download My Data</span>
+                  <Button variant="outline" size="sm">Export</Button>
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <span>Delete Account</span>
+                  <Button variant="outline" size="sm">Request</Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'calendar':
+        return (
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Calendar Integration</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div>
+                    <div className="font-medium">Google Calendar</div>
+                    <div className="text-sm text-gray-600">Sync with your Google Calendar</div>
+                  </div>
+                  <Button variant="outline" size="sm">Connect</Button>
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div>
+                    <div className="font-medium">Outlook Calendar</div>
+                    <div className="text-sm text-gray-600">Sync with Microsoft Outlook</div>
+                  </div>
+                  <Button variant="outline" size="sm">Connect</Button>
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div>
+                    <div className="font-medium">Apple Calendar</div>
+                    <div className="text-sm text-gray-600">Sync with iCloud Calendar</div>
+                  </div>
+                  <Button variant="outline" size="sm">Connect</Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Scheduling Preferences</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <span>Default Meeting Duration</span>
+                  <span className="text-gray-600">30 minutes</span>
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <span>Available Hours</span>
+                  <span className="text-gray-600">9 AM - 5 PM</span>
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div>
+                    <div className="font-medium">Auto-accept Invites</div>
+                    <div className="text-sm text-gray-600">Automatically accept calendar invites</div>
+                  </div>
+                  <input type="checkbox" className="h-4 w-4" />
                 </div>
               </div>
             </div>
@@ -213,6 +335,14 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
                     <Button variant="outline" size="sm">Large</Button>
                   </div>
                 </div>
+                <div className="p-3 border rounded-lg">
+                  <div className="font-medium mb-2">Color Scheme</div>
+                  <div className="flex gap-2">
+                    <Button variant="default" size="sm">Blue</Button>
+                    <Button variant="outline" size="sm">Green</Button>
+                    <Button variant="outline" size="sm">Purple</Button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -231,6 +361,14 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <span>Time Zone</span>
                   <span className="text-gray-600">Pacific Standard Time</span>
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <span>Date Format</span>
+                  <span className="text-gray-600">MM/DD/YYYY</span>
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <span>Currency</span>
+                  <span className="text-gray-600">USD ($)</span>
                 </div>
               </div>
             </div>
@@ -253,6 +391,59 @@ const PersonalizedSettings: React.FC<PersonalizedSettingsProps> = ({ onClose, us
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <span>Export Data</span>
                   <Button variant="outline" size="sm">Download</Button>
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div>
+                    <div className="font-medium">Beta Features</div>
+                    <div className="text-sm text-gray-600">Access experimental features</div>
+                  </div>
+                  <input type="checkbox" className="h-4 w-4" />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Integration Settings</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <span>API Access</span>
+                  <Button variant="outline" size="sm">Manage</Button>
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <span>Webhooks</span>
+                  <Button variant="outline" size="sm">Configure</Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'property':
+        return (
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Property Management</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div>
+                    <div className="font-medium">Property Management System</div>
+                    <div className="text-sm text-gray-600">Connect to your PMS</div>
+                  </div>
+                  <Button variant="outline" size="sm">Connect</Button>
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div>
+                    <div className="font-medium">Accounting Integration</div>
+                    <div className="text-sm text-gray-600">Sync with accounting software</div>
+                  </div>
+                  <Button variant="outline" size="sm">Setup</Button>
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div>
+                    <div className="font-medium">Maintenance Platform</div>
+                    <div className="text-sm text-gray-600">Connect maintenance tools</div>
+                  </div>
+                  <Button variant="outline" size="sm">Configure</Button>
                 </div>
               </div>
             </div>
