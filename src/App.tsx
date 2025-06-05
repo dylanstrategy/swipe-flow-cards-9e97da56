@@ -51,7 +51,7 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode;
   return <>{children}</>;
 }
 
-// App routes component that uses auth context
+// App routes component that uses auth context - moved inside AuthProvider
 function AppRoutes() {
   const { loading, user, userProfile } = useAuth();
 
