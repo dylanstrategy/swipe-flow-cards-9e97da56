@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,7 +32,6 @@ const Login = () => {
     } catch (error: any) {
       console.error('Google sign in error:', error);
       setError(error.message || "Failed to sign in with Google");
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -88,32 +86,43 @@ const Login = () => {
     if (user && userProfile && !loading) {
       console.log('✅ User logged in with role:', userProfile.role);
       
+      // Clear any submission state
+      setIsSubmitting(false);
+      
       // Route based on user role
       switch (userProfile.role) {
         case 'super_admin':
-          navigate('/super-admin');
+          console.log('Redirecting to /super-admin');
+          navigate('/super-admin', { replace: true });
           break;
         case 'operator':
         case 'senior_operator':
-          navigate('/operator');
+          console.log('Redirecting to /operator');
+          navigate('/operator', { replace: true });
           break;
         case 'maintenance':
-          navigate('/maintenance');
+          console.log('Redirecting to /maintenance');
+          navigate('/maintenance', { replace: true });
           break;
         case 'leasing':
-          navigate('/operator');
+          console.log('Redirecting to /operator');
+          navigate('/operator', { replace: true });
           break;
         case 'vendor':
-          navigate('/maintenance');
+          console.log('Redirecting to /maintenance');
+          navigate('/maintenance', { replace: true });
           break;
         case 'resident':
-          navigate('/');
+          console.log('Redirecting to /');
+          navigate('/', { replace: true });
           break;
         case 'prospect':
-          navigate('/discovery');
+          console.log('Redirecting to /discovery');
+          navigate('/discovery', { replace: true });
           break;
         default:
-          navigate('/');
+          console.log('Redirecting to / (default)');
+          navigate('/', { replace: true });
           break;
       }
     }
