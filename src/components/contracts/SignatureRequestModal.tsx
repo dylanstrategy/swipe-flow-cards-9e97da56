@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Send, User, Mail, FileText } from 'lucide-react';
+import { Send, User, Mail, FileText, Users } from 'lucide-react';
 import { signNowService } from '@/services/signNowService';
 
 interface ContractTemplate {
@@ -32,11 +33,25 @@ const SignatureRequestModal: React.FC<SignatureRequestModalProps> = ({
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
+    recipientType: 'resident',
     signerName: '',
     signerEmail: '',
     documentName: '',
     message: 'Please review and sign this document at your earliest convenience.',
   });
+
+  // Mock data - in real app, this would come from your backend
+  const [residents] = useState([
+    { id: '1', name: 'John Doe', email: 'john.doe@email.com', unit: '101' },
+    { id: '2', name: 'Jane Smith', email: 'jane.smith@email.com', unit: '102' },
+    { id: '3', name: 'Mike Johnson', email: 'mike.johnson@email.com', unit: '103' },
+  ]);
+
+  const [vendors] = useState([
+    { id: '1', name: 'ABC Maintenance', email: 'contact@abcmaint.com', type: 'Maintenance' },
+    { id: '2', name: 'ClearView Cleaning', email: 'info@clearview.com', type: 'Cleaning' },
+    { id: '3', name: 'GreenSpace Landscaping', email: 'hello@greenspace.com', type: 'Landscaping' },
+  ]);
 
   React.useEffect(() => {
     if (template) {
@@ -49,6 +64,18 @@ const SignatureRequestModal: React.FC<SignatureRequestModalProps> = ({
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleRecipientSelect = (recipientId: string) => {
+    const recipients = formData.recipientType === 'resident' ? residents : vendors;
+    const recipient = recipients.find(r => r.id === recipientId);
+    if (recipient) {
+      setFormData(prev => ({
+        ...prev,
+        signerName: recipient.name,
+        signerEmail: recipient.email,
+      }));
+    }
   };
 
   const handleSendForSignature = async () => {
@@ -64,13 +91,14 @@ const SignatureRequestModal: React.FC<SignatureRequestModalProps> = ({
     setIsLoading(true);
 
     try {
-      // In a real implementation, you would first upload the template to SignNow
-      // For now, we'll simulate the process
       const signatureRequest = await signNowService.sendForSignature({
         templateId: template.id,
         signerEmail: formData.signerEmail,
         signerName: formData.signerName,
         documentName: formData.documentName,
+        clientData: {
+          recipientType: formData.recipientType,
+        }
       });
 
       // Store the signature request locally
@@ -82,6 +110,7 @@ const SignatureRequestModal: React.FC<SignatureRequestModalProps> = ({
         signerName: formData.signerName,
         signerEmail: formData.signerEmail,
         documentName: formData.documentName,
+        recipientType: formData.recipientType,
         status: 'pending',
         sentAt: new Date().toISOString(),
         signNowDocumentId: signatureRequest.id,
@@ -101,6 +130,7 @@ const SignatureRequestModal: React.FC<SignatureRequestModalProps> = ({
 
       onClose();
       setFormData({
+        recipientType: 'resident',
         signerName: '',
         signerEmail: '',
         documentName: '',
@@ -117,6 +147,8 @@ const SignatureRequestModal: React.FC<SignatureRequestModalProps> = ({
       setIsLoading(false);
     }
   };
+
+  const currentRecipients = formData.recipientType === 'resident' ? residents : vendors;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -140,6 +172,48 @@ const SignatureRequestModal: React.FC<SignatureRequestModalProps> = ({
           )}
 
           <div className="space-y-3">
+            <div>
+              <Label htmlFor="recipient-type" className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Recipient Type *
+              </Label>
+              <Select value={formData.recipientType} onValueChange={(value) => handleInputChange('recipientType', value)}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select recipient type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="resident">Resident</SelectItem>
+                  <SelectItem value="vendor">Vendor</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="recipient-select">
+                Select {formData.recipientType === 'resident' ? 'Resident' : 'Vendor'}
+              </Label>
+              <Select onValueChange={handleRecipientSelect}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder={`Choose a ${formData.recipientType}`} />
+                </SelectTrigger>
+                <SelectContent>
+                  {currentRecipients.map((recipient) => (
+                    <SelectItem key={recipient.id} value={recipient.id}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{recipient.name}</span>
+                        <span className="text-sm text-gray-500">
+                          {formData.recipientType === 'resident' 
+                            ? `Unit ${(recipient as any).unit}` 
+                            : (recipient as any).type
+                          }
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div>
               <Label htmlFor="signer-name" className="flex items-center gap-2">
                 <User className="w-4 h-4" />

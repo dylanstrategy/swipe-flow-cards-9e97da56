@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TabNavigation from '@/components/TabNavigation';
@@ -6,6 +5,7 @@ import OperatorTodayTab from '@/components/operator/tabs/OperatorTodayTab';
 import OperatorScheduleTab from '@/components/operator/tabs/OperatorScheduleTab';
 import OperatorMessagesTab from '@/components/operator/tabs/OperatorMessagesTab';
 import OperatorResidentsTab from '@/components/operator/tabs/OperatorResidentsTab';
+import OperatorContractsTab from '@/components/operator/tabs/OperatorContractsTab';
 import PropertySetupModule from '@/components/property/setup/PropertySetupModule';
 import UserManagement from '@/components/user/UserManagement';
 import ContactProfileForm from '@/components/user/ContactProfileForm';
@@ -56,7 +56,8 @@ const Operator = () => {
     { id: 'today', label: 'Today', icon: '📊' },
     { id: 'schedule', label: 'Schedule', icon: '📅' },
     { id: 'messages', label: 'Messages', icon: '💬' },
-    { id: 'residents', label: 'Residents', icon: '👥' }
+    { id: 'residents', label: 'Residents', icon: '👥' },
+    { id: 'contracts', label: 'Contracts', icon: '📋' }
   ];
 
   const handleRoleSwitch = (role: string) => {
@@ -150,6 +151,8 @@ const Operator = () => {
         return <OperatorMessagesTab />;
       case 'residents':
         return <OperatorResidentsTab />;
+      case 'contracts':
+        return <OperatorContractsTab />;
       default:
         return <OperatorTodayTab />;
     }
