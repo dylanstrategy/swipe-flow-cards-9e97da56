@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<AppUser | null>(null);
-  const [loading, setLoading] = useState(true); // Start with true
+  const [loading, setLoading] = useState(true);
   const [impersonatedRole, setImpersonatedRole] = useState<AppRole | null>(null);
   const { toast } = useToast();
 
@@ -68,45 +68,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.log('🚀 AuthProvider initializing...');
     
-    // Get initial session
+    // Listen for auth changes FIRST (CRITICAL: Use non-async callback)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('🔔 Auth state change:', event, 'Session:', !!session);
+        
+        // Only synchronous state updates here
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Defer any Supabase calls with setTimeout to prevent deadlock
+        if (session?.user) {
+          console.log('👤 User signed in, will fetch profile...');
+          setTimeout(() => {
+            fetchUserProfile(session.user.id).finally(() => {
+              setLoading(false);
+            });
+          }, 0);
+        } else {
+          console.log('🚫 User signed out, clearing profile...');
+          setUserProfile(null);
+          setImpersonatedRole(null);
+          setLoading(false);
+        }
+      }
+    );
+
+    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       console.log('🔍 Initial session check:', !!session, 'Error:', error);
       
       if (session?.user) {
-        console.log('👤 Initial session found, fetching profile...');
+        console.log('👤 Initial session found, will fetch profile...');
         setSession(session);
         setUser(session.user);
-        // Fetch profile for initial session
-        fetchUserProfile(session.user.id).finally(() => {
-          setLoading(false);
-        });
+        // Use setTimeout here too for consistency
+        setTimeout(() => {
+          fetchUserProfile(session.user.id).finally(() => {
+            setLoading(false);
+          });
+        }, 0);
       } else {
         console.log('🚫 No initial session found');
         setLoading(false);
       }
     });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('🔔 Auth state change:', event, 'Session:', !!session);
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          console.log('👤 User signed in, fetching profile...');
-          setLoading(true); // Set loading while fetching profile
-          await fetchUserProfile(session.user.id);
-          setLoading(false); // Only set false AFTER profile is fetched
-        } else {
-          console.log('🚫 User signed out, clearing profile...');
-          setUserProfile(null);
-          setImpersonatedRole(null);
-          setLoading(false); // Set false after clearing profile
-        }
-      }
-    );
 
     return () => {
       subscription.unsubscribe();
