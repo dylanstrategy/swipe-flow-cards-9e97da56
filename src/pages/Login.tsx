@@ -14,6 +14,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading, user, userProfile } = useAuth();
   const { toast } = useToast();
@@ -39,6 +40,7 @@ const Login = () => {
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsSubmitting(true);
 
     try {
       if (isSignUp) {
@@ -68,15 +70,17 @@ const Login = () => {
     } catch (error: any) {
       console.error('Auth error:', error);
       setError(error.message || "Authentication failed");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleQuickLogin = async (testAccount: typeof quickTestAccounts[0]) => {
     setError('');
+    setIsSubmitting(true);
     console.log('Attempting quick login with:', testAccount.email);
     
     try {
-      // Try to sign in first
       await signInWithEmail(testAccount.email, testAccount.password);
       toast({
         title: "Quick login successful!",
@@ -84,7 +88,6 @@ const Login = () => {
       });
     } catch (error: any) {
       console.log('Login failed, creating account:', error.message);
-      // If login fails, try to create the account
       try {
         const result = await signUpWithEmail(testAccount.email, testAccount.password, {
           first_name: testAccount.label.split(' ')[0],
@@ -106,6 +109,8 @@ const Login = () => {
         console.error('Account creation failed:', signUpError);
         setError(signUpError.message || "Failed to create test account");
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -127,10 +132,10 @@ const Login = () => {
           navigate('/maintenance');
           break;
         case 'leasing':
-          navigate('/operator'); // Leasing uses operator dashboard
+          navigate('/operator');
           break;
         case 'vendor':
-          navigate('/maintenance'); // Vendors see maintenance-focused view
+          navigate('/maintenance');
           break;
         case 'resident':
           navigate('/');
@@ -139,7 +144,6 @@ const Login = () => {
           navigate('/discovery');
           break;
         default:
-          // Show fallback for unrecognized roles
           toast({
             title: "Account Under Review",
             description: "Your account is under review. Please check back soon.",
@@ -150,20 +154,20 @@ const Login = () => {
     }
   }, [user, userProfile, loading, navigate, toast]);
 
-  // Show loading while auth is being processed
+  // Show loading only during auth initialization
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 text-lg">Loading...</p>
+          <p className="text-gray-600 text-lg">Initializing...</p>
         </div>
       </div>
     );
   }
 
-  // If user is already logged in, show loading (redirect will happen via useEffect)
-  if (user) {
+  // If user is already logged in, show redirect message
+  if (user && userProfile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center space-y-4">
@@ -196,7 +200,7 @@ const Login = () => {
             <div className="space-y-4">
               <Button 
                 onClick={handleGoogleSignIn}
-                disabled={loading}
+                disabled={isSubmitting}
                 className="w-full flex items-center justify-center gap-2 bg-white text-gray-900 border border-gray-300 hover:bg-gray-50"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -217,7 +221,7 @@ const Login = () => {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                {loading ? 'Signing in...' : `Continue with Google`}
+                {isSubmitting ? 'Signing in...' : `Continue with Google`}
               </Button>
 
               <div className="relative">
@@ -257,8 +261,8 @@ const Login = () => {
                   />
                 </div>
 
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Please wait...' : (isSignUp ? 'Sign Up' : 'Sign In')}
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? 'Please wait...' : (isSignUp ? 'Sign Up' : 'Sign In')}
                 </Button>
               </form>
 
@@ -293,7 +297,7 @@ const Login = () => {
                 variant="outline"
                 className="w-full"
                 onClick={() => handleQuickLogin(account)}
-                disabled={loading}
+                disabled={isSubmitting}
               >
                 Login as {account.label}
               </Button>
