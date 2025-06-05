@@ -12,6 +12,5 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     flowType: 'pkce',
     debug: true,
-    redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined,
   }
 });
