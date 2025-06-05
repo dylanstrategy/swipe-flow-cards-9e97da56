@@ -13,9 +13,18 @@ import EventDetailModal from '@/components/events/EventDetailModal';
 import { useToast } from '@/hooks/use-toast';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
+import { useResident } from '@/contexts/ResidentContext';
 
 const OperatorTodayTab = () => {
   const { toast } = useToast();
+  const { 
+    allResidents, 
+    getCurrentResidents, 
+    getFutureResidents, 
+    getVacantUnits, 
+    getOccupancyRate 
+  } = useResident();
+  
   const [selectedTimeframe, setSelectedTimeframe] = useState('30');
   const [showCRMTracker, setShowCRMTracker] = useState(false);
   const [showMoveInTracker, setShowMoveInTracker] = useState(false);
@@ -28,6 +37,46 @@ const OperatorTodayTab = () => {
   const [showEventDetail, setShowEventDetail] = useState(false);
   const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
   const [selectedEventForReschedule, setSelectedEventForReschedule] = useState<EnhancedEvent | null>(null);
+
+  // Calculate real data from resident context
+  const currentResidents = getCurrentResidents();
+  const futureResidents = getFutureResidents();
+  const vacantUnits = getVacantUnits();
+  const occupancyRate = getOccupancyRate();
+  
+  // Calculate additional metrics
+  const totalUnits = 100;
+  const currentOccupied = currentResidents.length;
+  const vacantCount = vacantUnits.length;
+  const availableUnits = vacantCount; // Units ready for move-in
+  const delinquentResidents = currentResidents.filter(r => r.leaseStatus === 'delinquent').length;
+  const expiringLeases = currentResidents.filter(r => r.leaseStatus === 'expiring').length;
+  const renewalsPending = currentResidents.filter(r => r.renewalStatus === 'pending').length;
+  
+  // Calculate PPF metrics based on timeframe
+  const getCountsForTimeframe = (timeframe: string) => {
+    const baseFutureResidents = futureResidents.length;
+    const baseVacant = vacantCount;
+    const baseAvailable = availableUnits;
+    
+    // Project based on timeframe
+    const multiplier = timeframe === 'week' ? 0.25 : 
+                     timeframe === '30' ? 1 : 
+                     timeframe === '60' ? 1.8 : 2.5;
+    
+    return {
+      occupancy: `${Math.round(occupancyRate)}%`,
+      vacant: baseVacant,
+      available: baseAvailable,
+      requiredLeases: Math.round(baseVacant * multiplier * 0.8), // Assume 80% lease rate target
+      shows: Math.round(baseVacant * multiplier * 2), // Typically 2-3 shows per lease
+      outreach: Math.round(baseVacant * multiplier * 1.5), // Follow-ups needed
+      moveIns: baseFutureResidents + Math.round(multiplier * 2),
+      moveOuts: Math.round(multiplier * 1.5) // Expected move-outs
+    };
+  };
+
+  const currentCounts = getCountsForTimeframe(selectedTimeframe);
 
   // Daily scheduled events for calendar view
   const dailyEvents = [
@@ -99,76 +148,14 @@ const OperatorTodayTab = () => {
     }
   ];
 
-  const getCountsForTimeframe = (timeframe: string) => {
-    switch (timeframe) {
-      case 'week':
-        return {
-          occupancy: '98%',
-          vacant: 3,
-          available: 8,
-          requiredLeases: 12,
-          shows: 25,
-          outreach: 18,
-          moveIns: 5,
-          moveOuts: 3
-        };
-      case '30':
-        return {
-          occupancy: '97%',
-          vacant: 6,
-          available: 12,
-          requiredLeases: 22,
-          shows: 42,
-          outreach: 35,
-          moveIns: 12,
-          moveOuts: 8
-        };
-      case '60':
-        return {
-          occupancy: '96%',
-          vacant: 8,
-          available: 15,
-          requiredLeases: 35,
-          shows: 68,
-          outreach: 52,
-          moveIns: 22,
-          moveOuts: 15
-        };
-      case '90':
-        return {
-          occupancy: '95%',
-          vacant: 5,
-          available: 18,
-          requiredLeases: 45,
-          shows: 89,
-          outreach: 71,
-          moveIns: 35,
-          moveOuts: 25
-        };
-      default:
-        return {
-          occupancy: '97%',
-          vacant: 6,
-          available: 12,
-          requiredLeases: 22,
-          shows: 42,
-          outreach: 35,
-          moveIns: 12,
-          moveOuts: 8
-        };
-    }
-  };
-
-  const currentCounts = getCountsForTimeframe(selectedTimeframe);
-
-  // Chart data
+  // Chart data using real occupancy rate
   const occupancyTrendData = [
     { month: 'Jan', rate: 96.2 },
     { month: 'Feb', rate: 97.8 },
     { month: 'Mar', rate: 98.1 },
     { month: 'Apr', rate: 97.5 },
     { month: 'May', rate: 98.2 },
-    { month: 'Jun', rate: parseFloat(currentCounts.occupancy) }
+    { month: 'Jun', rate: occupancyRate }
   ];
 
   const leasingPipelineData = [
@@ -326,28 +313,29 @@ const OperatorTodayTab = () => {
     return <PricingModule onClose={() => setShowPricingModule(false)} initialFilter={pricingFilter} />;
   }
 
+  // Use real data for overview
   const overview = [
     {
       title: 'Total Units',
-      count: '150',
+      count: totalUnits.toString(),
       status: 'total',
       module: 'pricing',
       filter: 'all' as const
     },
     {
       title: 'Current Residents',
-      count: '144',
+      count: currentOccupied.toString(),
       status: 'occupied'
     },
     {
       title: 'Maintenance',
-      count: 7,
+      count: 7, // This would come from work orders system
       status: 'pending',
       module: 'maintenance'
     },
     {
       title: 'Renewals',
-      count: 12,
+      count: renewalsPending,
       status: 'due',
       module: 'renewals'
     }
