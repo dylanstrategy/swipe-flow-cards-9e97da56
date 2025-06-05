@@ -29,7 +29,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
       requiredRole, 
       loading,
       isImpersonating,
-      isDevMode
+      isDevMode,
+      currentPath: window.location.pathname
     });
   }
 
@@ -62,6 +63,47 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
       console.log('🚫 No user/profile, redirecting to login');
     }
     return <Navigate to="/login" replace />;
+  }
+
+  // Handle role-based redirects for the root path
+  if (!requiredRole && window.location.pathname === "/") {
+    switch (userProfile.role) {
+      case "super_admin":
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔄 Redirecting super_admin to /super-admin');
+        }
+        return <Navigate to="/super-admin" replace />;
+      case "operator":
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔄 Redirecting operator to /operator');
+        }
+        return <Navigate to="/operator" replace />;
+      case "resident":
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔄 Redirecting resident to /discovery');
+        }
+        return <Navigate to="/discovery" replace />;
+      case "prospect":
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔄 Redirecting prospect to /discovery');
+        }
+        return <Navigate to="/discovery" replace />;
+      case "vendor":
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔄 Redirecting vendor to /maintenance');
+        }
+        return <Navigate to="/maintenance" replace />;
+      case "maintenance":
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔄 Redirecting maintenance to /maintenance');
+        }
+        return <Navigate to="/maintenance" replace />;
+      default:
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🚫 Unknown role, redirecting to /unknown-role');
+        }
+        return <Navigate to="/unknown-role" replace />;
+    }
   }
 
   // If role is required, check permissions

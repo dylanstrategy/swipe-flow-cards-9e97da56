@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
 const Login = () => {
@@ -17,33 +17,28 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading, user, userProfile } = useAuth();
-  const navigate = useNavigate();
 
-  // Handle redirect after successful authentication
-  useEffect(() => {
-    if (!loading && user && userProfile) {
-      console.log('✅ User authenticated with profile, redirecting based on role:', userProfile.role);
-      
-      // Clear any submission state
-      setIsSubmitting(false);
-      
-      // Redirect based on role
-      switch (userProfile.role) {
-        case 'super_admin':
-          navigate('/super-admin', { replace: true });
-          break;
-        case 'operator':
-          navigate('/operator', { replace: true });
-          break;
-        case 'resident':
-          navigate('/', { replace: true });
-          break;
-        default:
-          navigate('/unknown-role', { replace: true });
-          break;
-      }
+  // Prevent logged-in users from seeing login page
+  if (!loading && user && userProfile) {
+    console.log('✅ User already authenticated, redirecting based on role:', userProfile.role);
+    
+    switch (userProfile.role) {
+      case 'super_admin':
+        return <Navigate to="/super-admin" replace />;
+      case 'operator':
+        return <Navigate to="/operator" replace />;
+      case 'resident':
+        return <Navigate to="/discovery" replace />;
+      case 'prospect':
+        return <Navigate to="/discovery" replace />;
+      case 'vendor':
+        return <Navigate to="/maintenance" replace />;
+      case 'maintenance':
+        return <Navigate to="/maintenance" replace />;
+      default:
+        return <Navigate to="/unknown-role" replace />;
     }
-  }, [user, userProfile, loading, navigate]);
+  }
 
   const handleForgotPassword = async () => {
     const email = prompt("Enter your email address:");
@@ -67,7 +62,7 @@ const Login = () => {
       console.log('🔑 Starting Google sign in...');
       await signInWithGoogle();
       console.log('🔑 Google sign in initiated');
-      // Don't set isSubmitting to false here - let the useEffect handle the redirect
+      // Don't set isSubmitting to false here - user will be redirected
     } catch (error: any) {
       console.error('Google sign in error:', error);
       setError(error.message || "Failed to sign in with Google");
@@ -89,7 +84,7 @@ const Login = () => {
       } else {
         await signInWithEmail(email, password);
       }
-      // Don't set isSubmitting to false here - let the useEffect handle the redirect
+      // Don't set isSubmitting to false here - user will be redirected
     } catch (error: any) {
       console.error('Auth error:', error);
       setError(error.message || "Authentication failed");

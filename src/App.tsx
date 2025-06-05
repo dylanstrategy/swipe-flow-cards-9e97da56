@@ -30,47 +30,54 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/unknown-role" element={<UnknownRole />} />
               
-              {/* Protected routes */}
+              {/* Super Admin routes - restricted access */}
               <Route path="/super-admin" element={
                 <ProtectedRoute requiredRole="super_admin">
                   <SuperAdmin />
                 </ProtectedRoute>
               } />
               
-              {/* Main app routes - these need authentication but allow role switching */}
+              {/* Operator routes - restricted access */}
+              <Route path="/operator" element={
+                <ProtectedRoute requiredRole="operator">
+                  <Operator />
+                </ProtectedRoute>
+              } />
+              
+              {/* Main app routes - authentication required, role-based redirects handled in ProtectedRoute */}
               <Route path="/" element={
                 <ProtectedRoute>
                   <Index />
                 </ProtectedRoute>
               } />
+              
               <Route path="/discovery" element={
                 <ProtectedRoute>
                   <Discovery />
                 </ProtectedRoute>
               } />
+              
               <Route path="/matches" element={
                 <ProtectedRoute>
                   <Matches />
                 </ProtectedRoute>
               } />
+              
               <Route path="/movein" element={
                 <ProtectedRoute>
                   <MoveIn />
                 </ProtectedRoute>
               } />
+              
               <Route path="/movein/:homeId" element={
                 <ProtectedRoute>
                   <MoveIn />
                 </ProtectedRoute>
               } />
+              
               <Route path="/maintenance" element={
                 <ProtectedRoute>
                   <Maintenance />
-                </ProtectedRoute>
-              } />
-              <Route path="/operator" element={
-                <ProtectedRoute>
-                  <Operator />
                 </ProtectedRoute>
               } />
               
