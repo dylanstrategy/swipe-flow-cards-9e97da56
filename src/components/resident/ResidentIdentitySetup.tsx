@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ArrowLeft, Save, Edit, User, Mail, Phone, Home, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useResident } from '@/contexts/ResidentContext';
 
 interface ResidentProfile {
   id: string;
@@ -28,23 +28,10 @@ interface ResidentIdentitySetupProps {
 
 const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack }) => {
   const { toast } = useToast();
+  const { profile, updateProfile } = useResident();
   const [isEditing, setIsEditing] = useState(false);
   
   // Mock resident data - in real app this would come from context/API
-  const [profile, setProfile] = useState<ResidentProfile>({
-    id: '1',
-    fullName: 'John Doe',
-    preferredName: 'John',
-    email: 'john.doe@email.com',
-    phone: '(555) 123-4567',
-    unitNumber: '204',
-    emergencyContact: {
-      name: 'Jane Doe',
-      phone: '(555) 987-6543',
-      relationship: 'Spouse'
-    }
-  });
-
   const [formData, setFormData] = useState({
     fullName: profile.fullName,
     preferredName: profile.preferredName,
@@ -56,8 +43,7 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
   });
 
   const handleSave = () => {
-    const updatedProfile: ResidentProfile = {
-      ...profile,
+    updateProfile({
       fullName: formData.fullName,
       preferredName: formData.preferredName,
       email: formData.email,
@@ -67,9 +53,8 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
         phone: formData.emergencyContactPhone,
         relationship: formData.emergencyContactRelationship
       }
-    };
+    });
     
-    setProfile(updatedProfile);
     setIsEditing(false);
     
     toast({
@@ -78,7 +63,7 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
       duration: 3000,
     });
     
-    console.log('Profile updated:', updatedProfile);
+    console.log('Profile updated:', profile);
   };
 
   const handleCancel = () => {

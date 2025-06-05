@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User, Settings, Bell, Shield, CreditCard, HelpCircle, LogOut, ChevronRight, Home, Mail, Phone } from 'lucide-react';
+import { useResident } from '@/contexts/ResidentContext';
 import ResidentIdentitySetup from '@/components/resident/ResidentIdentitySetup';
 
 const AccountTab = () => {
+  const { profile } = useResident();
   const [showIdentitySetup, setShowIdentitySetup] = useState(false);
 
   if (showIdentitySetup) {
@@ -22,23 +24,23 @@ const AccountTab = () => {
           <div className="flex items-center gap-4">
             <Avatar className="w-16 h-16">
               <AvatarFallback className="text-xl font-bold bg-blue-600 text-white">
-                JD
+                {profile.preferredName.charAt(0)}{profile.fullName.split(' ')[1]?.charAt(0)}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">John Doe</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">{profile.preferredName}</h2>
               <div className="flex items-center gap-2 text-gray-600 mb-2">
                 <Home className="w-4 h-4" />
-                <span>The Meridian • Apt 204</span>
+                <span>The Meridian • Apt {profile.unitNumber}</span>
               </div>
               <div className="flex items-center gap-4 text-sm text-gray-600">
                 <div className="flex items-center gap-1">
                   <Mail className="w-4 h-4" />
-                  <span>john.doe@email.com</span>
+                  <span>{profile.email}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Phone className="w-4 h-4" />
-                  <span>(555) 123-4567</span>
+                  <span>{profile.phone}</span>
                 </div>
               </div>
             </div>

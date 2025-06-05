@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProfileProvider } from "@/contexts/ProfileContext";
+import { ResidentProvider } from "@/contexts/ResidentContext";
 import Index from "./pages/Index";
 import Discovery from "./pages/Discovery";
 import Matches from "./pages/Matches";
@@ -17,21 +18,23 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ProfileProvider>
-      <TooltipProvider>
-        <Toaster />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/discovery" element={<Discovery />} />
-            <Route path="/matches" element={<Matches />} />
-            <Route path="/movein" element={<MoveIn />} />
-            <Route path="/movein/:homeId" element={<MoveIn />} />
-            <Route path="/maintenance" element={<Maintenance />} />
-            <Route path="/operator" element={<Operator />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <ResidentProvider>
+        <TooltipProvider>
+          <Toaster />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/discovery" element={<Discovery />} />
+              <Route path="/matches" element={<Matches />} />
+              <Route path="/movein" element={<MoveIn />} />
+              <Route path="/movein/:homeId" element={<MoveIn />} />
+              <Route path="/maintenance" element={<Maintenance />} />
+              <Route path="/operator" element={<Operator />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ResidentProvider>
     </ProfileProvider>
   </QueryClientProvider>
 );
