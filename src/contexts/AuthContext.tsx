@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session, User } from '@supabase/supabase-js';
@@ -32,6 +31,12 @@ interface AuthContextType {
   signInWithEmail: (email: string, password: string) => Promise<any>;
   signUpWithEmail: (email: string, password: string, metadata?: any) => Promise<any>;
   signInWithGoogle: () => Promise<any>;
+  // Dev mode additions
+  isDevMode: boolean;
+  devModeRole: AppRole | null;
+  devModeProperty: string | null;
+  enterDevMode: (role: AppRole, propertyId?: string) => void;
+  exitDevMode: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,6 +48,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isImpersonating, setIsImpersonating] = useState(false);
   const [impersonatedRole, setImpersonatedRole] = useState<AppRole | null>(null);
   const [impersonatedUser, setImpersonatedUser] = useState<UserProfile | null>(null);
+  
+  // Dev mode state
+  const [isDevMode, setIsDevMode] = useState(false);
+  const [devModeRole, setDevModeRole] = useState<AppRole | null>(null);
+  const [devModeProperty, setDevModeProperty] = useState<string | null>(null);
 
   useEffect(() => {
     console.log('🔄 AuthProvider useEffect triggered');
@@ -93,6 +103,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           setUserProfile(null);
           setLoading(false);
+          // Clear dev mode on logout
+          setIsDevMode(false);
+          setDevModeRole(null);
+          setDevModeProperty(null);
         }
       }
     );
@@ -146,6 +160,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('🚪 Sign out successful');
       setUser(null);
       setUserProfile(null);
+      setIsDevMode(false);
+      setDevModeRole(null);
+      setDevModeProperty(null);
     } catch (error) {
       console.error('❌ Error signing out:', error);
     }
@@ -196,6 +213,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setImpersonatedUser(null);
   };
 
+  // Dev mode functions
+  const enterDevMode = (role: AppRole, propertyId?: string) => {
+    console.log('🔧 Entering dev mode:', { role, propertyId });
+    setIsDevMode(true);
+    setDevModeRole(role);
+    setDevModeProperty(propertyId || null);
+  };
+
+  const exitDevMode = () => {
+    console.log('🔧 Exiting dev mode');
+    setIsDevMode(false);
+    setDevModeRole(null);
+    setDevModeProperty(null);
+  };
+
   const canImpersonate = userProfile?.role === 'super_admin';
 
   const value: AuthContextType = {
@@ -214,6 +246,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signInWithEmail,
     signUpWithEmail,
     signInWithGoogle,
+    isDevMode,
+    devModeRole,
+    devModeProperty,
+    enterDevMode,
+    exitDevMode,
   };
 
   return (

@@ -20,6 +20,7 @@ import {
 import { Settings, Eye, EyeOff, TestTube, LogOut, User, Home } from 'lucide-react';
 import type { AppRole } from '@/types/supabase';
 import { useUsers } from '@/hooks/useSupabaseData';
+import DevModeSelector from '@/components/admin/DevModeSelector';
 
 const RoleImpersonation = () => {
   const { 
@@ -31,11 +32,15 @@ const RoleImpersonation = () => {
     stopImpersonation,
     signOut,
     impersonateAsUser,
-    impersonatedUser
+    impersonatedUser,
+    isDevMode,
+    devModeRole,
+    exitDevMode
   } = useAuth();
   
   const { users } = useUsers();
   const [showResidentSelector, setShowResidentSelector] = useState(false);
+  const [showDevModeSelector, setShowDevModeSelector] = useState(false);
 
   const availableRoles: { role: AppRole; label: string; description: string }[] = [
     { role: 'resident', label: 'Resident', description: 'Current tenant view' },
@@ -81,22 +86,29 @@ const RoleImpersonation = () => {
     stopImpersonation();
   };
 
+  const handleExitDevMode = () => {
+    console.log('🔧 Exiting dev mode via button');
+    exitDevMode();
+  };
+
   const residents = users.filter(user => user.role === 'resident');
 
   console.log('🎭 RoleImpersonation render:', { 
     isImpersonating, 
     impersonatedRole, 
     currentUserRole: userProfile?.role,
-    impersonatedUser: impersonatedUser?.email
+    impersonatedUser: impersonatedUser?.email,
+    isDevMode,
+    devModeRole
   });
 
   return (
     <>
       <div className="flex items-center gap-2">
-        {isImpersonating && (
+        {(isImpersonating || isDevMode) && (
           <Badge variant="destructive" className="flex items-center gap-1 animate-pulse">
             <TestTube className="w-3 h-3" />
-            Testing as {formatRoleName(impersonatedRole!)}
+            {isDevMode ? `Testing as ${formatRoleName(devModeRole!)}` : `Testing as ${formatRoleName(impersonatedRole!)}`}
             {impersonatedUser && (
               <span className="ml-1">({impersonatedUser.first_name} {impersonatedUser.last_name})</span>
             )}
@@ -106,12 +118,12 @@ const RoleImpersonation = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 
-              variant={isImpersonating ? "destructive" : "outline"} 
+              variant={isImpersonating || isDevMode ? "destructive" : "outline"} 
               size="sm"
               className="flex items-center gap-2"
             >
               <Settings className="w-4 h-4" />
-              {isImpersonating ? 'Exit Dev Mode' : 'Account'}
+              {isImpersonating || isDevMode ? 'Exit Dev Mode' : 'Account'}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-64">
@@ -128,52 +140,34 @@ const RoleImpersonation = () => {
               <>
                 <DropdownMenuLabel className="flex items-center gap-2">
                   <TestTube className="w-4 h-4" />
-                  Role Testing Mode
+                  Development Mode
                 </DropdownMenuLabel>
                 
-                {isImpersonating && (
+                {(isImpersonating || isDevMode) && (
                   <>
                     <DropdownMenuItem 
-                      onClick={handleStopImpersonation}
+                      onClick={isDevMode ? handleExitDevMode : handleStopImpersonation}
                       className="text-red-600 cursor-pointer font-medium"
                     >
                       <EyeOff className="mr-2 h-4 w-4" />
-                      Stop Role Testing
+                      Exit Dev Mode
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                   </>
                 )}
                 
-                <DropdownMenuLabel className="text-xs text-gray-500 font-normal">
-                  Test user experiences:
-                </DropdownMenuLabel>
-                
-                {availableRoles.map(({ role, label, description }) => (
-                  <DropdownMenuItem
-                    key={role}
-                    onClick={() => handleRoleSelect(role)}
-                    className="cursor-pointer flex-col items-start py-2"
-                    disabled={impersonatedRole === role}
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center">
-                        <Eye className="mr-2 h-4 w-4" />
-                        <span className="font-medium">{label}</span>
-                      </div>
-                      {impersonatedRole === role && (
-                        <Badge variant="secondary" className="text-xs">
-                          Active
-                        </Badge>
-                      )}
-                    </div>
-                    <span className="text-xs text-gray-500 mt-1">{description}</span>
-                  </DropdownMenuItem>
-                ))}
+                <DropdownMenuItem
+                  onClick={() => setShowDevModeSelector(true)}
+                  className="cursor-pointer"
+                >
+                  <TestTube className="mr-2 h-4 w-4" />
+                  Start Dev Mode
+                </DropdownMenuItem>
                 
                 <DropdownMenuSeparator />
                 <div className="px-2 py-1">
                   <p className="text-xs text-gray-500">
-                    Test different user flows without creating separate accounts
+                    Test different user experiences without creating separate accounts
                   </p>
                 </div>
                 <DropdownMenuSeparator />
@@ -190,6 +184,12 @@ const RoleImpersonation = () => {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Dev Mode Selector Dialog */}
+      <DevModeSelector 
+        isOpen={showDevModeSelector} 
+        onClose={() => setShowDevModeSelector(false)} 
+      />
 
       {/* Resident Selector Dialog */}
       <Dialog open={showResidentSelector} onOpenChange={setShowResidentSelector}>

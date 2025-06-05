@@ -16,15 +16,18 @@ interface ImpersonatedInterfaceProps {
 }
 
 const ImpersonatedInterface: React.FC<ImpersonatedInterfaceProps> = ({ role }) => {
-  const { impersonatedUser } = useAuth();
+  const { impersonatedUser, isDevMode, devModeRole } = useAuth();
   
-  console.log('🎭 ImpersonatedInterface rendering for role:', role, 'user:', impersonatedUser?.email);
+  // Use dev mode role if in dev mode, otherwise use impersonated role
+  const effectiveRole = isDevMode ? devModeRole : role;
+  
+  console.log('🎭 ImpersonatedInterface rendering for role:', effectiveRole, 'user:', impersonatedUser?.email, 'devMode:', isDevMode);
 
   // Render the appropriate interface based on role
   const renderRoleInterface = () => {
-    console.log('🎭 renderRoleInterface called with role:', role);
+    console.log('🎭 renderRoleInterface called with role:', effectiveRole);
     try {
-      switch (role) {
+      switch (effectiveRole) {
         case 'resident':
           console.log('🏠 Rendering resident interface (Index)');
           return (
@@ -77,7 +80,7 @@ const ImpersonatedInterface: React.FC<ImpersonatedInterfaceProps> = ({ role }) =
         <div className="flex items-center justify-center h-64 p-8">
           <div className="text-center">
             <h3 className="text-lg font-medium text-gray-900 mb-2">Interface Loading Error</h3>
-            <p className="text-gray-600 mb-2">Failed to load {role} interface</p>
+            <p className="text-gray-600 mb-2">Failed to load {effectiveRole} interface</p>
             <p className="text-sm text-red-600">{error.message}</p>
             <button 
               onClick={() => window.location.reload()} 
@@ -97,14 +100,21 @@ const ImpersonatedInterface: React.FC<ImpersonatedInterfaceProps> = ({ role }) =
     if (impersonatedUser) {
       return `${impersonatedUser.first_name} ${impersonatedUser.last_name} (${impersonatedUser.email})`;
     }
-    return role.replace('_', ' ');
+    return effectiveRole?.replace('_', ' ') || 'Unknown Role';
+  };
+
+  const getModeLabel = () => {
+    if (isDevMode) {
+      return 'Development Mode';
+    }
+    return 'Preview Mode';
   };
 
   return (
     <div className="w-full h-full overflow-hidden">
       <div className="p-3 bg-blue-50 border-b border-blue-200">
         <p className="text-sm text-blue-800">
-          <strong>Preview Mode:</strong> Testing as {getUserDisplayName()}
+          <strong>{getModeLabel()}:</strong> Testing as {getUserDisplayName()}
         </p>
       </div>
       <div className="flex-1 h-full overflow-auto">

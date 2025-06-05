@@ -14,19 +14,19 @@ interface IndexProps {
 
 const Index: React.FC<IndexProps> = ({ isImpersonated = false }) => {
   const navigate = useNavigate();
-  const { user, userProfile, loading, impersonatedUser } = useAuth();
+  const { user, userProfile, loading, impersonatedUser, isDevMode, devModeRole } = useAuth();
   const [activeTab, setActiveTab] = useState('today');
 
   useEffect(() => {
-    // Only redirect if not impersonated and no auth
-    if (!isImpersonated && !loading && (!user || !userProfile)) {
+    // Only redirect if not impersonated/dev mode and no auth
+    if (!isImpersonated && !isDevMode && !loading && (!user || !userProfile)) {
       console.log('🚫 No user/profile, redirecting to login');
       navigate('/login');
     }
-  }, [user, userProfile, loading, navigate, isImpersonated]);
+  }, [user, userProfile, loading, navigate, isImpersonated, isDevMode]);
 
-  // Show loading while checking auth (but not during impersonation)
-  if (!isImpersonated && loading) {
+  // Show loading while checking auth (but not during impersonation/dev mode)
+  if (!isImpersonated && !isDevMode && loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -34,37 +34,39 @@ const Index: React.FC<IndexProps> = ({ isImpersonated = false }) => {
     );
   }
 
-  // Don't render if not authenticated (but allow during impersonation)
-  if (!isImpersonated && (!user || !userProfile)) {
+  // Don't render if not authenticated (but allow during impersonation/dev mode)
+  if (!isImpersonated && !isDevMode && (!user || !userProfile)) {
     return null;
   }
 
-  // When impersonated, use the specific impersonated user if available, otherwise create mock user
-  const effectiveUser = isImpersonated ? (impersonatedUser ? {
+  // When impersonated/dev mode, use the specific impersonated user if available, otherwise create mock user
+  const effectiveUser = (isImpersonated || isDevMode) ? (impersonatedUser ? {
     id: impersonatedUser.id,
     email: impersonatedUser.email
   } : {
-    id: 'impersonated-user',
+    id: 'dev-mode-user',
     email: 'test@resident.com'
   }) : user;
 
-  const effectiveUserProfile = isImpersonated ? (impersonatedUser || {
-    id: 'impersonated-profile',
+  const effectiveUserProfile = (isImpersonated || isDevMode) ? (impersonatedUser || {
+    id: 'dev-mode-profile',
     email: 'test@resident.com',
     first_name: 'Test',
-    last_name: 'Resident',
-    role: 'resident' as const,
+    last_name: 'User',
+    role: devModeRole || 'resident' as const,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   }) : userProfile;
 
   console.log('🏠 Index rendering with:', { 
     isImpersonated, 
+    isDevMode,
     hasUser: !!user, 
     hasProfile: !!userProfile,
     hasImpersonatedUser: !!impersonatedUser,
     effectiveUser: !!effectiveUser,
-    effectiveProfile: !!effectiveUserProfile
+    effectiveProfile: !!effectiveUserProfile,
+    devModeRole
   });
 
   const tabs = [
