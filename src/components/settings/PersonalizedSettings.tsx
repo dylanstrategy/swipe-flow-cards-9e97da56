@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,7 @@ import { ArrowLeft, User, Bell, Shield, Palette, Database, Globe, HelpCircle, Ch
 import { Checkbox } from '@/components/ui/checkbox';
 import ResidentIdentitySetup from '@/components/resident/ResidentIdentitySetup';
 import PropertySetupModule from '@/components/property/PropertySetupModule';
+import CalendarSettingsModule from '@/components/settings/CalendarSettingsModule';
 
 interface PersonalizedSettingsProps {
   onClose?: () => void;
@@ -43,6 +45,10 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
 
   if (currentSection === 'property') {
     return <PropertySetupModule onClose={handleBack} />;
+  }
+
+  if (currentSection === 'calendar') {
+    return <CalendarSettingsModule onBack={handleBack} userRole={userRole} />;
   }
 
   const renderSectionContent = () => {
@@ -442,8 +448,8 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <Calendar className="w-5 h-5 text-gray-600 flex-shrink-0" />
                     <div className="text-left min-w-0 flex-1">
-                      <div className="font-medium truncate">Calendar Settings</div>
-                      <div className="text-sm text-gray-600 truncate">Configure calendar preferences and scheduling options</div>
+                      <div className="font-medium truncate">Calendar & Time Slots</div>
+                      <div className="text-sm text-gray-600 truncate">Configure availability and time slot preferences</div>
                     </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
@@ -542,7 +548,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                currentSection === 'privacy' ? 'Privacy & Security' :
                currentSection === 'theme' ? 'Theme & Display' :
                currentSection === 'language' ? 'Language & Region' :
-               currentSection === 'calendar' ? 'Calendar Settings' :
+               currentSection === 'calendar' ? 'Calendar & Time Slots' :
                currentSection === 'data' ? 'Data Management' :
                currentSection === 'property' ? 'Property Setup' :
                currentSection === 'help' ? 'Getting Started' : 'Setup & Configuration'}
