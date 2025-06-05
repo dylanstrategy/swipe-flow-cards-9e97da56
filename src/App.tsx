@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -14,6 +13,7 @@ import MoveIn from "./pages/MoveIn";
 import Maintenance from "./pages/Maintenance";
 import Operator from "./pages/Operator";
 import NotFound from "./pages/NotFound";
+import SuperAdmin from "./pages/SuperAdmin";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +59,11 @@ const App = () => (
                 <Route path="/operator" element={
                   <ProtectedRoute>
                     <Operator />
+                  </ProtectedRoute>
+                } />
+                <Route path="/super-admin" element={
+                  <ProtectedRoute requiredRole="super_admin">
+                    <SuperAdmin />
                   </ProtectedRoute>
                 } />
                 <Route path="*" element={<NotFound />} />
