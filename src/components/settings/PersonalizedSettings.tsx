@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ChevronLeft, User, Calendar, Smartphone, Bell, CreditCard, Shield, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,8 +30,13 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
       sunday: { enabled: false, startTime: '10:00', endTime: '14:00' }
     },
     swipeGestures: {
-      leftAction: 'snooze',
-      rightAction: 'complete'
+      workOrder: { leftAction: 'snooze', rightAction: 'reschedule' },
+      management: { leftAction: 'reply', rightAction: 'archive' },
+      lease: { leftAction: 'remind', rightAction: 'accept' },
+      payment: { leftAction: 'remind', rightAction: 'pay' },
+      community: { leftAction: 'maybe', rightAction: 'attend' },
+      pointOfSale: { leftAction: 'ignore', rightAction: 'save' },
+      petService: { leftAction: 'ignore', rightAction: 'book' }
     },
     notifications: {
       push: true,
@@ -68,7 +72,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
     {
       id: 'swipes' as const,
       title: 'Swipe Gestures',
-      description: 'Customize swipe actions for cards',
+      description: 'Customize swipe actions for different event types',
       icon: Smartphone,
       status: 'complete'
     },
@@ -104,6 +108,19 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
         [day]: {
           ...prev.availability[day as keyof typeof prev.availability],
           [field]: value
+        }
+      }
+    }));
+  };
+
+  const updateSwipeGesture = (eventType: string, direction: 'leftAction' | 'rightAction', action: string) => {
+    setSettings(prev => ({
+      ...prev,
+      swipeGestures: {
+        ...prev.swipeGestures,
+        [eventType]: {
+          ...prev.swipeGestures[eventType as keyof typeof prev.swipeGestures],
+          [direction]: action
         }
       }
     }));
@@ -179,48 +196,53 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
           <div className="space-y-4 max-w-2xl mx-auto">
             <div className="sticky top-0 bg-white z-10 pb-4 border-b">
               <h2 className="text-xl font-bold text-gray-900">Swipe Gestures</h2>
-              <p className="text-sm text-gray-600">Customize swipe actions for cards</p>
+              <p className="text-sm text-gray-600">Customize swipe actions for different event types</p>
             </div>
             
-            <Card className="shadow-sm">
-              <CardContent className="p-4">
-                <div className="space-y-4">
-                  <div>
-                    <Label className="text-sm font-medium">Swipe Left Action</Label>
-                    <select
-                      value={settings.swipeGestures.leftAction}
-                      onChange={(e) => setSettings(prev => ({
-                        ...prev,
-                        swipeGestures: { ...prev.swipeGestures, leftAction: e.target.value }
-                      }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md mt-1 text-sm"
-                    >
-                      <option value="snooze">Snooze</option>
-                      <option value="delete">Delete</option>
-                      <option value="archive">Archive</option>
-                      <option value="assign">Assign</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <Label className="text-sm font-medium">Swipe Right Action</Label>
-                    <select
-                      value={settings.swipeGestures.rightAction}
-                      onChange={(e) => setSettings(prev => ({
-                        ...prev,
-                        swipeGestures: { ...prev.swipeGestures, rightAction: e.target.value }
-                      }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md mt-1 text-sm"
-                    >
-                      <option value="complete">Complete</option>
-                      <option value="reply">Reply</option>
-                      <option value="approve">Approve</option>
-                      <option value="forward">Forward</option>
-                    </select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-4">
+              {[
+                { key: 'workOrder', label: 'Work Orders', leftOptions: ['snooze', 'cancel', 'reschedule'], rightOptions: ['reschedule', 'complete', 'assign'] },
+                { key: 'management', label: 'Management Messages', leftOptions: ['reply', 'forward', 'snooze'], rightOptions: ['archive', 'mark-read', 'priority'] },
+                { key: 'lease', label: 'Lease Items', leftOptions: ['remind', 'forward', 'snooze'], rightOptions: ['accept', 'review', 'schedule'] },
+                { key: 'payment', label: 'Payments', leftOptions: ['remind', 'schedule', 'snooze'], rightOptions: ['pay', 'autopay', 'split'] },
+                { key: 'community', label: 'Community Events', leftOptions: ['maybe', 'ignore', 'share'], rightOptions: ['attend', 'rsvp', 'calendar'] },
+                { key: 'pointOfSale', label: 'Offers & Deals', leftOptions: ['ignore', 'later', 'share'], rightOptions: ['save', 'redeem', 'visit'] },
+                { key: 'petService', label: 'Pet Services', leftOptions: ['ignore', 'later', 'share'], rightOptions: ['book', 'save', 'call'] }
+              ].map((eventType) => (
+                <Card key={eventType.key} className="shadow-sm">
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold text-gray-900 mb-3">{eventType.label}</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm font-medium">Swipe Left Action</Label>
+                        <select
+                          value={settings.swipeGestures[eventType.key as keyof typeof settings.swipeGestures]?.leftAction || eventType.leftOptions[0]}
+                          onChange={(e) => updateSwipeGesture(eventType.key, 'leftAction', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md mt-1 text-sm"
+                        >
+                          {eventType.leftOptions.map(option => (
+                            <option key={option} value={option}>{option.charAt(0).toUpperCase() + option.slice(1)}</option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <Label className="text-sm font-medium">Swipe Right Action</Label>
+                        <select
+                          value={settings.swipeGestures[eventType.key as keyof typeof settings.swipeGestures]?.rightAction || eventType.rightOptions[0]}
+                          onChange={(e) => updateSwipeGesture(eventType.key, 'rightAction', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md mt-1 text-sm"
+                        >
+                          {eventType.rightOptions.map(option => (
+                            <option key={option} value={option}>{option.charAt(0).toUpperCase() + option.slice(1)}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
 
             <div className="sticky bottom-0 bg-white pt-4 border-t">
               <Button onClick={() => setCurrentSection('overview')} variant="outline" className="w-full">
