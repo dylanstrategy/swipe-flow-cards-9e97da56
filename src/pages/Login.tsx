@@ -6,12 +6,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Login = () => {
   const handleGoogleLogin = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/login`
+    console.log('Starting Google login...');
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+      
+      if (error) {
+        console.error('Google login error:', error);
+      } else {
+        console.log('Google login initiated successfully');
       }
-    });
+    } catch (error) {
+      console.error('Exception during Google login:', error);
+    }
   };
 
   return (

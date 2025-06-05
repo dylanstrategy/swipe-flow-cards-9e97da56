@@ -56,51 +56,80 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const canImpersonate = userProfile?.role === 'super_admin';
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
+  const fetchUserProfile = async (userId: string) => {
+    console.log('Fetching user profile for:', userId);
+    try {
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", userId)
+        .single();
 
-      if (session?.user) {
-        const { data, error } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-
-        if (!error) setUserProfile(data);
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
       }
 
-      setLoading(false);
-    };
+      console.log('User profile fetched:', data);
+      return data;
+    } catch (error) {
+      console.error('Exception fetching user profile:', error);
+      return null;
+    }
+  };
 
-    fetchUser();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+  useEffect(() => {
+    console.log('AuthContext initializing...');
+    
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event, session?.user?.email);
+      
       setUser(session?.user ?? null);
-      if (!session) {
+      
+      if (session?.user) {
+        // Defer profile fetch to avoid blocking
+        setTimeout(async () => {
+          const profile = await fetchUserProfile(session.user.id);
+          setUserProfile(profile);
+          setLoading(false);
+        }, 0);
+      } else {
         setUserProfile(null);
         setIsImpersonating(false);
         setImpersonatedRole(null);
         setImpersonatedUser(null);
         setIsDevMode(false);
         setDevModeRole(null);
-      } else {
-        // Fetch user profile when session changes
-        const { data, error } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-
-        if (!error) setUserProfile(data);
+        setLoading(false);
       }
     });
 
-    return () => listener?.subscription.unsubscribe();
+    // Check for existing session
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Initial session check:', session?.user?.email);
+        
+        if (session?.user) {
+          const profile = await fetchUserProfile(session.user.id);
+          setUser(session.user);
+          setUserProfile(profile);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    return () => subscription?.unsubscribe();
   }, []);
 
   const signOut = async () => {
+    console.log('Signing out...');
     await supabase.auth.signOut();
     setUser(null);
     setUserProfile(null);
