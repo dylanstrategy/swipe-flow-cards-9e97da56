@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,7 +44,29 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">Notification settings coming soon...</p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Push Notifications</h4>
+                    <p className="text-sm text-gray-600">Receive notifications on your device</p>
+                  </div>
+                  <input type="checkbox" className="rounded" defaultChecked />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Email Notifications</h4>
+                    <p className="text-sm text-gray-600">Receive notifications via email</p>
+                  </div>
+                  <input type="checkbox" className="rounded" defaultChecked />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Maintenance Updates</h4>
+                    <p className="text-sm text-gray-600">Get notified about work order updates</p>
+                  </div>
+                  <input type="checkbox" className="rounded" defaultChecked />
+                </div>
+              </div>
             </CardContent>
           </Card>
         );
@@ -60,7 +81,29 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">Privacy and security settings coming soon...</p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Two-Factor Authentication</h4>
+                    <p className="text-sm text-gray-600">Add an extra layer of security</p>
+                  </div>
+                  <Button variant="outline" size="sm">Enable</Button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Data Sharing</h4>
+                    <p className="text-sm text-gray-600">Control how your data is shared</p>
+                  </div>
+                  <input type="checkbox" className="rounded" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Location Services</h4>
+                    <p className="text-sm text-gray-600">Allow location-based features</p>
+                  </div>
+                  <input type="checkbox" className="rounded" defaultChecked />
+                </div>
+              </div>
             </CardContent>
           </Card>
         );
@@ -75,7 +118,24 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">Theme and display settings coming soon...</p>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">Theme</h4>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button variant="outline" size="sm" className="bg-blue-50 border-blue-300">Light</Button>
+                    <Button variant="outline" size="sm">Dark</Button>
+                    <Button variant="outline" size="sm">Auto</Button>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-2">Font Size</h4>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button variant="outline" size="sm">Small</Button>
+                    <Button variant="outline" size="sm" className="bg-blue-50 border-blue-300">Medium</Button>
+                    <Button variant="outline" size="sm">Large</Button>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         );
@@ -90,7 +150,31 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">Language and region settings coming soon...</p>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">Language</h4>
+                  <select className="w-full p-2 border rounded">
+                    <option>English (US)</option>
+                    <option>Spanish</option>
+                    <option>French</option>
+                  </select>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-2">Date Format</h4>
+                  <select className="w-full p-2 border rounded">
+                    <option>MM/DD/YYYY</option>
+                    <option>DD/MM/YYYY</option>
+                    <option>YYYY-MM-DD</option>
+                  </select>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-2">Time Format</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" size="sm" className="bg-blue-50 border-blue-300">12 Hour</Button>
+                    <Button variant="outline" size="sm">24 Hour</Button>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         );
@@ -105,7 +189,30 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">Calendar settings and preferences coming soon...</p>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">Start of Week</h4>
+                  <select className="w-full p-2 border rounded">
+                    <option>Sunday</option>
+                    <option>Monday</option>
+                  </select>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-2">Default View</h4>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button variant="outline" size="sm">Day</Button>
+                    <Button variant="outline" size="sm" className="bg-blue-50 border-blue-300">Week</Button>
+                    <Button variant="outline" size="sm">Month</Button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Show Weekends</h4>
+                    <p className="text-sm text-gray-600">Display weekends in calendar view</p>
+                  </div>
+                  <input type="checkbox" className="rounded" defaultChecked />
+                </div>
+              </div>
             </CardContent>
           </Card>
         );
@@ -120,7 +227,23 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">Data management settings coming soon...</p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Auto Backup</h4>
+                    <p className="text-sm text-gray-600">Automatically backup your data</p>
+                  </div>
+                  <input type="checkbox" className="rounded" defaultChecked />
+                </div>
+                <div>
+                  <h4 className="font-medium mb-2">Storage Usage</h4>
+                  <div className="bg-gray-200 rounded-full h-2">
+                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: '45%' }}></div>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">4.5 GB of 10 GB used</p>
+                </div>
+                <Button variant="outline" className="w-full">Export Data</Button>
+              </div>
             </CardContent>
           </Card>
         );
@@ -135,7 +258,20 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">Help and support content coming soon...</p>
+              <div className="space-y-4">
+                <Button variant="outline" className="w-full justify-start">
+                  📖 User Guide
+                </Button>
+                <Button variant="outline" className="w-full justify-start">
+                  💬 Contact Support
+                </Button>
+                <Button variant="outline" className="w-full justify-start">
+                  🎥 Video Tutorials
+                </Button>
+                <Button variant="outline" className="w-full justify-start">
+                  ❓ FAQ
+                </Button>
+              </div>
             </CardContent>
           </Card>
         );
