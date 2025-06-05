@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import type { AppRole } from '@/types/supabase';
 
 // Import the page components
@@ -20,33 +19,83 @@ const ImpersonatedInterface: React.FC<ImpersonatedInterfaceProps> = ({ role }) =
 
   // Render the appropriate interface based on role
   const renderRoleInterface = () => {
-    switch (role) {
-      case 'resident':
-        console.log('🏠 Rendering resident interface (Index)');
-        return <Index />;
-      case 'prospect':
-        console.log('🔍 Rendering prospect interface (Discovery)');
-        return <Discovery />;
-      case 'operator':
-      case 'senior_operator':
-      case 'leasing':
-        console.log('👨‍💼 Rendering operator interface');
-        return <Operator />;
-      case 'maintenance':
-        console.log('🔧 Rendering maintenance interface');
-        return <Maintenance />;
-      case 'vendor':
-        console.log('🏪 Rendering vendor interface (Index fallback)');
-        return <Index />;
-      default:
-        console.log('❓ Unknown role, rendering default interface (Index)');
-        return <Index />;
+    try {
+      switch (role) {
+        case 'resident':
+          console.log('🏠 Rendering resident interface (Index)');
+          return (
+            <div className="h-full">
+              <Index />
+            </div>
+          );
+        case 'prospect':
+          console.log('🔍 Rendering prospect interface (Discovery)');
+          return (
+            <div className="h-full">
+              <Discovery />
+            </div>
+          );
+        case 'operator':
+        case 'senior_operator':
+        case 'leasing':
+          console.log('👨‍💼 Rendering operator interface');
+          return (
+            <div className="h-full">
+              <Operator />
+            </div>
+          );
+        case 'maintenance':
+          console.log('🔧 Rendering maintenance interface');
+          return (
+            <div className="h-full">
+              <Maintenance />
+            </div>
+          );
+        case 'vendor':
+          console.log('🏪 Rendering vendor interface (Index fallback)');
+          return (
+            <div className="h-full">
+              <Index />
+            </div>
+          );
+        default:
+          console.log('❓ Unknown role, rendering default interface (Index)');
+          return (
+            <div className="h-full">
+              <Index />
+            </div>
+          );
+      }
+    } catch (error) {
+      console.error('❌ Error rendering role interface:', error);
+      return (
+        <div className="flex items-center justify-center h-64 p-8">
+          <div className="text-center">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Interface Loading Error</h3>
+            <p className="text-gray-600 mb-2">Failed to load {role} interface</p>
+            <p className="text-sm text-red-600">{error.message}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Reload Interface
+            </button>
+          </div>
+        </div>
+      );
     }
   };
 
   return (
-    <div className="w-full h-full">
-      {renderRoleInterface()}
+    <div className="w-full h-full overflow-hidden">
+      <div className="p-3 bg-blue-50 border-b border-blue-200">
+        <p className="text-sm text-blue-800">
+          <strong>Preview Mode:</strong> Testing {role.replace('_', ' ')} user experience
+        </p>
+      </div>
+      <div className="flex-1 h-full overflow-auto">
+        {renderRoleInterface()}
+      </div>
     </div>
   );
 };
