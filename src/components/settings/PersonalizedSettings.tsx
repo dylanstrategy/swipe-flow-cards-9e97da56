@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { ChevronLeft, User, Calendar, Smartphone, Bell, CreditCard, Shield } from 'lucide-react';
+import { ChevronLeft, User, Calendar, Smartphone, Bell, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,13 +7,14 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import PropertySetupModule from '@/components/property/PropertySetupModule';
 
 interface PersonalizedSettingsProps {
   onClose: () => void;
   userRole: 'operator' | 'resident' | 'maintenance' | 'prospect';
 }
 
-type SettingsSection = 'overview' | 'calendar' | 'swipes' | 'notifications' | 'identity';
+type SettingsSection = 'overview' | 'calendar' | 'swipes' | 'notifications' | 'identity' | 'property';
 
 const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) => {
   const [currentSection, setCurrentSection] = useState<SettingsSection>('overview');
@@ -83,7 +83,14 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
       description: 'Push, email, and in-app alert preferences',
       icon: Bell,
       status: 'complete'
-    }
+    },
+    ...(userRole === 'operator' ? [{
+      id: 'property' as const,
+      title: 'Property Setup',
+      description: 'Documents, branding, messaging, and CRM settings',
+      icon: Building,
+      status: 'incomplete'
+    }] : [])
   ];
 
   const updateDayAvailability = (day: string, field: string, value: string | boolean) => {
@@ -114,6 +121,9 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
 
   const renderCurrentSection = () => {
     switch (currentSection) {
+      case 'property':
+        return <PropertySetupModule onClose={() => setCurrentSection('overview')} />;
+      
       case 'calendar':
         return (
           <div className="space-y-4 max-w-4xl mx-auto">
