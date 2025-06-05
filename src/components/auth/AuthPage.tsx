@@ -12,9 +12,10 @@ const AuthPage = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
-  const [role, setRole] = useState('resident');
+  const [role, setRole] = useState('prospect');
   const [loading, setLoading] = useState(false);
   
   const { signIn, signUp } = useAuth();
@@ -22,9 +23,8 @@ const AuthPage = () => {
 
   // Quick test accounts
   const testAccounts = [
-    { email: 'test.resident@meridian.com', password: 'resident123', role: 'resident', name: 'Test Resident' },
-    { email: 'test.operator@meridian.com', password: 'operator123', role: 'operator', name: 'Test Operator' },
-    { email: 'test.maintenance@meridian.com', password: 'maintenance123', role: 'maintenance', name: 'Test Maintenance' },
+    { email: 'test.prospect@meridian.com', password: 'prospect123', role: 'prospect', firstName: 'Test', lastName: 'Prospect' },
+    { email: 'test.operator@meridian.com', password: 'operator123', role: 'operator', firstName: 'Test', lastName: 'Operator' },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,8 +35,8 @@ const AuthPage = () => {
       console.log('Starting registration/login process:', { email, role, isSignUp });
       
       if (isSignUp) {
-        console.log('Attempting sign up with data:', { name, email, phone, role });
-        await signUp(email, password, { name, phone, role });
+        console.log('Attempting sign up with data:', { firstName, lastName, email, phone, role });
+        await signUp(email, password, { firstName, lastName, phone, role });
         toast({
           title: "Account created!",
           description: "You have been automatically signed in.",
@@ -76,7 +76,8 @@ const AuthPage = () => {
       try {
         console.log('Creating test account:', testAccount);
         await signUp(testAccount.email, testAccount.password, {
-          name: testAccount.name,
+          firstName: testAccount.firstName,
+          lastName: testAccount.lastName,
           phone: '(555) 123-4567',
           role: testAccount.role,
         });
@@ -106,6 +107,11 @@ const AuthPage = () => {
             <CardTitle className="text-center">
               {isSignUp ? 'Create Account' : 'Sign In'}
             </CardTitle>
+            {isSignUp && (
+              <p className="text-sm text-center text-gray-600">
+                Available for prospects and operators only
+              </p>
+            )}
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -133,14 +139,25 @@ const AuthPage = () => {
 
               {isSignUp && (
                 <>
-                  <div>
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input
-                      id="name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input
+                        id="firstName"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <Input
+                        id="lastName"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        required
+                      />
+                    </div>
                   </div>
                   
                   <div>
@@ -160,10 +177,8 @@ const AuthPage = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="resident">Resident</SelectItem>
-                        <SelectItem value="operator">Operator</SelectItem>
-                        <SelectItem value="maintenance">Maintenance</SelectItem>
                         <SelectItem value="prospect">Prospect</SelectItem>
+                        <SelectItem value="operator">Operator</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

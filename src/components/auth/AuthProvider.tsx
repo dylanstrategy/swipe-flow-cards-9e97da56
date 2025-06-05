@@ -102,7 +102,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password,
       options: {
         data: {
-          name: userData.name,
+          first_name: userData.firstName,
+          last_name: userData.lastName,
           phone: userData.phone,
           role: userData.role,
         }
@@ -126,7 +127,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           {
             id: data.user.id,
             email: email,
-            name: userData.name,
+            first_name: userData.firstName,
+            last_name: userData.lastName,
             phone: userData.phone,
             role: userData.role,
             status: 'active',

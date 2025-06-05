@@ -11,14 +11,15 @@ export interface ContactInfo {
 
 export interface UserProfile {
   id: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone: string;
   role: UserRole;
   permissions: Permission[];
   contactInfo: ContactInfo;
   avatar?: string;
-  unit_number?: string; // Added unit_number property
+  unit_number?: string;
   status: 'active' | 'inactive' | 'pending';
   createdAt: Date;
   lastLogin?: Date;

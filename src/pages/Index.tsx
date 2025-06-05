@@ -83,6 +83,8 @@ const Index = () => {
     }
   };
 
+  const fullName = userProfile ? `${userProfile.first_name} ${userProfile.last_name}` : 'User';
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -98,7 +100,7 @@ const Index = () => {
               <button className="focus:outline-none">
                 <Avatar className="w-10 h-10 cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all">
                   <AvatarFallback className="bg-blue-600 text-white font-semibold">
-                    {userProfile?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
+                    {userProfile ? `${userProfile.first_name[0]}${userProfile.last_name[0]}` : 'U'}
                   </AvatarFallback>
                 </Avatar>
               </button>
@@ -110,7 +112,7 @@ const Index = () => {
             >
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{userProfile?.name}</p>
+                  <p className="text-sm font-medium leading-none">{fullName}</p>
                   <p className="text-xs leading-none text-muted-foreground">
                     {userProfile?.role} • {userProfile?.unit_number || 'No Unit'}
                   </p>
