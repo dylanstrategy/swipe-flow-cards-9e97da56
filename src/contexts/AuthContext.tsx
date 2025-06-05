@@ -108,30 +108,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    // Set up auth state listener - MUST be synchronous to avoid deadlock
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('👂 Auth state change event:', event, 'Session:', session ? 'present' : 'none');
         
         if (!mounted) return;
 
-        // Only synchronous state updates here
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Defer Supabase calls with setTimeout to avoid deadlock
-          setTimeout(() => {
-            if (mounted) {
-              console.log('👤 Auth state change - fetching profile for:', session.user.id);
-              fetchProfile(session.user.id).then(profile => {
-                if (mounted && profile) {
-                  setUserProfile(profile);
-                } else if (mounted) {
-                  setUserProfile(null);
-                }
-              });
+          console.log('👤 Auth state change - fetching profile for:', session.user.id);
+          try {
+            const profile = await fetchProfile(session.user.id);
+            if (mounted && profile) {
+              setUserProfile(profile);
+            } else if (mounted) {
+              setUserProfile(null);
             }
-          }, 0);
+          } catch (error) {
+            console.error('❌ Error fetching profile in auth state change:', error);
+            if (mounted) {
+              setUserProfile(null);
+            }
+          }
         } else {
           setUserProfile(null);
           setIsDevMode(false);
