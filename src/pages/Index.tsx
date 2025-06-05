@@ -6,6 +6,7 @@ import TodayTab from '@/components/tabs/TodayTab';
 import ScheduleTab from '@/components/tabs/ScheduleTab';
 import MessagesTab from '@/components/tabs/MessagesTab';
 import AccountTab from '@/components/tabs/AccountTab';
+import PersonalizedSettings from '@/components/settings/PersonalizedSettings';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +21,7 @@ import { User, Settings, LogOut } from 'lucide-react';
 const Index = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('today');
+  const [showSettings, setShowSettings] = useState(false);
 
   const tabs = [
     { id: 'today', label: 'Today', icon: '🏠' },
@@ -43,6 +45,10 @@ const Index = () => {
         break;
     }
   };
+
+  if (showSettings) {
+    return <PersonalizedSettings onClose={() => setShowSettings(false)} userRole="resident" />;
+  }
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -94,7 +100,10 @@ const Index = () => {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem 
+                className="cursor-pointer"
+                onClick={() => setShowSettings(true)}
+              >
                 <User className="mr-2 h-4 w-4" />
                 <span>Setup</span>
               </DropdownMenuItem>
