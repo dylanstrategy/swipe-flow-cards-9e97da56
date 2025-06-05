@@ -22,9 +22,13 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
   const [settings, setSettings] = useState({
     profilePhoto: '',
     availability: {
-      workDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-      startTime: '09:00',
-      endTime: '17:00'
+      monday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      tuesday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      wednesday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      thursday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      friday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      saturday: { enabled: false, startTime: '10:00', endTime: '14:00' },
+      sunday: { enabled: false, startTime: '10:00', endTime: '14:00' }
     },
     swipeGestures: {
       leftAction: 'snooze',
@@ -83,6 +87,19 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
     return <PropertySetupModule onClose={() => setCurrentSection('overview')} />;
   }
 
+  const updateDayAvailability = (day: string, field: string, value: string | boolean) => {
+    setSettings(prev => ({
+      ...prev,
+      availability: {
+        ...prev.availability,
+        [day]: {
+          ...prev.availability[day as keyof typeof prev.availability],
+          [field]: value
+        }
+      }
+    }));
+  };
+
   const renderCurrentSection = () => {
     switch (currentSection) {
       case 'calendar':
@@ -92,56 +109,49 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
             
             <Card>
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Default Availability</h3>
+                <h3 className="text-lg font-semibold mb-4">Weekly Availability</h3>
                 
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div>
-                    <Label htmlFor="startTime">Start Time</Label>
-                    <Input
-                      type="time"
-                      value={settings.availability.startTime}
-                      onChange={(e) => setSettings(prev => ({
-                        ...prev,
-                        availability: { ...prev.availability, startTime: e.target.value }
-                      }))}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="endTime">End Time</Label>
-                    <Input
-                      type="time"
-                      value={settings.availability.endTime}
-                      onChange={(e) => setSettings(prev => ({
-                        ...prev,
-                        availability: { ...prev.availability, endTime: e.target.value }
-                      }))}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Working Days</Label>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
-                      <div key={day} className="flex items-center space-x-2">
+                <div className="space-y-4">
+                  {Object.entries(settings.availability).map(([day, daySettings]) => (
+                    <div key={day} className="flex items-center space-x-4 p-4 border rounded-lg">
+                      <div className="w-20">
                         <Switch
-                          checked={settings.availability.workDays.includes(day)}
-                          onCheckedChange={(checked) => {
-                            setSettings(prev => ({
-                              ...prev,
-                              availability: {
-                                ...prev.availability,
-                                workDays: checked 
-                                  ? [...prev.availability.workDays, day]
-                                  : prev.availability.workDays.filter(d => d !== day)
-                              }
-                            }));
-                          }}
+                          checked={daySettings.enabled}
+                          onCheckedChange={(checked) => updateDayAvailability(day, 'enabled', checked)}
                         />
-                        <Label className="capitalize">{day}</Label>
+                        <Label className="capitalize text-sm font-medium mt-1 block">{day}</Label>
                       </div>
-                    ))}
-                  </div>
+                      
+                      {daySettings.enabled && (
+                        <>
+                          <div className="flex-1">
+                            <Label className="text-xs text-gray-500">Start Time</Label>
+                            <Input
+                              type="time"
+                              value={daySettings.startTime}
+                              onChange={(e) => updateDayAvailability(day, 'startTime', e.target.value)}
+                              className="mt-1"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <Label className="text-xs text-gray-500">End Time</Label>
+                            <Input
+                              type="time"
+                              value={daySettings.endTime}
+                              onChange={(e) => updateDayAvailability(day, 'endTime', e.target.value)}
+                              className="mt-1"
+                            />
+                          </div>
+                        </>
+                      )}
+                      
+                      {!daySettings.enabled && (
+                        <div className="flex-1 text-gray-400 text-sm">
+                          Not available
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
