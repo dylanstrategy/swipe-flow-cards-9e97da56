@@ -6,7 +6,7 @@ import OperatorTodayTab from '@/components/operator/tabs/OperatorTodayTab';
 import OperatorScheduleTab from '@/components/operator/tabs/OperatorScheduleTab';
 import OperatorMessagesTab from '@/components/operator/tabs/OperatorMessagesTab';
 import OperatorResidentsTab from '@/components/operator/tabs/OperatorResidentsTab';
-import PropertySetupModule from '@/components/property/PropertySetupModule';
+import PersonalizedSettings from '@/components/settings/PersonalizedSettings';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +21,7 @@ import { User, Settings, LogOut } from 'lucide-react';
 const Operator = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('today');
-  const [showPropertySetup, setShowPropertySetup] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const tabs = [
     { id: 'today', label: 'Today', icon: '📊' },
@@ -49,8 +49,8 @@ const Operator = () => {
     }
   };
 
-  if (showPropertySetup) {
-    return <PropertySetupModule onClose={() => setShowPropertySetup(false)} />;
+  if (showSettings) {
+    return <PersonalizedSettings onClose={() => setShowSettings(false)} userRole="operator" />;
   }
 
   const renderActiveTab = () => {
@@ -101,7 +101,7 @@ const Operator = () => {
               
               <DropdownMenuItem 
                 className="cursor-pointer"
-                onClick={() => setShowPropertySetup(true)}
+                onClick={() => setShowSettings(true)}
               >
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Setup</span>

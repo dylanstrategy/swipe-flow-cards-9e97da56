@@ -7,15 +7,9 @@ import { Button } from '@/components/ui/button';
 import MaintenanceTodayTab from '@/components/maintenance/tabs/MaintenanceTodayTab';
 import MaintenanceScheduleTab from '@/components/maintenance/tabs/MaintenanceScheduleTab';
 import MaintenanceInventoryTab from '@/components/maintenance/tabs/MaintenanceInventoryTab';
-import PropertySetupModule from '@/components/property/PropertySetupModule';
 
 const Maintenance = () => {
   const [activeTab, setActiveTab] = useState('today');
-  const [showPropertySetup, setShowPropertySetup] = useState(false);
-
-  if (showPropertySetup) {
-    return <PropertySetupModule onClose={() => setShowPropertySetup(false)} />;
-  }
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -50,11 +44,11 @@ const Maintenance = () => {
       {/* Tab Navigation */}
       <TabNavigation
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        onTabChange={setActiveTab}
         tabs={[
-          { id: 'today', label: 'Today', icon: 'Wrench' },
-          { id: 'schedule', label: 'Schedule', icon: 'Calendar' },
-          { id: 'inventory', label: 'Inventory', icon: 'Package' }
+          { id: 'today', label: 'Today', icon: '🔧' },
+          { id: 'schedule', label: 'Schedule', icon: '📅' },
+          { id: 'inventory', label: 'Inventory', icon: '📦' }
         ]}
       />
     </div>
