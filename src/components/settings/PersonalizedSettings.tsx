@@ -14,7 +14,7 @@ interface PersonalizedSettingsProps {
   userRole: 'operator' | 'resident' | 'maintenance' | 'prospect';
 }
 
-type SettingsSection = 'overview' | 'calendar' | 'swipes' | 'notifications' | 'identity' | 'property' | 'maintenance' | 'resident' | 'prospect';
+type SettingsSection = 'overview' | 'calendar' | 'swipes' | 'notifications' | 'identity' | 'property' | 'maintenance' | 'resident' | 'prospect' | 'resident-lease' | 'resident-services' | 'resident-community';
 
 const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) => {
   const [currentSection, setCurrentSection] = useState<SettingsSection>('overview');
@@ -52,7 +52,37 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
       cardExpiry: '',
       cardCvc: ''
     },
-    adPreferences: 'both' // 'both', 'building', 'none'
+    adPreferences: 'both', // 'both', 'building', 'none'
+    // Resident-specific settings
+    lease: {
+      unitNumber: 'Apt 204',
+      leaseStart: '2024-01-01',
+      leaseEnd: '2024-12-31',
+      rentAmount: '2500',
+      petDeposit: '300',
+      hasPets: true,
+      petDetails: 'Golden Retriever - Max',
+      emergencyContact: 'Jane Doe - 555-0123',
+      moveInDate: '2024-01-01'
+    },
+    services: {
+      maintenanceAccess: 'scheduled',
+      deliveryInstructions: 'Leave at door',
+      cleaningService: true,
+      petWalking: false,
+      packageHolding: true,
+      guestParking: false,
+      storageUnit: true
+    },
+    community: {
+      eventNotifications: true,
+      volunteerInterest: true,
+      socialMediaSharing: false,
+      newsletterSubscription: true,
+      amenityBooking: true,
+      gymAccess: '24/7',
+      poolAccess: 'daylight'
+    }
   });
 
   const getSettingsSections = () => {
@@ -221,7 +251,9 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                 <CardContent className="p-4">
                   <h3 className="text-lg font-semibold mb-3">Lease & Unit Details</h3>
                   <p className="text-sm text-gray-600 mb-3">Update lease information and unit preferences</p>
-                  <Button variant="outline" size="sm">Update Details</Button>
+                  <Button variant="outline" size="sm" onClick={() => setCurrentSection('resident-lease')}>
+                    Update Details
+                  </Button>
                 </CardContent>
               </Card>
 
@@ -229,7 +261,9 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                 <CardContent className="p-4">
                   <h3 className="text-lg font-semibold mb-3">Service Preferences</h3>
                   <p className="text-sm text-gray-600 mb-3">Set preferences for maintenance, delivery, and services</p>
-                  <Button variant="outline" size="sm">Configure Services</Button>
+                  <Button variant="outline" size="sm" onClick={() => setCurrentSection('resident-services')}>
+                    Configure Services
+                  </Button>
                 </CardContent>
               </Card>
 
@@ -237,7 +271,9 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                 <CardContent className="p-4">
                   <h3 className="text-lg font-semibold mb-3">Community Participation</h3>
                   <p className="text-sm text-gray-600 mb-3">Manage event preferences and community involvement</p>
-                  <Button variant="outline" size="sm">Set Preferences</Button>
+                  <Button variant="outline" size="sm" onClick={() => setCurrentSection('resident-community')}>
+                    Set Preferences
+                  </Button>
                 </CardContent>
               </Card>
             </div>
@@ -245,6 +281,389 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
             <div className="pt-4">
               <Button onClick={() => setCurrentSection('overview')} variant="outline" className="w-full">
                 Back to Overview
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'resident-lease':
+        return (
+          <div className="space-y-4 max-w-2xl mx-auto">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Lease & Unit Details</h2>
+              <p className="text-gray-600">Update your lease information and unit preferences</p>
+            </div>
+            
+            <Card className="shadow-sm">
+              <CardContent className="p-4 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Unit Number</Label>
+                    <Input
+                      value={settings.lease.unitNumber}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        lease: { ...prev.lease, unitNumber: e.target.value }
+                      }))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Move-In Date</Label>
+                    <Input
+                      type="date"
+                      value={settings.lease.moveInDate}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        lease: { ...prev.lease, moveInDate: e.target.value }
+                      }))}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Lease Start Date</Label>
+                    <Input
+                      type="date"
+                      value={settings.lease.leaseStart}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        lease: { ...prev.lease, leaseStart: e.target.value }
+                      }))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Lease End Date</Label>
+                    <Input
+                      type="date"
+                      value={settings.lease.leaseEnd}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        lease: { ...prev.lease, leaseEnd: e.target.value }
+                      }))}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Monthly Rent ($)</Label>
+                    <Input
+                      value={settings.lease.rentAmount}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        lease: { ...prev.lease, rentAmount: e.target.value }
+                      }))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Pet Deposit ($)</Label>
+                    <Input
+                      value={settings.lease.petDeposit}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        lease: { ...prev.lease, petDeposit: e.target.value }
+                      }))}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <Switch
+                    checked={settings.lease.hasPets}
+                    onCheckedChange={(checked) => setSettings(prev => ({
+                      ...prev,
+                      lease: { ...prev.lease, hasPets: checked }
+                    }))}
+                  />
+                  <Label className="text-sm font-medium">I have pets</Label>
+                </div>
+
+                {settings.lease.hasPets && (
+                  <div>
+                    <Label className="text-sm font-medium">Pet Details</Label>
+                    <Textarea
+                      placeholder="Describe your pets (breed, name, size, etc.)"
+                      value={settings.lease.petDetails}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        lease: { ...prev.lease, petDetails: e.target.value }
+                      }))}
+                      className="mt-1"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <Label className="text-sm font-medium">Emergency Contact</Label>
+                  <Input
+                    placeholder="Name and phone number"
+                    value={settings.lease.emergencyContact}
+                    onChange={(e) => setSettings(prev => ({
+                      ...prev,
+                      lease: { ...prev.lease, emergencyContact: e.target.value }
+                    }))}
+                    className="mt-1"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="pt-4">
+              <Button onClick={() => setCurrentSection('resident')} variant="outline" className="w-full">
+                Back to Resident Setup
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'resident-services':
+        return (
+          <div className="space-y-4 max-w-2xl mx-auto">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Service Preferences</h2>
+              <p className="text-gray-600">Configure your service and delivery preferences</p>
+            </div>
+            
+            <Card className="shadow-sm">
+              <CardContent className="p-4 space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">Maintenance Access Preference</Label>
+                  <select
+                    value={settings.services.maintenanceAccess}
+                    onChange={(e) => setSettings(prev => ({
+                      ...prev,
+                      services: { ...prev.services, maintenanceAccess: e.target.value }
+                    }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md mt-1 text-sm"
+                  >
+                    <option value="scheduled">Scheduled appointments only</option>
+                    <option value="emergency">Emergency access allowed</option>
+                    <option value="restricted">Restricted access - contact first</option>
+                  </select>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Package Delivery Instructions</Label>
+                  <Textarea
+                    placeholder="Special delivery instructions..."
+                    value={settings.services.deliveryInstructions}
+                    onChange={(e) => setSettings(prev => ({
+                      ...prev,
+                      services: { ...prev.services, deliveryInstructions: e.target.value }
+                    }))}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Cleaning Service</Label>
+                      <p className="text-xs text-gray-500">Weekly cleaning service</p>
+                    </div>
+                    <Switch
+                      checked={settings.services.cleaningService}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        services: { ...prev.services, cleaningService: checked }
+                      }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Pet Walking Service</Label>
+                      <p className="text-xs text-gray-500">Daily pet walking</p>
+                    </div>
+                    <Switch
+                      checked={settings.services.petWalking}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        services: { ...prev.services, petWalking: checked }
+                      }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Package Holding</Label>
+                      <p className="text-xs text-gray-500">Hold packages at front desk</p>
+                    </div>
+                    <Switch
+                      checked={settings.services.packageHolding}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        services: { ...prev.services, packageHolding: checked }
+                      }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Guest Parking</Label>
+                      <p className="text-xs text-gray-500">Reserve guest parking spots</p>
+                    </div>
+                    <Switch
+                      checked={settings.services.guestParking}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        services: { ...prev.services, guestParking: checked }
+                      }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Storage Unit</Label>
+                      <p className="text-xs text-gray-500">Access to storage unit</p>
+                    </div>
+                    <Switch
+                      checked={settings.services.storageUnit}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        services: { ...prev.services, storageUnit: checked }
+                      }))}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="pt-4">
+              <Button onClick={() => setCurrentSection('resident')} variant="outline" className="w-full">
+                Back to Resident Setup
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'resident-community':
+        return (
+          <div className="space-y-4 max-w-2xl mx-auto">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Community Participation</h2>
+              <p className="text-gray-600">Manage your community involvement and amenity access</p>
+            </div>
+            
+            <Card className="shadow-sm">
+              <CardContent className="p-4 space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Event Notifications</Label>
+                      <p className="text-xs text-gray-500">Receive notifications about community events</p>
+                    </div>
+                    <Switch
+                      checked={settings.community.eventNotifications}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        community: { ...prev.community, eventNotifications: checked }
+                      }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Volunteer Interest</Label>
+                      <p className="text-xs text-gray-500">Interested in volunteering for events</p>
+                    </div>
+                    <Switch
+                      checked={settings.community.volunteerInterest}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        community: { ...prev.community, volunteerInterest: checked }
+                      }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Social Media Sharing</Label>
+                      <p className="text-xs text-gray-500">Allow sharing on community social media</p>
+                    </div>
+                    <Switch
+                      checked={settings.community.socialMediaSharing}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        community: { ...prev.community, socialMediaSharing: checked }
+                      }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Newsletter Subscription</Label>
+                      <p className="text-xs text-gray-500">Receive monthly community newsletter</p>
+                    </div>
+                    <Switch
+                      checked={settings.community.newsletterSubscription}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        community: { ...prev.community, newsletterSubscription: checked }
+                      }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Amenity Booking</Label>
+                      <p className="text-xs text-gray-500">Enable booking of community amenities</p>
+                    </div>
+                    <Switch
+                      checked={settings.community.amenityBooking}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        community: { ...prev.community, amenityBooking: checked }
+                      }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Gym Access Hours</Label>
+                    <select
+                      value={settings.community.gymAccess}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        community: { ...prev.community, gymAccess: e.target.value }
+                      }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md mt-1 text-sm"
+                    >
+                      <option value="24/7">24/7 Access</option>
+                      <option value="business">Business Hours Only</option>
+                      <option value="extended">Extended Hours (6am-10pm)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Pool Access</Label>
+                    <select
+                      value={settings.community.poolAccess}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        community: { ...prev.community, poolAccess: e.target.value }
+                      }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md mt-1 text-sm"
+                    >
+                      <option value="daylight">Daylight Hours</option>
+                      <option value="extended">Extended Hours</option>
+                      <option value="restricted">Restricted Access</option>
+                    </select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="pt-4">
+              <Button onClick={() => setCurrentSection('resident')} variant="outline" className="w-full">
+                Back to Resident Setup
               </Button>
             </div>
           </div>
