@@ -19,13 +19,6 @@ const Login = () => {
   const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading, user, userProfile } = useAuth();
   const navigate = useNavigate();
 
-  // Quick test credentials with predefined password
-  const quickTestAccounts = [
-    { label: 'Super Admin', email: 'info@applaudliving.com', password: 'Applaud123!' },
-    { label: 'Operator', email: 'operator@meridian.com', password: 'Applaud123!' },
-    { label: 'Resident', email: 'resident@gmail.com', password: 'Applaud123!' }
-  ];
-
   const handleForgotPassword = async () => {
     const email = prompt("Enter your email address:");
     if (email) {
@@ -74,29 +67,6 @@ const Login = () => {
       console.error('Auth error:', error);
       setError(error.message || "Authentication failed");
       setIsSubmitting(false);
-    }
-  };
-
-  const handleQuickLogin = async (testAccount: typeof quickTestAccounts[0]) => {
-    setError('');
-    setIsSubmitting(true);
-    console.log('Attempting quick login with:', testAccount.email);
-    
-    try {
-      await signInWithEmail(testAccount.email, testAccount.password);
-      // Let the auth context handle navigation
-    } catch (error: any) {
-      console.log('Login failed, creating account:', error.message);
-      try {
-        await signUpWithEmail(testAccount.email, testAccount.password, {
-          first_name: testAccount.label.split(' ')[0],
-          last_name: testAccount.label.split(' ')[1] || 'User'
-        });
-      } catch (signUpError: any) {
-        console.error('Account creation failed:', signUpError);
-        setError(signUpError.message || "Failed to create test account");
-        setIsSubmitting(false);
-      }
     }
   };
 
@@ -181,7 +151,7 @@ const Login = () => {
   // Show the login form (default state when not logged in)
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-md">
         <Card className="shadow-lg">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">
@@ -294,29 +264,6 @@ const Login = () => {
                 )}
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Test Login */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center text-lg">Quick Test Login</CardTitle>
-            <p className="text-sm text-gray-600 text-center">
-              Click to instantly login with test accounts (Password: Applaud123!)
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {quickTestAccounts.map((account) => (
-              <Button
-                key={account.email}
-                variant="outline"
-                className="w-full"
-                onClick={() => handleQuickLogin(account)}
-                disabled={isSubmitting}
-              >
-                Login as {account.label}
-              </Button>
-            ))}
           </CardContent>
         </Card>
       </div>
