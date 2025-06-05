@@ -84,7 +84,7 @@ const Login = () => {
 
   // Handle role-based routing after successful login
   useEffect(() => {
-    // Only redirect if we have both user and userProfile, loading is complete, and we're not currently submitting
+    // Only redirect if we have both user and userProfile, loading is complete
     if (user && userProfile && !loading) {
       console.log('✅ User logged in with profile:', {
         email: user.email,
@@ -132,6 +132,14 @@ const Login = () => {
           navigate('/', { replace: true });
           break;
       }
+    } else if (user && !userProfile && !loading) {
+      // User exists but no profile yet - this might happen during profile fetching
+      console.log('⏳ User exists but profile still loading:', {
+        hasUser: !!user,
+        hasProfile: !!userProfile,
+        loading,
+        userEmail: user?.email
+      });
     } else {
       console.log('⏳ Waiting for auth completion:', {
         hasUser: !!user,
@@ -143,13 +151,15 @@ const Login = () => {
     }
   }, [user, userProfile, loading, navigate]);
 
-  // Show loading only during auth initialization
-  if (loading) {
+  // Show loading during auth initialization or when we have user but waiting for profile
+  if (loading || (user && !userProfile)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 text-lg">Loading...</p>
+          <p className="text-gray-600 text-lg">
+            {loading ? 'Loading...' : 'Setting up your profile...'}
+          </p>
         </div>
       </div>
     );
