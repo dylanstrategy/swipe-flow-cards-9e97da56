@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import ClientIntakeForm from '@/components/forms/ClientIntakeForm';
 import LeadIntakeForm from '@/components/forms/LeadIntakeForm';
+import ContractManager from '@/components/contracts/ContractManager';
 import {
   Building, 
   Users, 
@@ -277,6 +278,7 @@ const SuperAdmin = () => {
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'clients', label: 'Clients', icon: Building },
     { id: 'leads', label: 'CRM & Sales', icon: UserPlus },
+    { id: 'contracts', label: 'Contracts', icon: FileText },
     { id: 'billing', label: 'Billing', icon: CreditCard },
     { id: 'marketing', label: 'Marketing', icon: Mail },
     { id: 'calendar', label: 'Calendar', icon: Calendar },
@@ -748,6 +750,20 @@ const SuperAdmin = () => {
                 </Card>
               ))}
             </div>
+          </div>
+        )}
+
+        {activeView === 'contracts' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <h2 className="text-2xl font-bold text-gray-900">Contract Management</h2>
+            </div>
+            <ContractManager onSendContract={(templateId, clientData) => {
+              toast({
+                title: "Contract Prepared",
+                description: "Contract is ready to be sent for signature",
+              });
+            }} />
           </div>
         )}
 
