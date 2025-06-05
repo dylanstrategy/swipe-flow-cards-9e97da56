@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { MapPin, DollarSign, Calendar } from 'lucide-react';
 import GoogleMapsAutocomplete from '../GoogleMapsAutocomplete';
+import SwipeUpPrompt from '@/components/ui/swipe-up-prompt';
 
 interface PriceAndTimeStepProps {
   priceRange: [number, number];
@@ -163,6 +164,16 @@ const PriceAndTimeStep = ({
           </div>
         </div>
       </div>
+
+      {/* Swipe Up Prompt */}
+      {canContinue && (
+        <SwipeUpPrompt
+          onContinue={onContinue}
+          message="Ready to set your priorities!"
+          buttonText="Continue"
+          className="animate-in slide-in-from-bottom-4"
+        />
+      )}
     </div>
   );
 };
