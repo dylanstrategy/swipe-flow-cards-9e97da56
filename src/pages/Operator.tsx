@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TabNavigation from '@/components/TabNavigation';
@@ -5,7 +6,6 @@ import OperatorTodayTab from '@/components/operator/tabs/OperatorTodayTab';
 import OperatorScheduleTab from '@/components/operator/tabs/OperatorScheduleTab';
 import OperatorMessagesTab from '@/components/operator/tabs/OperatorMessagesTab';
 import OperatorResidentsTab from '@/components/operator/tabs/OperatorResidentsTab';
-import OperatorContractsTab from '@/components/operator/tabs/OperatorContractsTab';
 import PropertySetupModule from '@/components/property/setup/PropertySetupModule';
 import UserManagement from '@/components/user/UserManagement';
 import ContactProfileForm from '@/components/user/ContactProfileForm';
