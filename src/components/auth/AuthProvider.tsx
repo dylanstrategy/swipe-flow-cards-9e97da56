@@ -108,12 +108,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     console.log('Signing in:', email);
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) {
-      console.error('Sign in error:', error);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        console.error('Sign in error:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Network or other error during sign in:', error);
       throw error;
     }
   };
@@ -121,28 +126,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, userData: any) => {
     console.log('Signing up:', email, userData);
     
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          first_name: userData.firstName,
-          last_name: userData.lastName,
-          phone: userData.phone,
-          role: userData.role,
-          property: userData.property || '',
+    try {
+      // Test connectivity first
+      console.log('Testing Supabase connectivity...');
+      const connectivityTest = await supabase.from('user_profiles').select('count').limit(1);
+      console.log('Connectivity test result:', connectivityTest);
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: userData.firstName,
+            last_name: userData.lastName,
+            phone: userData.phone,
+            role: userData.role,
+            property: userData.property || '',
+          }
         }
+      });
+      
+      if (error) {
+        console.error('Sign up error:', error);
+        if (error.message.includes('User already registered')) {
+          throw new Error('An account with this email already exists. Please try signing in instead.');
+        }
+        if (error.message.includes('Load failed')) {
+          throw new Error('Network connection failed. Please check your internet connection and try again.');
+        }
+        throw error;
       }
-    });
-    
-    if (error) {
-      console.error('Sign up error:', error);
+
+      console.log('Sign up successful:', data);
+      
+      // If the user was created but needs email confirmation
+      if (data.user && !data.session) {
+        throw new Error('Please check your email and click the confirmation link to complete your registration.');
+      }
+      
+      // The user profile will be created automatically by the database trigger
+      // No need to manually create it here
+    } catch (error) {
+      console.error('Sign up failed:', error);
       throw error;
     }
-
-    console.log('Sign up successful:', data);
-    // The user profile will be created automatically by the database trigger
-    // No need to manually create it here
   };
 
   const signOut = async () => {
