@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Save, Shield, Lock, Eye, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -52,16 +53,54 @@ const PrivacySetup: React.FC<PrivacySetupProps> = ({ onBack }) => {
     }
   };
 
-  // Load saved data on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('privacySettings');
-    if (saved) {
-      try {
-        setPrivacySettings(JSON.parse(saved));
-      } catch (error) {
-        console.error('Error loading saved privacy settings:', error);
-      }
+  const handleToggleChange = (key: keyof typeof privacySettings, checked: boolean) => {
+    const newSettings = { ...privacySettings, [key]: checked };
+    setPrivacySettings(newSettings);
+    
+    // Save immediately
+    try {
+      localStorage.setItem('privacySettings', JSON.stringify(newSettings));
+    } catch (error) {
+      console.error('Error saving privacy setting change:', error);
     }
+  };
+
+  const handleInputChange = (key: keyof typeof privacySettings, value: string) => {
+    const newSettings = { ...privacySettings, [key]: value };
+    setPrivacySettings(newSettings);
+    
+    // Save immediately
+    try {
+      localStorage.setItem('privacySettings', JSON.stringify(newSettings));
+    } catch (error) {
+      console.error('Error saving privacy setting change:', error);
+    }
+  };
+
+  // Load saved data on mount and listen for storage changes
+  useEffect(() => {
+    const loadPrivacyData = () => {
+      const saved = localStorage.getItem('privacySettings');
+      if (saved) {
+        try {
+          setPrivacySettings(JSON.parse(saved));
+        } catch (error) {
+          console.error('Error loading saved privacy settings:', error);
+        }
+      }
+    };
+
+    loadPrivacyData();
+
+    // Listen for localStorage changes from other components
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'privacySettings') {
+        loadPrivacyData();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   return (
@@ -93,7 +132,7 @@ const PrivacySetup: React.FC<PrivacySetupProps> = ({ onBack }) => {
               </div>
               <Switch 
                 checked={privacySettings.twoFactorAuth}
-                onCheckedChange={(checked) => setPrivacySettings({ ...privacySettings, twoFactorAuth: checked })}
+                onCheckedChange={(checked) => handleToggleChange('twoFactorAuth', checked)}
               />
             </div>
             <Separator />
@@ -105,7 +144,7 @@ const PrivacySetup: React.FC<PrivacySetupProps> = ({ onBack }) => {
               </div>
               <Switch 
                 checked={privacySettings.biometricAuth}
-                onCheckedChange={(checked) => setPrivacySettings({ ...privacySettings, biometricAuth: checked })}
+                onCheckedChange={(checked) => handleToggleChange('biometricAuth', checked)}
               />
             </div>
             <Separator />
@@ -119,7 +158,7 @@ const PrivacySetup: React.FC<PrivacySetupProps> = ({ onBack }) => {
                   id="sessionTimeout"
                   type="number"
                   value={privacySettings.sessionTimeout}
-                  onChange={(e) => setPrivacySettings({ ...privacySettings, sessionTimeout: e.target.value })}
+                  onChange={(e) => handleInputChange('sessionTimeout', e.target.value)}
                   placeholder="8"
                 />
               </div>
@@ -132,7 +171,7 @@ const PrivacySetup: React.FC<PrivacySetupProps> = ({ onBack }) => {
                   id="passwordExpiry"
                   type="number"
                   value={privacySettings.passwordExpiry}
-                  onChange={(e) => setPrivacySettings({ ...privacySettings, passwordExpiry: e.target.value })}
+                  onChange={(e) => handleInputChange('passwordExpiry', e.target.value)}
                   placeholder="90"
                 />
               </div>
@@ -156,7 +195,7 @@ const PrivacySetup: React.FC<PrivacySetupProps> = ({ onBack }) => {
               </div>
               <Switch 
                 checked={privacySettings.autoLogout}
-                onCheckedChange={(checked) => setPrivacySettings({ ...privacySettings, autoLogout: checked })}
+                onCheckedChange={(checked) => handleToggleChange('autoLogout', checked)}
               />
             </div>
             <Separator />
@@ -168,7 +207,7 @@ const PrivacySetup: React.FC<PrivacySetupProps> = ({ onBack }) => {
               </div>
               <Switch 
                 checked={privacySettings.deviceTrust}
-                onCheckedChange={(checked) => setPrivacySettings({ ...privacySettings, deviceTrust: checked })}
+                onCheckedChange={(checked) => handleToggleChange('deviceTrust', checked)}
               />
             </div>
             <Separator />
@@ -180,7 +219,7 @@ const PrivacySetup: React.FC<PrivacySetupProps> = ({ onBack }) => {
               </div>
               <Switch 
                 checked={privacySettings.activityLogging}
-                onCheckedChange={(checked) => setPrivacySettings({ ...privacySettings, activityLogging: checked })}
+                onCheckedChange={(checked) => handleToggleChange('activityLogging', checked)}
               />
             </div>
           </CardContent>
@@ -202,7 +241,7 @@ const PrivacySetup: React.FC<PrivacySetupProps> = ({ onBack }) => {
               </div>
               <Switch 
                 checked={privacySettings.dataSharing}
-                onCheckedChange={(checked) => setPrivacySettings({ ...privacySettings, dataSharing: checked })}
+                onCheckedChange={(checked) => handleToggleChange('dataSharing', checked)}
               />
             </div>
             <Separator />
@@ -214,7 +253,7 @@ const PrivacySetup: React.FC<PrivacySetupProps> = ({ onBack }) => {
               </div>
               <Switch 
                 checked={privacySettings.analyticsTracking}
-                onCheckedChange={(checked) => setPrivacySettings({ ...privacySettings, analyticsTracking: checked })}
+                onCheckedChange={(checked) => handleToggleChange('analyticsTracking', checked)}
               />
             </div>
             <Separator />
@@ -226,7 +265,7 @@ const PrivacySetup: React.FC<PrivacySetupProps> = ({ onBack }) => {
               </div>
               <Switch 
                 checked={privacySettings.locationTracking}
-                onCheckedChange={(checked) => setPrivacySettings({ ...privacySettings, locationTracking: checked })}
+                onCheckedChange={(checked) => handleToggleChange('locationTracking', checked)}
               />
             </div>
           </CardContent>

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Save, Bell, Mail, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -69,43 +70,89 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ onBack }) => {
   };
 
   const handleEmailChange = (key: keyof typeof notifications.email, checked: boolean) => {
-    setNotifications({
+    const newNotifications = {
       ...notifications,
       email: { ...notifications.email, [key]: checked }
-    });
+    };
+    setNotifications(newNotifications);
+    
+    // Save immediately
+    try {
+      localStorage.setItem('notificationSettings', JSON.stringify(newNotifications));
+    } catch (error) {
+      console.error('Error saving notification change:', error);
+    }
   };
 
   const handleSmsChange = (key: keyof typeof notifications.sms, checked: boolean) => {
-    setNotifications({
+    const newNotifications = {
       ...notifications,
       sms: { ...notifications.sms, [key]: checked }
-    });
+    };
+    setNotifications(newNotifications);
+    
+    // Save immediately
+    try {
+      localStorage.setItem('notificationSettings', JSON.stringify(newNotifications));
+    } catch (error) {
+      console.error('Error saving notification change:', error);
+    }
   };
 
   const handlePushChange = (key: keyof typeof notifications.push, checked: boolean) => {
-    setNotifications({
+    const newNotifications = {
       ...notifications,
       push: { ...notifications.push, [key]: checked }
-    });
+    };
+    setNotifications(newNotifications);
+    
+    // Save immediately
+    try {
+      localStorage.setItem('notificationSettings', JSON.stringify(newNotifications));
+    } catch (error) {
+      console.error('Error saving notification change:', error);
+    }
   };
 
   const handleDesktopChange = (key: keyof typeof notifications.desktop, checked: boolean) => {
-    setNotifications({
+    const newNotifications = {
       ...notifications,
       desktop: { ...notifications.desktop, [key]: checked }
-    });
+    };
+    setNotifications(newNotifications);
+    
+    // Save immediately
+    try {
+      localStorage.setItem('notificationSettings', JSON.stringify(newNotifications));
+    } catch (error) {
+      console.error('Error saving notification change:', error);
+    }
   };
 
-  // Load saved data on mount
-  React.useEffect(() => {
-    const saved = localStorage.getItem('notificationSettings');
-    if (saved) {
-      try {
-        setNotifications(JSON.parse(saved));
-      } catch (error) {
-        console.error('Error loading saved notification settings:', error);
+  // Load saved data on mount and listen for storage changes
+  useEffect(() => {
+    const loadNotificationData = () => {
+      const saved = localStorage.getItem('notificationSettings');
+      if (saved) {
+        try {
+          setNotifications(JSON.parse(saved));
+        } catch (error) {
+          console.error('Error loading saved notification settings:', error);
+        }
       }
-    }
+    };
+
+    loadNotificationData();
+
+    // Listen for localStorage changes from other components
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'notificationSettings') {
+        loadNotificationData();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   return (

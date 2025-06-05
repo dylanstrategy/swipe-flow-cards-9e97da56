@@ -40,8 +40,11 @@ const ResidentNotificationSetup: React.FC<ResidentNotificationSetupProps> = ({ o
 
   const handleSave = () => {
     try {
-      // Save to localStorage
-      localStorage.setItem('residentNotifications', JSON.stringify(notifications));
+      // Save to the shared localStorage key
+      localStorage.setItem('residentPrivacy', JSON.stringify({
+        ...JSON.parse(localStorage.getItem('residentPrivacy') || '{}'),
+        ...notifications
+      }));
       
       // Show success toast
       toast({
@@ -62,36 +65,93 @@ const ResidentNotificationSetup: React.FC<ResidentNotificationSetupProps> = ({ o
   };
 
   const handleEmailChange = (key: keyof typeof notifications.email, checked: boolean) => {
-    setNotifications({
+    const newNotifications = {
       ...notifications,
       email: { ...notifications.email, [key]: checked }
-    });
+    };
+    setNotifications(newNotifications);
+    
+    // Save immediately to the shared localStorage key
+    try {
+      const existingData = JSON.parse(localStorage.getItem('residentPrivacy') || '{}');
+      localStorage.setItem('residentPrivacy', JSON.stringify({
+        ...existingData,
+        ...newNotifications
+      }));
+    } catch (error) {
+      console.error('Error saving notification change:', error);
+    }
   };
 
   const handleSmsChange = (key: keyof typeof notifications.sms, checked: boolean) => {
-    setNotifications({
+    const newNotifications = {
       ...notifications,
       sms: { ...notifications.sms, [key]: checked }
-    });
+    };
+    setNotifications(newNotifications);
+    
+    // Save immediately to the shared localStorage key
+    try {
+      const existingData = JSON.parse(localStorage.getItem('residentPrivacy') || '{}');
+      localStorage.setItem('residentPrivacy', JSON.stringify({
+        ...existingData,
+        ...newNotifications
+      }));
+    } catch (error) {
+      console.error('Error saving notification change:', error);
+    }
   };
 
   const handlePushChange = (key: keyof typeof notifications.push, checked: boolean) => {
-    setNotifications({
+    const newNotifications = {
       ...notifications,
       push: { ...notifications.push, [key]: checked }
-    });
+    };
+    setNotifications(newNotifications);
+    
+    // Save immediately to the shared localStorage key
+    try {
+      const existingData = JSON.parse(localStorage.getItem('residentPrivacy') || '{}');
+      localStorage.setItem('residentPrivacy', JSON.stringify({
+        ...existingData,
+        ...newNotifications
+      }));
+    } catch (error) {
+      console.error('Error saving notification change:', error);
+    }
   };
 
-  // Load saved data on mount
+  // Load saved data on mount and listen for storage changes
   useEffect(() => {
-    const saved = localStorage.getItem('residentNotifications');
-    if (saved) {
-      try {
-        setNotifications(JSON.parse(saved));
-      } catch (error) {
-        console.error('Error loading saved resident notification settings:', error);
+    const loadNotificationData = () => {
+      const saved = localStorage.getItem('residentPrivacy');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          if (data.email || data.sms || data.push) {
+            setNotifications({
+              email: data.email || notifications.email,
+              sms: data.sms || notifications.sms,
+              push: data.push || notifications.push
+            });
+          }
+        } catch (error) {
+          console.error('Error loading saved notification settings:', error);
+        }
       }
-    }
+    };
+
+    loadNotificationData();
+
+    // Listen for localStorage changes from other components
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'residentPrivacy') {
+        loadNotificationData();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   return (
