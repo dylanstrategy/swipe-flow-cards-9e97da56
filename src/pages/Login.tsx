@@ -1,20 +1,63 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Login = () => {
-  const { signInWithGoogle, loading } = useAuth();
+  const { signInWithGoogle, loading, user, userProfile } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (user && userProfile) {
+      console.log('🔄 User already authenticated, redirecting...');
+      const defaultRoute = getDefaultRouteForUser(userProfile);
+      navigate(defaultRoute, { replace: true });
+    }
+  }, [user, userProfile, navigate]);
+
+  const getDefaultRouteForUser = (profile: any) => {
+    if (profile.email === 'info@applaudliving.com') {
+      return '/super-admin';
+    }
+    
+    switch (profile.role) {
+      case 'super_admin':
+        return '/super-admin';
+      case 'senior_operator':
+      case 'operator':
+      case 'leasing':
+        return '/operator';
+      case 'maintenance':
+        return '/maintenance';
+      case 'resident':
+        return '/';
+      case 'prospect':
+        return '/discovery';
+      default:
+        return '/unknown-role';
+    }
+  };
 
   const handleGoogleSignIn = async () => {
     try {
-      console.log('Initiating Google sign in from Login page...');
+      console.log('🔄 Initiating Google sign in from Login page...');
       await signInWithGoogle();
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('❌ Login error:', error);
     }
   };
+
+  // Don't render if already authenticated
+  if (user && userProfile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">

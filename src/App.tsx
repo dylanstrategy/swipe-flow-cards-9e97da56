@@ -21,6 +21,8 @@ const queryClient = new QueryClient();
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
   const { user, loading, userProfile } = useAuth();
   
+  console.log('🔒 ProtectedRoute check - User:', !!user, 'Profile:', !!userProfile, 'Loading:', loading);
+  
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -30,10 +32,12 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
   }
   
   if (!user || !userProfile) {
+    console.log('🚫 No user/profile, redirecting to login');
     return <Navigate to="/login" replace />;
   }
   
   if (allowedRoles && !allowedRoles.includes(userProfile.role)) {
+    console.log('🚫 Role not allowed, redirecting to default route');
     return <Navigate to={getDefaultRouteForRole(userProfile)} replace />;
   }
   
@@ -41,6 +45,8 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
 }
 
 function getDefaultRouteForRole(userProfile: any): string {
+  console.log('🎯 Getting default route for role:', userProfile?.role, 'Email:', userProfile?.email);
+  
   // Special case for super admin email
   if (userProfile.email === 'info@applaudliving.com') {
     return '/super-admin';
@@ -67,10 +73,11 @@ function getDefaultRouteForRole(userProfile: any): string {
 function AppRoutes() {
   const { user, userProfile, loading } = useAuth();
   
-  console.log('AppRoutes render - User:', !!user, 'Profile:', !!userProfile, 'Loading:', loading);
+  console.log('🏠 AppRoutes render - User:', !!user, 'Profile:', userProfile?.role, 'Loading:', loading);
   
   // Show loading while checking auth state
   if (loading) {
+    console.log('⏳ Still loading auth state...');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -78,15 +85,18 @@ function AppRoutes() {
     );
   }
 
+  // If user is authenticated, redirect away from auth pages
+  const isAuthenticated = user && userProfile;
+  
   return (
     <Routes>
       <Route path="/login" element={
-        user && userProfile ? (
+        isAuthenticated ? (
           <Navigate to={getDefaultRouteForRole(userProfile)} replace />
         ) : <Login />
       } />
       <Route path="/owner-login" element={
-        user && userProfile ? (
+        isAuthenticated ? (
           <Navigate to={getDefaultRouteForRole(userProfile)} replace />
         ) : <OwnerLogin />
       } />

@@ -29,7 +29,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [impersonatedRole, setImpersonatedRole] = useState<AppRole | null>(null);
-  const [initialized, setInitialized] = useState(false);
   const { toast } = useToast();
 
   const isImpersonating = impersonatedRole !== null;
@@ -57,38 +56,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateAuthState = async (session: Session | null) => {
+    console.log('Updating auth state with session:', !!session);
+    
+    setSession(session);
+    setUser(session?.user ?? null);
+    
+    if (session?.user) {
+      const profile = await fetchUserProfile(session.user.id);
+      setUserProfile(profile);
+    } else {
+      setUserProfile(null);
+      setImpersonatedRole(null);
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
     
-    const initializeAuth = async () => {
-      console.log('Initializing auth...');
-      
+    const initialize = async () => {
       try {
-        // Check for existing session first
+        console.log('🔄 Initializing auth...');
+        
+        // Check for existing session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Session check error:', error);
+          console.error('❌ Session check error:', error);
         } else {
-          console.log('Initial session check:', !!session);
-          
-          if (session?.user && mounted) {
-            setSession(session);
-            setUser(session.user);
-            
-            // Fetch user profile
-            const profile = await fetchUserProfile(session.user.id);
-            if (mounted) {
-              setUserProfile(profile);
-            }
+          console.log('✅ Initial session found:', !!session);
+          if (session && mounted) {
+            await updateAuthState(session);
           }
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        console.error('❌ Auth initialization error:', error);
       } finally {
         if (mounted) {
+          console.log('✅ Auth initialization complete');
           setLoading(false);
-          setInitialized(true);
         }
       }
     };
@@ -96,28 +102,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!mounted || !initialized) return;
+        if (!mounted) return;
         
-        console.log('Auth state change:', event, 'Session exists:', !!session);
+        console.log('🔄 Auth state change:', event, 'Session:', !!session);
         
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user && event === 'SIGNED_IN') {
-          const profile = await fetchUserProfile(session.user.id);
-          if (mounted) {
-            setUserProfile(profile);
-          }
-        } else if (!session) {
-          if (mounted) {
-            setUserProfile(null);
-            setImpersonatedRole(null);
-          }
+        // Only update state for meaningful events
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+          await updateAuthState(session);
         }
+        
+        // Ensure loading is false after any auth event
+        setLoading(false);
       }
     );
 
-    initializeAuth();
+    initialize();
 
     return () => {
       mounted = false;
@@ -127,7 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
-      console.log('Starting Google sign in...');
+      console.log('🔄 Starting Google sign in...');
       setLoading(true);
       
       const { error } = await supabase.auth.signInWithOAuth({
@@ -138,14 +137,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       
       if (error) {
-        console.error('Google sign in error:', error);
+        console.error('❌ Google sign in error:', error);
         setLoading(false);
         throw error;
       }
       
-      console.log('Google sign in initiated successfully');
+      console.log('✅ Google sign in initiated');
     } catch (error: any) {
-      console.error('Google sign in error:', error);
+      console.error('❌ Google sign in error:', error);
       setLoading(false);
       toast({
         title: "Authentication Error",
@@ -199,14 +198,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      console.log('Signing out...');
+      console.log('🔄 Signing out...');
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
       setImpersonatedRole(null);
       setUserProfile(null);
       setUser(null);
       setSession(null);
+      
+      console.log('✅ Signed out successfully');
     } catch (error: any) {
+      console.error('❌ Sign out error:', error);
       toast({
         title: "Sign Out Error",
         description: error.message,
