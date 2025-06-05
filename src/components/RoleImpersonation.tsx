@@ -49,6 +49,22 @@ const RoleImpersonation = () => {
     }
   };
 
+  const handleRoleSelect = (role: AppRole) => {
+    console.log('🎭 Role selected:', role);
+    impersonateRole(role);
+  };
+
+  const handleStopImpersonation = () => {
+    console.log('🎭 Stopping impersonation via button');
+    stopImpersonation();
+  };
+
+  console.log('🎭 RoleImpersonation render:', { 
+    isImpersonating, 
+    impersonatedRole, 
+    currentUserRole: userProfile?.role 
+  });
+
   return (
     <div className="flex items-center gap-2">
       {isImpersonating && (
@@ -89,7 +105,7 @@ const RoleImpersonation = () => {
               {isImpersonating && (
                 <>
                   <DropdownMenuItem 
-                    onClick={stopImpersonation}
+                    onClick={handleStopImpersonation}
                     className="text-red-600 cursor-pointer font-medium"
                   >
                     <EyeOff className="mr-2 h-4 w-4" />
@@ -106,7 +122,7 @@ const RoleImpersonation = () => {
               {availableRoles.map(({ role, label, description }) => (
                 <DropdownMenuItem
                   key={role}
-                  onClick={() => impersonateRole(role)}
+                  onClick={() => handleRoleSelect(role)}
                   className="cursor-pointer flex-col items-start py-2"
                   disabled={impersonatedRole === role}
                 >
