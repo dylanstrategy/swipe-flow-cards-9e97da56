@@ -25,8 +25,16 @@ import RoleImpersonation from '@/components/RoleImpersonation';
 import type { Property } from '@/types/supabase';
 import { useNavigate } from 'react-router-dom';
 
+// Import role-specific components
+import Index from './Index';
+import Discovery from './Discovery';
+import Matches from './Matches';
+import MoveIn from './MoveIn';
+import Maintenance from './Maintenance';
+import Operator from './Operator';
+
 const SuperAdmin = () => {
-  const { userProfile, user, signOut } = useAuth();
+  const { userProfile, user, signOut, isImpersonating, impersonatedRole } = useAuth();
   const { users, loading: usersLoading, refetch: refetchUsers } = useUsers();
   const { properties, loading: propertiesLoading, refetch: refetchProperties } = useProperties();
   const navigate = useNavigate();
@@ -40,6 +48,7 @@ const SuperAdmin = () => {
   console.log('Current user:', user);
   console.log('Current userProfile:', userProfile);
   console.log('User role:', userProfile?.role);
+  console.log('Is impersonating:', isImpersonating, 'Role:', impersonatedRole);
 
   const handleSignOut = async () => {
     try {
@@ -90,6 +99,68 @@ const SuperAdmin = () => {
     }
   };
 
+  // Render the appropriate role interface when impersonating
+  const renderImpersonatedInterface = () => {
+    if (!isImpersonating || !impersonatedRole) return null;
+
+    console.log('🎭 Rendering impersonated interface for role:', impersonatedRole);
+
+    switch (impersonatedRole) {
+      case 'resident':
+        return <Index />;
+      case 'prospect':
+        return <Discovery />;
+      case 'operator':
+      case 'senior_operator':
+      case 'leasing':
+        return <Operator />;
+      case 'maintenance':
+        return <Maintenance />;
+      case 'vendor':
+        return <Index />; // Default to resident view for vendor
+      default:
+        return <Index />;
+    }
+  };
+
+  // If impersonating, show the role interface with admin header
+  if (isImpersonating) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* Admin Header - Always visible when impersonating */}
+        <div className="bg-white shadow-sm px-4 py-4 border-b-2 border-blue-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">Super Admin Dashboard</h1>
+              <p className="text-sm text-gray-600">
+                Testing {formatRole(impersonatedRole)} interface
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <RoleImpersonation />
+              <Button 
+                onClick={handleSignOut}
+                variant="outline"
+                className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Impersonated Role Interface */}
+        <div className="border-4 border-dashed border-gray-300 bg-gray-100 p-4">
+          <div className="bg-white rounded-lg shadow-sm min-h-[calc(100vh-200px)]">
+            {renderImpersonatedInterface()}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Regular Super Admin Dashboard
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
       {/* Header with Role Impersonation and Sign Out */}
