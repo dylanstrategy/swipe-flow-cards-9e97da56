@@ -78,23 +78,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     console.log('🔄 AuthProvider useEffect triggered');
+    
     let mounted = true;
 
-    const initAuth = async () => {
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('👂 Auth state change event:', event);
+        
+        if (!mounted) return;
+
+        // Only handle auth state synchronously - no async calls here
+        setUser(session?.user ?? null);
+        setLoading(false);
+        
+        // Clear dev mode on logout
+        if (!session?.user) {
+          setUserProfile(null);
+          setIsDevMode(false);
+          setDevModeRole(null);
+          setDevModeProperty(null);
+        }
+      }
+    );
+
+    // Get initial session
+    const getInitialSession = async () => {
       try {
         console.log('🔑 Getting initial session');
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (mounted && session?.user) {
-          console.log('👤 Found existing session, fetching profile');
-          setUser(session.user);
-          const profile = await fetchProfile(session.user.id);
-          if (mounted) {
-            setUserProfile(profile);
-          }
-        }
-        
         if (mounted) {
+          setUser(session?.user ?? null);
           setLoading(false);
         }
       } catch (error) {
@@ -105,46 +120,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    initAuth();
-
-    // Subscribe to auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('👂 Auth state change event:', event);
-        
-        if (!mounted) return;
-
-        // Handle auth state changes synchronously
-        if (session?.user) {
-          setUser(session.user);
-          // Defer profile fetching to avoid blocking the auth flow
-          setTimeout(async () => {
-            if (mounted) {
-              const profile = await fetchProfile(session.user.id);
-              if (mounted) {
-                setUserProfile(profile);
-              }
-            }
-          }, 0);
-        } else {
-          setUser(null);
-          setUserProfile(null);
-          // Clear dev mode on logout
-          setIsDevMode(false);
-          setDevModeRole(null);
-          setDevModeProperty(null);
-        }
-        
-        setLoading(false);
-      }
-    );
+    getInitialSession();
 
     return () => {
       mounted = false;
       console.log('🧹 AuthProvider useEffect cleanup');
       subscription?.unsubscribe();
     };
-  }, []); // Keep empty dependency array
+  }, []);
+
+  // Separate effect for profile fetching when user changes
+  useEffect(() => {
+    if (user && !userProfile) {
+      console.log('👤 User changed, fetching profile for:', user.id);
+      fetchProfile(user.id).then(profile => {
+        if (profile) {
+          setUserProfile(profile);
+        }
+      });
+    } else if (!user) {
+      setUserProfile(null);
+    }
+  }, [user?.id]);
 
   const signInWithEmail = async (email: string, password: string) => {
     console.log('🔑 Signing in with email:', email);
