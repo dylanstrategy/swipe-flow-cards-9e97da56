@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, User, Calendar, Smartphone, Bell, CreditCard, Shield, Settings } from 'lucide-react';
+import { ChevronLeft, User, Calendar, Smartphone, Bell, CreditCard, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,14 +7,13 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import PropertySetupModule from '@/components/property/PropertySetupModule';
 
 interface PersonalizedSettingsProps {
   onClose: () => void;
   userRole: 'operator' | 'resident' | 'maintenance' | 'prospect';
 }
 
-type SettingsSection = 'overview' | 'calendar' | 'swipes' | 'notifications' | 'identity' | 'property';
+type SettingsSection = 'overview' | 'calendar' | 'swipes' | 'notifications' | 'identity';
 
 const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) => {
   const [currentSection, setCurrentSection] = useState<SettingsSection>('overview');
@@ -85,21 +84,6 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
       status: 'complete'
     }
   ];
-
-  // Add property setup for operators only
-  if (userRole === 'operator') {
-    settingsSections.push({
-      id: 'property' as const,
-      title: 'Property Setup',
-      description: 'Configure property-level settings',
-      icon: Settings,
-      status: 'incomplete'
-    });
-  }
-
-  if (currentSection === 'property' && userRole === 'operator') {
-    return <PropertySetupModule onClose={() => setCurrentSection('overview')} />;
-  }
 
   const updateDayAvailability = (day: string, field: string, value: string | boolean) => {
     setSettings(prev => ({
