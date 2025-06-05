@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, Save, Edit, User, Mail, Phone, Home } from 'lucide-react';
+import { ArrowLeft, Save, Edit, User, Mail, Phone, Home, CheckCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface ResidentProfile {
   id: string;
@@ -26,6 +27,7 @@ interface ResidentIdentitySetupProps {
 }
 
 const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack }) => {
+  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   
   // Mock resident data - in real app this would come from context/API
@@ -69,6 +71,13 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
     
     setProfile(updatedProfile);
     setIsEditing(false);
+    
+    toast({
+      title: "Profile Updated",
+      description: "Your information has been saved successfully.",
+      duration: 3000,
+    });
+    
     console.log('Profile updated:', updatedProfile);
   };
 
@@ -95,7 +104,7 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-900">Identity Setup</h1>
-            <p className="text-sm text-gray-600">Manage your personal information and preferences</p>
+            <p className="text-sm text-gray-600">Update your personal information and contact details</p>
           </div>
         </div>
 
@@ -109,7 +118,7 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">{formData.preferredName}</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-1">{profile.preferredName}</h2>
                 <div className="flex items-center gap-2 text-gray-600 mb-2">
                   <Home className="w-4 h-4" />
                   <span>The Meridian • Apt {profile.unitNumber}</span>
@@ -137,6 +146,67 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
           </CardContent>
         </Card>
 
+        {/* Contact Information - Primary Section */}
+        <Card className="border-blue-200 bg-blue-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-900">
+              <Phone className="w-5 h-5" />
+              Primary Contact Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="preferredName" className="text-sm font-medium text-gray-700 mb-2 block">
+                Preferred Name *
+              </Label>
+              <Input
+                id="preferredName"
+                value={formData.preferredName}
+                onChange={(e) => setFormData({ ...formData, preferredName: e.target.value })}
+                disabled={!isEditing}
+                placeholder="What you'd like to be called"
+                className={isEditing ? "bg-white" : "bg-gray-100"}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="email" className="text-sm font-medium text-gray-700 mb-2 block">
+                Email Address *
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                disabled={!isEditing}
+                placeholder="your.email@example.com"
+                className={isEditing ? "bg-white" : "bg-gray-100"}
+              />
+              <p className="text-xs text-gray-600 mt-1">
+                Used for notifications and important updates
+              </p>
+            </div>
+            
+            <div>
+              <Label htmlFor="phone" className="text-sm font-medium text-gray-700 mb-2 block">
+                Cell Phone Number *
+              </Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                disabled={!isEditing}
+                placeholder="(555) 123-4567"
+                className={isEditing ? "bg-white" : "bg-gray-100"}
+              />
+              <p className="text-xs text-gray-600 mt-1">
+                Used for urgent notifications and two-factor authentication
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Personal Information */}
         <Card>
           <CardHeader>
@@ -146,77 +216,18 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="fullName" className="text-sm font-medium text-gray-700 mb-2 block">
-                  Full Legal Name
-                </Label>
-                <Input
-                  id="fullName"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  disabled={!isEditing}
-                  placeholder="Your full legal name"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="preferredName" className="text-sm font-medium text-gray-700 mb-2 block">
-                  Preferred Name
-                </Label>
-                <Input
-                  id="preferredName"
-                  value={formData.preferredName}
-                  onChange={(e) => setFormData({ ...formData, preferredName: e.target.value })}
-                  disabled={!isEditing}
-                  placeholder="What you'd like to be called"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Contact Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Phone className="w-5 h-5" />
-              Contact Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="email" className="text-sm font-medium text-gray-700 mb-2 block">
-                Email Address
+              <Label htmlFor="fullName" className="text-sm font-medium text-gray-700 mb-2 block">
+                Full Legal Name
               </Label>
               <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                id="fullName"
+                value={formData.fullName}
+                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                 disabled={!isEditing}
-                placeholder="your.email@example.com"
+                placeholder="Your full legal name"
+                className={isEditing ? "bg-white" : "bg-gray-100"}
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Used for notifications and important updates
-              </p>
-            </div>
-            
-            <div>
-              <Label htmlFor="phone" className="text-sm font-medium text-gray-700 mb-2 block">
-                Cell Phone Number
-              </Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                disabled={!isEditing}
-                placeholder="(555) 123-4567"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Used for urgent notifications and two-factor authentication
-              </p>
             </div>
           </CardContent>
         </Card>
@@ -241,6 +252,7 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
                   onChange={(e) => setFormData({ ...formData, emergencyContactName: e.target.value })}
                   disabled={!isEditing}
                   placeholder="Emergency contact name"
+                  className={isEditing ? "bg-white" : "bg-gray-100"}
                 />
               </div>
               
@@ -254,6 +266,7 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
                   onChange={(e) => setFormData({ ...formData, emergencyContactRelationship: e.target.value })}
                   disabled={!isEditing}
                   placeholder="e.g., Spouse, Parent, Sibling"
+                  className={isEditing ? "bg-white" : "bg-gray-100"}
                 />
               </div>
             </div>
@@ -269,6 +282,7 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
                 onChange={(e) => setFormData({ ...formData, emergencyContactPhone: e.target.value })}
                 disabled={!isEditing}
                 placeholder="(555) 987-6543"
+                className={isEditing ? "bg-white" : "bg-gray-100"}
               />
             </div>
           </CardContent>
@@ -277,12 +291,17 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
         {/* Privacy Notice */}
         <Card className="bg-blue-50 border-blue-200">
           <CardContent className="p-4">
-            <h3 className="font-semibold text-blue-900 mb-2">Privacy Notice</h3>
-            <p className="text-sm text-blue-800">
-              Your personal information is securely stored and only used for property management, 
-              emergency situations, and service delivery. We never share your information with 
-              third parties without your consent.
-            </p>
+            <div className="flex items-start gap-3">
+              <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-blue-900 mb-2">Privacy & Security</h3>
+                <p className="text-sm text-blue-800">
+                  Your personal information is securely stored and only used for property management, 
+                  emergency situations, and service delivery. We never share your information with 
+                  third parties without your consent.
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
