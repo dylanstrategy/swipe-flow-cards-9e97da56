@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench, ChevronDown, BarChart3, PieChart, CalendarDays, Activity } from 'lucide-react';
+import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench, ChevronDown, BarChart3, PieChart, CalendarDays, Activity, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,8 @@ import CRMTracker from '../CRMTracker';
 import MoveInTracker from '../MoveInTracker';
 import MoveOutTracker from '../MoveOutTracker';
 import PricingModule from '../PricingModule';
+import CancelNoticeButton from '../CancelNoticeButton';
+import CancelMoveOutButton from '../CancelMoveOutButton';
 import SwipeCard from '@/components/SwipeCard';
 import RescheduleFlow from '@/components/events/RescheduleFlow';
 import EventDetailModal from '@/components/events/EventDetailModal';
@@ -22,7 +24,8 @@ const OperatorTodayTab = () => {
     getCurrentResidents, 
     getFutureResidents, 
     getVacantUnits, 
-    getOccupancyRate 
+    getOccupancyRate,
+    getNoticeResidents
   } = useResident();
   
   const [selectedTimeframe, setSelectedTimeframe] = useState('30');
@@ -41,6 +44,7 @@ const OperatorTodayTab = () => {
   // Calculate real data from resident context
   const currentResidents = getCurrentResidents();
   const futureResidents = getFutureResidents();
+  const noticeResidents = getNoticeResidents();
   const vacantUnits = getVacantUnits();
   const occupancyRate = getOccupancyRate();
   
@@ -420,6 +424,43 @@ const OperatorTodayTab = () => {
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Operations Dashboard</h1>
         <p className="text-gray-600">The Meridian • Live Data</p>
       </div>
+
+      {/* Active Notices - NEW SECTION */}
+      {noticeResidents.length > 0 && (
+        <div className="bg-orange-50 border border-orange-200 rounded-xl shadow-sm p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <AlertTriangle className="text-orange-600" size={24} />
+            ACTIVE NOTICES TO VACATE ({noticeResidents.length})
+          </h2>
+          <div className="space-y-3">
+            {noticeResidents.map((resident) => (
+              <div key={resident.id} className="bg-white rounded-lg p-4 flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium text-gray-900">{resident.name}</h3>
+                  <p className="text-sm text-gray-600">Unit {resident.unitNumber}</p>
+                  <p className="text-xs text-orange-600">
+                    Move-out: {resident.moveOutDate ? new Date(resident.moveOutDate).toLocaleDateString() : 'TBD'}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <CancelNoticeButton 
+                    residentId={resident.id} 
+                    residentName={resident.name}
+                    variant="outline"
+                    size="sm"
+                  />
+                  <CancelMoveOutButton 
+                    residentId={resident.id} 
+                    residentName={resident.name}
+                    variant="destructive"
+                    size="sm"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Graph Toggle */}
       <div className="text-center">
