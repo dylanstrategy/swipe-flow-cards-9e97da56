@@ -15,16 +15,26 @@ const Login = () => {
       hasUser: !!user, 
       hasProfile: !!userProfile, 
       email: user?.email,
-      role: userProfile?.role 
+      role: userProfile?.role,
+      loading
     });
     
-    if (user && userProfile) {
-      console.log('🔄 User already authenticated, redirecting...');
-      const defaultRoute = getDefaultRouteForUser(userProfile);
-      console.log('📍 Redirecting to:', defaultRoute);
-      navigate(defaultRoute, { replace: true });
+    // Only redirect if we have both user AND profile, OR if we're not loading and have a user
+    if (user && (userProfile || !loading)) {
+      console.log('🔄 User authenticated, determining redirect...');
+      
+      // If we have a profile, use it for routing
+      if (userProfile) {
+        const defaultRoute = getDefaultRouteForUser(userProfile);
+        console.log('📍 Redirecting to:', defaultRoute);
+        navigate(defaultRoute, { replace: true });
+      } else {
+        // If no profile but user exists and we're not loading, redirect to a safe default
+        console.log('📍 No profile but user exists, redirecting to home');
+        navigate('/', { replace: true });
+      }
     }
-  }, [user, userProfile, navigate]);
+  }, [user, userProfile, loading, navigate]);
 
   const getDefaultRouteForUser = (profile: any) => {
     console.log('🎯 Getting default route for:', profile.email, profile.role);
@@ -64,16 +74,22 @@ const Login = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
       </div>
     );
   }
 
-  // Don't render login form if already authenticated
-  if (user && userProfile) {
+  // Don't render login form if already authenticated and redirecting
+  if (user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-gray-600">Redirecting...</p>
+        </div>
       </div>
     );
   }
