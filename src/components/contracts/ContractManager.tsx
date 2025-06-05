@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import SignatureRequestModal from './SignatureRequestModal';
 import SignNowConfigModal from './SignNowConfigModal';
+import { signNowService } from '@/services/signNowService';
 
 interface ContractTemplate {
   id: string;
