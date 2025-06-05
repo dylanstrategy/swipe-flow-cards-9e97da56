@@ -26,10 +26,39 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
     allowDirectMessages: true
   });
 
+  // Function to save data immediately and trigger storage event
+  const savePrivacyData = (newData: typeof privacyData) => {
+    try {
+      localStorage.setItem('residentPrivacy', JSON.stringify(newData));
+      console.log('Privacy data saved:', newData);
+      // Trigger storage event for other components to sync
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'residentPrivacy',
+        newValue: JSON.stringify(newData),
+        oldValue: localStorage.getItem('residentPrivacy')
+      }));
+    } catch (error) {
+      console.error('Error saving privacy data:', error);
+    }
+  };
+
+  const handleToggleChange = (key: keyof typeof privacyData, value: boolean) => {
+    console.log(`Toggling ${key} to ${value}`);
+    const newData = { ...privacyData, [key]: value };
+    setPrivacyData(newData);
+    savePrivacyData(newData);
+  };
+
+  const handleSelectChange = (key: keyof typeof privacyData, value: string) => {
+    console.log(`Changing ${key} to ${value}`);
+    const newData = { ...privacyData, [key]: value };
+    setPrivacyData(newData);
+    savePrivacyData(newData);
+  };
+
   const handleSave = () => {
     try {
-      // Save to localStorage
-      localStorage.setItem('residentPrivacy', JSON.stringify(privacyData));
+      savePrivacyData(privacyData);
       
       // Show success toast
       toast({
@@ -53,9 +82,12 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
   useEffect(() => {
     const loadPrivacyData = () => {
       const saved = localStorage.getItem('residentPrivacy');
+      console.log('Loading privacy data:', saved);
       if (saved) {
         try {
-          setPrivacyData(JSON.parse(saved));
+          const parsedData = JSON.parse(saved);
+          console.log('Parsed privacy data:', parsedData);
+          setPrivacyData(parsedData);
         } catch (error) {
           console.error('Error loading saved resident privacy settings:', error);
         }
@@ -66,8 +98,14 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
 
     // Listen for localStorage changes from other components
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'residentPrivacy') {
-        loadPrivacyData();
+      console.log('Storage change detected:', e.key, e.newValue);
+      if (e.key === 'residentPrivacy' && e.newValue) {
+        try {
+          const parsedData = JSON.parse(e.newValue);
+          setPrivacyData(parsedData);
+        } catch (error) {
+          console.error('Error parsing storage change:', error);
+        }
       }
     };
 
@@ -103,11 +141,7 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
               </label>
               <Select 
                 value={privacyData.dataSharing} 
-                onValueChange={(value) => {
-                  const newData = { ...privacyData, dataSharing: value };
-                  setPrivacyData(newData);
-                  localStorage.setItem('residentPrivacy', JSON.stringify(newData));
-                }}
+                onValueChange={(value) => handleSelectChange('dataSharing', value)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -131,27 +165,19 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
                 </div>
                 <Switch 
                   checked={privacyData.marketingEmails}
-                  onCheckedChange={(checked) => {
-                    const newData = { ...privacyData, marketingEmails: checked };
-                    setPrivacyData(newData);
-                    localStorage.setItem('residentPrivacy', JSON.stringify(newData));
-                  }}
+                  onCheckedChange={(checked) => handleToggleChange('marketingEmails', checked)}
                 />
               </div>
               <Separator />
 
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium">Analytics Tracking</div>
-                  <div className="text-sm text-gray-600">Allow analytics to improve user experience</div>
+                  <div className="font-medium">Personalized Ads / Analytics Tracking</div>
+                  <div className="text-sm text-gray-600">Allow analytics and personalized advertising</div>
                 </div>
                 <Switch 
                   checked={privacyData.analyticsTracking}
-                  onCheckedChange={(checked) => {
-                    const newData = { ...privacyData, analyticsTracking: checked };
-                    setPrivacyData(newData);
-                    localStorage.setItem('residentPrivacy', JSON.stringify(newData));
-                  }}
+                  onCheckedChange={(checked) => handleToggleChange('analyticsTracking', checked)}
                 />
               </div>
               <Separator />
@@ -163,11 +189,7 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
                 </div>
                 <Switch 
                   checked={privacyData.locationTracking}
-                  onCheckedChange={(checked) => {
-                    const newData = { ...privacyData, locationTracking: checked };
-                    setPrivacyData(newData);
-                    localStorage.setItem('residentPrivacy', JSON.stringify(newData));
-                  }}
+                  onCheckedChange={(checked) => handleToggleChange('locationTracking', checked)}
                 />
               </div>
             </div>
@@ -189,11 +211,7 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
               </label>
               <Select 
                 value={privacyData.profileVisibility} 
-                onValueChange={(value) => {
-                  const newData = { ...privacyData, profileVisibility: value };
-                  setPrivacyData(newData);
-                  localStorage.setItem('residentPrivacy', JSON.stringify(newData));
-                }}
+                onValueChange={(value) => handleSelectChange('profileVisibility', value)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -214,11 +232,7 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
                 </div>
                 <Switch 
                   checked={privacyData.shareContactInfo}
-                  onCheckedChange={(checked) => {
-                    const newData = { ...privacyData, shareContactInfo: checked };
-                    setPrivacyData(newData);
-                    localStorage.setItem('residentPrivacy', JSON.stringify(newData));
-                  }}
+                  onCheckedChange={(checked) => handleToggleChange('shareContactInfo', checked)}
                 />
               </div>
               <Separator />
@@ -230,11 +244,7 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
                 </div>
                 <Switch 
                   checked={privacyData.allowDirectMessages}
-                  onCheckedChange={(checked) => {
-                    const newData = { ...privacyData, allowDirectMessages: checked };
-                    setPrivacyData(newData);
-                    localStorage.setItem('residentPrivacy', JSON.stringify(newData));
-                  }}
+                  onCheckedChange={(checked) => handleToggleChange('allowDirectMessages', checked)}
                 />
               </div>
             </div>

@@ -1,11 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Save, Edit, User, Shield, Eye } from 'lucide-react';
+import { ChevronLeft, Save, User, Phone, Mail, MapPin, Calendar, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,137 +16,186 @@ interface ResidentIdentitySetupProps {
   onBack: () => void;
 }
 
+interface ExtendedResidentProfile {
+  fullName: string;
+  preferredName: string;
+  email: string;
+  phone: string;
+  unitNumber: string;
+  emergencyContact: {
+    name: string;
+    phone: string;
+    relationship: string;
+  };
+  dateOfBirth: string;
+  occupation: string;
+  moveInDate: string;
+  preferences: {
+    notifications: boolean;
+    newsletters: boolean;
+    events: boolean;
+  };
+}
+
 const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack }) => {
-  const { toast } = useToast();
   const { profile, updateProfile } = useResident();
-  const [isEditing, setIsEditing] = useState(false);
+  const { toast } = useToast();
   
-  const [formData, setFormData] = useState({
-    fullName: profile.fullName || '',
-    preferredName: profile.preferredName || '',
-    email: profile.email || '',
-    phone: profile.phone || '',
-    emergencyContactName: profile.emergencyContact?.name || '',
-    emergencyContactPhone: profile.emergencyContact?.phone || '',
-    emergencyContactRelationship: profile.emergencyContact?.relationship || 'Spouse'
+  const [formData, setFormData] = useState<ExtendedResidentProfile>({
+    fullName: profile.fullName,
+    preferredName: profile.preferredName,
+    email: profile.email,
+    phone: profile.phone,
+    unitNumber: profile.unitNumber,
+    emergencyContact: {
+      name: profile.emergencyContact?.name || '',
+      phone: profile.emergencyContact?.phone || '',
+      relationship: profile.emergencyContact?.relationship || ''
+    },
+    dateOfBirth: '',
+    occupation: '',
+    moveInDate: '',
+    preferences: {
+      notifications: true,
+      newsletters: false,
+      events: true
+    }
   });
 
-  // Load privacy preferences from the shared localStorage key
-  const [privacyData, setPrivacyData] = useState({
-    dataSharing: 'none',
-    marketingEmails: false,
+  // Privacy settings state (synced with ResidentPrivacySetup)
+  const [privacySettings, setPrivacySettings] = useState({
     analyticsTracking: true,
-    locationTracking: false,
-    email: {
-      maintenanceUpdates: true,
-      rentReminders: true,
-      communityNews: false,
-      emergencyAlerts: true,
-      packageDeliveries: true,
-      leaseRenewals: true
-    },
-    sms: {
-      emergencyAlerts: true,
-      maintenanceEntry: true,
-      packageDeliveries: false,
-      rentReminders: true
-    },
-    push: {
-      maintenanceUpdates: true,
-      messages: true,
-      communityEvents: false,
-      packageDeliveries: true
-    }
+    marketingEmails: false,
+    locationTracking: false
   });
 
-  const handleSave = () => {
-    try {
-      setIsEditing(false);
-      
-      // Save identity data to localStorage
-      localStorage.setItem('residentIdentity', JSON.stringify(formData));
-      
-      // Save privacy data to the shared localStorage key
-      localStorage.setItem('residentPrivacy', JSON.stringify(privacyData));
-      
-      // Update resident context with the correct structure
-      updateProfile({
-        fullName: formData.fullName,
-        preferredName: formData.preferredName,
-        email: formData.email,
-        phone: formData.phone,
-        emergencyContact: {
-          name: formData.emergencyContactName,
-          phone: formData.emergencyContactPhone,
-          relationship: formData.emergencyContactRelationship
-        }
-      });
-      
-      // Show success toast
-      toast({
-        title: "✅ Profile Updated",
-        description: "Your personal information and preferences have been saved successfully.",
-        duration: 4000,
-      });
-      
-      console.log('Resident identity saved successfully:', formData);
-      console.log('Privacy preferences saved successfully:', privacyData);
-    } catch (error) {
-      console.error('Error saving resident identity:', error);
-      toast({
-        title: "❌ Save Failed",
-        description: "Failed to save your personal information. Please try again.",
-        duration: 4000,
-      });
-    }
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-    // Reset form data from localStorage if available
-    const savedIdentity = localStorage.getItem('residentIdentity');
-    if (savedIdentity) {
-      setFormData(JSON.parse(savedIdentity));
-    }
-    const savedPrivacy = localStorage.getItem('residentPrivacy');
-    if (savedPrivacy) {
-      setPrivacyData(JSON.parse(savedPrivacy));
-    }
-  };
-
-  // Load saved data on mount and listen for storage changes
+  // Load privacy settings and sync with other components
   useEffect(() => {
-    const loadData = () => {
-      const savedIdentity = localStorage.getItem('residentIdentity');
-      if (savedIdentity) {
+    const loadPrivacySettings = () => {
+      const saved = localStorage.getItem('residentPrivacy');
+      console.log('Loading privacy settings in IdentitySetup:', saved);
+      if (saved) {
         try {
-          setFormData(JSON.parse(savedIdentity));
+          const parsedData = JSON.parse(saved);
+          setPrivacySettings({
+            analyticsTracking: parsedData.analyticsTracking ?? true,
+            marketingEmails: parsedData.marketingEmails ?? false,
+            locationTracking: parsedData.locationTracking ?? false
+          });
         } catch (error) {
-          console.error('Error loading saved resident identity:', error);
-        }
-      }
-
-      const savedPrivacy = localStorage.getItem('residentPrivacy');
-      if (savedPrivacy) {
-        try {
-          setPrivacyData(JSON.parse(savedPrivacy));
-        } catch (error) {
-          console.error('Error loading saved privacy settings:', error);
+          console.error('Error loading privacy settings:', error);
         }
       }
     };
 
-    loadData();
+    loadPrivacySettings();
 
-    // Listen for localStorage changes from other components
+    // Listen for privacy settings changes from other components
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'residentPrivacy' || e.key === 'residentIdentity') {
-        loadData();
+      if (e.key === 'residentPrivacy' && e.newValue) {
+        try {
+          const parsedData = JSON.parse(e.newValue);
+          setPrivacySettings({
+            analyticsTracking: parsedData.analyticsTracking ?? true,
+            marketingEmails: parsedData.marketingEmails ?? false,
+            locationTracking: parsedData.locationTracking ?? false
+          });
+        } catch (error) {
+          console.error('Error parsing privacy settings change:', error);
+        }
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  const handleSave = () => {
+    try {
+      // Update resident profile
+      updateProfile({
+        fullName: formData.fullName,
+        preferredName: formData.preferredName,
+        email: formData.email,
+        phone: formData.phone,
+        unitNumber: formData.unitNumber,
+        emergencyContact: formData.emergencyContact
+      });
+
+      // Save extended profile data
+      localStorage.setItem('residentProfile', JSON.stringify(formData));
+      
+      // Show success toast
+      toast({
+        title: "✅ Profile Updated",
+        description: "Your personal information has been saved successfully.",
+        duration: 4000,
+      });
+      
+      console.log('Resident profile saved successfully:', formData);
+    } catch (error) {
+      console.error('Error saving resident profile:', error);
+      toast({
+        title: "❌ Save Failed",
+        description: "Failed to save profile. Please try again.",
+        duration: 4000,
+      });
+    }
+  };
+
+  const handlePrivacyToggle = (key: keyof typeof privacySettings, value: boolean) => {
+    console.log(`Identity Setup: Toggling ${key} to ${value}`);
+    
+    // Update local state
+    const newPrivacySettings = { ...privacySettings, [key]: value };
+    setPrivacySettings(newPrivacySettings);
+    
+    // Update the full privacy data in localStorage
+    const existingPrivacyData = localStorage.getItem('residentPrivacy');
+    let fullPrivacyData = {
+      dataSharing: 'none',
+      marketingEmails: false,
+      analyticsTracking: true,
+      locationTracking: false,
+      profileVisibility: 'private',
+      shareContactInfo: false,
+      allowDirectMessages: true
+    };
+    
+    if (existingPrivacyData) {
+      try {
+        fullPrivacyData = JSON.parse(existingPrivacyData);
+      } catch (error) {
+        console.error('Error parsing existing privacy data:', error);
+      }
+    }
+    
+    // Update the specific privacy setting
+    fullPrivacyData[key] = value;
+    
+    // Save to localStorage
+    localStorage.setItem('residentPrivacy', JSON.stringify(fullPrivacyData));
+    console.log('Privacy data updated from Identity Setup:', fullPrivacyData);
+    
+    // Trigger storage event for other components
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'residentPrivacy',
+      newValue: JSON.stringify(fullPrivacyData),
+      oldValue: existingPrivacyData
+    }));
+  };
+
+  // Load saved data on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('residentProfile');
+    if (saved) {
+      try {
+        const savedData = JSON.parse(saved);
+        setFormData(savedData);
+      } catch (error) {
+        console.error('Error loading saved profile:', error);
+      }
+    }
   }, []);
 
   return (
@@ -158,45 +206,10 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
             <ChevronLeft className="w-4 h-4" />
           </Button>
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Identity & Profile Setup</h2>
+            <h2 className="text-xl font-bold text-gray-900">Identity Setup</h2>
             <p className="text-sm text-gray-600">Manage your personal information and preferences</p>
           </div>
         </div>
-
-        {/* Profile Header */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <Avatar className="w-16 h-16 flex-shrink-0">
-                <AvatarFallback className="text-xl font-bold bg-blue-600 text-white">
-                  {formData.preferredName.charAt(0)}{formData.fullName.split(' ')[1]?.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <h2 className="text-xl font-bold text-gray-900 mb-1">{formData.preferredName}</h2>
-                <p className="text-gray-600 mb-2">Resident • Apt {profile.unitNumber}</p>
-                <div className="flex gap-2">
-                  {!isEditing ? (
-                    <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit Profile
-                    </Button>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={handleCancel}>
-                        Cancel
-                      </Button>
-                      <Button size="sm" onClick={handleSave}>
-                        <Save className="w-4 h-4 mr-2" />
-                        Save Changes
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Personal Information */}
         <Card>
@@ -209,60 +222,70 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="fullName" className="text-sm font-medium text-gray-700 mb-2 block">
-                  Full Legal Name
-                </Label>
+                <Label htmlFor="fullName">Full Name</Label>
                 <Input
                   id="fullName"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  disabled={!isEditing}
-                  className={isEditing ? "bg-white" : "bg-gray-100"}
                 />
               </div>
-              
               <div>
-                <Label htmlFor="preferredName" className="text-sm font-medium text-gray-700 mb-2 block">
-                  Preferred Name
-                </Label>
+                <Label htmlFor="preferredName">Preferred Name</Label>
                 <Input
                   id="preferredName"
                   value={formData.preferredName}
                   onChange={(e) => setFormData({ ...formData, preferredName: e.target.value })}
-                  disabled={!isEditing}
-                  className={isEditing ? "bg-white" : "bg-gray-100"}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700 mb-2 block">
-                  Email Address
-                </Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  disabled={!isEditing}
-                  className={isEditing ? "bg-white" : "bg-gray-100"}
                 />
               </div>
-              
               <div>
-                <Label htmlFor="phone" className="text-sm font-medium text-gray-700 mb-2 block">
-                  Phone Number
-                </Label>
+                <Label htmlFor="phone">Phone</Label>
                 <Input
                   id="phone"
-                  type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  disabled={!isEditing}
-                  className={isEditing ? "bg-white" : "bg-gray-100"}
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="unitNumber">Unit Number</Label>
+                <Input
+                  id="unitNumber"
+                  value={formData.unitNumber}
+                  onChange={(e) => setFormData({ ...formData, unitNumber: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                <Input
+                  id="dateOfBirth"
+                  type="date"
+                  value={formData.dateOfBirth}
+                  onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="occupation">Occupation</Label>
+              <Input
+                id="occupation"
+                value={formData.occupation}
+                onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
+              />
             </div>
           </CardContent>
         </Card>
@@ -271,223 +294,110 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5" />
+              <Heart className="w-5 h-5" />
               Emergency Contact
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="emergencyName" className="text-sm font-medium text-gray-700 mb-2 block">
-                  Contact Name
-                </Label>
+                <Label htmlFor="emergencyName">Contact Name</Label>
                 <Input
                   id="emergencyName"
-                  value={formData.emergencyContactName}
-                  onChange={(e) => setFormData({ ...formData, emergencyContactName: e.target.value })}
-                  disabled={!isEditing}
-                  className={isEditing ? "bg-white" : "bg-gray-100"}
+                  value={formData.emergencyContact.name}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    emergencyContact: { ...formData.emergencyContact, name: e.target.value }
+                  })}
                 />
               </div>
-              
               <div>
-                <Label htmlFor="emergencyRelationship" className="text-sm font-medium text-gray-700 mb-2 block">
-                  Relationship
-                </Label>
-                <Select 
-                  value={formData.emergencyContactRelationship} 
-                  onValueChange={(value) => setFormData({ ...formData, emergencyContactRelationship: value })}
-                  disabled={!isEditing}
-                >
-                  <SelectTrigger className={isEditing ? "bg-white" : "bg-gray-100"}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Spouse">Spouse</SelectItem>
-                    <SelectItem value="Parent">Parent</SelectItem>
-                    <SelectItem value="Sibling">Sibling</SelectItem>
-                    <SelectItem value="Child">Child</SelectItem>
-                    <SelectItem value="Friend">Friend</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="emergencyPhone">Contact Phone</Label>
+                <Input
+                  id="emergencyPhone"
+                  value={formData.emergencyContact.phone}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    emergencyContact: { ...formData.emergencyContact, phone: e.target.value }
+                  })}
+                />
               </div>
             </div>
-            
             <div>
-              <Label htmlFor="emergencyPhone" className="text-sm font-medium text-gray-700 mb-2 block">
-                Contact Phone
-              </Label>
-              <Input
-                id="emergencyPhone"
-                type="tel"
-                value={formData.emergencyContactPhone}
-                onChange={(e) => setFormData({ ...formData, emergencyContactPhone: e.target.value })}
-                disabled={!isEditing}
-                className={isEditing ? "bg-white" : "bg-gray-100"}
+              <Label htmlFor="emergencyRelationship">Relationship</Label>
+              <Select 
+                value={formData.emergencyContact.relationship}
+                onValueChange={(value) => setFormData({
+                  ...formData,
+                  emergencyContact: { ...formData.emergencyContact, relationship: value }
+                })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select relationship" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="spouse">Spouse</SelectItem>
+                  <SelectItem value="partner">Partner</SelectItem>
+                  <SelectItem value="parent">Parent</SelectItem>
+                  <SelectItem value="sibling">Sibling</SelectItem>
+                  <SelectItem value="child">Child</SelectItem>
+                  <SelectItem value="friend">Friend</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Privacy Preferences */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Privacy Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">Personalized Ads / Analytics</div>
+                <div className="text-sm text-gray-600">Allow personalized advertising and analytics tracking</div>
+              </div>
+              <Switch 
+                checked={privacySettings.analyticsTracking}
+                onCheckedChange={(checked) => handlePrivacyToggle('analyticsTracking', checked)}
+              />
+            </div>
+            <Separator />
+
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">Marketing Emails</div>
+                <div className="text-sm text-gray-600">Receive promotional emails and newsletters</div>
+              </div>
+              <Switch 
+                checked={privacySettings.marketingEmails}
+                onCheckedChange={(checked) => handlePrivacyToggle('marketingEmails', checked)}
+              />
+            </div>
+            <Separator />
+
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">Location Tracking</div>
+                <div className="text-sm text-gray-600">Allow location services for enhanced features</div>
+              </div>
+              <Switch 
+                checked={privacySettings.locationTracking}
+                onCheckedChange={(checked) => handlePrivacyToggle('locationTracking', checked)}
               />
             </div>
           </CardContent>
         </Card>
 
-        {/* Privacy & Data Sharing */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Eye className="w-5 h-5" />
-              Privacy & Data Sharing
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="dataSharing" className="text-sm font-medium text-gray-700 mb-2 block">
-                Data Sharing Preferences
-              </Label>
-              <Select 
-                value={privacyData.dataSharing} 
-                onValueChange={(value) => {
-                  const newData = { ...privacyData, dataSharing: value };
-                  setPrivacyData(newData);
-                  localStorage.setItem('residentPrivacy', JSON.stringify(newData));
-                }}
-                disabled={!isEditing}
-              >
-                <SelectTrigger className={isEditing ? "bg-white" : "bg-gray-100"}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No Data Sharing</SelectItem>
-                  <SelectItem value="property">Property Management Only</SelectItem>
-                  <SelectItem value="third-party">Allow Third-Party Partners</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Marketing Emails</div>
-                  <div className="text-sm text-gray-600">Receive promotional and marketing communications</div>
-                </div>
-                <Switch 
-                  checked={privacyData.marketingEmails}
-                  onCheckedChange={(checked) => {
-                    const newData = { ...privacyData, marketingEmails: checked };
-                    setPrivacyData(newData);
-                    localStorage.setItem('residentPrivacy', JSON.stringify(newData));
-                  }}
-                  disabled={!isEditing}
-                />
-              </div>
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Analytics Tracking</div>
-                  <div className="text-sm text-gray-600">Allow analytics to improve user experience</div>
-                </div>
-                <Switch 
-                  checked={privacyData.analyticsTracking}
-                  onCheckedChange={(checked) => {
-                    const newData = { ...privacyData, analyticsTracking: checked };
-                    setPrivacyData(newData);
-                    localStorage.setItem('residentPrivacy', JSON.stringify(newData));
-                  }}
-                  disabled={!isEditing}
-                />
-              </div>
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Location Tracking</div>
-                  <div className="text-sm text-gray-600">Allow location services for enhanced features</div>
-                </div>
-                <Switch 
-                  checked={privacyData.locationTracking}
-                  onCheckedChange={(checked) => {
-                    const newData = { ...privacyData, locationTracking: checked };
-                    setPrivacyData(newData);
-                    localStorage.setItem('residentPrivacy', JSON.stringify(newData));
-                  }}
-                  disabled={!isEditing}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Notification Preferences */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5" />
-              Notification Preferences
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Email Notifications</div>
-                  <div className="text-sm text-gray-600">Receive notifications via email</div>
-                </div>
-                <Switch 
-                  checked={privacyData.email.maintenanceUpdates}
-                  onCheckedChange={(checked) => {
-                    const newData = { 
-                      ...privacyData, 
-                      email: { ...privacyData.email, maintenanceUpdates: checked }
-                    };
-                    setPrivacyData(newData);
-                    localStorage.setItem('residentPrivacy', JSON.stringify(newData));
-                  }}
-                  disabled={!isEditing}
-                />
-              </div>
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">SMS Notifications</div>
-                  <div className="text-sm text-gray-600">Receive notifications via text message</div>
-                </div>
-                <Switch 
-                  checked={privacyData.sms.emergencyAlerts}
-                  onCheckedChange={(checked) => {
-                    const newData = { 
-                      ...privacyData, 
-                      sms: { ...privacyData.sms, emergencyAlerts: checked }
-                    };
-                    setPrivacyData(newData);
-                    localStorage.setItem('residentPrivacy', JSON.stringify(newData));
-                  }}
-                  disabled={!isEditing}
-                />
-              </div>
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Push Notifications</div>
-                  <div className="text-sm text-gray-600">Receive push notifications on your device</div>
-                </div>
-                <Switch 
-                  checked={privacyData.push.messages}
-                  onCheckedChange={(checked) => {
-                    const newData = { 
-                      ...privacyData, 
-                      push: { ...privacyData.push, messages: checked }
-                    };
-                    setPrivacyData(newData);
-                    localStorage.setItem('residentPrivacy', JSON.stringify(newData));
-                  }}
-                  disabled={!isEditing}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex justify-end">
+          <Button onClick={handleSave}>
+            <Save className="w-4 h-4 mr-2" />
+            Save Profile
+          </Button>
+        </div>
       </div>
       <Toaster />
     </>
