@@ -25,7 +25,8 @@ const SuperAdmin = () => {
       leasing: 'bg-green-100 text-green-800',
       resident: 'bg-indigo-100 text-indigo-800',
       prospect: 'bg-gray-100 text-gray-800',
-      former_resident: 'bg-yellow-100 text-yellow-800'
+      former_resident: 'bg-yellow-100 text-yellow-800',
+      vendor: 'bg-cyan-100 text-cyan-800'
     };
     return colors[role as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
@@ -256,7 +257,7 @@ const SuperAdmin = () => {
                             </Badge>
                           </div>
                           <p className="text-sm text-gray-600">
-                            {unit.bed_count} bed, {unit.bath_count} bath
+                            {unit.bedroom_type || 'N/A'} bed, {unit.bath_type || 'N/A'} bath
                           </p>
                           {unit.lease_start && unit.lease_end && (
                             <p className="text-xs text-gray-500">
