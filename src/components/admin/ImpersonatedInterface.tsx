@@ -26,7 +26,7 @@ const ImpersonatedInterface: React.FC<ImpersonatedInterfaceProps> = ({ role }) =
           console.log('🏠 Rendering resident interface (Index)');
           return (
             <div className="h-full">
-              <Index />
+              <Index isImpersonated={true} />
             </div>
           );
         case 'prospect':
@@ -56,14 +56,14 @@ const ImpersonatedInterface: React.FC<ImpersonatedInterfaceProps> = ({ role }) =
           console.log('🏪 Rendering vendor interface (Index fallback)');
           return (
             <div className="h-full">
-              <Index />
+              <Index isImpersonated={true} />
             </div>
           );
         default:
           console.log('❓ Unknown role, rendering default interface (Index)');
           return (
             <div className="h-full">
-              <Index />
+              <Index isImpersonated={true} />
             </div>
           );
       }

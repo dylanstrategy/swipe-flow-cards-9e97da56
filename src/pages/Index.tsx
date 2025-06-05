@@ -8,19 +8,24 @@ import MessagesTab from '@/components/tabs/MessagesTab';
 import AccountTab from '@/components/tabs/AccountTab';
 import { useAuth } from '@/contexts/AuthContext';
 
-const Index = () => {
+interface IndexProps {
+  isImpersonated?: boolean;
+}
+
+const Index: React.FC<IndexProps> = ({ isImpersonated = false }) => {
   const navigate = useNavigate();
   const { user, userProfile, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('today');
 
   useEffect(() => {
-    if (!loading && (!user || !userProfile)) {
+    // Only redirect if not impersonated and no auth
+    if (!isImpersonated && !loading && (!user || !userProfile)) {
       navigate('/login');
     }
-  }, [user, userProfile, loading, navigate]);
+  }, [user, userProfile, loading, navigate, isImpersonated]);
 
-  // Show loading while checking auth
-  if (loading) {
+  // Show loading while checking auth (but not during impersonation)
+  if (!isImpersonated && loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -28,8 +33,8 @@ const Index = () => {
     );
   }
 
-  // Don't render if not authenticated
-  if (!user || !userProfile) {
+  // Don't render if not authenticated (but allow during impersonation)
+  if (!isImpersonated && (!user || !userProfile)) {
     return null;
   }
 
