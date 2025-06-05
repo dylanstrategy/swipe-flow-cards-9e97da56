@@ -181,7 +181,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel }) =
                               : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
-                          <Badge className={getRoleColor(role)} size="sm">
+                          <Badge className={getRoleColor(role)}>
                             {role.charAt(0).toUpperCase() + role.slice(1)}
                           </Badge>
                           <div className="text-xs text-gray-600 mt-1">
