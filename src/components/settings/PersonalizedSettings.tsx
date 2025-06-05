@@ -18,6 +18,7 @@ type SettingsSection = 'overview' | 'calendar' | 'swipes' | 'notifications' | 'i
 
 const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) => {
   const [currentSection, setCurrentSection] = useState<SettingsSection>('overview');
+  
   const [settings, setSettings] = useState({
     profilePhoto: '',
     availability: {
