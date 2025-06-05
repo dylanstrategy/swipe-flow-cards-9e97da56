@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ChevronLeft, Clock, DollarSign, Calendar, Plus, Trash2, Edit2 } from 'lucide-react';
+import { ChevronLeft, Clock, DollarSign, Calendar, Plus, Trash2, Edit2, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -94,7 +94,28 @@ const AmenitiesSetup = ({ onBack }: AmenitiesSetupProps) => {
   ]);
 
   const [editingAmenity, setEditingAmenity] = useState<string | null>(null);
+  const [editedData, setEditedData] = useState<Amenity | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+
+  const startEditing = (amenity: Amenity) => {
+    setEditingAmenity(amenity.id);
+    setEditedData({ ...amenity });
+  };
+
+  const cancelEditing = () => {
+    setEditingAmenity(null);
+    setEditedData(null);
+  };
+
+  const saveChanges = () => {
+    if (editedData) {
+      setAmenities(amenities.map(amenity => 
+        amenity.id === editedData.id ? editedData : amenity
+      ));
+      setEditingAmenity(null);
+      setEditedData(null);
+    }
+  };
 
   const addNewAmenity = () => {
     const newAmenity: Amenity = {
@@ -125,273 +146,306 @@ const AmenitiesSetup = ({ onBack }: AmenitiesSetupProps) => {
     };
     
     setAmenities([...amenities, newAmenity]);
-    setEditingAmenity(newAmenity.id);
+    startEditing(newAmenity);
     setShowAddForm(false);
   };
 
-  const updateAmenity = (id: string, updates: Partial<Amenity>) => {
-    setAmenities(amenities.map(amenity => 
-      amenity.id === id ? { ...amenity, ...updates } : amenity
-    ));
+  const updateEditedData = (updates: Partial<Amenity>) => {
+    if (editedData) {
+      setEditedData({ ...editedData, ...updates });
+    }
   };
 
   const deleteAmenity = (id: string) => {
     setAmenities(amenities.filter(amenity => amenity.id !== id));
+    if (editingAmenity === id) {
+      cancelEditing();
+    }
   };
 
-  const updateHours = (amenityId: string, day: string, field: string, value: string | boolean) => {
-    setAmenities(amenities.map(amenity => 
-      amenity.id === amenityId 
-        ? {
-            ...amenity,
-            hoursOfOperation: {
-              ...amenity.hoursOfOperation,
-              [day]: {
-                ...amenity.hoursOfOperation[day],
-                [field]: value
-              }
-            }
+  const updateHours = (day: string, field: string, value: string | boolean) => {
+    if (editedData) {
+      setEditedData({
+        ...editedData,
+        hoursOfOperation: {
+          ...editedData.hoursOfOperation,
+          [day]: {
+            ...editedData.hoursOfOperation[day],
+            [field]: value
           }
-        : amenity
-    ));
+        }
+      });
+    }
   };
 
-  const renderAmenityCard = (amenity: Amenity) => (
-    <Card key={amenity.id} className="shadow-sm">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CardTitle className="text-lg">{amenity.name || 'New Amenity'}</CardTitle>
-            <Switch
-              checked={amenity.isActive}
-              onCheckedChange={(checked) => updateAmenity(amenity.id, { isActive: checked })}
-            />
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setEditingAmenity(editingAmenity === amenity.id ? null : amenity.id)}
-            >
-              <Edit2 className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => deleteAmenity(amenity.id)}
-              className="text-red-600 hover:text-red-700"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-        {amenity.description && (
-          <p className="text-sm text-gray-600">{amenity.description}</p>
-        )}
-      </CardHeader>
-
-      {editingAmenity === amenity.id && (
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label className="text-sm font-medium">Amenity Name</Label>
-              <Input
-                value={amenity.name}
-                onChange={(e) => updateAmenity(amenity.id, { name: e.target.value })}
-                placeholder="e.g., Swimming Pool"
-                className="mt-1"
+  const renderAmenityCard = (amenity: Amenity) => {
+    const isEditing = editingAmenity === amenity.id;
+    const displayData = isEditing ? editedData! : amenity;
+    
+    return (
+      <Card key={amenity.id} className="shadow-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-lg">{displayData.name || 'New Amenity'}</CardTitle>
+              <Switch
+                checked={displayData.isActive}
+                onCheckedChange={(checked) => {
+                  if (isEditing) {
+                    updateEditedData({ isActive: checked });
+                  }
+                }}
+                disabled={!isEditing}
               />
             </div>
-            <div>
-              <Label className="text-sm font-medium">Max Capacity</Label>
-              <Input
-                type="number"
-                value={amenity.maxCapacity}
-                onChange={(e) => updateAmenity(amenity.id, { maxCapacity: parseInt(e.target.value) || 0 })}
-                className="mt-1"
-              />
-            </div>
-          </div>
-
-          <div>
-            <Label className="text-sm font-medium">Description</Label>
-            <Textarea
-              value={amenity.description}
-              onChange={(e) => updateAmenity(amenity.id, { description: e.target.value })}
-              placeholder="Brief description of the amenity"
-              className="mt-1"
-            />
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <Switch
-              checked={amenity.requiresBooking}
-              onCheckedChange={(checked) => updateAmenity(amenity.id, { requiresBooking: checked })}
-            />
-            <Label className="text-sm font-medium">Requires Booking/Reservation</Label>
-          </div>
-
-          {/* Hours of Operation */}
-          <div>
-            <Label className="text-sm font-medium mb-3 block">Hours of Operation</Label>
-            <div className="space-y-2">
-              {Object.entries(amenity.hoursOfOperation).map(([day, hours]) => (
-                <div key={day} className="flex items-center gap-3 p-2 border rounded-lg bg-gray-50">
-                  <div className="w-20">
-                    <Switch
-                      checked={hours.enabled}
-                      onCheckedChange={(checked) => updateHours(amenity.id, day, 'enabled', checked)}
-                    />
-                    <Label className="capitalize text-xs font-medium mt-1 block">{day}</Label>
-                  </div>
-                  
-                  {hours.enabled ? (
-                    <div className="flex gap-2 flex-1">
-                      <div className="flex-1">
-                        <Label className="text-xs text-gray-500">Open</Label>
-                        <Input
-                          type="time"
-                          value={hours.openTime}
-                          onChange={(e) => updateHours(amenity.id, day, 'openTime', e.target.value)}
-                          className="mt-1 h-8 text-sm"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <Label className="text-xs text-gray-500">Close</Label>
-                        <Input
-                          type="time"
-                          value={hours.closeTime}
-                          onChange={(e) => updateHours(amenity.id, day, 'closeTime', e.target.value)}
-                          className="mt-1 h-8 text-sm"
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex-1 text-gray-400 text-sm">Closed</div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Booking Settings */}
-          {amenity.requiresBooking && (
-            <div className="border-t pt-4">
-              <Label className="text-sm font-medium mb-3 block">Booking Settings</Label>
-              
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <Label className="text-xs text-gray-600">Advance Booking (days)</Label>
-                  <Input
-                    type="number"
-                    value={amenity.bookingSettings.advanceBookingDays}
-                    onChange={(e) => updateAmenity(amenity.id, {
-                      bookingSettings: {
-                        ...amenity.bookingSettings,
-                        advanceBookingDays: parseInt(e.target.value) || 0
-                      }
-                    })}
-                    className="mt-1 h-8 text-sm"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs text-gray-600">Max Booking Duration (hours)</Label>
-                  <Input
-                    type="number"
-                    value={amenity.bookingSettings.maxBookingDuration}
-                    onChange={(e) => updateAmenity(amenity.id, {
-                      bookingSettings: {
-                        ...amenity.bookingSettings,
-                        maxBookingDuration: parseInt(e.target.value) || 0
-                      }
-                    })}
-                    className="mt-1 h-8 text-sm"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs text-gray-600">Time Slot Duration (hours)</Label>
-                  <Input
-                    type="number"
-                    step="0.5"
-                    value={amenity.bookingSettings.timeSlotDuration}
-                    onChange={(e) => updateAmenity(amenity.id, {
-                      bookingSettings: {
-                        ...amenity.bookingSettings,
-                        timeSlotDuration: parseFloat(e.target.value) || 0
-                      }
-                    })}
-                    className="mt-1 h-8 text-sm"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs text-gray-600">Cost per booking ($)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={amenity.bookingSettings.cost}
-                    onChange={(e) => updateAmenity(amenity.id, {
-                      bookingSettings: {
-                        ...amenity.bookingSettings,
-                        cost: parseFloat(e.target.value) || 0
-                      }
-                    })}
-                    className="mt-1 h-8 text-sm"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3 mb-3">
-                <Switch
-                  checked={amenity.bookingSettings.depositRequired}
-                  onCheckedChange={(checked) => updateAmenity(amenity.id, {
-                    bookingSettings: {
-                      ...amenity.bookingSettings,
-                      depositRequired: checked
-                    }
-                  })}
-                />
-                <Label className="text-sm font-medium">Require Security Deposit</Label>
-              </div>
-
-              {amenity.bookingSettings.depositRequired && (
-                <div className="mb-3">
-                  <Label className="text-xs text-gray-600">Deposit Amount ($)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={amenity.bookingSettings.depositAmount}
-                    onChange={(e) => updateAmenity(amenity.id, {
-                      bookingSettings: {
-                        ...amenity.bookingSettings,
-                        depositAmount: parseFloat(e.target.value) || 0
-                      }
-                    })}
-                    className="mt-1 h-8 text-sm"
-                  />
-                </div>
+            <div className="flex gap-2">
+              {!isEditing ? (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => startEditing(amenity)}
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => deleteAmenity(amenity.id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={cancelEditing}
+                    className="text-gray-600 hover:text-gray-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={saveChanges}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Check className="w-4 h-4" />
+                  </Button>
+                </>
               )}
+            </div>
+          </div>
+          {displayData.description && (
+            <p className="text-sm text-gray-600">{displayData.description}</p>
+          )}
+        </CardHeader>
 
+        {isEditing && (
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-xs text-gray-600">Cancellation Policy</Label>
-                <Textarea
-                  value={amenity.bookingSettings.cancellationPolicy}
-                  onChange={(e) => updateAmenity(amenity.id, {
-                    bookingSettings: {
-                      ...amenity.bookingSettings,
-                      cancellationPolicy: e.target.value
-                    }
-                  })}
-                  placeholder="e.g., 24 hours notice required for cancellation"
-                  className="mt-1 text-sm"
-                  rows={2}
+                <Label className="text-sm font-medium">Amenity Name</Label>
+                <Input
+                  value={displayData.name}
+                  onChange={(e) => updateEditedData({ name: e.target.value })}
+                  placeholder="e.g., Swimming Pool"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Max Capacity</Label>
+                <Input
+                  type="number"
+                  value={displayData.maxCapacity}
+                  onChange={(e) => updateEditedData({ maxCapacity: parseInt(e.target.value) || 0 })}
+                  className="mt-1"
                 />
               </div>
             </div>
-          )}
-        </CardContent>
-      )}
-    </Card>
-  );
+
+            <div>
+              <Label className="text-sm font-medium">Description</Label>
+              <Textarea
+                value={displayData.description}
+                onChange={(e) => updateEditedData({ description: e.target.value })}
+                placeholder="Brief description of the amenity"
+                className="mt-1"
+              />
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <Switch
+                checked={displayData.requiresBooking}
+                onCheckedChange={(checked) => updateEditedData({ requiresBooking: checked })}
+              />
+              <Label className="text-sm font-medium">Requires Booking/Reservation</Label>
+            </div>
+
+            {/* Hours of Operation */}
+            <div>
+              <Label className="text-sm font-medium mb-3 block">Hours of Operation</Label>
+              <div className="space-y-2">
+                {Object.entries(displayData.hoursOfOperation).map(([day, hours]) => (
+                  <div key={day} className="flex items-center gap-3 p-2 border rounded-lg bg-gray-50">
+                    <div className="w-20">
+                      <Switch
+                        checked={hours.enabled}
+                        onCheckedChange={(checked) => updateHours(day, 'enabled', checked)}
+                      />
+                      <Label className="capitalize text-xs font-medium mt-1 block">{day}</Label>
+                    </div>
+                    
+                    {hours.enabled ? (
+                      <div className="flex gap-2 flex-1">
+                        <div className="flex-1">
+                          <Label className="text-xs text-gray-500">Open</Label>
+                          <Input
+                            type="time"
+                            value={hours.openTime}
+                            onChange={(e) => updateHours(day, 'openTime', e.target.value)}
+                            className="mt-1 h-8 text-sm"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <Label className="text-xs text-gray-500">Close</Label>
+                          <Input
+                            type="time"
+                            value={hours.closeTime}
+                            onChange={(e) => updateHours(day, 'closeTime', e.target.value)}
+                            className="mt-1 h-8 text-sm"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex-1 text-gray-400 text-sm">Closed</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Booking Settings */}
+            {displayData.requiresBooking && (
+              <div className="border-t pt-4">
+                <Label className="text-sm font-medium mb-3 block">Booking Settings</Label>
+                
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <Label className="text-xs text-gray-600">Advance Booking (days)</Label>
+                    <Input
+                      type="number"
+                      value={displayData.bookingSettings.advanceBookingDays}
+                      onChange={(e) => updateEditedData({
+                        bookingSettings: {
+                          ...displayData.bookingSettings,
+                          advanceBookingDays: parseInt(e.target.value) || 0
+                        }
+                      })}
+                      className="mt-1 h-8 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-600">Max Booking Duration (hours)</Label>
+                    <Input
+                      type="number"
+                      value={displayData.bookingSettings.maxBookingDuration}
+                      onChange={(e) => updateEditedData({
+                        bookingSettings: {
+                          ...displayData.bookingSettings,
+                          maxBookingDuration: parseInt(e.target.value) || 0
+                        }
+                      })}
+                      className="mt-1 h-8 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-600">Time Slot Duration (hours)</Label>
+                    <Input
+                      type="number"
+                      step="0.5"
+                      value={displayData.bookingSettings.timeSlotDuration}
+                      onChange={(e) => updateEditedData({
+                        bookingSettings: {
+                          ...displayData.bookingSettings,
+                          timeSlotDuration: parseFloat(e.target.value) || 0
+                        }
+                      })}
+                      className="mt-1 h-8 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-600">Cost per booking ($)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={displayData.bookingSettings.cost}
+                      onChange={(e) => updateEditedData({
+                        bookingSettings: {
+                          ...displayData.bookingSettings,
+                          cost: parseFloat(e.target.value) || 0
+                        }
+                      })}
+                      className="mt-1 h-8 text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3 mb-3">
+                  <Switch
+                    checked={displayData.bookingSettings.depositRequired}
+                    onCheckedChange={(checked) => updateEditedData({
+                      bookingSettings: {
+                        ...displayData.bookingSettings,
+                        depositRequired: checked
+                      }
+                    })}
+                  />
+                  <Label className="text-sm font-medium">Require Security Deposit</Label>
+                </div>
+
+                {displayData.bookingSettings.depositRequired && (
+                  <div className="mb-3">
+                    <Label className="text-xs text-gray-600">Deposit Amount ($)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={displayData.bookingSettings.depositAmount}
+                      onChange={(e) => updateEditedData({
+                        bookingSettings: {
+                          ...displayData.bookingSettings,
+                          depositAmount: parseFloat(e.target.value) || 0
+                        }
+                      })}
+                      className="mt-1 h-8 text-sm"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <Label className="text-xs text-gray-600">Cancellation Policy</Label>
+                  <Textarea
+                    value={displayData.bookingSettings.cancellationPolicy}
+                    onChange={(e) => updateEditedData({
+                      bookingSettings: {
+                        ...displayData.bookingSettings,
+                        cancellationPolicy: e.target.value
+                      }
+                    })}
+                    placeholder="e.g., 24 hours notice required for cancellation"
+                    className="mt-1 text-sm"
+                    rows={2}
+                  />
+                </div>
+              </div>
+            )}
+          </CardContent>
+        )}
+      </Card>
+    );
+  };
 
   return (
     <div className="space-y-4 max-w-4xl mx-auto">
