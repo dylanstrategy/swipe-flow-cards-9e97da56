@@ -2,10 +2,9 @@
 import React from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MapPin, DollarSign, Calendar } from 'lucide-react';
-import GoogleMapsAutocomplete from '../GoogleMapsAutocomplete';
-import SwipeUpPrompt from '@/components/ui/swipe-up-prompt';
 
 interface PriceAndTimeStepProps {
   priceRange: [number, number];
@@ -126,9 +125,9 @@ const PriceAndTimeStep = ({
             </div>
           </div>
           
-          <GoogleMapsAutocomplete
+          <Input
             value={location}
-            onChange={(value) => onUpdate({ location: value })}
+            onChange={(e) => onUpdate({ location: e.target.value })}
             placeholder="e.g., Austin, TX or Downtown Seattle"
             className="h-14 text-base bg-gray-50 border-gray-200"
           />
@@ -164,16 +163,6 @@ const PriceAndTimeStep = ({
           </div>
         </div>
       </div>
-
-      {/* Swipe Up Prompt */}
-      {canContinue && (
-        <SwipeUpPrompt
-          onContinue={onContinue}
-          message="Ready to set your priorities!"
-          buttonText="Continue"
-          className="animate-in slide-in-from-bottom-4"
-        />
-      )}
     </div>
   );
 };
