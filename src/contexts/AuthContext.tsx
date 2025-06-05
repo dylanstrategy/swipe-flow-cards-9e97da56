@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,13 +33,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Use refs to prevent multiple operations and track state
   const initializingRef = useRef(false);
   const currentUserIdRef = useRef<string | null>(null);
-  const profileFetchedRef = useRef(false);
+  const profileHandledRef = useRef(false);
 
   const isImpersonating = impersonatedRole !== null;
   const canImpersonate = userProfile?.role === 'super_admin';
 
-  // Function to fetch user profile from the database
-  const fetchUserProfile = async (userId: string): Promise<AppUser | null> => {
+  // Function to determine role based on email
+  const determineRoleFromEmail = (email: string): AppRole => {
+    if (email === 'info@applaudliving.com') {
+      return 'super_admin';
+    }
+    if (email.endsWith('@applaudliving.com')) {
+      return 'operator'; // Support team gets operator role for now
+    }
+    // Check for client domains (this would need to be expanded with actual client domains)
+    if (email.includes('@client') || email.endsWith('.property.com')) {
+      return 'operator';
+    }
+    // Public emails (Gmail, Yahoo, etc.) get resident role
+    if (email.endsWith('@gmail.com') || email.endsWith('@yahoo.com') || 
+        email.endsWith('@hotmail.com') || email.endsWith('@outlook.com')) {
+      return 'resident';
+    }
+    // Default to prospect for new users
+    return 'prospect';
+  };
+
+  // Function to fetch or create user profile
+  const fetchOrCreateUserProfile = async (userId: string, email: string): Promise<AppUser | null> => {
     try {
       console.log('🔍 Fetching user profile for:', userId);
       
@@ -56,14 +76,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (data) {
-        console.log('✅ User profile fetched:', data);
+        console.log('✅ User profile found:', data);
         return data;
       } else {
-        console.log('⚠️ No user profile found for user:', userId);
-        return null;
+        console.log('⚠️ No user profile found, creating new profile for:', email);
+        
+        // Determine role based on email
+        const role = determineRoleFromEmail(email);
+        
+        // Create new user profile
+        const { data: newUser, error: createError } = await supabase
+          .from('users')
+          .insert({
+            id: userId,
+            email: email,
+            first_name: 'New',
+            last_name: 'User',
+            role: role
+          })
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('❌ Error creating user profile:', createError);
+          return null;
+        }
+
+        console.log('✅ Created new user profile:', newUser);
+        return newUser;
       }
     } catch (error) {
-      console.error('❌ Exception fetching user profile:', error);
+      console.error('❌ Exception fetching/creating user profile:', error);
       return null;
     }
   };
@@ -82,24 +125,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     try {
       // Only update state if values have actually changed
-      if (session?.user?.id !== currentUserIdRef.current) {
+      const newUserId = session?.user?.id || null;
+      
+      if (newUserId !== currentUserIdRef.current) {
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          console.log('👤 User signed in, fetching profile...');
+          console.log('👤 User signed in, fetching/creating profile...');
           currentUserIdRef.current = session.user.id;
-          profileFetchedRef.current = false;
+          profileHandledRef.current = false;
           
-          const profile = await fetchUserProfile(session.user.id);
+          const profile = await fetchOrCreateUserProfile(session.user.id, session.user.email || '');
           setUserProfile(profile);
-          profileFetchedRef.current = true;
+          profileHandledRef.current = true;
         } else {
           console.log('🚫 User signed out, clearing profile...');
           setUserProfile(null);
           setImpersonatedRole(null);
           currentUserIdRef.current = null;
-          profileFetchedRef.current = false;
+          profileHandledRef.current = false;
           
           // Clear localStorage on logout
           localStorage.removeItem('supabase.auth.token');
@@ -231,7 +276,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Clear all state and localStorage
       setImpersonatedRole(null);
       currentUserIdRef.current = null;
-      profileFetchedRef.current = false;
+      profileHandledRef.current = false;
       initializingRef.current = false;
       localStorage.removeItem('supabase.auth.token');
       

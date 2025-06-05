@@ -14,7 +14,6 @@ import Operator from "./pages/Operator";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import SuperAdmin from "./pages/SuperAdmin";
-import OwnerLogin from "./pages/OwnerLogin";
 import UnknownRole from "./pages/UnknownRole";
 
 const queryClient = new QueryClient();
@@ -43,7 +42,6 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="/owner-login" element={<OwnerLogin />} />
       <Route path="/unknown-role" element={<UnknownRole />} />
       
       {/* Main app routes */}
