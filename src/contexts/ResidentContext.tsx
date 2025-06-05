@@ -24,6 +24,7 @@ interface ExtendedResidentProfile extends ResidentProfile {
       completedDate?: string;
     };
   };
+  balance: number; // Make this required to match ResidentProfile
 }
 
 interface ResidentContextType {
@@ -364,7 +365,7 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           }
         };
         
-        // If this is the current profile, update it too
+        // If this is the current profile, update it too AND trigger a re-render
         if (residentId === profile.id) {
           setProfile(updatedResident);
           localStorage.setItem('residentProfile', JSON.stringify(updatedResident));
@@ -380,13 +381,14 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     console.log(`Notice to Vacate submitted for resident ${residentId}`);
     console.log('Updated resident:', updatedResidents.find(r => r.id === residentId));
+    console.log('Move-out checklist created:', updatedResidents.find(r => r.id === residentId)?.moveOutChecklist);
   };
 
   const generateMoveOutChecklist = (residentId: string) => {
     setAllResidents(prevResidents => 
       prevResidents.map(resident => {
         if (resident.id === residentId && !resident.moveOutChecklist) {
-          return {
+          const updatedResident = {
             ...resident,
             moveOutChecklist: {
               'notice-to-vacate': { completed: resident.noticeToVacateSubmitted || false },
@@ -399,6 +401,14 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               'move-out-confirmation': { completed: false }
             }
           };
+
+          // If this is the current profile, update it too
+          if (residentId === profile.id) {
+            setProfile(updatedResident);
+            localStorage.setItem('residentProfile', JSON.stringify(updatedResident));
+          }
+
+          return updatedResident;
         }
         return resident;
       })
@@ -406,65 +416,83 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const completeInspection = (residentId: string, type: 'moveIn' | 'moveOut', completedBy: string) => {
-    setAllResidents(prevResidents => 
-      prevResidents.map(resident => {
-        if (resident.id === residentId) {
-          const updates: any = {
-            finalInspectionComplete: true
+    const updatedResidents = allResidents.map(resident => {
+      if (resident.id === residentId) {
+        const updates: any = {
+          finalInspectionComplete: true
+        };
+
+        if (type === 'moveIn' && resident.moveInChecklist) {
+          updates.moveInChecklist = {
+            ...resident.moveInChecklist,
+            'inspection': { completed: true, completedBy, completedDate: new Date().toISOString().split('T')[0] }
           };
-
-          if (type === 'moveIn' && resident.moveInChecklist) {
-            updates.moveInChecklist = {
-              ...resident.moveInChecklist,
-              'inspection': { completed: true, completedBy, completedDate: new Date().toISOString().split('T')[0] }
-            };
-          } else if (type === 'moveOut' && resident.moveOutChecklist) {
-            updates.moveOutChecklist = {
-              ...resident.moveOutChecklist,
-              'final-inspection': { completed: true, completedBy, completedDate: new Date().toISOString().split('T')[0] }
-            };
-          }
-
-          return { ...resident, ...updates };
+        } else if (type === 'moveOut' && resident.moveOutChecklist) {
+          updates.moveOutChecklist = {
+            ...resident.moveOutChecklist,
+            'final-inspection': { completed: true, completedBy, completedDate: new Date().toISOString().split('T')[0] }
+          };
         }
-        return resident;
-      })
-    );
+
+        const updatedResident = { ...resident, ...updates };
+
+        // If this is the current profile, update it too
+        if (residentId === profile.id) {
+          setProfile(updatedResident);
+          localStorage.setItem('residentProfile', JSON.stringify(updatedResident));
+        }
+
+        return updatedResident;
+      }
+      return resident;
+    });
+
+    setAllResidents(updatedResidents);
+    localStorage.setItem('allResidents', JSON.stringify(updatedResidents));
 
     console.log(`${type} inspection completed for resident ${residentId} by ${completedBy}`);
   };
 
   const updateChecklistItem = (residentId: string, type: 'moveIn' | 'moveOut', itemId: string, completed: boolean, completedBy?: string) => {
-    setAllResidents(prevResidents => 
-      prevResidents.map(resident => {
-        if (resident.id === residentId) {
-          const checklistKey = type === 'moveIn' ? 'moveInChecklist' : 'moveOutChecklist';
-          const currentChecklist = resident[checklistKey];
+    const updatedResidents = allResidents.map(resident => {
+      if (resident.id === residentId) {
+        const checklistKey = type === 'moveIn' ? 'moveInChecklist' : 'moveOutChecklist';
+        const currentChecklist = resident[checklistKey];
 
-          if (currentChecklist) {
-            const updatedChecklist = {
-              ...currentChecklist,
-              [itemId]: {
-                completed,
-                completedBy: completed ? (completedBy || 'system') : undefined,
-                completedDate: completed ? new Date().toISOString().split('T')[0] : undefined
-              }
-            };
+        if (currentChecklist) {
+          const updatedChecklist = {
+            ...currentChecklist,
+            [itemId]: {
+              completed,
+              completedBy: completed ? (completedBy || 'system') : undefined,
+              completedDate: completed ? new Date().toISOString().split('T')[0] : undefined
+            }
+          };
 
-            // Check if all items are complete
-            const allComplete = Object.values(updatedChecklist).every(item => item.completed);
-            const completeKey = type === 'moveIn' ? 'moveInChecklistComplete' : 'moveOutChecklistComplete';
+          // Check if all items are complete
+          const allComplete = Object.values(updatedChecklist).every(item => item.completed);
+          const completeKey = type === 'moveIn' ? 'moveInChecklistComplete' : 'moveOutChecklistComplete';
 
-            return {
-              ...resident,
-              [checklistKey]: updatedChecklist,
-              [completeKey]: allComplete
-            };
+          const updatedResident = {
+            ...resident,
+            [checklistKey]: updatedChecklist,
+            [completeKey]: allComplete
+          };
+
+          // If this is the current profile, update it too
+          if (residentId === profile.id) {
+            setProfile(updatedResident);
+            localStorage.setItem('residentProfile', JSON.stringify(updatedResident));
           }
+
+          return updatedResident;
         }
-        return resident;
-      })
-    );
+      }
+      return resident;
+    });
+
+    setAllResidents(updatedResidents);
+    localStorage.setItem('allResidents', JSON.stringify(updatedResidents));
   };
 
   const markAsMoved = (residentId: string, type: 'in' | 'out') => {
@@ -477,17 +505,26 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       };
     }
 
-    setAllResidents(prevResidents => 
-      prevResidents.map(resident => {
-        if (resident.id === residentId) {
-          return {
-            ...resident,
-            status: type === 'in' ? 'current' : 'moved_out' as ResidentProfile['status']
-          };
+    const updatedResidents = allResidents.map(resident => {
+      if (resident.id === residentId) {
+        const updatedResident = {
+          ...resident,
+          status: type === 'in' ? 'current' : 'moved_out' as ResidentProfile['status']
+        };
+
+        // If this is the current profile, update it too
+        if (residentId === profile.id) {
+          setProfile(updatedResident);
+          localStorage.setItem('residentProfile', JSON.stringify(updatedResident));
         }
-        return resident;
-      })
-    );
+
+        return updatedResident;
+      }
+      return resident;
+    });
+
+    setAllResidents(updatedResidents);
+    localStorage.setItem('allResidents', JSON.stringify(updatedResidents));
 
     return {
       success: true,

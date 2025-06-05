@@ -27,7 +27,7 @@ interface NoticeFormData {
 const NoticeToVacateForm = ({ residentName, isOperator = false, onClose }: NoticeToVacateFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { submitNoticeToVacate, generateMoveOutChecklist, profile } = useResident();
+  const { submitNoticeToVacate, profile, updateProfile } = useResident();
   
   const form = useForm<NoticeFormData>({
     defaultValues: {
@@ -45,9 +45,18 @@ const NoticeToVacateForm = ({ residentName, isOperator = false, onClose }: Notic
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Submit notice to vacate and generate move-out checklist
+    // Submit notice to vacate - this will create the move-out checklist automatically
     submitNoticeToVacate(profile.id, data);
-    generateMoveOutChecklist(profile.id);
+    
+    // Force a profile update to ensure UI refresh
+    setTimeout(() => {
+      updateProfile({ 
+        status: 'notice',
+        noticeToVacateSubmitted: true,
+        moveOutDate: data.moveOutDate,
+        forwardingAddress: data.forwardingAddress || ''
+      });
+    }, 100);
     
     toast({
       title: "Notice to Vacate Submitted",
