@@ -8,14 +8,14 @@ import MaintenanceTodayTab from '@/components/maintenance/tabs/MaintenanceTodayT
 import MaintenanceScheduleTab from '@/components/maintenance/tabs/MaintenanceScheduleTab';
 import MaintenanceInventoryTab from '@/components/maintenance/tabs/MaintenanceInventoryTab';
 import MaintenanceVendorsTab from '@/components/maintenance/tabs/MaintenanceVendorsTab';
-import PropertySetupModule from '@/components/property/PropertySetupModule';
+import MaintenanceSetupModule from '@/components/maintenance/MaintenanceSetupModule';
 
 const Maintenance = () => {
   const [activeTab, setActiveTab] = useState('today');
   const [showSetup, setShowSetup] = useState(false);
 
   if (showSetup) {
-    return <PropertySetupModule onClose={() => setShowSetup(false)} />;
+    return <MaintenanceSetupModule onClose={() => setShowSetup(false)} />;
   }
 
   const renderActiveTab = () => {
