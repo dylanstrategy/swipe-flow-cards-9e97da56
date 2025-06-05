@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { mockResidents, type ResidentProfile } from '@/data/mockResidents';
 
@@ -49,6 +50,8 @@ interface ResidentContextType {
   canMoveOut: (residentId: string) => { canMove: boolean; blockers: string[] };
   updateMoveInDate: (residentId: string, newDate: string) => void;
   submitNoticeToVacate: (residentId: string, data: any) => void;
+  cancelMoveOut: (residentId: string) => void;
+  getMoveOutProgress: (residentId: string) => { completed: number; total: number; percentage: number };
   completeInspection: (residentId: string, type: 'moveIn' | 'moveOut', completedBy: string) => void;
   updateChecklistItem: (residentId: string, type: 'moveIn' | 'moveOut', itemId: string, completed: boolean, completedBy?: string) => void;
   generateMoveOutChecklist: (residentId: string) => void;
