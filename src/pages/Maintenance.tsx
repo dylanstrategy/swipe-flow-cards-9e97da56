@@ -11,6 +11,7 @@ import MaintenanceInventoryTab from '@/components/maintenance/tabs/MaintenanceIn
 import MaintenanceVendorsTab from '@/components/maintenance/tabs/MaintenanceVendorsTab';
 import MaintenanceSetupModule from '@/components/maintenance/MaintenanceSetupModule';
 import PersonalizedSettings from '@/components/settings/PersonalizedSettings';
+import ContactProfileForm from '@/components/user/ContactProfileForm';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,12 +21,38 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { UserProfile, ROLE_PERMISSIONS } from '@/types/users';
 
 const Maintenance = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('today');
   const [showSetup, setShowSetup] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showContactProfile, setShowContactProfile] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+
+  // Mock current user profile
+  const [currentUserProfile] = useState<UserProfile>({
+    id: '2',
+    name: 'Mike Rodriguez',
+    email: 'mike.rodriguez@meridian.com',
+    phone: '(555) 234-5678',
+    role: 'maintenance',
+    permissions: ROLE_PERMISSIONS.maintenance,
+    contactInfo: {
+      email: 'mike.rodriguez@meridian.com',
+      phone: '(555) 234-5678',
+      emergencyContact: {
+        name: 'Maria Rodriguez',
+        phone: '(555) 876-5432',
+        relationship: 'Wife'
+      }
+    },
+    status: 'active',
+    createdAt: new Date('2025-02-15'),
+    lastLogin: new Date('2025-06-05'),
+    createdBy: '1'
+  });
 
   const handleRoleSwitch = (role: string) => {
     switch (role) {
@@ -46,12 +73,50 @@ const Maintenance = () => {
     }
   };
 
+  const handleSaveProfile = (updatedProfile: UserProfile) => {
+    console.log('Saving profile:', updatedProfile);
+    // In real app, this would update the backend
+    setIsEditingProfile(false);
+  };
+
   if (showSetup) {
     return <MaintenanceSetupModule onClose={() => setShowSetup(false)} />;
   }
 
   if (showSettings) {
     return <PersonalizedSettings onClose={() => setShowSettings(false)} userRole="maintenance" />;
+  }
+
+  if (showContactProfile) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <ContactProfileForm
+          userProfile={currentUserProfile}
+          onSave={handleSaveProfile}
+          onCancel={() => {
+            setShowContactProfile(false);
+            setIsEditingProfile(false);
+          }}
+          isEditing={isEditingProfile}
+        />
+        {!isEditingProfile && (
+          <div className="flex justify-center mt-6 gap-4">
+            <button
+              onClick={() => setIsEditingProfile(true)}
+              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+            >
+              Edit Profile
+            </button>
+            <button
+              onClick={() => setShowContactProfile(false)}
+              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+            >
+              Back to Dashboard
+            </button>
+          </div>
+        )}
+      </div>
+    );
   }
 
   const renderActiveTab = () => {
@@ -109,7 +174,7 @@ const Maintenance = () => {
               >
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">Mike Rodriguez</p>
+                    <p className="text-sm font-medium leading-none">{currentUserProfile.name}</p>
                     <p className="text-xs leading-none text-muted-foreground">
                       Maintenance Technician
                     </p>
@@ -119,9 +184,17 @@ const Maintenance = () => {
                 
                 <DropdownMenuItem 
                   className="cursor-pointer"
-                  onClick={() => setShowSettings(true)}
+                  onClick={() => setShowContactProfile(true)}
                 >
                   <User className="mr-2 h-4 w-4" />
+                  <span>Contact Profile</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem 
+                  className="cursor-pointer"
+                  onClick={() => setShowSettings(true)}
+                >
+                  <Settings className="mr-2 h-4 w-4" />
                   <span>Setup</span>
                 </DropdownMenuItem>
                 

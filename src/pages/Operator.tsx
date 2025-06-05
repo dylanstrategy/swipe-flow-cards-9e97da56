@@ -7,6 +7,8 @@ import OperatorScheduleTab from '@/components/operator/tabs/OperatorScheduleTab'
 import OperatorMessagesTab from '@/components/operator/tabs/OperatorMessagesTab';
 import OperatorResidentsTab from '@/components/operator/tabs/OperatorResidentsTab';
 import PersonalizedSettings from '@/components/settings/PersonalizedSettings';
+import UserManagement from '@/components/user/UserManagement';
+import ContactProfileForm from '@/components/user/ContactProfileForm';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,12 +18,38 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { User, Settings, LogOut } from 'lucide-react';
+import { User, Settings, LogOut, Users } from 'lucide-react';
+import { UserProfile, ROLE_PERMISSIONS } from '@/types/users';
 
 const Operator = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('today');
   const [showSettings, setShowSettings] = useState(false);
+  const [showUserManagement, setShowUserManagement] = useState(false);
+  const [showContactProfile, setShowContactProfile] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+
+  // Mock current user profile
+  const [currentUserProfile] = useState<UserProfile>({
+    id: '1',
+    name: 'John Smith',
+    email: 'john.smith@meridian.com',
+    phone: '(555) 123-4567',
+    role: 'operator',
+    permissions: ROLE_PERMISSIONS.operator,
+    contactInfo: {
+      email: 'john.smith@meridian.com',
+      phone: '(555) 123-4567',
+      emergencyContact: {
+        name: 'Jane Smith',
+        phone: '(555) 987-6543',
+        relationship: 'Spouse'
+      }
+    },
+    status: 'active',
+    createdAt: new Date('2025-01-01'),
+    lastLogin: new Date('2025-06-05')
+  });
 
   const tabs = [
     { id: 'today', label: 'Today', icon: '📊' },
@@ -49,8 +77,50 @@ const Operator = () => {
     }
   };
 
+  const handleSaveProfile = (updatedProfile: UserProfile) => {
+    console.log('Saving profile:', updatedProfile);
+    // In real app, this would update the backend
+    setIsEditingProfile(false);
+  };
+
   if (showSettings) {
     return <PersonalizedSettings onClose={() => setShowSettings(false)} userRole="operator" />;
+  }
+
+  if (showUserManagement) {
+    return <UserManagement />;
+  }
+
+  if (showContactProfile) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <ContactProfileForm
+          userProfile={currentUserProfile}
+          onSave={handleSaveProfile}
+          onCancel={() => {
+            setShowContactProfile(false);
+            setIsEditingProfile(false);
+          }}
+          isEditing={isEditingProfile}
+        />
+        {!isEditingProfile && (
+          <div className="flex justify-center mt-6 gap-4">
+            <button
+              onClick={() => setIsEditingProfile(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Edit Profile
+            </button>
+            <button
+              onClick={() => setShowContactProfile(false)}
+              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+            >
+              Back to Dashboard
+            </button>
+          </div>
+        )}
+      </div>
+    );
   }
 
   const renderActiveTab = () => {
@@ -91,13 +161,29 @@ const Operator = () => {
             <DropdownMenuContent align="end" className="w-56 bg-white border shadow-lg">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">John Smith</p>
+                  <p className="text-sm font-medium leading-none">{currentUserProfile.name}</p>
                   <p className="text-xs leading-none text-muted-foreground">
                     Property Manager
                   </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              
+              <DropdownMenuItem 
+                className="cursor-pointer"
+                onClick={() => setShowContactProfile(true)}
+              >
+                <User className="mr-2 h-4 w-4" />
+                <span>Contact Profile</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem 
+                className="cursor-pointer"
+                onClick={() => setShowUserManagement(true)}
+              >
+                <Users className="mr-2 h-4 w-4" />
+                <span>Manage Users</span>
+              </DropdownMenuItem>
               
               <DropdownMenuItem 
                 className="cursor-pointer"
@@ -109,7 +195,7 @@ const Operator = () => {
               
               <DropdownMenuItem className="cursor-pointer focus:bg-accent">
                 <div className="flex items-center w-full">
-                  <User className="mr-2 h-4 w-4" />
+                  <Settings className="mr-2 h-4 w-4" />
                   <span>Role</span>
                 </div>
               </DropdownMenuItem>
