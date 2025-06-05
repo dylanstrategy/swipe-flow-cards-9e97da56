@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,8 @@ import {
   Send,
   CheckCircle,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Settings
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -25,6 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import SignatureRequestModal from './SignatureRequestModal';
 
 interface ContractTemplate {
   id: string;
@@ -46,9 +47,13 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
   const { toast } = useToast();
   const [templates, setTemplates] = useState<ContractTemplate[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<ContractTemplate | null>(null);
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [isSignNowConfigured, setIsSignNowConfigured] = useState(false);
 
   useEffect(() => {
     loadTemplates();
+    checkSignNowConfiguration();
   }, []);
 
   const loadTemplates = () => {
@@ -84,6 +89,13 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
       setTemplates(sampleTemplates);
       localStorage.setItem('applaud_contract_templates', JSON.stringify(sampleTemplates));
     }
+  };
+
+  const checkSignNowConfiguration = () => {
+    // Check if SignNow API keys are configured
+    const clientId = process.env.SIGNNOW_CLIENT_ID;
+    const clientSecret = process.env.SIGNNOW_CLIENT_SECRET;
+    setIsSignNowConfigured(!!(clientId && clientSecret));
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -141,13 +153,27 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
   };
 
   const handleSendForSignature = (template: ContractTemplate) => {
+    if (!isSignNowConfigured) {
+      toast({
+        title: "SignNow Not Configured",
+        description: "Please configure your SignNow API credentials to send contracts for signature",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSelectedTemplate(template);
+    setShowSignatureModal(true);
+  };
+
+  const handleSignatureRequested = (templateId: string, signerData: any) => {
     toast({
-      title: "E-Signature Integration Required",
-      description: "Connect an e-signature service to send contracts for signature",
+      title: "Signature Request Sent",
+      description: `Contract sent to ${signerData.signerEmail} for signature`,
     });
     
     if (onSendContract) {
-      onSendContract(template.id, {});
+      onSendContract(templateId, signerData);
     }
   };
 
@@ -172,6 +198,54 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
 
   return (
     <div className="space-y-6">
+      {/* SignNow Configuration Status */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="w-5 h-5" />
+            SignNow Integration
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className={`p-4 rounded-lg ${isSignNowConfigured ? 'bg-green-50' : 'bg-orange-50'}`}>
+              <h4 className={`font-medium mb-2 ${isSignNowConfigured ? 'text-green-900' : 'text-orange-900'}`}>
+                Configuration Status
+              </h4>
+              <div className="flex items-center gap-2">
+                {isSignNowConfigured ? (
+                  <>
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <span className="text-sm text-green-800">
+                      SignNow is configured and ready to use
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="w-4 h-4 text-orange-600" />
+                    <span className="text-sm text-orange-800">
+                      SignNow API credentials not configured. Add SIGNNOW_CLIENT_ID and SIGNNOW_CLIENT_SECRET to your environment variables.
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+            
+            {!isSignNowConfigured && (
+              <div className="p-4 border rounded-lg">
+                <h5 className="font-medium mb-2">Setup Instructions</h5>
+                <ol className="text-sm text-gray-600 space-y-1">
+                  <li>1. Sign up for a SignNow developer account</li>
+                  <li>2. Create an application to get your Client ID and Secret</li>
+                  <li>3. Add SIGNNOW_CLIENT_ID and SIGNNOW_CLIENT_SECRET to your environment</li>
+                  <li>4. Restart the application</li>
+                </ol>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Upload Section */}
       <Card>
         <CardHeader>
@@ -255,6 +329,7 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
                       variant="outline" 
                       size="sm"
                       onClick={() => handleSendForSignature(template)}
+                      disabled={!isSignNowConfigured}
                     >
                       <Send className="w-4 h-4 mr-2" />
                       Send for Signature
@@ -296,43 +371,13 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
         </CardContent>
       </Card>
 
-      {/* E-Signature Integration Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CheckCircle className="w-5 h-5" />
-            E-Signature Integration
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-medium text-blue-900 mb-2">Integration Status</h4>
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-blue-600" />
-                <span className="text-sm text-blue-800">
-                  No e-signature service connected. Connect a service to enable contract signing.
-                </span>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-3 border rounded-lg">
-                <h5 className="font-medium mb-1">DocuSign</h5>
-                <p className="text-xs text-gray-500">Industry standard e-signature</p>
-              </div>
-              <div className="p-3 border rounded-lg">
-                <h5 className="font-medium mb-1">HelloSign (Dropbox)</h5>
-                <p className="text-xs text-gray-500">Simple and user-friendly</p>
-              </div>
-              <div className="p-3 border rounded-lg">
-                <h5 className="font-medium mb-1">Adobe Sign</h5>
-                <p className="text-xs text-gray-500">PDF-native signatures</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Signature Request Modal */}
+      <SignatureRequestModal
+        isOpen={showSignatureModal}
+        onClose={() => setShowSignatureModal(false)}
+        template={selectedTemplate}
+        onSignatureRequested={handleSignatureRequested}
+      />
     </div>
   );
 };
