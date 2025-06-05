@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useRoleRedirect } from '@/hooks/useRoleRedirect';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -16,8 +17,11 @@ const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading, user, userProfile } = useAuth();
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading, user } = useAuth();
   const navigate = useNavigate();
+  
+  // Use the role redirect hook to handle automatic redirects
+  const { userProfile } = useRoleRedirect();
 
   const handleForgotPassword = async () => {
     const email = prompt("Enter your email address:");
@@ -68,53 +72,6 @@ const Login = () => {
       setIsSubmitting(false);
     }
   };
-
-  // Handle role-based routing after successful login
-  useEffect(() => {
-    // Only redirect if we have both user and userProfile, and we're not currently loading
-    if (user && userProfile && !loading) {
-      console.log('✅ User logged in with profile:', {
-        email: user.email,
-        role: userProfile.role,
-        userId: user.id,
-        profileId: userProfile.id
-      });
-      
-      // Clear submitting state
-      setIsSubmitting(false);
-      
-      // Route based on user role
-      switch (userProfile.role) {
-        case 'super_admin':
-          console.log('🚀 Redirecting super admin to /super-admin');
-          navigate('/super-admin', { replace: true });
-          break;
-        case 'operator':
-        case 'senior_operator':
-        case 'leasing':
-          console.log('👨‍💼 Redirecting operator/leasing to /operator');
-          navigate('/operator', { replace: true });
-          break;
-        case 'maintenance':
-        case 'vendor':
-          console.log('🔧 Redirecting maintenance/vendor to /maintenance');
-          navigate('/maintenance', { replace: true });
-          break;
-        case 'resident':
-          console.log('🏠 Redirecting resident to /');
-          navigate('/', { replace: true });
-          break;
-        case 'prospect':
-          console.log('🔍 Redirecting prospect to /discovery');
-          navigate('/discovery', { replace: true });
-          break;
-        default:
-          console.log('❓ Unknown role, redirecting to / (default)');
-          navigate('/', { replace: true });
-          break;
-      }
-    }
-  }, [user, userProfile, loading, navigate]);
 
   // Show loading screen only during auth initialization
   if (loading) {
