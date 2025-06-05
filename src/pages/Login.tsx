@@ -29,8 +29,9 @@ const Login = () => {
     setError('');
     setIsSubmitting(true);
     try {
+      console.log('🔑 Starting Google sign in...');
       await signInWithGoogle();
-      // Don't set isSubmitting to false here - let the auth state change handle navigation
+      console.log('🔑 Google sign in completed');
     } catch (error: any) {
       console.error('Google sign in error:', error);
       setError(error.message || "Failed to sign in with Google");
@@ -52,7 +53,6 @@ const Login = () => {
       } else {
         await signInWithEmail(email, password);
       }
-      // Don't set isSubmitting to false here - let the auth state change handle navigation
     } catch (error: any) {
       console.error('Auth error:', error);
       setError(error.message || "Authentication failed");
@@ -67,7 +67,6 @@ const Login = () => {
     
     try {
       await signInWithEmail(testAccount.email, testAccount.password);
-      // Don't set isSubmitting to false here - let the auth state change handle navigation
     } catch (error: any) {
       console.log('Login failed, creating account:', error.message);
       try {
@@ -75,7 +74,6 @@ const Login = () => {
           first_name: testAccount.label.split(' ')[0],
           last_name: testAccount.label.split(' ')[1] || 'User'
         });
-        // Don't set isSubmitting to false here - let the auth state change handle navigation
       } catch (signUpError: any) {
         console.error('Account creation failed:', signUpError);
         setError(signUpError.message || "Failed to create test account");
@@ -86,48 +84,64 @@ const Login = () => {
 
   // Handle role-based routing after successful login
   useEffect(() => {
-    // Only redirect if we have both user and userProfile, and we're not currently loading
-    if (user && userProfile && !loading && !isSubmitting) {
-      console.log('✅ User logged in with role:', userProfile.role);
+    // Only redirect if we have both user and userProfile, loading is complete, and we're not currently submitting
+    if (user && userProfile && !loading) {
+      console.log('✅ User logged in with profile:', {
+        email: user.email,
+        role: userProfile.role,
+        userId: user.id,
+        profileId: userProfile.id
+      });
+      
+      // Clear submitting state
+      setIsSubmitting(false);
       
       // Route based on user role
       switch (userProfile.role) {
         case 'super_admin':
-          console.log('Redirecting to /super-admin');
+          console.log('🚀 Redirecting super admin to /super-admin');
           navigate('/super-admin', { replace: true });
           break;
         case 'operator':
         case 'senior_operator':
-          console.log('Redirecting to /operator');
+          console.log('👨‍💼 Redirecting operator to /operator');
           navigate('/operator', { replace: true });
           break;
         case 'maintenance':
-          console.log('Redirecting to /maintenance');
+          console.log('🔧 Redirecting maintenance to /maintenance');
           navigate('/maintenance', { replace: true });
           break;
         case 'leasing':
-          console.log('Redirecting to /operator');
+          console.log('🏢 Redirecting leasing to /operator');
           navigate('/operator', { replace: true });
           break;
         case 'vendor':
-          console.log('Redirecting to /maintenance');
+          console.log('🏪 Redirecting vendor to /maintenance');
           navigate('/maintenance', { replace: true });
           break;
         case 'resident':
-          console.log('Redirecting to /');
+          console.log('🏠 Redirecting resident to /');
           navigate('/', { replace: true });
           break;
         case 'prospect':
-          console.log('Redirecting to /discovery');
+          console.log('🔍 Redirecting prospect to /discovery');
           navigate('/discovery', { replace: true });
           break;
         default:
-          console.log('Redirecting to / (default)');
+          console.log('❓ Unknown role, redirecting to / (default)');
           navigate('/', { replace: true });
           break;
       }
+    } else {
+      console.log('⏳ Waiting for auth completion:', {
+        hasUser: !!user,
+        hasProfile: !!userProfile,
+        loading,
+        userEmail: user?.email,
+        profileRole: userProfile?.role
+      });
     }
-  }, [user, userProfile, loading, navigate, isSubmitting]);
+  }, [user, userProfile, loading, navigate]);
 
   // Show loading only during auth initialization
   if (loading) {
@@ -148,6 +162,7 @@ const Login = () => {
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="text-gray-600 text-lg">Redirecting to your dashboard...</p>
+          <p className="text-sm text-gray-500">Role: {userProfile.role}</p>
         </div>
       </div>
     );
