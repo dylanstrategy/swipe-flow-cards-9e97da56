@@ -27,61 +27,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<AppUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start with false to prevent infinite loading
   const [impersonatedRole, setImpersonatedRole] = useState<AppRole | null>(null);
   const { toast } = useToast();
 
   const isImpersonating = impersonatedRole !== null;
   const canImpersonate = userProfile?.role === 'super_admin';
 
-  const fetchUserProfile = async (userId: string): Promise<AppUser | null> => {
-    try {
-      console.log('📋 Fetching user profile for:', userId);
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      
-      if (error) {
-        console.error('❌ Error fetching user profile:', error);
-        return null;
-      }
-      
-      console.log('✅ User profile fetched:', data);
-      return data as AppUser;
-    } catch (error) {
-      console.error('❌ Error in fetchUserProfile:', error);
-      return null;
-    }
-  };
-
+  // Simplified auth initialization - no automatic profile fetching
   useEffect(() => {
-    console.log('🚀 AuthProvider initializing...');
+    console.log('🚀 AuthProvider initializing (simplified)...');
     
-    // Get initial session
+    // Get initial session without fetching profile
     supabase.auth.getSession().then(({ data: { session }, error }) => {
-      console.log('🔍 Initial session:', !!session, 'Error:', error);
+      console.log('🔍 Initial session check:', !!session, 'Error:', error);
       
       if (session?.user) {
         setSession(session);
         setUser(session.user);
-        
-        fetchUserProfile(session.user.id).then(profile => {
-          console.log('📋 Initial profile fetch result:', profile);
-          setUserProfile(profile);
-          setLoading(false);
-        }).catch(err => {
-          console.error('❌ Initial profile fetch error:', err);
-          setUserProfile(null);
-          setLoading(false);
-        });
-      } else {
-        setSession(null);
-        setUser(null);
-        setUserProfile(null);
-        setLoading(false);
       }
+      setLoading(false);
     });
 
     // Listen for auth changes
@@ -89,31 +54,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (event, session) => {
         console.log('🔔 Auth state change:', event, 'Session:', !!session);
         
-        if (session?.user) {
-          setSession(session);
-          setUser(session.user);
-          
-          // Only fetch profile if we don't have one or it's a different user
-          if (!userProfile || userProfile.id !== session.user.id) {
-            fetchUserProfile(session.user.id).then(profile => {
-              console.log('📋 Auth change profile fetch result:', profile);
-              setUserProfile(profile);
-              setLoading(false);
-            }).catch(err => {
-              console.error('❌ Auth change profile fetch error:', err);
-              setUserProfile(null);
-              setLoading(false);
-            });
-          } else {
-            setLoading(false);
-          }
-        } else {
-          setSession(null);
-          setUser(null);
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (!session) {
           setUserProfile(null);
           setImpersonatedRole(null);
-          setLoading(false);
         }
+        
+        setLoading(false);
       }
     );
 
