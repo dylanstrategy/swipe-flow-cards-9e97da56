@@ -1,12 +1,9 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ChevronLeft, X } from 'lucide-react';
 import { useProfile } from '@/contexts/ProfileContext';
-import SwipeableScreen from '@/components/schedule/SwipeableScreen';
-import SwipeUpPrompt from '@/components/ui/swipe-up-prompt';
 import PriceAndTimeStep from './steps/PriceAndTimeStep';
 import PriorityIntroStep from './steps/PriorityIntroStep';
 import PrioritiesStep from './steps/PrioritiesStep';
@@ -26,7 +23,6 @@ const SwipeableDiscoveryFlow = () => {
   const navigate = useNavigate();
   const { updateLifestyleTags } = useProfile();
   const [currentStep, setCurrentStep] = useState(1);
-  const [showPrompt, setShowPrompt] = useState(false);
   const [discoveryData, setDiscoveryData] = useState<DiscoveryData>({
     priceRange: [1500, 3500],
     moveInTimeframe: '',
@@ -68,7 +64,6 @@ const SwipeableDiscoveryFlow = () => {
   const handleNextStep = () => {
     if (currentStep < 5) {
       setCurrentStep(currentStep + 1);
-      setShowPrompt(false);
     } else {
       // Save to profile context
       updateLifestyleTags(discoveryData.lifestyleTags);
@@ -95,15 +90,7 @@ const SwipeableDiscoveryFlow = () => {
   };
 
   const updateDiscoveryData = (updates: Partial<DiscoveryData>) => {
-    setDiscoveryData(prev => {
-      const newData = { ...prev, ...updates };
-      // Check if we can proceed and show prompt for step 1
-      if (currentStep === 1) {
-        const canProceed = newData.moveInTimeframe !== '' && newData.location.trim() !== '';
-        setShowPrompt(canProceed);
-      }
-      return newData;
-    });
+    setDiscoveryData(prev => ({ ...prev, ...updates }));
   };
 
   const renderCurrentStep = () => {
@@ -168,31 +155,12 @@ const SwipeableDiscoveryFlow = () => {
     }
   };
 
-  // For the first step, render with SwipeableScreen wrapper
+  // For the first step, render without header wrapper
   if (currentStep === 1) {
     return (
-      <>
-        <SwipeableScreen
-          title={getStepTitle()}
-          currentStep={currentStep}
-          totalSteps={5}
-          onClose={handleClose}
-          onSwipeUp={canProceedFromCurrentStep() ? handleNextStep : undefined}
-          canSwipeUp={canProceedFromCurrentStep()}
-          hideSwipeHandling={false}
-        >
-          {renderCurrentStep()}
-        </SwipeableScreen>
-        
-        {showPrompt && canProceedFromCurrentStep() && (
-          <SwipeUpPrompt
-            onContinue={handleNextStep}
-            onClear={() => setShowPrompt(false)}
-            message="Ready to find your priorities!"
-            buttonText="Continue"
-          />
-        )}
-      </>
+      <div className="min-h-screen bg-white">
+        {renderCurrentStep()}
+      </div>
     );
   }
 
