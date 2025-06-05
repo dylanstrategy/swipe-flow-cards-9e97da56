@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { X, Database, MessageSquare, Palette, FileText, Users, Wrench, Home, TrendingUp, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';

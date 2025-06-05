@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Calculator, Settings, TrendingUp, AlertTriangle, CheckCircle, Edit } from 'lucide-react';
+import { ArrowLeft, Calculator, Settings, TrendingUp, AlertTriangle, CheckCircle, Edit, Building, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,7 +19,102 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
   const [selectedMoveInDate, setSelectedMoveInDate] = useState(new Date());
   const [selectedUnitType, setSelectedUnitType] = useState('1BR');
   
-  // Expiration allocation by month (percentage of total expirations)
+  // Occupancy thresholds with pricing adjustments
+  const [occupancyThresholds, setOccupancyThresholds] = useState([
+    { threshold: 98, adjustment: 15, type: 'percent' },
+    { threshold: 97, adjustment: 10, type: 'percent' },
+    { threshold: 95, adjustment: 5, type: 'percent' },
+    { threshold: 93, adjustment: 0, type: 'percent' },
+    { threshold: 90, adjustment: -5, type: 'percent' },
+    { threshold: 85, adjustment: -10, type: 'percent' }
+  ]);
+
+  // Market comps with detailed configuration
+  const [marketComps, setMarketComps] = useState([
+    { 
+      name: 'The Meridian East', 
+      studio: 2650, 
+      oneBR: 3250, 
+      twoBR: 4150, 
+      threeBR: 5200,
+      weight: 25, 
+      quality: 9 
+    },
+    { 
+      name: 'Downtown Lofts', 
+      studio: 2580, 
+      oneBR: 3180, 
+      twoBR: 4080, 
+      threeBR: 5100,
+      weight: 20, 
+      quality: 8 
+    },
+    { 
+      name: 'City Center Apartments', 
+      studio: 2720, 
+      oneBR: 3320, 
+      twoBR: 4220, 
+      threeBR: 5350,
+      weight: 30, 
+      quality: 9 
+    },
+    { 
+      name: 'Urban Heights', 
+      studio: 2550, 
+      oneBR: 3150, 
+      twoBR: 4050, 
+      threeBR: 5050,
+      weight: 15, 
+      quality: 7 
+    },
+    { 
+      name: 'Metro Commons', 
+      studio: 2680, 
+      oneBR: 3280, 
+      twoBR: 4180, 
+      threeBR: 5250,
+      weight: 10, 
+      quality: 8 
+    }
+  ];
+
+  // Unit type pricing configuration with min/max
+  const [unitTypePricing, setUnitTypePricing] = useState([
+    { 
+      type: 'Studio', 
+      baseRent: 2650, 
+      minRent: 2400, 
+      maxRent: 2900, 
+      available: true,
+      unitCount: 45
+    },
+    { 
+      type: '1BR', 
+      baseRent: 3200, 
+      minRent: 2950, 
+      maxRent: 3500, 
+      available: true,
+      unitCount: 120
+    },
+    { 
+      type: '2BR', 
+      baseRent: 4100, 
+      minRent: 3800, 
+      maxRent: 4500, 
+      available: true,
+      unitCount: 80
+    },
+    { 
+      type: '3BR', 
+      baseRent: 5200, 
+      minRent: 4800, 
+      maxRent: 5700, 
+      available: true,
+      unitCount: 35
+    }
+  ]);
+
+  // Expiration allocation by month
   const [expirationAllocation, setExpirationAllocation] = useState([
     { month: 'Jan', percentage: 8, maxUnits: 24, currentCount: 18 },
     { month: 'Feb', percentage: 12, maxUnits: 36, currentCount: 32 },
@@ -50,33 +144,7 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
     { term: 15, adjustment: 75, type: 'dollar' }
   ]);
 
-  // Occupancy-based pricing rules
-  const [occupancyRules, setOccupancyRules] = useState([
-    { threshold: 98, adjustment: 10, type: 'percent' },
-    { threshold: 97, adjustment: 5, type: 'percent' },
-    { threshold: 95, adjustment: 0, type: 'percent' },
-    { threshold: 93, adjustment: -3, type: 'percent' },
-    { threshold: 90, adjustment: -5, type: 'percent' }
-  ]);
-
-  // Market comps
-  const [marketComps, setMarketComps] = useState([
-    { name: 'The Meridian East', rent: 3250, weight: 25, quality: 9 },
-    { name: 'Downtown Lofts', rent: 3180, weight: 20, quality: 8 },
-    { name: 'City Center Apartments', rent: 3320, weight: 30, quality: 9 },
-    { name: 'Urban Heights', rent: 3150, weight: 15, quality: 7 },
-    { name: 'Metro Commons', rent: 3280, weight: 10, quality: 8 }
-  ]);
-
-  // Base unit pricing by type
-  const [unitTypePricing, setUnitTypePricing] = useState([
-    { type: 'Studio', baseRent: 2850, available: true },
-    { type: '1BR', baseRent: 3200, available: true },
-    { type: '2BR', baseRent: 4100, available: true },
-    { type: '3BR', baseRent: 5200, available: false }
-  ]);
-
-  // 18-week forecast data
+  // 18-week forecast data with occupancy
   const [weeklyForecast] = useState(() => {
     const weeks = [];
     for (let i = 1; i <= 18; i++) {
@@ -85,7 +153,7 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
       weeks.push({
         week: i,
         date: date.toDateString(),
-        occupancy: Math.max(90, 96.5 - Math.random() * 3),
+        occupancy: Math.max(85, 96.5 - Math.random() * 8 + Math.random() * 3),
         moveIns: Math.floor(Math.random() * 8) + 2,
         moveOuts: Math.floor(Math.random() * 6) + 1
       });
@@ -93,23 +161,43 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
     return weeks;
   });
 
-  // Calculate pricing suggestions
+  // Calculate comp-based pricing for selected unit type
+  const calculateCompPrice = () => {
+    const unitTypeKey = selectedUnitType === 'Studio' ? 'studio' :
+                       selectedUnitType === '1BR' ? 'oneBR' :
+                       selectedUnitType === '2BR' ? 'twoBR' : 'threeBR';
+    
+    // Calculate weighted average
+    const totalWeight = marketComps.reduce((sum, comp) => sum + comp.weight, 0);
+    const weightedPrice = marketComps.reduce((sum, comp) => {
+      const unitPrice = comp[unitTypeKey] || 0;
+      return sum + (unitPrice * comp.weight / totalWeight);
+    }, 0);
+
+    return Math.round(weightedPrice);
+  };
+
+  // Get occupancy adjustment based on current occupancy
+  const getOccupancyAdjustment = (basePrice: number) => {
+    const threshold = occupancyThresholds.find(t => currentOccupancy >= t.threshold);
+    if (!threshold) return 0;
+    
+    return threshold.type === 'percent' 
+      ? Math.round(basePrice * (threshold.adjustment / 100))
+      : threshold.adjustment;
+  };
+
+  // Calculate pricing suggestions with all factors
   const calculatePricingSuggestions = () => {
     const selectedUnit = unitTypePricing.find(unit => unit.type === selectedUnitType);
     if (!selectedUnit) return [];
 
+    const compPrice = calculateCompPrice();
     const baseRent = selectedUnit.baseRent;
     
-    // Get comp-based pricing
-    const weightedCompPrice = marketComps.reduce((sum, comp) => 
-      sum + (comp.rent * comp.weight / 100), 0
-    );
-
-    // Get occupancy adjustment
-    const occupancyRule = occupancyRules.find(rule => currentOccupancy >= rule.threshold) || occupancyRules[occupancyRules.length - 1];
-    const occupancyAdjustment = occupancyRule.type === 'percent' 
-      ? baseRent * (occupancyRule.adjustment / 100)
-      : occupancyRule.adjustment;
+    // North Star price from comp analysis
+    const northStarPrice = Math.round((baseRent + compPrice) / 2);
+    const occupancyAdjustment = getOccupancyAdjustment(northStarPrice);
 
     const suggestions = [];
 
@@ -124,11 +212,13 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
       const isTermAllowed = monthData ? monthData.currentCount < monthData.maxUnits : true;
 
       // Calculate final rent
-      let finalRent = Math.round((baseRent + weightedCompPrice) / 2); // Average of base and comps
-      finalRent += occupancyAdjustment;
+      let finalRent = northStarPrice + occupancyAdjustment;
       finalRent += termAdj.type === 'percent' 
-        ? finalRent * (termAdj.adjustment / 100)
+        ? Math.round(finalRent * (termAdj.adjustment / 100))
         : termAdj.adjustment;
+
+      // Apply min/max constraints
+      finalRent = Math.max(selectedUnit.minRent, Math.min(selectedUnit.maxRent, finalRent));
 
       suggestions.push({
         term: termAdj.term,
@@ -136,10 +226,12 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
         expirationMonth,
         isAllowed: isTermAllowed,
         breakdown: {
+          northStarPrice,
+          compPrice,
           baseRent,
-          compAdjustment: Math.round(weightedCompPrice - baseRent),
-          occupancyAdjustment: Math.round(occupancyAdjustment),
-          termAdjustment: termAdj.adjustment
+          occupancyAdjustment,
+          termAdjustment: termAdj.adjustment,
+          constraints: `${selectedUnit.minRent} - ${selectedUnit.maxRent}`
         }
       });
     }
@@ -148,6 +240,22 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
   };
 
   const pricingSuggestions = calculatePricingSuggestions();
+
+  const addNewComp = () => {
+    setMarketComps([...marketComps, {
+      name: 'New Property',
+      studio: 2500,
+      oneBR: 3000,
+      twoBR: 3800,
+      threeBR: 4800,
+      weight: 0,
+      quality: 5
+    }]);
+  };
+
+  const removeComp = (index: number) => {
+    setMarketComps(marketComps.filter((_, i) => i !== index));
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -172,27 +280,27 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Dynamic Pricing Dashboard</h1>
-          <p className="text-gray-600">Configure pricing parameters and view real-time pricing suggestions</p>
+          <p className="text-gray-600">Advanced pricing engine with occupancy thresholds, comp analysis, and unit-specific constraints</p>
         </div>
 
         <Tabs defaultValue="pricing" className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="pricing">Pricing Engine</TabsTrigger>
-            <TabsTrigger value="expiration">Expiration Allocation</TabsTrigger>
-            <TabsTrigger value="comps">Market Comps</TabsTrigger>
-            <TabsTrigger value="rules">Pricing Rules</TabsTrigger>
+            <TabsTrigger value="comps">Comp Analysis</TabsTrigger>
+            <TabsTrigger value="thresholds">Occupancy Rules</TabsTrigger>
+            <TabsTrigger value="expiration">Expiration Control</TabsTrigger>
             <TabsTrigger value="forecast">18-Week Forecast</TabsTrigger>
           </TabsList>
 
           {/* Pricing Engine Tab */}
           <TabsContent value="pricing" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Input Parameters */}
+              {/* Current Parameters */}
               <Card className="lg:col-span-1">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Settings className="w-5 h-5" />
-                    Pricing Parameters
+                    Current Parameters
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -206,15 +314,9 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
                       min="0"
                       max="100"
                     />
-                  </div>
-                  
-                  <div>
-                    <Label>Move-In Date</Label>
-                    <Input
-                      type="date"
-                      value={selectedMoveInDate.toISOString().split('T')[0]}
-                      onChange={(e) => setSelectedMoveInDate(new Date(e.target.value))}
-                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Threshold: {occupancyThresholds.find(t => currentOccupancy >= t.threshold)?.adjustment || 0}% adjustment
+                    </p>
                   </div>
                   
                   <div>
@@ -226,28 +328,63 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
                       <SelectContent>
                         {unitTypePricing.filter(unit => unit.available).map(unit => (
                           <SelectItem key={unit.type} value={unit.type}>
-                            {unit.type} - ${unit.baseRent.toLocaleString()}
+                            {unit.type} ({unit.unitCount} units)
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <div>
+                    <Label>Move-In Date</Label>
+                    <Input
+                      type="date"
+                      value={selectedMoveInDate.toISOString().split('T')[0]}
+                      onChange={(e) => setSelectedMoveInDate(new Date(e.target.value))}
+                    />
+                  </div>
                 </CardContent>
               </Card>
 
-              {/* Pricing Suggestions */}
+              {/* North Star Pricing */}
               <Card className="lg:col-span-2">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Calculator className="w-5 h-5" />
-                    Pricing Suggestions
+                    <TrendingUp className="w-5 h-5" />
+                    North Star Pricing Analysis
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <div className="text-sm text-gray-600">Comp Average</div>
+                      <div className="text-xl font-semibold">${calculateCompPrice().toLocaleString()}</div>
+                    </div>
+                    <div className="text-center p-4 bg-green-50 rounded-lg">
+                      <div className="text-sm text-gray-600">Base Rent</div>
+                      <div className="text-xl font-semibold">
+                        ${unitTypePricing.find(u => u.type === selectedUnitType)?.baseRent.toLocaleString() || 0}
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                      <div className="text-sm text-gray-600">North Star</div>
+                      <div className="text-xl font-semibold text-yellow-700">
+                        ${Math.round((calculateCompPrice() + (unitTypePricing.find(u => u.type === selectedUnitType)?.baseRent || 0)) / 2).toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-purple-50 rounded-lg">
+                      <div className="text-sm text-gray-600">Occupancy Impact</div>
+                      <div className="text-xl font-semibold text-purple-700">
+                        {getOccupancyAdjustment(Math.round((calculateCompPrice() + (unitTypePricing.find(u => u.type === selectedUnitType)?.baseRent || 0)) / 2)) >= 0 ? '+' : ''}
+                        ${getOccupancyAdjustment(Math.round((calculateCompPrice() + (unitTypePricing.find(u => u.type === selectedUnitType)?.baseRent || 0)) / 2)).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Term (Months)</TableHead>
+                        <TableHead>Term</TableHead>
                         <TableHead>Suggested Rent</TableHead>
                         <TableHead>Expires</TableHead>
                         <TableHead>Status</TableHead>
@@ -255,9 +392,9 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {pricingSuggestions.map((suggestion) => (
+                      {pricingSuggestions.slice(0, 6).map((suggestion) => (
                         <TableRow key={suggestion.term}>
-                          <TableCell className="font-medium">{suggestion.term}</TableCell>
+                          <TableCell className="font-medium">{suggestion.term} months</TableCell>
                           <TableCell className="font-semibold text-lg">
                             ${suggestion.rent.toLocaleString()}
                           </TableCell>
@@ -278,7 +415,7 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
                           <TableCell>
                             {suggestion.isAllowed && (
                               <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                                Apply Price
+                                Apply
                               </Button>
                             )}
                           </TableCell>
@@ -289,49 +426,251 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
 
-            {/* Pricing Breakdown */}
+          {/* Comp Analysis Tab */}
+          <TabsContent value="comps" className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle>Pricing Breakdown (12-Month Example)</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Market Comparables Configuration</CardTitle>
+                  <p className="text-sm text-gray-600">Configure competitor properties and their pricing by unit type</p>
+                </div>
+                <Button onClick={addNewComp} className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Property
+                </Button>
               </CardHeader>
               <CardContent>
-                {pricingSuggestions.find(s => s.term === 12) && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <div className="text-sm text-gray-600">Base Rent</div>
-                      <div className="text-xl font-semibold">
-                        ${pricingSuggestions.find(s => s.term === 12)?.breakdown.baseRent.toLocaleString()}
-                      </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Property</TableHead>
+                      <TableHead>Studio</TableHead>
+                      <TableHead>1BR</TableHead>
+                      <TableHead>2BR</TableHead>
+                      <TableHead>3BR</TableHead>
+                      <TableHead>Weight (%)</TableHead>
+                      <TableHead>Quality</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {marketComps.map((comp, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          <Input
+                            value={comp.name}
+                            onChange={(e) => {
+                              const newComps = [...marketComps];
+                              newComps[index].name = e.target.value;
+                              setMarketComps(newComps);
+                            }}
+                            className="w-32"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            value={comp.studio}
+                            onChange={(e) => {
+                              const newComps = [...marketComps];
+                              newComps[index].studio = parseInt(e.target.value);
+                              setMarketComps(newComps);
+                            }}
+                            className="w-20"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            value={comp.oneBR}
+                            onChange={(e) => {
+                              const newComps = [...marketComps];
+                              newComps[index].oneBR = parseInt(e.target.value);
+                              setMarketComps(newComps);
+                            }}
+                            className="w-20"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            value={comp.twoBR}
+                            onChange={(e) => {
+                              const newComps = [...marketComps];
+                              newComps[index].twoBR = parseInt(e.target.value);
+                              setMarketComps(newComps);
+                            }}
+                            className="w-20"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            value={comp.threeBR}
+                            onChange={(e) => {
+                              const newComps = [...marketComps];
+                              newComps[index].threeBR = parseInt(e.target.value);
+                              setMarketComps(newComps);
+                            }}
+                            className="w-20"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            value={comp.weight}
+                            onChange={(e) => {
+                              const newComps = [...marketComps];
+                              newComps[index].weight = parseInt(e.target.value);
+                              setMarketComps(newComps);
+                            }}
+                            className="w-16"
+                            min="0"
+                            max="100"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Badge>{comp.quality}/10</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => removeComp(index)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-semibold mb-2">Weighted Averages by Unit Type</h4>
+                  <div className="grid grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600">Studio</div>
+                      <div className="text-lg font-semibold">${Math.round(marketComps.reduce((sum, comp) => sum + (comp.studio * comp.weight / 100), 0)).toLocaleString()}</div>
                     </div>
-                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <div className="text-sm text-gray-600">Comp Adjustment</div>
-                      <div className="text-xl font-semibold">
-                        {pricingSuggestions.find(s => s.term === 12)?.breakdown.compAdjustment >= 0 ? '+' : ''}
-                        ${pricingSuggestions.find(s => s.term === 12)?.breakdown.compAdjustment.toLocaleString()}
-                      </div>
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600">1BR</div>
+                      <div className="text-lg font-semibold">${Math.round(marketComps.reduce((sum, comp) => sum + (comp.oneBR * comp.weight / 100), 0)).toLocaleString()}</div>
                     </div>
-                    <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                      <div className="text-sm text-gray-600">Occupancy Adjustment</div>
-                      <div className="text-xl font-semibold">
-                        {pricingSuggestions.find(s => s.term === 12)?.breakdown.occupancyAdjustment >= 0 ? '+' : ''}
-                        ${pricingSuggestions.find(s => s.term === 12)?.breakdown.occupancyAdjustment.toLocaleString()}
-                      </div>
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600">2BR</div>
+                      <div className="text-lg font-semibold">${Math.round(marketComps.reduce((sum, comp) => sum + (comp.twoBR * comp.weight / 100), 0)).toLocaleString()}</div>
                     </div>
-                    <div className="text-center p-4 bg-purple-50 rounded-lg">
-                      <div className="text-sm text-gray-600">Term Adjustment</div>
-                      <div className="text-xl font-semibold">
-                        {pricingSuggestions.find(s => s.term === 12)?.breakdown.termAdjustment >= 0 ? '+' : ''}
-                        ${pricingSuggestions.find(s => s.term === 12)?.breakdown.termAdjustment.toLocaleString()}
-                      </div>
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600">3BR</div>
+                      <div className="text-lg font-semibold">${Math.round(marketComps.reduce((sum, comp) => sum + (comp.threeBR * comp.weight / 100), 0)).toLocaleString()}</div>
                     </div>
                   </div>
-                )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Expiration Allocation Tab */}
+          {/* Occupancy Thresholds Tab */}
+          <TabsContent value="thresholds" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Occupancy Thresholds & Adjustments</CardTitle>
+                  <p className="text-sm text-gray-600">Configure pricing adjustments based on occupancy levels</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {occupancyThresholds.map((threshold, index) => (
+                      <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
+                        <div className="flex-1">
+                          <Label className="text-sm">≥{threshold.threshold}% occupancy</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            value={threshold.adjustment}
+                            onChange={(e) => {
+                              const newThresholds = [...occupancyThresholds];
+                              newThresholds[index].adjustment = parseFloat(e.target.value);
+                              setOccupancyThresholds(newThresholds);
+                            }}
+                            className="w-20"
+                          />
+                          <span className="text-sm text-gray-600">%</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Unit Type Constraints</CardTitle>
+                  <p className="text-sm text-gray-600">Set minimum and maximum rent limits by unit type</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {unitTypePricing.map((unit, index) => (
+                      <div key={index} className="p-3 border rounded-lg space-y-2">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium">{unit.type}</h4>
+                          <Badge>{unit.unitCount} units</Badge>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>
+                            <Label className="text-xs">Min Rent</Label>
+                            <Input
+                              type="number"
+                              value={unit.minRent}
+                              onChange={(e) => {
+                                const newUnits = [...unitTypePricing];
+                                newUnits[index].minRent = parseInt(e.target.value);
+                                setUnitTypePricing(newUnits);
+                              }}
+                              className="h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Base Rent</Label>
+                            <Input
+                              type="number"
+                              value={unit.baseRent}
+                              onChange={(e) => {
+                                const newUnits = [...unitTypePricing];
+                                newUnits[index].baseRent = parseInt(e.target.value);
+                                setUnitTypePricing(newUnits);
+                              }}
+                              className="h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Max Rent</Label>
+                            <Input
+                              type="number"
+                              value={unit.maxRent}
+                              onChange={(e) => {
+                                const newUnits = [...unitTypePricing];
+                                newUnits[index].maxRent = parseInt(e.target.value);
+                                setUnitTypePricing(newUnits);
+                              }}
+                              className="h-8"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Expiration Control Tab */}
           <TabsContent value="expiration" className="space-y-6">
             <Card>
               <CardHeader>
@@ -364,7 +703,7 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
                             onChange={(e) => {
                               const newAllocation = [...expirationAllocation];
                               newAllocation[index].percentage = parseInt(e.target.value);
-                              newAllocation[index].maxUnits = Math.floor(300 * parseInt(e.target.value) / 100); // Assuming 300 total units
+                              newAllocation[index].maxUnits = Math.floor(300 * parseInt(e.target.value) / 100);
                               setExpirationAllocation(newAllocation);
                             }}
                             className="h-8 text-sm"
@@ -384,133 +723,6 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
             </Card>
           </TabsContent>
 
-          {/* Market Comps Tab */}
-          <TabsContent value="comps" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Market Comparables</CardTitle>
-                <p className="text-sm text-gray-600">
-                  Configure competitor properties and their influence on pricing
-                </p>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Property Name</TableHead>
-                      <TableHead>Rent ({selectedUnitType})</TableHead>
-                      <TableHead>Weight (%)</TableHead>
-                      <TableHead>Quality Score</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {marketComps.map((comp, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium">{comp.name}</TableCell>
-                        <TableCell>
-                          <Input
-                            type="number"
-                            value={comp.rent}
-                            onChange={(e) => {
-                              const newComps = [...marketComps];
-                              newComps[index].rent = parseInt(e.target.value);
-                              setMarketComps(newComps);
-                            }}
-                            className="w-24"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            type="number"
-                            value={comp.weight}
-                            onChange={(e) => {
-                              const newComps = [...marketComps];
-                              newComps[index].weight = parseInt(e.target.value);
-                              setMarketComps(newComps);
-                            }}
-                            className="w-16"
-                            min="0"
-                            max="100"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Badge>{comp.quality}/10</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="outline" size="sm">
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Pricing Rules Tab */}
-          <TabsContent value="rules" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Occupancy-Based Adjustments</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {occupancyRules.map((rule, index) => (
-                      <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
-                        <div className="flex-1">
-                          <Label className="text-sm">≥{rule.threshold}% occupancy</Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            value={rule.adjustment}
-                            onChange={(e) => {
-                              const newRules = [...occupancyRules];
-                              newRules[index].adjustment = parseInt(e.target.value);
-                              setOccupancyRules(newRules);
-                            }}
-                            className="w-20"
-                          />
-                          <span className="text-sm text-gray-600">%</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Lease Term Adjustments</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {leaseTermAdjustments.map((term, index) => (
-                      <div key={index} className="flex items-center gap-3 p-2 border rounded">
-                        <div className="w-16 text-sm font-medium">{term.term}mo</div>
-                        <Input
-                          type="number"
-                          value={term.adjustment}
-                          onChange={(e) => {
-                            const newTerms = [...leaseTermAdjustments];
-                            newTerms[index].adjustment = parseInt(e.target.value);
-                            setLeaseTermAdjustments(newTerms);
-                          }}
-                          className="w-20"
-                        />
-                        <span className="text-sm text-gray-600">$</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
           {/* 18-Week Forecast Tab */}
           <TabsContent value="forecast" className="space-y-6">
             <Card>
@@ -527,34 +739,37 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
                       <TableHead>Week</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Projected Occupancy</TableHead>
+                      <TableHead>Pricing Impact</TableHead>
                       <TableHead>Move-Ins</TableHead>
                       <TableHead>Move-Outs</TableHead>
-                      <TableHead>Net Change</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {weeklyForecast.map((week) => (
-                      <TableRow key={week.week}>
-                        <TableCell className="font-medium">Week {week.week}</TableCell>
-                        <TableCell>{week.date}</TableCell>
-                        <TableCell>
-                          <span className={
-                            week.occupancy >= 98 ? 'text-red-600 font-semibold' :
-                            week.occupancy >= 95 ? 'text-green-600 font-semibold' :
-                            'text-yellow-600 font-semibold'
-                          }>
-                            {week.occupancy.toFixed(1)}%
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-green-600">+{week.moveIns}</TableCell>
-                        <TableCell className="text-red-600">-{week.moveOuts}</TableCell>
-                        <TableCell>
-                          <span className={week.moveIns - week.moveOuts >= 0 ? 'text-green-600' : 'text-red-600'}>
-                            {week.moveIns - week.moveOuts >= 0 ? '+' : ''}{week.moveIns - week.moveOuts}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {weeklyForecast.map((week) => {
+                      const threshold = occupancyThresholds.find(t => week.occupancy >= t.threshold);
+                      return (
+                        <TableRow key={week.week}>
+                          <TableCell className="font-medium">Week {week.week}</TableCell>
+                          <TableCell>{week.date}</TableCell>
+                          <TableCell>
+                            <span className={
+                              week.occupancy >= 98 ? 'text-red-600 font-semibold' :
+                              week.occupancy >= 95 ? 'text-green-600 font-semibold' :
+                              'text-yellow-600 font-semibold'
+                            }>
+                              {week.occupancy.toFixed(1)}%
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className={threshold?.adjustment > 0 ? 'text-green-600' : threshold?.adjustment < 0 ? 'text-red-600' : 'text-gray-600'}>
+                              {threshold?.adjustment >= 0 ? '+' : ''}{threshold?.adjustment || 0}%
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-green-600">+{week.moveIns}</TableCell>
+                          <TableCell className="text-red-600">-{week.moveOuts}</TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </CardContent>
