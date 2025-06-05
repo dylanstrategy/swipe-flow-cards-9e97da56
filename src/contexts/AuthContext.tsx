@@ -81,35 +81,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     let mounted = true;
 
-    // Set up auth state listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('👂 Auth state change event:', event);
-        
-        if (!mounted) return;
-
-        // Only handle auth state synchronously - no async calls here
-        setUser(session?.user ?? null);
-        setLoading(false);
-        
-        // Clear dev mode on logout
-        if (!session?.user) {
-          setUserProfile(null);
-          setIsDevMode(false);
-          setDevModeRole(null);
-          setDevModeProperty(null);
-        }
-      }
-    );
-
-    // Get initial session
-    const getInitialSession = async () => {
+    // Get initial session first
+    const getInitialAuth = async () => {
       try {
         console.log('🔑 Getting initial session');
         const { data: { session } } = await supabase.auth.getSession();
         
         if (mounted) {
+          console.log('🔑 Initial session:', session ? 'found' : 'none');
           setUser(session?.user ?? null);
+          
+          if (session?.user) {
+            console.log('👤 Fetching profile for initial user:', session.user.id);
+            const profile = await fetchProfile(session.user.id);
+            if (mounted && profile) {
+              setUserProfile(profile);
+            }
+          }
           setLoading(false);
         }
       } catch (error) {
@@ -120,7 +108,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    getInitialSession();
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('👂 Auth state change event:', event, 'Session:', session ? 'present' : 'none');
+        
+        if (!mounted) return;
+
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          console.log('👤 Auth state change - fetching profile for:', session.user.id);
+          const profile = await fetchProfile(session.user.id);
+          if (mounted && profile) {
+            setUserProfile(profile);
+          } else if (mounted) {
+            setUserProfile(null);
+          }
+        } else {
+          setUserProfile(null);
+          setIsDevMode(false);
+          setDevModeRole(null);
+          setDevModeProperty(null);
+        }
+        
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    );
+
+    getInitialAuth();
 
     return () => {
       mounted = false;
@@ -128,20 +146,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription?.unsubscribe();
     };
   }, []);
-
-  // Separate effect for profile fetching when user changes
-  useEffect(() => {
-    if (user && !userProfile) {
-      console.log('👤 User changed, fetching profile for:', user.id);
-      fetchProfile(user.id).then(profile => {
-        if (profile) {
-          setUserProfile(profile);
-        }
-      });
-    } else if (!user) {
-      setUserProfile(null);
-    }
-  }, [user?.id]);
 
   const signInWithEmail = async (email: string, password: string) => {
     console.log('🔑 Signing in with email:', email);
