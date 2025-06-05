@@ -1,9 +1,9 @@
+
 import React, { useState } from 'react';
 import { X, Database, MessageSquare, Palette, FileText, Users, Wrench, Home, TrendingUp, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import DataSourceManager from './DataSourceManager';
-import PPFManager from './PPFManager';
 import MessagingSetup from './MessagingSetup';
 import BrandingSetup from './BrandingSetup';
 import DocumentsSetup from './DocumentsSetup';
@@ -32,13 +32,6 @@ const PropertySetupModule = ({ onClose }: PropertySetupModuleProps) => {
       description: 'Real-time pricing engine with occupancy, comps, and expiration controls',
       icon: DollarSign,
       component: PricingDashboard
-    },
-    {
-      id: 'ppf-management',
-      title: 'PPF & Pricing Strategy',
-      description: 'Configure 18-week forecasting and automated pricing campaigns',
-      icon: TrendingUp,
-      component: PPFManager
     },
     {
       id: 'messaging',
@@ -83,13 +76,7 @@ const PropertySetupModule = ({ onClose }: PropertySetupModuleProps) => {
       const Component = module.component;
       
       // Handle different prop requirements for each component
-      if (module.id === 'data-sources') {
-        return <Component onBack={() => setActiveModule(null)} />;
-      }
-      if (module.id === 'ppf-management') {
-        return <Component onClose={() => setActiveModule(null)} />;
-      }
-      if (module.id === 'pricing-dashboard') {
+      if (module.id === 'data-sources' || module.id === 'pricing-dashboard') {
         return <Component onBack={() => setActiveModule(null)} />;
       }
       // All other components expect onBack
