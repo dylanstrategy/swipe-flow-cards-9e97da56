@@ -9,205 +9,308 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      auth_verifications: {
+      calendar_events: {
         Row: {
-          code: string
           created_at: string
-          expires_at: string
+          created_by: string
+          description: string | null
+          event_date: string
+          event_time: string | null
+          event_type: string
           id: string
-          used_at: string | null
-          user_id: string
-          verification_type: string
+          related_unit_id: string | null
+          related_user_id: string | null
+          title: string
         }
         Insert: {
-          code: string
           created_at?: string
-          expires_at: string
+          created_by: string
+          description?: string | null
+          event_date: string
+          event_time?: string | null
+          event_type: string
           id?: string
-          used_at?: string | null
-          user_id: string
-          verification_type: string
+          related_unit_id?: string | null
+          related_user_id?: string | null
+          title: string
         }
         Update: {
-          code?: string
           created_at?: string
-          expires_at?: string
+          created_by?: string
+          description?: string | null
+          event_date?: string
+          event_time?: string | null
+          event_type?: string
           id?: string
-          used_at?: string | null
-          user_id?: string
-          verification_type?: string
-        }
-        Relationships: []
-      }
-      companies: {
-        Row: {
-          address: string | null
-          contact_email: string | null
-          contact_phone: string | null
-          created_at: string
-          domain: string | null
-          id: string
-          name: string
-          plan_type: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          address?: string | null
-          contact_email?: string | null
-          contact_phone?: string | null
-          created_at?: string
-          domain?: string | null
-          id?: string
-          name: string
-          plan_type?: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          address?: string | null
-          contact_email?: string | null
-          contact_phone?: string | null
-          created_at?: string
-          domain?: string | null
-          id?: string
-          name?: string
-          plan_type?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      properties: {
-        Row: {
-          address: string | null
-          city: string | null
-          company_id: string
-          created_at: string
-          id: string
-          name: string
-          property_type: string | null
-          state: string | null
-          status: string
-          unit_count: number | null
-          updated_at: string
-          zip_code: string | null
-        }
-        Insert: {
-          address?: string | null
-          city?: string | null
-          company_id: string
-          created_at?: string
-          id?: string
-          name: string
-          property_type?: string | null
-          state?: string | null
-          status?: string
-          unit_count?: number | null
-          updated_at?: string
-          zip_code?: string | null
-        }
-        Update: {
-          address?: string | null
-          city?: string | null
-          company_id?: string
-          created_at?: string
-          id?: string
-          name?: string
-          property_type?: string | null
-          state?: string | null
-          status?: string
-          unit_count?: number | null
-          updated_at?: string
-          zip_code?: string | null
+          related_unit_id?: string | null
+          related_user_id?: string | null
+          title?: string
         }
         Relationships: [
           {
-            foreignKeyName: "properties_company_id_fkey"
-            columns: ["company_id"]
+            foreignKeyName: "calendar_events_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "companies"
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_related_unit_id_fkey"
+            columns: ["related_unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_related_user_id_fkey"
+            columns: ["related_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
       }
-      user_profiles: {
+      move_ins: {
         Row: {
-          avatar_url: string | null
-          backup_codes: string[] | null
-          company_id: string | null
-          created_at: string | null
-          email: string
-          email_verified: boolean | null
-          first_name: string
+          balance_due: number
+          checklist_completed: boolean
+          created_at: string
           id: string
-          last_login: string | null
-          last_name: string
-          phone: string | null
-          phone_verified: boolean | null
-          property: string | null
-          property_id: string | null
-          role: string
-          status: string
-          two_factor_enabled: boolean | null
-          two_factor_secret: string | null
-          unit_number: string | null
-          updated_at: string | null
+          lease_signed_date: string | null
+          lease_start_date: string
+          resident_id: string
+          status: Database["public"]["Enums"]["move_in_status"]
+          unit_id: string
+          updated_at: string
         }
         Insert: {
-          avatar_url?: string | null
-          backup_codes?: string[] | null
-          company_id?: string | null
-          created_at?: string | null
-          email: string
-          email_verified?: boolean | null
-          first_name: string
-          id: string
-          last_login?: string | null
-          last_name: string
-          phone?: string | null
-          phone_verified?: boolean | null
-          property?: string | null
-          property_id?: string | null
-          role?: string
-          status?: string
-          two_factor_enabled?: boolean | null
-          two_factor_secret?: string | null
-          unit_number?: string | null
-          updated_at?: string | null
+          balance_due?: number
+          checklist_completed?: boolean
+          created_at?: string
+          id?: string
+          lease_signed_date?: string | null
+          lease_start_date: string
+          resident_id: string
+          status?: Database["public"]["Enums"]["move_in_status"]
+          unit_id: string
+          updated_at?: string
         }
         Update: {
-          avatar_url?: string | null
-          backup_codes?: string[] | null
-          company_id?: string | null
-          created_at?: string | null
-          email?: string
-          email_verified?: boolean | null
-          first_name?: string
+          balance_due?: number
+          checklist_completed?: boolean
+          created_at?: string
           id?: string
-          last_login?: string | null
-          last_name?: string
-          phone?: string | null
-          phone_verified?: boolean | null
-          property?: string | null
-          property_id?: string | null
-          role?: string
-          status?: string
-          two_factor_enabled?: boolean | null
-          two_factor_secret?: string | null
-          unit_number?: string | null
-          updated_at?: string | null
+          lease_signed_date?: string | null
+          lease_start_date?: string
+          resident_id?: string
+          status?: Database["public"]["Enums"]["move_in_status"]
+          unit_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "user_profiles_company_id_fkey"
-            columns: ["company_id"]
+            foreignKeyName: "move_ins_resident_id_fkey"
+            columns: ["resident_id"]
             isOneToOne: false
-            referencedRelation: "companies"
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "user_profiles_property_id_fkey"
+            foreignKeyName: "move_ins_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      move_outs: {
+        Row: {
+          checklist_completed: boolean
+          created_at: string
+          forwarding_address: string | null
+          id: string
+          inspection_video_link: string | null
+          move_out_date: string
+          notice_to_vacate_signed: boolean
+          resident_id: string
+          status: Database["public"]["Enums"]["move_out_status"]
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          checklist_completed?: boolean
+          created_at?: string
+          forwarding_address?: string | null
+          id?: string
+          inspection_video_link?: string | null
+          move_out_date: string
+          notice_to_vacate_signed?: boolean
+          resident_id: string
+          status?: Database["public"]["Enums"]["move_out_status"]
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          checklist_completed?: boolean
+          created_at?: string
+          forwarding_address?: string | null
+          id?: string
+          inspection_video_link?: string | null
+          move_out_date?: string
+          notice_to_vacate_signed?: boolean
+          resident_id?: string
+          status?: Database["public"]["Enums"]["move_out_status"]
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "move_outs_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "move_outs_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      properties: {
+        Row: {
+          address: string
+          created_at: string
+          id: string
+          name: string
+          operator_id: string
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          id?: string
+          name: string
+          operator_id: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          id?: string
+          name?: string
+          operator_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "properties_operator_id_fkey"
+            columns: ["operator_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      unit_status_logs: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          id: string
+          new_status: Database["public"]["Enums"]["unit_status"]
+          notes: string | null
+          old_status: Database["public"]["Enums"]["unit_status"] | null
+          unit_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          id?: string
+          new_status: Database["public"]["Enums"]["unit_status"]
+          notes?: string | null
+          old_status?: Database["public"]["Enums"]["unit_status"] | null
+          unit_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          new_status?: Database["public"]["Enums"]["unit_status"]
+          notes?: string | null
+          old_status?: Database["public"]["Enums"]["unit_status"] | null
+          unit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unit_status_logs_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unit_status_logs_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      units: {
+        Row: {
+          bath_count: number
+          bed_count: number
+          created_at: string
+          current_resident_id: string | null
+          id: string
+          lease_end: string | null
+          lease_start: string | null
+          property_id: string
+          status: Database["public"]["Enums"]["unit_status"]
+          unit_number: string
+          updated_at: string
+        }
+        Insert: {
+          bath_count?: number
+          bed_count?: number
+          created_at?: string
+          current_resident_id?: string | null
+          id?: string
+          lease_end?: string | null
+          lease_start?: string | null
+          property_id: string
+          status?: Database["public"]["Enums"]["unit_status"]
+          unit_number: string
+          updated_at?: string
+        }
+        Update: {
+          bath_count?: number
+          bed_count?: number
+          created_at?: string
+          current_resident_id?: string | null
+          id?: string
+          lease_end?: string | null
+          lease_start?: string | null
+          property_id?: string
+          status?: Database["public"]["Enums"]["unit_status"]
+          unit_number?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "units_current_resident_id_fkey"
+            columns: ["current_resident_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "units_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
@@ -215,30 +318,36 @@ export type Database = {
           },
         ]
       }
-      user_settings: {
+      users: {
         Row: {
-          created_at: string | null
+          created_at: string
+          email: string
+          first_name: string
           id: string
-          setting_type: string
-          settings: Json
-          updated_at: string | null
-          user_id: string
+          last_name: string
+          phone: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
-          id?: string
-          setting_type: string
-          settings: Json
-          updated_at?: string | null
-          user_id: string
+          created_at?: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string
           id?: string
-          setting_type?: string
-          settings?: Json
-          updated_at?: string | null
-          user_id?: string
+          last_name?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -250,7 +359,24 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      app_role:
+        | "super_admin"
+        | "senior_operator"
+        | "operator"
+        | "maintenance"
+        | "leasing"
+        | "prospect"
+        | "resident"
+        | "former_resident"
+      move_in_status: "pending" | "approved" | "canceled"
+      move_out_status: "scheduled" | "completed" | "canceled"
+      unit_status:
+        | "available"
+        | "occupied"
+        | "maintenance"
+        | "turn"
+        | "leased_not_moved_in"
+        | "off_market"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -365,6 +491,27 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: [
+        "super_admin",
+        "senior_operator",
+        "operator",
+        "maintenance",
+        "leasing",
+        "prospect",
+        "resident",
+        "former_resident",
+      ],
+      move_in_status: ["pending", "approved", "canceled"],
+      move_out_status: ["scheduled", "completed", "canceled"],
+      unit_status: [
+        "available",
+        "occupied",
+        "maintenance",
+        "turn",
+        "leased_not_moved_in",
+        "off_market",
+      ],
+    },
   },
 } as const
