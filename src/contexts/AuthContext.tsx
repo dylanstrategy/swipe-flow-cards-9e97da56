@@ -183,7 +183,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       email,
       password,
       options: {
-        data: metadata,
+        data: {
+          first_name: metadata?.first_name || 'New',
+          last_name: metadata?.last_name || 'User',
+          role: 'resident',
+          ...metadata
+        },
         emailRedirectTo: `${window.location.origin}/login`
       }
     });
@@ -196,7 +201,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/login`
+        redirectTo: `${window.location.origin}/login`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        }
       }
     });
     if (error) throw error;
