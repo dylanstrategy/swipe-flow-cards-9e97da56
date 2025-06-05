@@ -1,4 +1,3 @@
-
 interface SignNowConfig {
   clientId: string;
   clientSecret: string;
@@ -22,7 +21,7 @@ interface SignNowSigner {
 
 interface DocumentField {
   id: string;
-  type: 'signature' | 'initial' | 'date' | 'text' | 'checkbox';
+  type: 'signature' | 'initial' | 'date' | 'text' | 'checkbox' | 'merge';
   x: number;
   y: number;
   width: number;
@@ -42,6 +41,8 @@ interface CreateDocumentRequest {
   fields?: DocumentField[];
   mergeData?: Record<string, string>;
 }
+
+import { mergeFieldsService } from './mergeFieldsLibrary';
 
 class SignNowService {
   private config: SignNowConfig;
@@ -182,18 +183,15 @@ class SignNowService {
       'initial': 'initials',
       'date': 'date',
       'text': 'text',
-      'checkbox': 'checkbox'
+      'checkbox': 'checkbox',
+      'merge': 'text' // Merge fields are treated as text fields with prefilled content
     };
     return typeMap[fieldType as keyof typeof typeMap] || 'text';
   }
 
   private populateMergeFields(text: string, mergeData: Record<string, string>): string {
-    let populatedText = text;
-    Object.entries(mergeData).forEach(([key, value]) => {
-      const placeholder = `{{${key}}}`;
-      populatedText = populatedText.replace(new RegExp(placeholder, 'g'), value);
-    });
-    return populatedText;
+    // Use the merge fields service to populate the template
+    return mergeFieldsService.populateTemplate(text, mergeData);
   }
 
   async sendForSignature(request: CreateDocumentRequest): Promise<SignNowDocument> {
@@ -330,6 +328,16 @@ class SignNowService {
       console.error('SignNow download document error:', error);
       throw error;
     }
+  }
+
+  // New method to get suggested merge fields for different document types
+  getSuggestedMergeFields(documentType: string): string[] {
+    return mergeFieldsService.getFieldsForDocumentType(documentType).map(field => field.name);
+  }
+
+  // Method to validate merge fields in a template
+  validateMergeFields(template: string): { valid: boolean; unknownFields: string[] } {
+    return mergeFieldsService.validateMergeFields(template);
   }
 }
 

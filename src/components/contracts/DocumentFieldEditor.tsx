@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { mergeFieldsService, type MergeField } from '@/services/mergeFieldsLibrary';
 
 interface DocumentField {
   id: string;
@@ -64,6 +64,7 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
   const [documentLoaded, setDocumentLoaded] = useState(false);
   const [scale, setScale] = useState(1);
   const [fieldHistory, setFieldHistory] = useState<DocumentField[][]>([]);
+  const [selectedMergeCategory, setSelectedMergeCategory] = useState<string>('all');
 
   const fieldTypes = [
     { type: 'signature' as const, icon: PenTool, label: 'Signature', color: 'bg-blue-500' },
@@ -74,18 +75,11 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
     { type: 'merge' as const, icon: Database, label: 'Merge Field', color: 'bg-teal-500' },
   ];
 
-  const mergeFields = [
-    'resident_first_name',
-    'resident_last_name',
-    'resident_email', 
-    'unit_number',
-    'property_name',
-    'lease_start_date',
-    'lease_end_date',
-    'monthly_rent',
-    'security_deposit',
-    'move_in_date'
-  ];
+  // Get merge fields from the library
+  const mergeFieldCategories = mergeFieldsService.getAllCategories();
+  const availableMergeFields = selectedMergeCategory === 'all' 
+    ? mergeFieldsService.getAllFields()
+    : mergeFieldsService.getFieldsByCategory(selectedMergeCategory);
 
   useEffect(() => {
     loadDocument();
@@ -255,7 +249,7 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
       height: size.height,
       role: 'Signer 1',
       required: true,
-      mergeField: selectedTool === 'merge' ? mergeFields[0] : undefined,
+      mergeField: selectedTool === 'merge' ? availableMergeFields[0]?.name : undefined,
     };
 
     setFields(prev => [...prev, newField]);
@@ -430,27 +424,57 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
                 </div>
 
                 {(selectedField.type === 'text' || selectedField.type === 'date' || selectedField.type === 'merge') && (
-                  <div>
-                    <Label htmlFor="merge-field" className="text-sm text-gray-700">
-                      {selectedField.type === 'merge' ? 'Merge Field' : 'Merge Field (Optional)'}
-                    </Label>
-                    <Select 
-                      value={selectedField.mergeField || ''} 
-                      onValueChange={(value) => updateField(selectedField.id, { mergeField: value || undefined })}
-                    >
-                      <SelectTrigger className="h-9 mt-1">
-                        <SelectValue placeholder="Select merge field" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {selectedField.type !== 'merge' && <SelectItem value="">None</SelectItem>}
-                        {mergeFields.map(field => (
-                          <SelectItem key={field} value={field}>
-                            {field.replace(/_/g, ' ').toUpperCase()}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <>
+                    {selectedField.type === 'merge' && (
+                      <div>
+                        <Label htmlFor="merge-category" className="text-sm text-gray-700">Category</Label>
+                        <Select 
+                          value={selectedMergeCategory} 
+                          onValueChange={setSelectedMergeCategory}
+                        >
+                          <SelectTrigger className="h-9 mt-1">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Fields</SelectItem>
+                            {mergeFieldCategories.map(category => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                    
+                    <div>
+                      <Label htmlFor="merge-field" className="text-sm text-gray-700">
+                        {selectedField.type === 'merge' ? 'Merge Field' : 'Merge Field (Optional)'}
+                      </Label>
+                      <Select 
+                        value={selectedField.mergeField || ''} 
+                        onValueChange={(value) => updateField(selectedField.id, { mergeField: value || undefined })}
+                      >
+                        <SelectTrigger className="h-9 mt-1">
+                          <SelectValue placeholder="Select merge field" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {selectedField.type !== 'merge' && <SelectItem value="">None</SelectItem>}
+                          {availableMergeFields.map(field => (
+                            <SelectItem key={field.id} value={field.name}>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{field.label}</span>
+                                <span className="text-xs text-gray-500">{field.description}</span>
+                                {field.example && (
+                                  <span className="text-xs text-blue-600">Example: {field.example}</span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
                 )}
 
                 <div className="grid grid-cols-2 gap-3">
