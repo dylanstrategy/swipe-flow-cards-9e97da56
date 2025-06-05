@@ -4,6 +4,10 @@ import { ChevronLeft, Wrench, Users, Package, Settings as SettingsIcon, Clock } 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import VendorSetup from './setup/VendorSetup';
+import InventorySetup from './setup/InventorySetup';
+import ScheduleSetup from './setup/ScheduleSetup';
+import NotificationSetup from './setup/NotificationSetup';
 
 interface MaintenanceSetupModuleProps {
   onClose: () => void;
@@ -60,73 +64,13 @@ const MaintenanceSetupModule = ({ onClose }: MaintenanceSetupModuleProps) => {
   const renderCurrentSection = () => {
     switch (currentSection) {
       case 'vendors':
-        return (
-          <div className="space-y-4 max-w-4xl mx-auto">
-            <div className="flex items-center gap-3 mb-4">
-              <Users className="w-6 h-6 text-blue-600 flex-shrink-0" />
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Vendor Management</h1>
-                <p className="text-sm text-gray-600">Configure your maintenance vendors and contractors</p>
-              </div>
-            </div>
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-gray-600">Vendor setup will be implemented here...</p>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return <VendorSetup />;
       case 'inventory':
-        return (
-          <div className="space-y-4 max-w-4xl mx-auto">
-            <div className="flex items-center gap-3 mb-4">
-              <Package className="w-6 h-6 text-blue-600 flex-shrink-0" />
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Inventory Setup</h1>
-                <p className="text-sm text-gray-600">Manage parts, supplies, and stock levels</p>
-              </div>
-            </div>
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-gray-600">Inventory setup will be implemented here...</p>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return <InventorySetup />;
       case 'schedules':
-        return (
-          <div className="space-y-4 max-w-4xl mx-auto">
-            <div className="flex items-center gap-3 mb-4">
-              <Clock className="w-6 h-6 text-blue-600 flex-shrink-0" />
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Maintenance Schedules</h1>
-                <p className="text-sm text-gray-600">Set up preventive maintenance and recurring tasks</p>
-              </div>
-            </div>
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-gray-600">Schedule setup will be implemented here...</p>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return <ScheduleSetup />;
       case 'notifications':
-        return (
-          <div className="space-y-4 max-w-4xl mx-auto">
-            <div className="flex items-center gap-3 mb-4">
-              <SettingsIcon className="w-6 h-6 text-blue-600 flex-shrink-0" />
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Alert Settings</h1>
-                <p className="text-sm text-gray-600">Configure emergency alerts and escalation rules</p>
-              </div>
-            </div>
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-gray-600">Notification setup will be implemented here...</p>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return <NotificationSetup />;
       default:
         return (
           <div className="space-y-4 max-w-4xl mx-auto">
