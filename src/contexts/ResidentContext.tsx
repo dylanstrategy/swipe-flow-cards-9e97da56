@@ -50,11 +50,13 @@ interface ResidentContextType {
   updateMoveInDate: (residentId: string, newDate: string) => void;
   submitNoticeToVacate: (residentId: string, data: any) => void;
   cancelMoveOut: (residentId: string) => void;
+  cancelNotice: (residentId: string) => void;
   getMoveOutProgress: (residentId: string) => { completed: number; total: number; percentage: number };
   completeInspection: (residentId: string, type: 'moveIn' | 'moveOut', completedBy: string) => void;
   updateChecklistItem: (residentId: string, type: 'moveIn' | 'moveOut', itemId: string, completed: boolean, completedBy?: string) => void;
   generateMoveOutChecklist: (residentId: string) => void;
   markAsMoved: (residentId: string, type: 'in' | 'out') => { success: boolean; message: string };
+  refreshResidentData: () => void;
 }
 
 const ResidentContext = createContext<ResidentContextType | undefined>(undefined);
@@ -126,6 +128,21 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
+  // Helper function to update both profile and allResidents consistently
+  const updateResidentData = (updatedResidents: ExtendedResidentProfile[]) => {
+    setAllResidents(updatedResidents);
+    localStorage.setItem('allResidents', JSON.stringify(updatedResidents));
+    
+    // Find and update the current profile if it's in the updated residents
+    const updatedProfile = updatedResidents.find(r => r.id === profile.id);
+    if (updatedProfile) {
+      setProfile(updatedProfile);
+      localStorage.setItem('residentProfile', JSON.stringify(updatedProfile));
+    }
+    
+    console.log('Resident data updated across entire system');
+  };
+
   const updateProfile = (updates: Partial<ExtendedResidentProfile>) => {
     const updatedProfile = { ...profile, ...updates };
     setProfile(updatedProfile);
@@ -152,11 +169,8 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return resident;
     });
     
-    setAllResidents(updatedResidents);
-    localStorage.setItem('allResidents', JSON.stringify(updatedResidents));
-    
+    updateResidentData(updatedResidents);
     console.log(`Updated resident ${residentId} status to ${newStatus}`);
-    console.log('Updated residents list:', updatedResidents.filter(r => r.id === residentId));
   };
 
   const getResidentByUnit = (unitNumber: string) => {
@@ -322,34 +336,33 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const updateMoveInDate = (residentId: string, newDate: string) => {
-    setAllResidents(prevResidents => 
-      prevResidents.map(resident => {
-        if (resident.id === residentId) {
-          return {
-            ...resident,
-            leaseStartDate: newDate,
-            // Reset required items when move-in date changes
-            moveInChecklist: {
-              ...resident.moveInChecklist,
-              'sign-lease': { completed: false },
-              'payment': { completed: false },
-              'renters-insurance': { completed: false }
-            },
-            moveInChecklistComplete: false,
-            balance: 1550 // Reset balance when date changes
-          };
-        }
-        return resident;
-      })
-    );
+    const updatedResidents = allResidents.map(resident => {
+      if (resident.id === residentId) {
+        return {
+          ...resident,
+          leaseStartDate: newDate,
+          // Reset required items when move-in date changes
+          moveInChecklist: {
+            ...resident.moveInChecklist,
+            'sign-lease': { completed: false },
+            'payment': { completed: false },
+            'renters-insurance': { completed: false }
+          },
+          moveInChecklistComplete: false,
+          balance: 1550 // Reset balance when date changes
+        };
+      }
+      return resident;
+    });
 
+    updateResidentData(updatedResidents);
     console.log(`Move-in date updated for resident ${residentId}. Lease re-signing and balance recalculation required.`);
   };
 
   const submitNoticeToVacate = (residentId: string, data: any) => {
     const updatedResidents = allResidents.map(resident => {
       if (resident.id === residentId) {
-        const updatedResident = {
+        return {
           ...resident,
           status: 'notice' as ResidentProfile['status'],
           noticeToVacateSubmitted: true,
@@ -366,30 +379,18 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             'move-out-confirmation': { completed: false }
           }
         };
-        
-        // If this is the current profile, update it too AND trigger a re-render
-        if (residentId === profile.id) {
-          setProfile(updatedResident);
-          localStorage.setItem('residentProfile', JSON.stringify(updatedResident));
-        }
-        
-        return updatedResident;
       }
       return resident;
     });
     
-    setAllResidents(updatedResidents);
-    localStorage.setItem('allResidents', JSON.stringify(updatedResidents));
-
+    updateResidentData(updatedResidents);
     console.log(`Notice to Vacate submitted for resident ${residentId}`);
-    console.log('Updated resident:', updatedResidents.find(r => r.id === residentId));
-    console.log('Move-out checklist created:', updatedResidents.find(r => r.id === residentId)?.moveOutChecklist);
   };
 
   const cancelMoveOut = (residentId: string) => {
     const updatedResidents = allResidents.map(resident => {
       if (resident.id === residentId) {
-        const updatedResident = {
+        return {
           ...resident,
           status: 'current' as ResidentProfile['status'],
           noticeToVacateSubmitted: false,
@@ -398,22 +399,32 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           moveOutChecklist: undefined,
           moveOutChecklistComplete: false
         };
-        
-        // If this is the current profile, update it too
-        if (residentId === profile.id) {
-          setProfile(updatedResident);
-          localStorage.setItem('residentProfile', JSON.stringify(updatedResident));
-        }
-        
-        return updatedResident;
       }
       return resident;
     });
     
-    setAllResidents(updatedResidents);
-    localStorage.setItem('allResidents', JSON.stringify(updatedResidents));
-
+    updateResidentData(updatedResidents);
     console.log(`Move-out cancelled for resident ${residentId}`);
+  };
+
+  const cancelNotice = (residentId: string) => {
+    const updatedResidents = allResidents.map(resident => {
+      if (resident.id === residentId) {
+        return {
+          ...resident,
+          status: 'current' as ResidentProfile['status'],
+          noticeToVacateSubmitted: false,
+          moveOutDate: undefined,
+          forwardingAddress: '',
+          moveOutChecklist: undefined,
+          moveOutChecklistComplete: false
+        };
+      }
+      return resident;
+    });
+    
+    updateResidentData(updatedResidents);
+    console.log(`Notice to Vacate cancelled for resident ${residentId}`);
   };
 
   const getMoveOutProgress = (residentId: string) => {
@@ -431,34 +442,26 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const generateMoveOutChecklist = (residentId: string) => {
-    setAllResidents(prevResidents => 
-      prevResidents.map(resident => {
-        if (resident.id === residentId && !resident.moveOutChecklist) {
-          const updatedResident = {
-            ...resident,
-            moveOutChecklist: {
-              'notice-to-vacate': { completed: resident.noticeToVacateSubmitted || false },
-              'forwarding-address': { completed: !!resident.forwardingAddress },
-              'final-inspection': { completed: false },
-              'exit-survey': { completed: false },
-              'key-return': { completed: false },
-              'final-balance': { completed: false },
-              'deposit-release': { completed: false },
-              'move-out-confirmation': { completed: false }
-            }
-          };
-
-          // If this is the current profile, update it too
-          if (residentId === profile.id) {
-            setProfile(updatedResident);
-            localStorage.setItem('residentProfile', JSON.stringify(updatedResident));
+    const updatedResidents = allResidents.map(resident => {
+      if (resident.id === residentId && !resident.moveOutChecklist) {
+        return {
+          ...resident,
+          moveOutChecklist: {
+            'notice-to-vacate': { completed: resident.noticeToVacateSubmitted || false },
+            'forwarding-address': { completed: !!resident.forwardingAddress },
+            'final-inspection': { completed: false },
+            'exit-survey': { completed: false },
+            'key-return': { completed: false },
+            'final-balance': { completed: false },
+            'deposit-release': { completed: false },
+            'move-out-confirmation': { completed: false }
           }
+        };
+      }
+      return resident;
+    });
 
-          return updatedResident;
-        }
-        return resident;
-      })
-    );
+    updateResidentData(updatedResidents);
   };
 
   const completeInspection = (residentId: string, type: 'moveIn' | 'moveOut', completedBy: string) => {
@@ -480,22 +483,12 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           };
         }
 
-        const updatedResident = { ...resident, ...updates };
-
-        // If this is the current profile, update it too
-        if (residentId === profile.id) {
-          setProfile(updatedResident);
-          localStorage.setItem('residentProfile', JSON.stringify(updatedResident));
-        }
-
-        return updatedResident;
+        return { ...resident, ...updates };
       }
       return resident;
     });
 
-    setAllResidents(updatedResidents);
-    localStorage.setItem('allResidents', JSON.stringify(updatedResidents));
-
+    updateResidentData(updatedResidents);
     console.log(`${type} inspection completed for resident ${residentId} by ${completedBy}`);
   };
 
@@ -519,26 +512,17 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           const allComplete = Object.values(updatedChecklist).every(item => item.completed);
           const completeKey = type === 'moveIn' ? 'moveInChecklistComplete' : 'moveOutChecklistComplete';
 
-          const updatedResident = {
+          return {
             ...resident,
             [checklistKey]: updatedChecklist,
             [completeKey]: allComplete
           };
-
-          // If this is the current profile, update it too
-          if (residentId === profile.id) {
-            setProfile(updatedResident);
-            localStorage.setItem('residentProfile', JSON.stringify(updatedResident));
-          }
-
-          return updatedResident;
         }
       }
       return resident;
     });
 
-    setAllResidents(updatedResidents);
-    localStorage.setItem('allResidents', JSON.stringify(updatedResidents));
+    updateResidentData(updatedResidents);
   };
 
   const markAsMoved = (residentId: string, type: 'in' | 'out') => {
@@ -553,29 +537,27 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updatedResidents = allResidents.map(resident => {
       if (resident.id === residentId) {
-        const updatedResident = {
+        return {
           ...resident,
           status: type === 'in' ? 'current' : 'moved_out' as ResidentProfile['status']
         };
-
-        // If this is the current profile, update it too
-        if (residentId === profile.id) {
-          setProfile(updatedResident);
-          localStorage.setItem('residentProfile', JSON.stringify(updatedResident));
-        }
-
-        return updatedResident;
       }
       return resident;
     });
 
-    setAllResidents(updatedResidents);
-    localStorage.setItem('allResidents', JSON.stringify(updatedResidents));
+    updateResidentData(updatedResidents);
 
     return {
       success: true,
       message: `Resident successfully marked as moved ${type}`
     };
+  };
+
+  const refreshResidentData = () => {
+    // Force a re-render by updating the state
+    const currentResidents = [...allResidents];
+    updateResidentData(currentResidents);
+    console.log('Resident data refreshed across entire system');
   };
 
   return (
@@ -597,11 +579,13 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       updateMoveInDate,
       submitNoticeToVacate,
       cancelMoveOut,
+      cancelNotice,
       getMoveOutProgress,
       completeInspection,
       updateChecklistItem,
       generateMoveOutChecklist,
-      markAsMoved
+      markAsMoved,
+      refreshResidentData
     }}>
       {children}
     </ResidentContext.Provider>
