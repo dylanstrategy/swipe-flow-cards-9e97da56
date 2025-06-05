@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { ArrowLeft, MessageCircle, Wrench, Calendar, Users, Clock, FileText, BarChart3, Home, DollarSign, Clipboard } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Wrench, Calendar, Users, Clock, FileText, BarChart3, Home, DollarSign, Clipboard, Send } from 'lucide-react';
 
 interface OperatorScheduleMenuProps {
   onSelectType: (type: string) => void;
@@ -24,6 +25,23 @@ const OperatorScheduleMenu = ({ onSelectType, onClose }: OperatorScheduleMenuPro
       icon: BarChart3,
       color: 'bg-purple-500',
       category: 'Communication'
+    },
+    // Documents & Contracts
+    {
+      id: 'Send Document',
+      title: 'Send Document',
+      description: 'Send contracts or documents for signature',
+      icon: Send,
+      color: 'bg-emerald-500',
+      category: 'Documents'
+    },
+    {
+      id: 'Vendor Contract',
+      title: 'Vendor Contract',
+      description: 'Send agreements to vendors',
+      icon: FileText,
+      color: 'bg-teal-500',
+      category: 'Documents'
     },
     // Leasing
     {
@@ -97,6 +115,7 @@ const OperatorScheduleMenu = ({ onSelectType, onClose }: OperatorScheduleMenuPro
 
   const categories = [
     'Communication',
+    'Documents',
     'Leasing', 
     'Maintenance',
     'Events',

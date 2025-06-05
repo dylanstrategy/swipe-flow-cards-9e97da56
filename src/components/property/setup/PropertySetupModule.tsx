@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { ChevronLeft, Building, Upload, Palette, MessageSquare, TrendingUp, Calendar, Home, User, Bell, Settings, Shield, Clock } from 'lucide-react';
+import { ChevronLeft, Building, Upload, Palette, MessageSquare, TrendingUp, Calendar, Home, User, Bell, Settings, Shield, Clock, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,12 +14,13 @@ import PersonalIdentitySetup from './PersonalIdentitySetup';
 import SchedulingSetup from './SchedulingSetup';
 import NotificationSetup from './NotificationSetup';
 import PrivacySetup from './PrivacySetup';
+import ContractDocumentSetup from './ContractDocumentSetup';
 
 interface PropertySetupModuleProps {
   onClose: () => void;
 }
 
-type SetupSection = 'overview' | 'units' | 'pricing' | 'documents' | 'branding' | 'messaging' | 'crm' | 'amenities' | 'identity' | 'schedule' | 'notifications' | 'privacy';
+type SetupSection = 'overview' | 'units' | 'pricing' | 'documents' | 'contracts' | 'branding' | 'messaging' | 'crm' | 'amenities' | 'identity' | 'schedule' | 'notifications' | 'privacy';
 
 const PropertySetupModule = ({ onClose }: PropertySetupModuleProps) => {
   const [currentSection, setCurrentSection] = useState<SetupSection>('overview');
@@ -100,6 +100,16 @@ const PropertySetupModule = ({ onClose }: PropertySetupModuleProps) => {
       category: 'property'
     },
     {
+      id: 'contracts' as const,
+      title: 'Contract Templates',
+      description: 'Manage contract templates, SignNow integration',
+      icon: FileText,
+      status: 'incomplete',
+      completedItems: 2,
+      totalItems: 4,
+      category: 'property'
+    },
+    {
       id: 'branding' as const,
       title: 'White-Label Branding',
       description: 'Logo, colors, favicon, domain branding',
@@ -157,6 +167,8 @@ const PropertySetupModule = ({ onClose }: PropertySetupModuleProps) => {
         return <PricingDashboard onBack={() => setCurrentSection('overview')} />;
       case 'documents':
         return <DocumentsSetup onBack={() => setCurrentSection('overview')} />;
+      case 'contracts':
+        return <ContractDocumentSetup onBack={() => setCurrentSection('overview')} />;
       case 'branding':
         return <BrandingSetup onBack={() => setCurrentSection('overview')} />;
       case 'amenities':

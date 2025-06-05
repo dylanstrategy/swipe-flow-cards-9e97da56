@@ -56,8 +56,7 @@ const Operator = () => {
     { id: 'today', label: 'Today', icon: '📊' },
     { id: 'schedule', label: 'Schedule', icon: '📅' },
     { id: 'messages', label: 'Messages', icon: '💬' },
-    { id: 'residents', label: 'Residents', icon: '👥' },
-    { id: 'contracts', label: 'Contracts', icon: '📋' }
+    { id: 'residents', label: 'Residents', icon: '👥' }
   ];
 
   const handleRoleSwitch = (role: string) => {
@@ -151,8 +150,6 @@ const Operator = () => {
         return <OperatorMessagesTab />;
       case 'residents':
         return <OperatorResidentsTab />;
-      case 'contracts':
-        return <OperatorContractsTab />;
       default:
         return <OperatorTodayTab />;
     }
