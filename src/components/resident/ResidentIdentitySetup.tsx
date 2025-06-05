@@ -118,7 +118,6 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
       updateProfile({
         firstName: formData.firstName,
         lastName: formData.lastName,
-        fullName: getFullName(formData.firstName, formData.lastName),
         preferredName: formData.preferredName,
         email: formData.email,
         phone: formData.phone,

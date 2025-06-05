@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +13,7 @@ import RenewalForm from '../../forms/RenewalForm';
 import NoticeToVacateForm from '../../forms/NoticeToVacateForm';
 import { useResident } from '@/contexts/ResidentContext';
 import { useToast } from '@/hooks/use-toast';
+import { getFullName } from '@/utils/nameUtils';
 
 const OperatorResidentsTab = () => {
   const { allResidents, updateResidentStatus } = useResident();
@@ -77,7 +77,8 @@ const OperatorResidentsTab = () => {
 
   const filteredAndSortedResidents = allResidents
     .filter(resident => {
-      const matchesSearch = resident.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      const residentFullName = getFullName(resident.firstName, resident.lastName);
+      const matchesSearch = residentFullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            resident.unitNumber.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = filterStatus === 'all' || resident.status === filterStatus;
       const matchesUnitType = filterUnitType === 'all' || (resident.unitType || 'Unknown') === filterUnitType;
@@ -88,7 +89,9 @@ const OperatorResidentsTab = () => {
       
       switch (sortBy) {
         case 'name':
-          comparison = a.fullName.localeCompare(b.fullName);
+          const fullNameA = getFullName(a.firstName, a.lastName);
+          const fullNameB = getFullName(b.firstName, b.lastName);
+          comparison = fullNameA.localeCompare(fullNameB);
           break;
         case 'unit':
           // Sort units chronologically (numerically)
@@ -154,9 +157,10 @@ const OperatorResidentsTab = () => {
   const handleMoveInResident = (resident: any) => {
     const completion = getTaskCompletion(resident.id, resident.status);
     if (completion < 100) {
+      const residentFullName = getFullName(resident.firstName, resident.lastName);
       toast({
         title: "Cannot Move In",
-        description: `${resident.fullName} has incomplete tasks (${completion}% complete). Please complete all tasks first.`,
+        description: `${residentFullName} has incomplete tasks (${completion}% complete). Please complete all tasks first.`,
         variant: "destructive"
       });
       return;
@@ -164,18 +168,20 @@ const OperatorResidentsTab = () => {
 
     // Update resident status to current
     updateResidentStatus(resident.id, 'current');
+    const residentFullName = getFullName(resident.firstName, resident.lastName);
     toast({
       title: "Resident Moved In",
-      description: `${resident.fullName} has been successfully moved in to Unit ${resident.unitNumber}.`
+      description: `${residentFullName} has been successfully moved in to Unit ${resident.unitNumber}.`
     });
   };
 
   const handleMoveOutResident = (resident: any) => {
     const completion = getTaskCompletion(resident.id, resident.status);
     if (completion < 100) {
+      const residentFullName = getFullName(resident.firstName, resident.lastName);
       toast({
         title: "Cannot Move Out",
-        description: `${resident.fullName} has incomplete tasks (${completion}% complete). Please complete all tasks first.`,
+        description: `${residentFullName} has incomplete tasks (${completion}% complete). Please complete all tasks first.`,
         variant: "destructive"
       });
       return;
@@ -183,9 +189,10 @@ const OperatorResidentsTab = () => {
 
     // Update resident status to past
     updateResidentStatus(resident.id, 'past');
+    const residentFullName = getFullName(resident.firstName, resident.lastName);
     toast({
       title: "Resident Moved Out",
-      description: `${resident.fullName} has been successfully moved out from Unit ${resident.unitNumber}.`
+      description: `${residentFullName} has been successfully moved out from Unit ${resident.unitNumber}.`
     });
   };
 
@@ -211,6 +218,7 @@ const OperatorResidentsTab = () => {
     const taskCompletion = getTaskCompletion(selectedResident.id, selectedResident.status);
     const canMoveIn = selectedResident.status === 'future' && taskCompletion === 100;
     const canMoveOut = selectedResident.status === 'notice' && taskCompletion === 100;
+    const selectedResidentFullName = getFullName(selectedResident.firstName, selectedResident.lastName);
 
     return (
       <div className="px-4 py-6 pb-24">
@@ -225,7 +233,7 @@ const OperatorResidentsTab = () => {
               <ArrowLeft size={20} />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{selectedResident.fullName}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{selectedResidentFullName}</h1>
               <p className="text-gray-600">Unit {selectedResident.unitNumber}</p>
             </div>
           </div>
@@ -407,7 +415,7 @@ const OperatorResidentsTab = () => {
                       <DialogTitle>Submit Lease Renewal Offer</DialogTitle>
                     </DialogHeader>
                     <RenewalForm 
-                      residentName={selectedResident.name}
+                      residentName={selectedResidentFullName}
                       currentRent={selectedResident.currentRent}
                       isOperator={true}
                       onClose={() => setShowRenewalForm(false)}
@@ -427,7 +435,7 @@ const OperatorResidentsTab = () => {
                       <DialogTitle>Issue Notice to Vacate</DialogTitle>
                     </DialogHeader>
                     <NoticeToVacateForm 
-                      residentName={selectedResident.name}
+                      residentName={selectedResidentFullName}
                       isOperator={true}
                       onClose={() => setShowNoticeForm(false)}
                     />
@@ -707,74 +715,77 @@ const OperatorResidentsTab = () => {
       {/* Residents List - Cards View */}
       {viewMode === 'cards' && (
         <div className="space-y-4">
-          {filteredAndSortedResidents.map((resident) => (
-            <Card 
-              key={resident.id} 
-              className="hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => setSelectedResident(resident)}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <User className="w-5 h-5 text-blue-600" />
+          {filteredAndSortedResidents.map((resident) => {
+            const residentFullName = getFullName(resident.firstName, resident.lastName);
+            return (
+              <Card 
+                key={resident.id} 
+                className="hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => setSelectedResident(resident)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <User className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">{residentFullName}</h3>
+                            <p className="text-sm text-gray-600">Unit {resident.unitNumber} • {resident.unitType || 'Unknown'}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900">{resident.fullName}</h3>
-                          <p className="text-sm text-gray-600">Unit {resident.unitNumber} • {resident.unitType || 'Unknown'}</p>
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 mb-3">
+                        <div className="flex items-center space-x-2 text-sm text-gray-600">
+                          <Phone className="w-4 h-4" />
+                          <span>{resident.phone}</span>
+                        </div>
+                        <div className="flex items-center space-x-2 text-sm text-gray-600">
+                          <Mail className="w-4 h-4" />
+                          <span className="truncate">{resident.email}</span>
+                        </div>
+                        <div className="flex items-center space-x-2 text-sm text-gray-600">
+                          <Calendar className="w-4 h-4" />
+                          <span>${resident.currentRent.toLocaleString()}/mo</span>
+                        </div>
+                        <div className="flex items-center space-x-2 text-sm text-gray-600">
+                          <Home className="w-4 h-4" />
+                          <span>{resident.workOrders} open work orders</span>
                         </div>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400" />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4 mb-3">
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <Phone className="w-4 h-4" />
-                        <span>{resident.phone}</span>
-                      </div>
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <Mail className="w-4 h-4" />
-                        <span className="truncate">{resident.email}</span>
-                      </div>
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <Calendar className="w-4 h-4" />
-                        <span>${resident.currentRent.toLocaleString()}/mo</span>
-                      </div>
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <Home className="w-4 h-4" />
-                        <span>{resident.workOrders} open work orders</span>
-                      </div>
-                    </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Badge className={getResidentStatusColor(resident.status)}>
-                          {resident.status}
-                        </Badge>
-                        {resident.leaseStatus === 'delinquent' && (
-                          <Badge className="bg-red-100 text-red-800">
-                            Delinquent
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Badge className={getResidentStatusColor(resident.status)}>
+                            {resident.status}
                           </Badge>
-                        )}
-                        {resident.status === 'future' && (
-                          <Badge className="bg-blue-100 text-blue-800">
-                            Move-in: {new Date(resident.moveInDate).toLocaleDateString()}
-                          </Badge>
+                          {resident.leaseStatus === 'delinquent' && (
+                            <Badge className="bg-red-100 text-red-800">
+                              Delinquent
+                            </Badge>
+                          )}
+                          {resident.status === 'future' && (
+                            <Badge className="bg-blue-100 text-blue-800">
+                              Move-in: {new Date(resident.moveInDate).toLocaleDateString()}
+                            </Badge>
+                          )}
+                        </div>
+                        {resident.balance > 0 && (
+                          <div className="text-sm font-medium text-red-600">
+                            Balance: ${resident.balance.toFixed(2)}
+                          </div>
                         )}
                       </div>
-                      {resident.balance > 0 && (
-                        <div className="text-sm font-medium text-red-600">
-                          Balance: ${resident.balance.toFixed(2)}
-                        </div>
-                      )}
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
@@ -834,41 +845,44 @@ const OperatorResidentsTab = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredAndSortedResidents.map((resident) => (
-                <TableRow 
-                  key={resident.id}
-                  className="cursor-pointer"
-                  onClick={() => setSelectedResident(resident)}
-                >
-                  <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <User className="w-4 h-4 text-blue-600" />
+              {filteredAndSortedResidents.map((resident) => {
+                const residentFullName = getFullName(resident.firstName, resident.lastName);
+                return (
+                  <TableRow 
+                    key={resident.id}
+                    className="cursor-pointer"
+                    onClick={() => setSelectedResident(resident)}
+                  >
+                    <TableCell>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <User className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <span className="font-medium">{residentFullName}</span>
                       </div>
-                      <span className="font-medium">{resident.fullName}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{resident.unitNumber}</TableCell>
-                  <TableCell>{resident.unitType || 'Unknown'}</TableCell>
-                  <TableCell>
-                    <Badge className={getResidentStatusColor(resident.status)}>
-                      {resident.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>${resident.currentRent.toLocaleString()}</TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      <div>{resident.phone}</div>
-                      <div className="text-gray-500 truncate max-w-32">{resident.email}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm">
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>{resident.unitNumber}</TableCell>
+                    <TableCell>{resident.unitType || 'Unknown'}</TableCell>
+                    <TableCell>
+                      <Badge className={getResidentStatusColor(resident.status)}>
+                        {resident.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>${resident.currentRent.toLocaleString()}</TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <div>{resident.phone}</div>
+                        <div className="text-gray-500 truncate max-w-32">{resident.email}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="sm">
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </Card>
