@@ -16,16 +16,20 @@ interface ImpersonatedInterfaceProps {
 
 const ImpersonatedInterface: React.FC<ImpersonatedInterfaceProps> = ({ role }) => {
   console.log('🎭 ImpersonatedInterface rendering for role:', role);
+  console.log('🎭 ResidentPreview component loaded:', !!ResidentPreview);
 
   // Render the appropriate interface based on role
   const renderRoleInterface = () => {
+    console.log('🎭 renderRoleInterface called with role:', role);
     try {
       switch (role) {
         case 'resident':
-          console.log('🏠 Rendering resident interface (ResidentPreview)');
+          console.log('🏠 About to render ResidentPreview component');
+          const ResidentComponent = ResidentPreview;
+          console.log('🏠 ResidentComponent:', ResidentComponent);
           return (
             <div className="h-full">
-              <ResidentPreview />
+              <ResidentComponent />
             </div>
           );
         case 'prospect':
@@ -68,6 +72,7 @@ const ImpersonatedInterface: React.FC<ImpersonatedInterfaceProps> = ({ role }) =
       }
     } catch (error) {
       console.error('❌ Error rendering role interface:', error);
+      console.error('❌ Error stack:', error.stack);
       return (
         <div className="flex items-center justify-center h-64 p-8">
           <div className="text-center">
@@ -85,6 +90,8 @@ const ImpersonatedInterface: React.FC<ImpersonatedInterfaceProps> = ({ role }) =
       );
     }
   };
+
+  console.log('🎭 About to render ImpersonatedInterface wrapper');
 
   return (
     <div className="w-full h-full overflow-hidden">
