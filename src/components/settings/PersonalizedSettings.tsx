@@ -30,6 +30,14 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
       saturday: { enabled: false, startTime: '10:00', endTime: '14:00' },
       sunday: { enabled: false, startTime: '10:00', endTime: '14:00' }
     },
+    calendarIntegration: {
+      googleConnected: false,
+      outlookConnected: false,
+      syncWorkOrders: true,
+      syncMessages: true,
+      syncEvents: true,
+      syncMaintenanceAppointments: true
+    },
     swipeGestures: {
       workOrder: { leftAction: 'snooze', rightAction: 'reschedule' },
       management: { leftAction: 'reply', rightAction: 'archive' },
@@ -90,7 +98,9 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
       {
         id: 'calendar' as const,
         title: 'Calendar Preferences',
-        description: 'Set your availability and working hours',
+        description: userRole === 'resident' 
+          ? 'Set availability for work orders, management messages, and sync external calendars'
+          : 'Set your availability and working hours',
         icon: Calendar,
         status: 'incomplete'
       },
@@ -716,12 +726,134 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
           <div className="space-y-4 max-w-4xl mx-auto">
             <div className="mb-6">
               <h2 className="text-xl font-bold text-gray-900 mb-2">Calendar Preferences</h2>
-              <p className="text-gray-600">Set your availability and working hours</p>
+              <p className="text-gray-600">
+                {userRole === 'resident' 
+                  ? 'Set your availability for work orders, management messages, and sync external calendars'
+                  : 'Set your availability and working hours'
+                }
+              </p>
             </div>
+            
+            {userRole === 'resident' && (
+              <Card className="shadow-sm mb-6">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">External Calendar Integration</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">Google Calendar</Label>
+                        <p className="text-xs text-gray-500">Sync with your Google Calendar</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={settings.calendarIntegration.googleConnected}
+                          onCheckedChange={(checked) => setSettings(prev => ({
+                            ...prev,
+                            calendarIntegration: { ...prev.calendarIntegration, googleConnected: checked }
+                          }))}
+                        />
+                        {settings.calendarIntegration.googleConnected ? (
+                          <Badge className="bg-green-100 text-green-800 text-xs">Connected</Badge>
+                        ) : (
+                          <Button variant="outline" size="sm" className="text-xs">Connect</Button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">Outlook Calendar</Label>
+                        <p className="text-xs text-gray-500">Sync with your Outlook Calendar</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={settings.calendarIntegration.outlookConnected}
+                          onCheckedChange={(checked) => setSettings(prev => ({
+                            ...prev,
+                            calendarIntegration: { ...prev.calendarIntegration, outlookConnected: checked }
+                          }))}
+                        />
+                        {settings.calendarIntegration.outlookConnected ? (
+                          <Badge className="bg-green-100 text-green-800 text-xs">Connected</Badge>
+                        ) : (
+                          <Button variant="outline" size="sm" className="text-xs">Connect</Button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-4">
+                      <h4 className="text-sm font-medium mb-3">Sync Preferences</h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-sm font-medium">Work Orders</Label>
+                            <p className="text-xs text-gray-500">Sync maintenance appointments to external calendar</p>
+                          </div>
+                          <Switch
+                            checked={settings.calendarIntegration.syncWorkOrders}
+                            onCheckedChange={(checked) => setSettings(prev => ({
+                              ...prev,
+                              calendarIntegration: { ...prev.calendarIntegration, syncWorkOrders: checked }
+                            }))}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-sm font-medium">Management Messages</Label>
+                            <p className="text-xs text-gray-500">Sync scheduled management communications</p>
+                          </div>
+                          <Switch
+                            checked={settings.calendarIntegration.syncMessages}
+                            onCheckedChange={(checked) => setSettings(prev => ({
+                              ...prev,
+                              calendarIntegration: { ...prev.calendarIntegration, syncMessages: checked }
+                            }))}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-sm font-medium">Community Events</Label>
+                            <p className="text-xs text-gray-500">Sync community events and activities</p>
+                          </div>
+                          <Switch
+                            checked={settings.calendarIntegration.syncEvents}
+                            onCheckedChange={(checked) => setSettings(prev => ({
+                              ...prev,
+                              calendarIntegration: { ...prev.calendarIntegration, syncEvents: checked }
+                            }))}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-sm font-medium">Maintenance Appointments</Label>
+                            <p className="text-xs text-gray-500">Sync all maintenance-related appointments</p>
+                          </div>
+                          <Switch
+                            checked={settings.calendarIntegration.syncMaintenanceAppointments}
+                            onCheckedChange={(checked) => setSettings(prev => ({
+                              ...prev,
+                              calendarIntegration: { ...prev.calendarIntegration, syncMaintenanceAppointments: checked }
+                            }))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             
             <Card className="shadow-sm">
               <CardContent className="p-4">
-                <h3 className="text-lg font-semibold mb-3">Weekly Availability</h3>
+                <h3 className="text-lg font-semibold mb-3">
+                  {userRole === 'resident' 
+                    ? 'Availability for Work Orders & Management Communications'
+                    : 'Weekly Availability'
+                  }
+                </h3>
                 
                 <div className="space-y-3">
                   {Object.entries(settings.availability).map(([day, daySettings]) => (
