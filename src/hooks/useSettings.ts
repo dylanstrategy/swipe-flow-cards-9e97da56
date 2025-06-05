@@ -45,10 +45,12 @@ export const useSettings = (settingType: 'privacy' | 'notifications' | 'identity
         if (localData) {
           setSettings(JSON.parse(localData));
         }
-      } else if (data) {
-        setSettings(data.settings);
+      } else if (data && data.settings) {
+        // Properly type cast the Json to SettingsData
+        const settingsData = data.settings as SettingsData;
+        setSettings(settingsData);
         // Also save to localStorage as backup
-        localStorage.setItem(`resident${settingType.charAt(0).toUpperCase() + settingType.slice(1)}`, JSON.stringify(data.settings));
+        localStorage.setItem(`resident${settingType.charAt(0).toUpperCase() + settingType.slice(1)}`, JSON.stringify(settingsData));
       }
     } catch (error) {
       console.error('Error in loadSettings:', error);
