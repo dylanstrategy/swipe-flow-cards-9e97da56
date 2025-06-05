@@ -66,14 +66,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('❌ Error fetching profile:', error);
-        setUserProfile(null);
+        return null;
       } else {
         console.log('👤 User profile fetched:', profile);
-        setUserProfile(profile as UserProfile);
+        return profile as UserProfile;
       }
     } catch (err) {
       console.error('🔥 Error fetching profile:', err);
-      setUserProfile(null);
+      return null;
     }
   };
 
@@ -87,9 +87,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: { session } } = await supabase.auth.getSession();
         
         if (mounted) {
-          setUser(session?.user || null);
           if (session?.user) {
-            await fetchProfile(session.user.id);
+            setUser(session.user);
+            const profile = await fetchProfile(session.user.id);
+            setUserProfile(profile);
+          } else {
+            setUser(null);
+            setUserProfile(null);
           }
           setLoading(false);
         }
@@ -108,23 +112,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       async (event, session) => {
         console.log('👂 Auth state change event:', event);
         
-        if (mounted) {
-          setUser(session?.user || null);
-          
-          if (session?.user) {
-            await fetchProfile(session.user.id);
-          } else {
-            setUserProfile(null);
-            // Clear dev mode on logout
-            setIsDevMode(false);
-            setDevModeRole(null);
-            setDevModeProperty(null);
+        if (!mounted) return;
+
+        if (session?.user) {
+          setUser(session.user);
+          // Only fetch profile if we don't have one or if it's a different user
+          if (!userProfile || userProfile.id !== session.user.id) {
+            const profile = await fetchProfile(session.user.id);
+            setUserProfile(profile);
           }
-          
-          if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-            setLoading(false);
-          }
+        } else {
+          setUser(null);
+          setUserProfile(null);
+          // Clear dev mode on logout
+          setIsDevMode(false);
+          setDevModeRole(null);
+          setDevModeProperty(null);
         }
+        
+        setLoading(false);
       }
     );
 
@@ -133,7 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('🧹 AuthProvider useEffect cleanup');
       subscription?.unsubscribe();
     };
-  }, []); // Remove all dependencies to prevent loops
+  }, []); // Empty dependency array
 
   const signInWithEmail = async (email: string, password: string) => {
     console.log('🔑 Signing in with email:', email);
@@ -189,7 +195,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshProfile = async () => {
     console.log('🔄 Refreshing profile...');
     if (user) {
-      await fetchProfile(user.id);
+      const profile = await fetchProfile(user.id);
+      setUserProfile(profile);
     } else {
       console.log('🚫 No user session, cannot refresh profile');
     }

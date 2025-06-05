@@ -18,7 +18,7 @@ const Index: React.FC<IndexProps> = ({ isImpersonated = false }) => {
   const [activeTab, setActiveTab] = useState('today');
 
   useEffect(() => {
-    // Only redirect if not impersonated/dev mode and no auth
+    // Only redirect if not impersonated/dev mode and no auth after loading is complete
     if (!isImpersonated && !isDevMode && !loading && (!user || !userProfile)) {
       console.log('🚫 No user/profile, redirecting to login');
       navigate('/login');
