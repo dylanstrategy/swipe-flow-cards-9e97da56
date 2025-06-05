@@ -75,11 +75,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.log('🚀 AuthProvider initializing...');
     
+    let mounted = true;
+
+    // Listen for auth changes first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('🔔 Auth state change:', event, 'Session exists:', !!session);
+        
+        if (!mounted) return;
+        
+        if (session?.user) {
+          console.log('👤 User signed in, creating profile...');
+          setSession(session);
+          setUser(session.user);
+          const profile = createUserProfile(session.user.id, session.user.email || '');
+          setUserProfile(profile);
+        } else {
+          console.log('🚫 User signed out, clearing profile...');
+          setSession(null);
+          setUser(null);
+          setUserProfile(null);
+          setImpersonatedRole(null);
+        }
+        
+        setLoading(false);
+      }
+    );
+
     // Get initial session
     const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         console.log('🔍 Initial session check:', !!session, 'Error:', error);
+        
+        if (!mounted) return;
         
         if (session?.user) {
           console.log('👤 User found in initial session');
@@ -96,36 +125,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('❌ Error getting initial session:', error);
       } finally {
-        setLoading(false);
-        console.log('✅ Auth initialization complete');
+        if (mounted) {
+          setLoading(false);
+          console.log('✅ Auth initialization complete');
+        }
       }
     };
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('🔔 Auth state change:', event, 'Session exists:', !!session);
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          console.log('👤 User signed in, creating profile...');
-          const profile = createUserProfile(session.user.id, session.user.email || '');
-          setUserProfile(profile);
-        } else {
-          console.log('🚫 User signed out, clearing profile...');
-          setUserProfile(null);
-          setImpersonatedRole(null);
-        }
-        
-        setLoading(false);
-      }
-    );
 
     getInitialSession();
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -133,7 +143,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       console.log('🔄 Starting Google sign in...');
-      setLoading(true);
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -144,18 +153,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         console.error('❌ Google sign in error:', error);
+        toast({
+          title: "Authentication Error",
+          description: error.message || "Failed to sign in with Google",
+          variant: "destructive",
+        });
         throw error;
       }
       
       console.log('✅ Google sign in initiated');
     } catch (error: any) {
       console.error('❌ Google sign in error:', error);
-      setLoading(false);
-      toast({
-        title: "Authentication Error",
-        description: error.message || "Failed to sign in with Google",
-        variant: "destructive",
-      });
       throw error;
     }
   };
@@ -163,7 +171,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithEmail = async (email: string, password: string) => {
     try {
       console.log('🔄 Starting email sign in for:', email);
-      setLoading(true);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -172,13 +179,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('❌ Email sign in error:', error);
+        toast({
+          title: "Authentication Error",
+          description: error.message || "Invalid email or password",
+          variant: "destructive",
+        });
         throw error;
       }
       
       console.log('✅ Email sign in successful:', data.user?.email);
+      toast({
+        title: "Welcome back!",
+        description: "You have been signed in successfully",
+      });
     } catch (error: any) {
       console.error('❌ Email sign in error:', error);
-      setLoading(false);
       throw error;
     }
   };
@@ -186,7 +201,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUpWithEmail = async (email: string, password: string, userData: any) => {
     try {
       console.log('🔄 Starting email sign up for:', email);
-      setLoading(true);
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -199,16 +213,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('❌ Email sign up error:', error);
+        toast({
+          title: "Authentication Error",
+          description: error.message || "Failed to create account",
+          variant: "destructive",
+        });
         throw error;
       }
 
       console.log('✅ Email sign up successful:', data);
-      return {
-        needsConfirmation: !data.session && !!data.user
-      };
+      
+      if (!data.session && data.user) {
+        toast({
+          title: "Check your email",
+          description: "We've sent you a confirmation link",
+        });
+        return { needsConfirmation: true };
+      } else {
+        toast({
+          title: "Account created!",
+          description: "You have been signed up successfully",
+        });
+        return { needsConfirmation: false };
+      }
     } catch (error: any) {
       console.error('❌ Email sign up error:', error);
-      setLoading(false);
       throw error;
     }
   };
@@ -221,6 +250,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       setImpersonatedRole(null);
       console.log('✅ Signed out successfully');
+      toast({
+        title: "Signed out",
+        description: "You have been signed out successfully",
+      });
     } catch (error: any) {
       console.error('❌ Sign out error:', error);
       toast({

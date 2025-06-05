@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
@@ -17,7 +16,6 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading, user, userProfile } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   // Quick test credentials
@@ -29,11 +27,14 @@ const Login = () => {
 
   const handleGoogleSignIn = async () => {
     setError('');
+    setIsSubmitting(true);
     try {
       await signInWithGoogle();
     } catch (error: any) {
       console.error('Google sign in error:', error);
       setError(error.message || "Failed to sign in with Google");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -44,28 +45,12 @@ const Login = () => {
 
     try {
       if (isSignUp) {
-        const result = await signUpWithEmail(email, password, {
+        await signUpWithEmail(email, password, {
           first_name: 'New',
           last_name: 'User'
         });
-        
-        if (result.needsConfirmation) {
-          toast({
-            title: "Check your email",
-            description: "We've sent you a confirmation link",
-          });
-        } else {
-          toast({
-            title: "Account created",
-            description: "You have been signed up successfully",
-          });
-        }
       } else {
         await signInWithEmail(email, password);
-        toast({
-          title: "Welcome back!",
-          description: "You have been signed in successfully",
-        });
       }
     } catch (error: any) {
       console.error('Auth error:', error);
@@ -82,29 +67,13 @@ const Login = () => {
     
     try {
       await signInWithEmail(testAccount.email, testAccount.password);
-      toast({
-        title: "Quick login successful!",
-        description: `Logged in as ${testAccount.label}`,
-      });
     } catch (error: any) {
       console.log('Login failed, creating account:', error.message);
       try {
-        const result = await signUpWithEmail(testAccount.email, testAccount.password, {
+        await signUpWithEmail(testAccount.email, testAccount.password, {
           first_name: testAccount.label.split(' ')[0],
           last_name: testAccount.label.split(' ')[1] || 'User'
         });
-        
-        if (result.needsConfirmation) {
-          toast({
-            title: "Account created",
-            description: "Check your email to confirm, then try logging in again",
-          });
-        } else {
-          toast({
-            title: "Account created and logged in!",
-            description: `Created and logged in as ${testAccount.label}`,
-          });
-        }
       } catch (signUpError: any) {
         console.error('Account creation failed:', signUpError);
         setError(signUpError.message || "Failed to create test account");
@@ -144,15 +113,11 @@ const Login = () => {
           navigate('/discovery');
           break;
         default:
-          toast({
-            title: "Account Under Review",
-            description: "Your account is under review. Please check back soon.",
-            variant: "default",
-          });
+          navigate('/');
           break;
       }
     }
-  }, [user, userProfile, loading, navigate, toast]);
+  }, [user, userProfile, loading, navigate]);
 
   // Show loading only during auth initialization
   if (loading) {
@@ -160,7 +125,7 @@ const Login = () => {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 text-lg">Initializing...</p>
+          <p className="text-gray-600 text-lg">Loading...</p>
         </div>
       </div>
     );
@@ -221,7 +186,7 @@ const Login = () => {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                {isSubmitting ? 'Signing in...' : `Continue with Google`}
+                {isSubmitting ? 'Please wait...' : 'Continue with Google'}
               </Button>
 
               <div className="relative">
@@ -245,6 +210,7 @@ const Login = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
                 
@@ -258,6 +224,7 @@ const Login = () => {
                     placeholder="Enter your password"
                     required
                     minLength={6}
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -274,6 +241,7 @@ const Login = () => {
                     setError('');
                   }}
                   className="text-blue-600 hover:underline text-sm"
+                  disabled={isSubmitting}
                 >
                   {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
                 </button>
