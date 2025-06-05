@@ -141,17 +141,12 @@ const Login = () => {
     );
   }
 
-  // If user exists but no profile, show a different message
+  // CRITICAL: If user exists but no profile, it means there's an invalid state
+  // Clear the user and show login form
   if (user && !userProfile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 text-lg">Setting up your profile...</p>
-          <p className="text-sm text-gray-500">This should only take a moment</p>
-        </div>
-      </div>
-    );
+    console.warn('🚨 Invalid state: user exists but no profile, clearing user');
+    // Don't show "Setting up profile" - this is likely an error state
+    // Just show the login form
   }
 
   // Show the login form (default state when not logged in)

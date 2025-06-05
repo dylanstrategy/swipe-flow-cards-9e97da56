@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session, User } from '@supabase/supabase-js';
@@ -81,7 +80,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('🔄 AuthProvider useEffect triggered');
     
     let mounted = true;
-    let authInitialized = false;
 
     // Initialize auth - get session and set up listener
     const initializeAuth = async () => {
@@ -90,25 +88,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: { session } } = await supabase.auth.getSession();
         console.log('🔑 Initial session result:', session ? 'found' : 'none');
         
-        if (mounted && !authInitialized) {
-          authInitialized = true;
-          setUser(session?.user ?? null);
-          
+        if (mounted) {
+          // CRITICAL: Only set user if we have a valid session
           if (session?.user) {
+            setUser(session.user);
             console.log('👤 Fetching profile for initial user:', session.user.id);
             const profile = await fetchProfile(session.user.id);
             if (mounted) {
               setUserProfile(profile);
             }
+          } else {
+            // No session - clear everything
+            setUser(null);
+            setUserProfile(null);
           }
           
-          if (mounted) {
-            setLoading(false);
-          }
+          setLoading(false);
         }
       } catch (error) {
         console.error('🔥 Error during auth initialization:', error);
         if (mounted) {
+          setUser(null);
+          setUserProfile(null);
           setLoading(false);
         }
       }
@@ -119,11 +120,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       async (event, session) => {
         console.log('👂 Auth state change event:', event, 'Session:', session ? 'present' : 'none');
         
-        if (!mounted || !authInitialized) return;
+        if (!mounted) return;
 
-        setUser(session?.user ?? null);
-        
+        // CRITICAL: Only set user if we have a valid session
         if (session?.user) {
+          setUser(session.user);
           console.log('👤 Auth state change - fetching profile for:', session.user.id);
           try {
             const profile = await fetchProfile(session.user.id);
@@ -137,7 +138,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           }
         } else {
+          // No session - clear everything including dev mode
           if (mounted) {
+            console.log('🧹 Clearing user state - no session');
+            setUser(null);
             setUserProfile(null);
             setIsDevMode(false);
             setDevModeRole(null);
