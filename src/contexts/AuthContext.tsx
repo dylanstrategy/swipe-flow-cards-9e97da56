@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -61,92 +62,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     let mounted = true;
 
-    const initializeAuth = async () => {
-      try {
-        console.log('📍 Getting initial session...');
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('❌ Error getting session:', error);
-          if (mounted) {
-            setLoading(false);
-          }
-          return;
-        }
-
-        console.log('📍 Initial session check:', {
-          hasSession: !!currentSession,
-          userEmail: currentSession?.user?.email
-        });
-        
-        if (currentSession?.user && mounted) {
-          // We have a session, fetch everything
-          setSession(currentSession);
-          setUser(currentSession.user);
-          
-          console.log('🔄 Fetching user profile...');
-          const profile = await fetchUserProfile(currentSession.user.id);
-          
-          if (mounted) {
-            setUserProfile(profile);
-            console.log('✅ Auth initialization complete:', {
-              session: !!currentSession,
-              profile: !!profile,
-              email: currentSession.user.email
-            });
-            setLoading(false);
-          }
-        } else {
-          // No session
-          console.log('🚫 No session found');
-          if (mounted) {
-            setSession(null);
-            setUser(null);
-            setUserProfile(null);
-            setLoading(false);
-          }
-        }
-      } catch (error) {
-        console.error('❌ Auth initialization error:', error);
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    // Set up auth state listener (separate from initialization)
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('🔔 Auth state change:', event, 'Session exists:', !!session);
         
         if (!mounted) return;
         
-        if (event === 'SIGNED_IN' && session) {
-          console.log('✅ User signed in via auth state change:', session.user.email);
+        if (session?.user) {
+          console.log('✅ User session found:', session.user.email);
           setSession(session);
           setUser(session.user);
           
-          // Fetch profile for new sign-ins
+          // Fetch profile
           const profile = await fetchUserProfile(session.user.id);
           if (mounted) {
             setUserProfile(profile);
+            setLoading(false);
           }
-        } else if (event === 'SIGNED_OUT') {
-          console.log('🚫 User signed out');
+        } else {
+          console.log('🚫 No session');
           setSession(null);
           setUser(null);
           setUserProfile(null);
           setImpersonatedRole(null);
-        } else if (event === 'TOKEN_REFRESHED' && session) {
-          console.log('🔄 Token refreshed');
-          setSession(session);
-          setUser(session.user);
+          if (mounted) {
+            setLoading(false);
+          }
         }
       }
     );
-
-    // Initialize auth
-    initializeAuth();
 
     return () => {
       mounted = false;
