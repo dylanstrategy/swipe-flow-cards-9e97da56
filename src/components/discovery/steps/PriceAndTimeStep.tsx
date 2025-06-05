@@ -2,9 +2,9 @@
 import React from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MapPin, DollarSign, Calendar } from 'lucide-react';
+import GoogleMapsAutocomplete from '../GoogleMapsAutocomplete';
 
 interface PriceAndTimeStepProps {
   priceRange: [number, number];
@@ -125,9 +125,9 @@ const PriceAndTimeStep = ({
             </div>
           </div>
           
-          <Input
+          <GoogleMapsAutocomplete
             value={location}
-            onChange={(e) => onUpdate({ location: e.target.value })}
+            onChange={(value) => onUpdate({ location: value })}
             placeholder="e.g., Austin, TX or Downtown Seattle"
             className="h-14 text-base bg-gray-50 border-gray-200"
           />

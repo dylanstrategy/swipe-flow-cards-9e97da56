@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { MapPin } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
+import GoogleMapsAutocomplete from '../GoogleMapsAutocomplete';
 
 interface LocationStepProps {
   location: string;
@@ -38,28 +39,11 @@ const LocationStep = ({ location, proximityRadius, onUpdate }: LocationStepProps
         <h3 className="text-lg font-semibold text-gray-900">
           Primary location or landmark
         </h3>
-        <input
-          type="text"
+        <GoogleMapsAutocomplete
           value={location}
-          onChange={(e) => onUpdate({ location: e.target.value })}
+          onChange={(value) => onUpdate({ location: value })}
           placeholder="e.g., Financial District, My Office, etc."
           className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          style={{ 
-            fontSize: '16px',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-            touchAction: 'manipulation',
-            WebkitUserSelect: 'text',
-            WebkitTouchCallout: 'none',
-            WebkitTapHighlightColor: 'transparent',
-            WebkitAppearance: 'none',
-            borderRadius: '8px',
-            transform: 'translateZ(0)'
-          }}
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          spellCheck="false"
-          inputMode="text"
         />
         
         {/* Quick Location Options */}
