@@ -16,6 +16,7 @@ const AuthPage = () => {
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState('prospect');
+  const [property, setProperty] = useState('');
   const [loading, setLoading] = useState(false);
   
   const { signIn, signUp } = useAuth();
@@ -35,8 +36,8 @@ const AuthPage = () => {
       console.log('Starting registration/login process:', { email, role, isSignUp });
       
       if (isSignUp) {
-        console.log('Attempting sign up with data:', { firstName, lastName, email, phone, role });
-        await signUp(email, password, { firstName, lastName, phone, role });
+        console.log('Attempting sign up with data:', { firstName, lastName, email, phone, role, property });
+        await signUp(email, password, { firstName, lastName, phone, role, property });
         toast({
           title: "Account created!",
           description: "You have been automatically signed in.",
@@ -80,6 +81,7 @@ const AuthPage = () => {
           lastName: testAccount.lastName,
           phone: '(555) 123-4567',
           role: testAccount.role,
+          property: 'The Meridian',
         });
         await signIn(testAccount.email, testAccount.password);
         toast({
@@ -182,6 +184,19 @@ const AuthPage = () => {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {role === 'operator' && (
+                    <div>
+                      <Label htmlFor="property">Property</Label>
+                      <Input
+                        id="property"
+                        value={property}
+                        onChange={(e) => setProperty(e.target.value)}
+                        placeholder="e.g., The Meridian"
+                        required
+                      />
+                    </div>
+                  )}
                 </>
               )}
 

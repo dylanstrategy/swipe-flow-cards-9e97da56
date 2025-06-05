@@ -71,7 +71,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('Error loading user profile:', error);
       } else if (data) {
         console.log('User profile loaded:', data);
-        setUserProfile(data);
+        // Convert database format to UserProfile type
+        const userProfile: UserProfile = {
+          id: data.id,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          email: data.email,
+          phone: data.phone || '',
+          role: data.role as any,
+          permissions: [], // Will be populated based on role
+          contactInfo: {
+            email: data.email,
+            phone: data.phone || '',
+          },
+          status: data.status as 'active' | 'inactive',
+          createdAt: new Date(data.created_at),
+          lastLogin: data.last_login ? new Date(data.last_login) : undefined
+        };
+        setUserProfile(userProfile);
       } else {
         console.log('No user profile found');
       }
@@ -106,6 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           last_name: userData.lastName,
           phone: userData.phone,
           role: userData.role,
+          property: userData.property || '',
         }
       }
     });
@@ -131,6 +149,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             last_name: userData.lastName,
             phone: userData.phone,
             role: userData.role,
+            property: userData.property || '',
             status: 'active',
           }
         ], {
