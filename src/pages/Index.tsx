@@ -38,6 +38,22 @@ const Index: React.FC<IndexProps> = ({ isImpersonated = false }) => {
     return null;
   }
 
+  // When impersonated and no real user, create a mock user experience
+  const effectiveUser = isImpersonated && !user ? {
+    id: 'impersonated-user',
+    email: 'test@resident.com'
+  } : user;
+
+  const effectiveUserProfile = isImpersonated && !userProfile ? {
+    id: 'impersonated-profile',
+    email: 'test@resident.com',
+    first_name: 'Test',
+    last_name: 'Resident',
+    role: 'resident',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  } : userProfile;
+
   const tabs = [
     { id: 'today', label: 'Today', icon: '📊' },
     { id: 'schedule', label: 'Schedule', icon: '📅' },
