@@ -65,6 +65,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('❌ Error fetching profile:', error);
+        if (error.code === 'PGRST116') {
+          console.log('🔧 No profile found, attempting to create one...');
+          return await createMissingProfile(userId);
+        }
         return null;
       } else {
         console.log('👤 User profile fetched:', profile);
@@ -72,6 +76,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err) {
       console.error('🔥 Error fetching profile:', err);
+      return null;
+    }
+  };
+
+  const createMissingProfile = async (userId: string): Promise<UserProfile | null> => {
+    try {
+      // Get user info from Supabase Auth
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
+        console.error('❌ No auth user found when creating profile');
+        return null;
+      }
+
+      console.log('🔧 Creating missing profile for user:', authUser.email);
+      
+      const newProfile = {
+        id: userId,
+        email: authUser.email || '',
+        first_name: authUser.user_metadata?.first_name || authUser.user_metadata?.full_name?.split(' ')[0] || 'User',
+        last_name: authUser.user_metadata?.last_name || authUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+        role: (authUser.email === 'info@applaudliving.com' ? 'super_admin' : 'prospect') as AppRole,
+        phone: authUser.user_metadata?.phone || '',
+      };
+
+      const { data: createdProfile, error } = await supabase
+        .from('users')
+        .insert([newProfile])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Error creating profile:', error);
+        return null;
+      }
+
+      console.log('✅ Created missing profile:', createdProfile);
+      return createdProfile as UserProfile;
+    } catch (err) {
+      console.error('🔥 Error creating missing profile:', err);
       return null;
     }
   };
