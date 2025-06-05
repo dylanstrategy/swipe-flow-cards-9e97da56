@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -64,11 +63,11 @@ const DocumentFieldEditor: React.FC<DocumentFieldEditorProps> = ({
   const [scale, setScale] = useState(1);
 
   const fieldTypes = [
-    { type: 'signature', icon: PenTool, label: 'Signature', color: 'bg-blue-500' },
-    { type: 'initial', icon: Edit3, label: 'Initial', color: 'bg-green-500' },
-    { type: 'date', icon: Calendar, label: 'Date', color: 'bg-purple-500' },
-    { type: 'text', icon: Type, label: 'Text', color: 'bg-orange-500' },
-    { type: 'checkbox', icon: CheckSquare, label: 'Checkbox', color: 'bg-red-500' },
+    { type: 'signature' as const, icon: PenTool, label: 'Signature', color: 'bg-blue-500' },
+    { type: 'initial' as const, icon: Edit3, label: 'Initial', color: 'bg-green-500' },
+    { type: 'date' as const, icon: Calendar, label: 'Date', color: 'bg-purple-500' },
+    { type: 'text' as const, icon: Type, label: 'Text', color: 'bg-orange-500' },
+    { type: 'checkbox' as const, icon: CheckSquare, label: 'Checkbox', color: 'bg-red-500' },
   ];
 
   const mergeFields = [
