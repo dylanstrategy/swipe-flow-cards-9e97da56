@@ -28,8 +28,7 @@ import {
   CreditCard,
   MessageSquare,
   Activity,
-  Menu,
-  X
+  ChevronDown
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -39,6 +38,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const SuperAdmin = () => {
   const { toast } = useToast();
@@ -50,7 +56,6 @@ const SuperAdmin = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState('overview');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -203,7 +208,7 @@ const SuperAdmin = () => {
 
   const navigationItems = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
-    { id: 'clients', label: 'Client Management', icon: Building },
+    { id: 'clients', label: 'Clients', icon: Building },
     { id: 'leads', label: 'CRM & Sales', icon: UserPlus },
     { id: 'billing', label: 'Billing', icon: CreditCard },
     { id: 'marketing', label: 'Marketing', icon: Mail },
@@ -223,32 +228,20 @@ const SuperAdmin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 w-full">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="bg-white shadow-sm border-b sticky top-0 z-40">
+        <div className="px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="min-w-0 flex-1">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Applaud Super Admin</h1>
-                <p className="text-sm text-gray-600 hidden sm:block">Global oversight & client management</p>
-              </div>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Applaud Super Admin</h1>
+              <p className="text-sm text-gray-600 hidden sm:block">Global oversight & client management</p>
             </div>
             
             <div className="flex items-center space-x-3">
-              {/* Mobile menu button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              >
-                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </Button>
-
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="focus:outline-none flex-shrink-0">
+                  <button className="focus:outline-none">
                     <Avatar className="w-10 h-10 cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all">
                       <AvatarFallback className="bg-red-600 text-white font-semibold">
                         SA
@@ -290,50 +283,32 @@ const SuperAdmin = () => {
         </div>
       </div>
 
-      {/* Mobile Navigation Overlay */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setMobileMenuOpen(false)}>
-          <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg" onClick={(e) => e.stopPropagation()}>
-            <div className="p-4 border-b">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Navigation</h2>
-                <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
-            <div className="p-4">
-              <nav className="space-y-2">
-                {navigationItems.map((view) => {
-                  const Icon = view.icon;
-                  return (
-                    <button
-                      key={view.id}
-                      onClick={() => {
-                        setActiveView(view.id);
-                        setMobileMenuOpen(false);
-                      }}
-                      className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                        activeView === view.id
-                          ? 'bg-blue-100 text-blue-700 font-medium'
-                          : 'text-gray-600 hover:bg-gray-100'
-                      }`}
-                    >
-                      <Icon className="w-5 h-5" />
-                      <span>{view.label}</span>
-                    </button>
-                  );
-                })}
-              </nav>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Mobile Navigation Selector */}
+      <div className="md:hidden bg-white border-b p-4">
+        <Select value={activeView} onValueChange={setActiveView}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select section" />
+          </SelectTrigger>
+          <SelectContent>
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <SelectItem key={item.id} value={item.id}>
+                  <div className="flex items-center gap-2">
+                    <Icon className="w-4 h-4" />
+                    {item.label}
+                  </div>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Desktop Navigation */}
-      <div className="bg-white border-b hidden lg:block">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-8 overflow-x-auto">
+      <div className="bg-white border-b hidden md:block">
+        <div className="px-4 sm:px-6 lg:px-8">
+          <nav className="flex space-x-8">
             {navigationItems.map((view) => {
               const Icon = view.icon;
               return (
@@ -355,46 +330,19 @@ const SuperAdmin = () => {
         </div>
       </div>
 
-      {/* Mobile Tab Navigation (visible on small screens) */}
-      <div className="bg-white border-b lg:hidden">
-        <div className="px-4">
-          <ScrollArea className="w-full">
-            <nav className="flex space-x-6 py-2">
-              {navigationItems.map((view) => {
-                const Icon = view.icon;
-                return (
-                  <button
-                    key={view.id}
-                    onClick={() => setActiveView(view.id)}
-                    className={`py-2 px-3 border-b-2 font-medium text-xs whitespace-nowrap flex flex-col items-center gap-1 min-w-0 transition-colors ${
-                      activeView === view.id
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span className="truncate">{view.label}</span>
-                  </button>
-                );
-              })}
-            </nav>
-          </ScrollArea>
-        </div>
-      </div>
-
       {/* Content */}
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+      <div className="px-4 sm:px-6 lg:px-8 py-6">
         {activeView === 'overview' && (
           <div className="space-y-6">
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center">
                     <Building className="h-8 w-8 text-blue-600" />
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600">Total Clients</p>
-                      <p className="text-2xl font-bold text-gray-900">{companies.length}</p>
+                      <p className="text-xs font-medium text-gray-600">Total Clients</p>
+                      <p className="text-xl font-bold text-gray-900">{companies.length}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -405,8 +353,8 @@ const SuperAdmin = () => {
                   <div className="flex items-center">
                     <Building className="h-8 w-8 text-green-600" />
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600">Properties</p>
-                      <p className="text-2xl font-bold text-gray-900">{properties.length}</p>
+                      <p className="text-xs font-medium text-gray-600">Properties</p>
+                      <p className="text-xl font-bold text-gray-900">{properties.length}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -417,8 +365,8 @@ const SuperAdmin = () => {
                   <div className="flex items-center">
                     <Users className="h-8 w-8 text-purple-600" />
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600">Total Units</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                      <p className="text-xs font-medium text-gray-600">Total Units</p>
+                      <p className="text-xl font-bold text-gray-900">
                         {properties.reduce((sum, prop) => sum + (prop.unit_count || 0), 0)}
                       </p>
                     </div>
@@ -431,8 +379,8 @@ const SuperAdmin = () => {
                   <div className="flex items-center">
                     <UserPlus className="h-8 w-8 text-orange-600" />
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600">Active Leads</p>
-                      <p className="text-2xl font-bold text-gray-900">{leads.length}</p>
+                      <p className="text-xs font-medium text-gray-600">Active Leads</p>
+                      <p className="text-xl font-bold text-gray-900">{leads.length}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -443,8 +391,8 @@ const SuperAdmin = () => {
                   <div className="flex items-center">
                     <DollarSign className="h-8 w-8 text-green-600" />
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
-                      <p className="text-2xl font-bold text-gray-900">$47.2K</p>
+                      <p className="text-xs font-medium text-gray-600">Monthly Revenue</p>
+                      <p className="text-xl font-bold text-gray-900">$47.2K</p>
                     </div>
                   </div>
                 </CardContent>
