@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TabNavigation from '@/components/TabNavigation';
 import TodayTab from '@/components/tabs/TodayTab';
@@ -7,6 +7,7 @@ import ScheduleTab from '@/components/tabs/ScheduleTab';
 import MessagesTab from '@/components/tabs/MessagesTab';
 import AccountTab from '@/components/tabs/AccountTab';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 
 interface IndexProps {
   isImpersonated?: boolean;
@@ -16,17 +17,11 @@ const Index: React.FC<IndexProps> = ({ isImpersonated = false }) => {
   const navigate = useNavigate();
   const { user, userProfile, loading, impersonatedUser, isDevMode, devModeRole } = useAuth();
   const [activeTab, setActiveTab] = useState('today');
-
-  useEffect(() => {
-    // Only redirect if not impersonated/dev mode and no auth after loading is complete
-    if (!isImpersonated && !isDevMode && !loading && (!user || !userProfile)) {
-      console.log('🚫 No user/profile, redirecting to login');
-      navigate('/login');
-    }
-  }, [user, userProfile, loading, navigate, isImpersonated, isDevMode]);
-
-  // Show loading while checking auth (but not during impersonation/dev mode)
-  if (!isImpersonated && !isDevMode && loading) {
+  
+  const isReady = useProtectedRoute();
+  
+  // Don't render if not ready (either loading or redirecting)
+  if (!isReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -34,10 +29,17 @@ const Index: React.FC<IndexProps> = ({ isImpersonated = false }) => {
     );
   }
 
-  // Don't render if not authenticated (but allow during impersonation/dev mode)
-  if (!isImpersonated && !isDevMode && (!user || !userProfile)) {
-    return null;
-  }
+  // Create stable dev profile to avoid hydration issues
+  const devProfile = {
+    id: 'dev-mode-profile',
+    email: 'test@resident.com',
+    first_name: 'Test',
+    last_name: 'User',
+    role: devModeRole || 'resident' as const,
+    phone: '201.212.0935',
+    created_at: '2025-01-01T00:00:00.000Z',
+    updated_at: '2025-01-01T00:00:00.000Z'
+  };
 
   // When impersonated/dev mode, use the specific impersonated user if available, otherwise create mock user
   const effectiveUser = (isImpersonated || isDevMode) ? (impersonatedUser ? {
@@ -48,26 +50,22 @@ const Index: React.FC<IndexProps> = ({ isImpersonated = false }) => {
     email: 'test@resident.com'
   }) : user;
 
-  const effectiveUserProfile = (isImpersonated || isDevMode) ? (impersonatedUser || {
-    id: 'dev-mode-profile',
-    email: 'test@resident.com',
-    first_name: 'Test',
-    last_name: 'User',
-    role: devModeRole || 'resident' as const,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }) : userProfile;
+  const effectiveUserProfile = (isImpersonated || isDevMode) 
+    ? (impersonatedUser || devProfile) 
+    : userProfile;
 
-  console.log('🏠 Index rendering with:', { 
-    isImpersonated, 
-    isDevMode,
-    hasUser: !!user, 
-    hasProfile: !!userProfile,
-    hasImpersonatedUser: !!impersonatedUser,
-    effectiveUser: !!effectiveUser,
-    effectiveProfile: !!effectiveUserProfile,
-    devModeRole
-  });
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🏠 Index rendering with:', { 
+      isImpersonated, 
+      isDevMode,
+      hasUser: !!user, 
+      hasProfile: !!userProfile,
+      hasImpersonatedUser: !!impersonatedUser,
+      effectiveUser: !!effectiveUser,
+      effectiveProfile: !!effectiveUserProfile,
+      devModeRole
+    });
+  }
 
   const tabs = [
     { id: 'today', label: 'Today', icon: '📊' },
