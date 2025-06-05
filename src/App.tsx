@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ResidentProvider } from "@/contexts/ResidentContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Discovery from "./pages/Discovery";
 import Matches from "./pages/Matches";
@@ -21,22 +22,24 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <BrowserRouter>
-        <ProfileProvider>
-          <ResidentProvider>
-            <Routes>
-              {/* All routes are now open without authentication */}
-              <Route path="/" element={<Index />} />
-              <Route path="/discovery" element={<Discovery />} />
-              <Route path="/matches" element={<Matches />} />
-              <Route path="/movein" element={<MoveIn />} />
-              <Route path="/movein/:homeId" element={<MoveIn />} />
-              <Route path="/maintenance" element={<Maintenance />} />
-              <Route path="/operator" element={<Operator />} />
-              <Route path="/super-admin" element={<SuperAdmin />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </ResidentProvider>
-        </ProfileProvider>
+        <AuthProvider>
+          <ProfileProvider>
+            <ResidentProvider>
+              <Routes>
+                {/* All routes are now open without authentication */}
+                <Route path="/" element={<Index />} />
+                <Route path="/discovery" element={<Discovery />} />
+                <Route path="/matches" element={<Matches />} />
+                <Route path="/movein" element={<MoveIn />} />
+                <Route path="/movein/:homeId" element={<MoveIn />} />
+                <Route path="/maintenance" element={<Maintenance />} />
+                <Route path="/operator" element={<Operator />} />
+                <Route path="/super-admin" element={<SuperAdmin />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </ResidentProvider>
+          </ProfileProvider>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
