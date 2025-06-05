@@ -18,6 +18,7 @@ export interface UserProfile {
   permissions: Permission[];
   contactInfo: ContactInfo;
   avatar?: string;
+  unit_number?: string; // Added unit_number property
   status: 'active' | 'inactive' | 'pending';
   createdAt: Date;
   lastLogin?: Date;
