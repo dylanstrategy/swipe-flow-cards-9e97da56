@@ -1,21 +1,11 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Login = () => {
-  const { signInWithGoogle, loading, user } = useAuth();
-  const navigate = useNavigate();
-
-  // Simple redirect logic
-  useEffect(() => {
-    if (user) {
-      console.log('✅ User authenticated, redirecting to home');
-      navigate('/', { replace: true });
-    }
-  }, [user, navigate]);
+  const { signInWithGoogle, loading } = useAuth();
 
   const handleGoogleSignIn = async () => {
     try {
@@ -33,18 +23,6 @@ const Login = () => {
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
           <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't show login form if user is already authenticated
-  if (user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600">Redirecting...</p>
         </div>
       </div>
     );

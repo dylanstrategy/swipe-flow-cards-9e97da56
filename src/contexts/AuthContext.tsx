@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -56,44 +55,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Single effect to handle all auth state
   useEffect(() => {
     console.log('🚀 AuthProvider initializing...');
+    let mounted = true;
     
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
       console.log('🔍 Initial session:', !!session);
       setSession(session);
       setUser(session?.user ?? null);
-      setLoading(false);
+      
+      if (session?.user) {
+        fetchUserProfile(session.user.id).then(profile => {
+          if (mounted) {
+            setUserProfile(profile);
+            setLoading(false);
+          }
+        });
+      } else {
+        setLoading(false);
+      }
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        if (!mounted) return;
+        
         console.log('🔔 Auth state change:', event, 'Session:', !!session);
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
+        
+        if (session?.user) {
+          fetchUserProfile(session.user.id).then(profile => {
+            if (mounted) {
+              setUserProfile(profile);
+              setLoading(false);
+            }
+          });
+        } else {
+          setUserProfile(null);
+          setImpersonatedRole(null);
+          setLoading(false);
+        }
       }
     );
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
-
-  // Separate effect for profile fetching
-  useEffect(() => {
-    if (user && !userProfile) {
-      console.log('👤 Fetching profile for user:', user.id);
-      fetchUserProfile(user.id).then(setUserProfile);
-    } else if (!user && userProfile) {
-      console.log('🧹 Clearing profile');
-      setUserProfile(null);
-      setImpersonatedRole(null);
-    }
-  }, [user]);
 
   const signInWithGoogle = async () => {
     try {

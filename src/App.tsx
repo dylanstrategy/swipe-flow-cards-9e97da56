@@ -80,6 +80,36 @@ function getDefaultRouteForRole(userProfile: any): string {
   }
 }
 
+function AuthenticatedRedirect() {
+  const { user, loading, userProfile } = useAuth();
+  
+  console.log('🏠 AuthenticatedRedirect - User:', !!user, 'Profile:', !!userProfile, 'Loading:', loading);
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!userProfile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  const defaultRoute = getDefaultRouteForRole(userProfile);
+  console.log('🎯 Redirecting authenticated user to:', defaultRoute);
+  return <Navigate to={defaultRoute} replace />;
+}
+
 function AppRoutes() {
   const { user, loading } = useAuth();
   
@@ -97,7 +127,7 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={user ? <AuthenticatedRedirect /> : <Login />} />
       <Route path="/owner-login" element={<OwnerLogin />} />
       <Route path="/unknown-role" element={
         <ProtectedRoute>
