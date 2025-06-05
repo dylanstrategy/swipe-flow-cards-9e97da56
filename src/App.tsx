@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -11,8 +12,6 @@ import MoveIn from "./pages/MoveIn";
 import Maintenance from "./pages/Maintenance";
 import Operator from "./pages/Operator";
 import NotFound from "./pages/NotFound";
-import { AuthProvider } from "@/components/auth/AuthProvider";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import SuperAdmin from "./pages/SuperAdmin";
 import OwnerLogin from "./pages/OwnerLogin";
 
@@ -20,61 +19,27 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <ProfileProvider>
-        <ResidentProvider>
-          <TooltipProvider>
-            <Toaster />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/owner-login" element={<OwnerLogin />} />
-                <Route path="/super-admin" element={
-                  <ProtectedRoute requiredRole="super_admin">
-                    <SuperAdmin />
-                  </ProtectedRoute>
-                } />
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <Index />
-                  </ProtectedRoute>
-                } />
-                <Route path="/discovery" element={
-                  <ProtectedRoute>
-                    <Discovery />
-                  </ProtectedRoute>
-                } />
-                <Route path="/matches" element={
-                  <ProtectedRoute>
-                    <Matches />
-                  </ProtectedRoute>
-                } />
-                <Route path="/movein" element={
-                  <ProtectedRoute>
-                    <MoveIn />
-                  </ProtectedRoute>
-                } />
-                <Route path="/movein/:homeId" element={
-                  <ProtectedRoute>
-                    <MoveIn />
-                  </ProtectedRoute>
-                } />
-                <Route path="/maintenance" element={
-                  <ProtectedRoute>
-                    <Maintenance />
-                  </ProtectedRoute>
-                } />
-                <Route path="/operator" element={
-                  <ProtectedRoute>
-                    <Operator />
-                  </ProtectedRoute>
-                } />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </ResidentProvider>
-      </ProfileProvider>
-    </AuthProvider>
+    <ProfileProvider>
+      <ResidentProvider>
+        <TooltipProvider>
+          <Toaster />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/owner-login" element={<OwnerLogin />} />
+              <Route path="/super-admin" element={<SuperAdmin />} />
+              <Route path="/" element={<Index />} />
+              <Route path="/discovery" element={<Discovery />} />
+              <Route path="/matches" element={<Matches />} />
+              <Route path="/movein" element={<MoveIn />} />
+              <Route path="/movein/:homeId" element={<MoveIn />} />
+              <Route path="/maintenance" element={<Maintenance />} />
+              <Route path="/operator" element={<Operator />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ResidentProvider>
+    </ProfileProvider>
   </QueryClientProvider>
 );
 
