@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { TabNavigation } from '@/components/TabNavigation';
+import TabNavigation from '@/components/TabNavigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Building, Settings, Wrench, Calendar, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
