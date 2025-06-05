@@ -1,3 +1,4 @@
+
 interface SignNowConfig {
   clientId: string;
   clientSecret: string;
@@ -19,12 +20,27 @@ interface SignNowSigner {
   signedAt?: string;
 }
 
+interface DocumentField {
+  id: string;
+  type: 'signature' | 'initial' | 'date' | 'text' | 'checkbox';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  role: string;
+  mergeField?: string;
+  required: boolean;
+  placeholder?: string;
+}
+
 interface CreateDocumentRequest {
   templateId: string;
   signerEmail: string;
   signerName: string;
   documentName: string;
   clientData?: Record<string, any>;
+  fields?: DocumentField[];
+  mergeData?: Record<string, string>;
 }
 
 class SignNowService {
@@ -122,12 +138,84 @@ class SignNowService {
     }
   }
 
+  async addDocumentFields(documentId: string, fields: DocumentField[]): Promise<void> {
+    if (!this.accessToken) {
+      await this.authenticate();
+    }
+
+    try {
+      const signNowFields = fields.map(field => ({
+        type: this.mapFieldTypeToSignNow(field.type),
+        x: field.x,
+        y: field.y,
+        width: field.width,
+        height: field.height,
+        page_number: 0, // Assuming single page for now
+        role: field.role,
+        required: field.required,
+        prefilled_text: field.mergeField ? `{{${field.mergeField}}}` : undefined,
+        placeholder_text: field.placeholder
+      }));
+
+      const response = await fetch(`${this.config.apiUrl}/document/${documentId}/fields`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fields: signNowFields }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(`Add fields failed: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('SignNow add fields error:', error);
+      throw error;
+    }
+  }
+
+  private mapFieldTypeToSignNow(fieldType: string): string {
+    const typeMap = {
+      'signature': 'signature',
+      'initial': 'initials',
+      'date': 'date',
+      'text': 'text',
+      'checkbox': 'checkbox'
+    };
+    return typeMap[fieldType as keyof typeof typeMap] || 'text';
+  }
+
+  private populateMergeFields(text: string, mergeData: Record<string, string>): string {
+    let populatedText = text;
+    Object.entries(mergeData).forEach(([key, value]) => {
+      const placeholder = `{{${key}}}`;
+      populatedText = populatedText.replace(new RegExp(placeholder, 'g'), value);
+    });
+    return populatedText;
+  }
+
   async sendForSignature(request: CreateDocumentRequest): Promise<SignNowDocument> {
     if (!this.accessToken) {
       await this.authenticate();
     }
 
     try {
+      // If fields are provided, add them to the document first
+      if (request.fields && request.fields.length > 0) {
+        await this.addDocumentFields(request.templateId, request.fields);
+      }
+
+      // Prepare merge data if provided
+      let documentName = request.documentName;
+      let message = 'Please review and sign this document.';
+      
+      if (request.mergeData) {
+        documentName = this.populateMergeFields(documentName, request.mergeData);
+        message = this.populateMergeFields(message, request.mergeData);
+      }
+
       // Create signing request
       const response = await fetch(`${this.config.apiUrl}/document/${request.templateId}/invite`, {
         method: 'POST',
@@ -146,13 +234,15 @@ class SignNowService {
               decline_by_signature: '0',
               reminder: 4,
               expiration_days: 15,
-              subject: `Please sign: ${request.documentName}`,
-              message: 'Please review and sign this document.',
+              subject: `Please sign: ${documentName}`,
+              message: message,
             }
           ],
           from: 'noreply@yourcompany.com',
-          subject: `Signature Request: ${request.documentName}`,
-          message: 'Please review and sign the attached document.',
+          subject: `Signature Request: ${documentName}`,
+          message: message,
+          // Include merge data in the request
+          merge_data: request.mergeData || {},
         }),
       });
 
@@ -164,7 +254,7 @@ class SignNowService {
 
       return {
         id: request.templateId,
-        name: request.documentName,
+        name: documentName,
         status: 'pending',
         created: new Date().toISOString(),
         signers: [
@@ -244,4 +334,4 @@ class SignNowService {
 }
 
 export const signNowService = new SignNowService();
-export type { SignNowDocument, SignNowSigner, CreateDocumentRequest };
+export type { SignNowDocument, SignNowSigner, CreateDocumentRequest, DocumentField };

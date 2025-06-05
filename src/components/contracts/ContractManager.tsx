@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,8 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  Settings
+  Settings,
+  PenTool
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -28,7 +28,21 @@ import {
 } from '@/components/ui/dropdown-menu';
 import SignatureRequestModal from './SignatureRequestModal';
 import SignNowConfigModal from './SignNowConfigModal';
+import DocumentFieldEditor from './DocumentFieldEditor';
 import { signNowService } from '@/services/signNowService';
+
+interface DocumentField {
+  id: string;
+  type: 'signature' | 'initial' | 'date' | 'text' | 'checkbox';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  role: string;
+  mergeField?: string;
+  required: boolean;
+  placeholder?: string;
+}
 
 interface ContractTemplate {
   id: string;
@@ -40,6 +54,7 @@ interface ContractTemplate {
   lastModified: string;
   status: 'active' | 'draft' | 'archived';
   category: 'lease' | 'service' | 'vendor' | 'other';
+  fields?: DocumentField[];
 }
 
 interface ContractManagerProps {
@@ -53,6 +68,8 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
   const [selectedTemplate, setSelectedTemplate] = useState<ContractTemplate | null>(null);
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false);
+  const [showFieldEditor, setShowFieldEditor] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<ContractTemplate | null>(null);
   const [isSignNowConfigured, setIsSignNowConfigured] = useState(false);
 
   useEffect(() => {
@@ -154,6 +171,37 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
     });
   };
 
+  const handleEditFields = (template: ContractTemplate) => {
+    setEditingTemplate(template);
+    setShowFieldEditor(true);
+  };
+
+  const handleSaveFields = (fields: DocumentField[]) => {
+    if (!editingTemplate) return;
+
+    const updatedTemplates = templates.map(template =>
+      template.id === editingTemplate.id
+        ? { 
+            ...template, 
+            fields,
+            status: 'active' as const,
+            lastModified: new Date().toISOString()
+          }
+        : template
+    );
+
+    setTemplates(updatedTemplates);
+    localStorage.setItem('applaud_contract_templates', JSON.stringify(updatedTemplates));
+    
+    setShowFieldEditor(false);
+    setEditingTemplate(null);
+    
+    toast({
+      title: "Template Updated",
+      description: `${editingTemplate.name} has been configured with ${fields.length} fields`,
+    });
+  };
+
   const handleSendForSignature = (template: ContractTemplate) => {
     if (!isSignNowConfigured) {
       toast({
@@ -201,6 +249,21 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
     };
     return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
+
+  if (showFieldEditor && editingTemplate) {
+    return (
+      <DocumentFieldEditor
+        documentUrl={editingTemplate.fileUrl}
+        documentName={editingTemplate.name}
+        onSave={handleSaveFields}
+        onBack={() => {
+          setShowFieldEditor(false);
+          setEditingTemplate(null);
+        }}
+        initialFields={editingTemplate.fields || []}
+      />
+    );
+  }
 
   return (
     <div className="w-full max-w-full overflow-hidden space-y-6">
@@ -322,6 +385,11 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
                         <Badge variant="outline" className={`${getCategoryColor(template.category)} text-xs`}>
                           {template.category}
                         </Badge>
+                        {template.fields && template.fields.length > 0 && (
+                          <Badge variant="outline" className="text-xs">
+                            {template.fields.length} fields
+                          </Badge>
+                        )}
                         <span className="text-xs text-gray-400 whitespace-nowrap">
                           Uploaded {new Date(template.uploadedAt).toLocaleDateString()}
                         </span>
@@ -333,8 +401,18 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
                     <Button 
                       variant="outline" 
                       size="sm"
+                      onClick={() => handleEditFields(template)}
+                      className="text-xs sm:text-sm whitespace-nowrap"
+                    >
+                      <PenTool className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      {template.fields?.length ? 'Edit Fields' : 'Add Fields'}
+                    </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm"
                       onClick={() => handleSendForSignature(template)}
-                      disabled={!isSignNowConfigured}
+                      disabled={!isSignNowConfigured || !template.fields?.length}
                       className="text-xs sm:text-sm whitespace-nowrap"
                     >
                       <Send className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
