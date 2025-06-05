@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { UserProfile as UserProfileType, UserRole, ROLE_PERMISSIONS } from '@/types/users';
-import { ArrowLeft, Edit, Save, X, Trash2, User, Mail, Phone, Shield, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Edit, Save, X, Trash2, User, Mail, Phone, Shield } from 'lucide-react';
 
 interface UserProfileProps {
   user: UserProfileType;
@@ -73,54 +73,54 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
   const availableRoles: UserRole[] = ['maintenance', 'leasing', 'operator', 'senior_operator'];
 
   return (
-    <div className="flex flex-col h-full">
-      <ScrollArea className="flex-1">
-        <div className="p-4">
+    <div className="min-h-screen bg-gray-50">
+      <ScrollArea className="h-screen">
+        <div className="p-4 pb-20">
           <Card className="max-w-4xl mx-auto">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Button variant="outline" size="sm" onClick={onBack}>
+            <CardHeader className="space-y-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-4 min-w-0 flex-1">
+                  <Button variant="outline" size="sm" onClick={onBack} className="flex-shrink-0 mt-1">
                     <ArrowLeft className="w-4 h-4" />
                   </Button>
-                  <Avatar className="w-16 h-16">
+                  <Avatar className="w-16 h-16 flex-shrink-0">
                     <AvatarFallback className="text-lg font-semibold">
                       {formData.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <CardTitle className="text-xl">User Profile</CardTitle>
-                    <div className="flex gap-2 mt-2">
-                      <Badge className={getRoleColor(formData.role)}>
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-xl truncate">User Profile</CardTitle>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <Badge className={`${getRoleColor(formData.role)} text-xs`}>
                         {formData.role === 'senior_operator' ? 'Senior Operator' : formData.role.charAt(0).toUpperCase() + formData.role.slice(1)}
                       </Badge>
-                      <Badge className={getStatusColor(formData.status)}>
+                      <Badge className={`${getStatusColor(formData.status)} text-xs`}>
                         {formData.status}
                       </Badge>
                     </div>
                   </div>
                 </div>
                 
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-shrink-0">
                   {!isEditing ? (
                     <>
-                      <Button variant="outline" onClick={() => setIsEditing(true)}>
-                        <Edit className="w-4 h-4 mr-2" />
+                      <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                        <Edit className="w-4 h-4 mr-1" />
                         Edit
                       </Button>
-                      <Button variant="outline" className="text-red-600 hover:text-red-700" onClick={() => onDelete(user.id)}>
-                        <Trash2 className="w-4 h-4 mr-2" />
+                      <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700" onClick={() => onDelete(user.id)}>
+                        <Trash2 className="w-4 h-4 mr-1" />
                         Delete
                       </Button>
                     </>
                   ) : (
                     <>
-                      <Button variant="outline" onClick={handleCancel}>
-                        <X className="w-4 h-4 mr-2" />
+                      <Button variant="outline" size="sm" onClick={handleCancel}>
+                        <X className="w-4 h-4 mr-1" />
                         Cancel
                       </Button>
-                      <Button onClick={handleSave}>
-                        <Save className="w-4 h-4 mr-2" />
+                      <Button size="sm" onClick={handleSave}>
+                        <Save className="w-4 h-4 mr-1" />
                         Save
                       </Button>
                     </>
@@ -137,36 +137,39 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
                   Basic Information
                 </h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div>
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>
                     <Input
                       id="name"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       disabled={!isEditing}
+                      className="mt-1"
                     />
                   </div>
                   
                   <div>
-                    <Label htmlFor="phone">Phone Number</Label>
+                    <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
+                    <Input
+                      id="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      disabled={!isEditing}
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
                     <Input
                       id="phone"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       disabled={!isEditing}
+                      className="mt-1"
                     />
                   </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    disabled={!isEditing}
-                  />
                 </div>
               </div>
 
@@ -179,13 +182,13 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="role">Role</Label>
+                    <Label htmlFor="role" className="text-sm font-medium">Role</Label>
                     {isEditing ? (
                       <select
                         id="role"
                         value={formData.role}
                         onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
-                        className="w-full px-3 py-2 border rounded-md"
+                        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         {availableRoles.map(role => (
                           <option key={role} value={role}>
@@ -194,30 +197,28 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
                         ))}
                       </select>
                     ) : (
-                      <Input
-                        value={formData.role === 'senior_operator' ? 'Senior Operator' : formData.role.charAt(0).toUpperCase() + formData.role.slice(1)}
-                        disabled
-                      />
+                      <div className="mt-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-900">
+                        {formData.role === 'senior_operator' ? 'Senior Operator' : formData.role.charAt(0).toUpperCase() + formData.role.slice(1)}
+                      </div>
                     )}
                   </div>
                   
                   <div>
-                    <Label htmlFor="status">Status</Label>
+                    <Label htmlFor="status" className="text-sm font-medium">Status</Label>
                     {isEditing ? (
                       <select
                         id="status"
                         value={formData.status}
                         onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })}
-                        className="w-full px-3 py-2 border rounded-md"
+                        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>
                       </select>
                     ) : (
-                      <Input
-                        value={formData.status.charAt(0).toUpperCase() + formData.status.slice(1)}
-                        disabled
-                      />
+                      <div className="mt-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-900">
+                        {formData.status.charAt(0).toUpperCase() + formData.status.slice(1)}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -227,14 +228,14 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Permissions</h3>
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {ROLE_PERMISSIONS[formData.role].map((permission) => (
-                      <div key={permission.id} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
+                      <div key={permission.id} className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Badge variant="outline" className="text-xs flex-shrink-0">
                             {permission.name}
                           </Badge>
-                          <Badge className={`text-xs ${
+                          <Badge className={`text-xs flex-shrink-0 ${
                             permission.level === 'admin' ? 'bg-red-100 text-red-700' :
                             permission.level === 'advanced' ? 'bg-blue-100 text-blue-700' :
                             'bg-gray-100 text-gray-700'
@@ -253,12 +254,12 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
                 <h3 className="text-lg font-semibold">Account Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <Label>Created</Label>
-                    <p className="text-gray-600">{user.createdAt.toLocaleDateString()}</p>
+                    <Label className="text-sm font-medium">Created</Label>
+                    <p className="text-gray-600 mt-1">{user.createdAt.toLocaleDateString()}</p>
                   </div>
                   <div>
-                    <Label>Last Login</Label>
-                    <p className="text-gray-600">{user.lastLogin?.toLocaleDateString() || 'Never'}</p>
+                    <Label className="text-sm font-medium">Last Login</Label>
+                    <p className="text-gray-600 mt-1">{user.lastLogin?.toLocaleDateString() || 'Never'}</p>
                   </div>
                 </div>
               </div>
