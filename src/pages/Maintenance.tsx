@@ -32,22 +32,13 @@ const Maintenance = () => {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {/* Header with Property Setup */}
+      {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Building className="w-6 h-6 text-orange-600" />
             <h1 className="text-xl font-semibold text-gray-900">Maintenance Portal</h1>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowPropertySetup(true)}
-            className="flex items-center gap-2"
-          >
-            <Settings className="w-4 h-4" />
-            Property Setup
-          </Button>
         </div>
       </div>
 
@@ -61,9 +52,9 @@ const Maintenance = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         tabs={[
-          { id: 'today', label: 'Today', icon: Wrench },
-          { id: 'schedule', label: 'Schedule', icon: Calendar },
-          { id: 'inventory', label: 'Inventory', icon: Package }
+          { id: 'today', label: 'Today', icon: 'Wrench' },
+          { id: 'schedule', label: 'Schedule', icon: 'Calendar' },
+          { id: 'inventory', label: 'Inventory', icon: 'Package' }
         ]}
       />
     </div>

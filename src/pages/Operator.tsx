@@ -6,6 +6,7 @@ import OperatorTodayTab from '@/components/operator/tabs/OperatorTodayTab';
 import OperatorScheduleTab from '@/components/operator/tabs/OperatorScheduleTab';
 import OperatorMessagesTab from '@/components/operator/tabs/OperatorMessagesTab';
 import OperatorResidentsTab from '@/components/operator/tabs/OperatorResidentsTab';
+import PropertySetupModule from '@/components/property/PropertySetupModule';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +21,7 @@ import { User, Settings, LogOut } from 'lucide-react';
 const Operator = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('today');
+  const [showPropertySetup, setShowPropertySetup] = useState(false);
 
   const tabs = [
     { id: 'today', label: 'Today', icon: '📊' },
@@ -46,6 +48,10 @@ const Operator = () => {
         break;
     }
   };
+
+  if (showPropertySetup) {
+    return <PropertySetupModule onClose={() => setShowPropertySetup(false)} />;
+  }
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -93,14 +99,17 @@ const Operator = () => {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               
-              <DropdownMenuItem className="cursor-pointer">
-                <User className="mr-2 h-4 w-4" />
+              <DropdownMenuItem 
+                className="cursor-pointer"
+                onClick={() => setShowPropertySetup(true)}
+              >
+                <Settings className="mr-2 h-4 w-4" />
                 <span>Setup</span>
               </DropdownMenuItem>
               
               <DropdownMenuItem className="cursor-pointer focus:bg-accent">
                 <div className="flex items-center w-full">
-                  <Settings className="mr-2 h-4 w-4" />
+                  <User className="mr-2 h-4 w-4" />
                   <span>Role</span>
                 </div>
               </DropdownMenuItem>
