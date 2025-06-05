@@ -16,7 +16,7 @@ const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading, user, userProfile } = useAuth();
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading, user, userProfile, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleForgotPassword = async () => {
@@ -68,6 +68,20 @@ const Login = () => {
       setIsSubmitting(false);
     }
   };
+
+  // Handle invalid auth state - force logout if user exists but no profile after reasonable time
+  useEffect(() => {
+    if (user && !userProfile && !loading) {
+      console.warn('🚨 Invalid state: user exists but no profile found');
+      const timer = setTimeout(async () => {
+        console.log('🔄 Forcing logout due to missing profile');
+        await signOut();
+        setError('Authentication issue detected. Please try logging in again.');
+      }, 10000); // Wait 10 seconds before forcing logout
+
+      return () => clearTimeout(timer);
+    }
+  }, [user, userProfile, loading, signOut]);
 
   // Handle role-based routing after successful login
   useEffect(() => {
