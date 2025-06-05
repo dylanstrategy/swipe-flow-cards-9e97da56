@@ -140,3 +140,59 @@ export function useProperties() {
 
   return { properties, loading, error, refetch: fetchProperties };
 }
+
+export function useCalendarEvents() {
+  const [events, setEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .order('event_date', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching calendar events:', error);
+        setError(error.message);
+        
+        // If there's a schema error, provide mock data for development
+        if (error.message?.includes('schema') || error.message?.includes('relation')) {
+          console.log('Using mock data for calendar events due to schema issues');
+          const mockEvents: any[] = [
+            {
+              id: '1',
+              title: 'Sample Event',
+              description: 'This is a sample calendar event',
+              event_date: new Date().toISOString().split('T')[0],
+              event_time: '10:00',
+              event_type: 'meeting',
+              created_at: new Date().toISOString()
+            }
+          ];
+          setEvents(mockEvents);
+        } else {
+          setEvents([]);
+        }
+      } else {
+        setEvents(data || []);
+      }
+    } catch (err) {
+      console.error('Exception fetching calendar events:', err);
+      setError('Failed to fetch calendar events');
+      setEvents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  return { events, loading, error, refetch: fetchEvents };
+}
