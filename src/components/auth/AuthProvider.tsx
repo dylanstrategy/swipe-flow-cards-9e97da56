@@ -32,6 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session?.user?.email);
       setUser(session?.user ?? null);
       if (session?.user) {
         loadUserProfile(session.user.id);
@@ -43,6 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.email);
         setUser(session?.user ?? null);
         if (session?.user) {
           await loadUserProfile(session.user.id);
@@ -58,6 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadUserProfile = async (userId: string) => {
     try {
+      console.log('Loading user profile for:', userId);
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
@@ -67,7 +70,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error && error.code !== 'PGRST116') {
         console.error('Error loading user profile:', error);
       } else if (data) {
+        console.log('User profile loaded:', data);
         setUserProfile(data);
+      } else {
+        console.log('No user profile found');
       }
     } catch (error) {
       console.error('Error in loadUserProfile:', error);
@@ -77,25 +83,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signIn = async (email: string, password: string) => {
+    console.log('Signing in:', email);
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    if (error) throw error;
+    if (error) {
+      console.error('Sign in error:', error);
+      throw error;
+    }
   };
 
   const signUp = async (email: string, password: string, userData: any) => {
+    console.log('Signing up:', email, userData);
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          name: userData.name,
+          phone: userData.phone,
+          role: userData.role,
+        }
+      }
     });
-    if (error) throw error;
+    
+    if (error) {
+      console.error('Sign up error:', error);
+      throw error;
+    }
 
+    console.log('Sign up successful:', data);
+
+    // The user profile will be created by the database trigger
+    // But let's also manually create it to ensure it exists
     if (data.user) {
-      // Create user profile
+      console.log('Creating user profile manually for:', data.user.id);
       const { error: profileError } = await supabase
         .from('user_profiles')
-        .insert([
+        .upsert([
           {
             id: data.user.id,
             email: email,
@@ -103,17 +130,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             phone: userData.phone,
             role: userData.role,
             status: 'active',
-            created_at: new Date().toISOString(),
           }
-        ]);
+        ], {
+          onConflict: 'id'
+        });
       
       if (profileError) {
         console.error('Error creating user profile:', profileError);
+        // Don't throw here as the trigger might have created it
+      } else {
+        console.log('User profile created successfully');
       }
     }
   };
 
   const signOut = async () => {
+    console.log('Signing out');
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };
@@ -121,6 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const switchRole = async (newRole: string) => {
     if (!user || !userProfile) return;
 
+    console.log('Switching role to:', newRole);
     const { error } = await supabase
       .from('user_profiles')
       .update({ role: newRole })

@@ -32,13 +32,17 @@ const AuthPage = () => {
     setLoading(true);
 
     try {
+      console.log('Starting registration/login process:', { email, role, isSignUp });
+      
       if (isSignUp) {
+        console.log('Attempting sign up with data:', { name, email, phone, role });
         await signUp(email, password, { name, phone, role });
         toast({
           title: "Account created!",
-          description: "Please check your email to verify your account.",
+          description: "You have been automatically signed in.",
         });
       } else {
+        console.log('Attempting sign in');
         await signIn(email, password);
         toast({
           title: "Welcome back!",
@@ -46,6 +50,7 @@ const AuthPage = () => {
         });
       }
     } catch (error: any) {
+      console.error('Auth error:', error);
       toast({
         title: "Error",
         description: error.message || "Something went wrong",
@@ -59,14 +64,17 @@ const AuthPage = () => {
   const handleTestLogin = async (testAccount: typeof testAccounts[0]) => {
     setLoading(true);
     try {
+      console.log('Attempting test login:', testAccount.email);
       await signIn(testAccount.email, testAccount.password);
       toast({
         title: "Test login successful!",
         description: `Logged in as ${testAccount.role}`,
       });
     } catch (error: any) {
+      console.log('Test login failed, creating account:', error.message);
       // If login fails, try to create the test account
       try {
+        console.log('Creating test account:', testAccount);
         await signUp(testAccount.email, testAccount.password, {
           name: testAccount.name,
           phone: '(555) 123-4567',
@@ -78,6 +86,7 @@ const AuthPage = () => {
           description: `Created and logged in as ${testAccount.role}`,
         });
       } catch (signUpError: any) {
+        console.error('Test account creation failed:', signUpError);
         toast({
           title: "Error",
           description: signUpError.message || "Failed to create test account",
