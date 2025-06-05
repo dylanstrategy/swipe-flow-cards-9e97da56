@@ -20,6 +20,7 @@ const Index: React.FC<IndexProps> = ({ isImpersonated = false }) => {
   useEffect(() => {
     // Only redirect if not impersonated and no auth
     if (!isImpersonated && !loading && (!user || !userProfile)) {
+      console.log('🚫 No user/profile, redirecting to login');
       navigate('/login');
     }
   }, [user, userProfile, loading, navigate, isImpersonated]);
@@ -49,10 +50,18 @@ const Index: React.FC<IndexProps> = ({ isImpersonated = false }) => {
     email: 'test@resident.com',
     first_name: 'Test',
     last_name: 'Resident',
-    role: 'resident',
+    role: 'resident' as const,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   } : userProfile;
+
+  console.log('🏠 Index rendering with:', { 
+    isImpersonated, 
+    hasUser: !!user, 
+    hasProfile: !!userProfile,
+    effectiveUser: !!effectiveUser,
+    effectiveProfile: !!effectiveUserProfile
+  });
 
   const tabs = [
     { id: 'today', label: 'Today', icon: '📊' },
