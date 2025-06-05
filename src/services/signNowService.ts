@@ -1,4 +1,3 @@
-
 interface SignNowConfig {
   clientId: string;
   clientSecret: string;
@@ -33,14 +32,39 @@ class SignNowService {
   private accessToken: string | null = null;
 
   constructor() {
-    this.config = {
-      clientId: process.env.SIGNNOW_CLIENT_ID || '',
-      clientSecret: process.env.SIGNNOW_CLIENT_SECRET || '',
+    // Get configuration from localStorage or use empty strings as defaults
+    const storedConfig = localStorage.getItem('signnow_config');
+    const defaultConfig = {
+      clientId: '',
+      clientSecret: '',
       apiUrl: 'https://api.signnow.com'
     };
+
+    this.config = storedConfig ? JSON.parse(storedConfig) : defaultConfig;
+  }
+
+  // Method to update configuration
+  updateConfig(clientId: string, clientSecret: string) {
+    this.config = {
+      clientId,
+      clientSecret,
+      apiUrl: 'https://api.signnow.com'
+    };
+    localStorage.setItem('signnow_config', JSON.stringify(this.config));
+    // Clear access token when config changes
+    this.accessToken = null;
+  }
+
+  // Method to check if service is configured
+  isConfigured(): boolean {
+    return !!(this.config.clientId && this.config.clientSecret);
   }
 
   async authenticate(): Promise<string> {
+    if (!this.isConfigured()) {
+      throw new Error('SignNow service is not configured. Please provide Client ID and Client Secret.');
+    }
+
     try {
       const response = await fetch(`${this.config.apiUrl}/oauth2/token`, {
         method: 'POST',

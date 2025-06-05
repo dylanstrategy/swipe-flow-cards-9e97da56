@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import SignatureRequestModal from './SignatureRequestModal';
+import SignNowConfigModal from './SignNowConfigModal';
 
 interface ContractTemplate {
   id: string;
@@ -49,6 +50,7 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
   const [isUploading, setIsUploading] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<ContractTemplate | null>(null);
   const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [showConfigModal, setShowConfigModal] = useState(false);
   const [isSignNowConfigured, setIsSignNowConfigured] = useState(false);
 
   useEffect(() => {
@@ -92,10 +94,8 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
   };
 
   const checkSignNowConfiguration = () => {
-    // Check if SignNow API keys are configured
-    const clientId = process.env.SIGNNOW_CLIENT_ID;
-    const clientSecret = process.env.SIGNNOW_CLIENT_SECRET;
-    setIsSignNowConfigured(!!(clientId && clientSecret));
+    // Check if SignNow is configured using the service method
+    setIsSignNowConfigured(signNowService.isConfigured());
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -156,7 +156,7 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
     if (!isSignNowConfigured) {
       toast({
         title: "SignNow Not Configured",
-        description: "Please configure your SignNow API credentials to send contracts for signature",
+        description: "Please configure your SignNow API credentials first",
         variant: "destructive",
       });
       return;
@@ -175,6 +175,10 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
     if (onSendContract) {
       onSendContract(templateId, signerData);
     }
+  };
+
+  const handleConfigured = () => {
+    checkSignNowConfiguration();
   };
 
   const getStatusColor = (status: string) => {
@@ -212,36 +216,34 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
               <h4 className={`font-medium mb-2 ${isSignNowConfigured ? 'text-green-900' : 'text-orange-900'}`}>
                 Configuration Status
               </h4>
-              <div className="flex items-center gap-2">
-                {isSignNowConfigured ? (
-                  <>
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-green-800">
-                      SignNow is configured and ready to use
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className="w-4 h-4 text-orange-600" />
-                    <span className="text-sm text-orange-800">
-                      SignNow API credentials not configured. Add SIGNNOW_CLIENT_ID and SIGNNOW_CLIENT_SECRET to your environment variables.
-                    </span>
-                  </>
-                )}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {isSignNowConfigured ? (
+                    <>
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span className="text-sm text-green-800">
+                        SignNow is configured and ready to use
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-4 h-4 text-orange-600" />
+                      <span className="text-sm text-orange-800">
+                        SignNow API credentials not configured
+                      </span>
+                    </>
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowConfigModal(true)}
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  {isSignNowConfigured ? 'Update' : 'Configure'}
+                </Button>
               </div>
             </div>
-            
-            {!isSignNowConfigured && (
-              <div className="p-4 border rounded-lg">
-                <h5 className="font-medium mb-2">Setup Instructions</h5>
-                <ol className="text-sm text-gray-600 space-y-1">
-                  <li>1. Sign up for a SignNow developer account</li>
-                  <li>2. Create an application to get your Client ID and Secret</li>
-                  <li>3. Add SIGNNOW_CLIENT_ID and SIGNNOW_CLIENT_SECRET to your environment</li>
-                  <li>4. Restart the application</li>
-                </ol>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
@@ -377,6 +379,13 @@ const ContractManager: React.FC<ContractManagerProps> = ({ onSendContract }) => 
         onClose={() => setShowSignatureModal(false)}
         template={selectedTemplate}
         onSignatureRequested={handleSignatureRequested}
+      />
+
+      {/* SignNow Configuration Modal */}
+      <SignNowConfigModal
+        isOpen={showConfigModal}
+        onClose={() => setShowConfigModal(false)}
+        onConfigured={handleConfigured}
       />
     </div>
   );
