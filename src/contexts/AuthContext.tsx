@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -60,58 +61,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     let mounted = true;
 
-    // Set up auth state listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('🔔 Auth state change:', event, 'Session exists:', !!session);
-        
-        if (!mounted) return;
-        
-        if (event === 'SIGNED_IN' && session) {
-          console.log('✅ User signed in:', session.user.email);
-          setSession(session);
-          setUser(session.user);
-          
-          const profile = await fetchUserProfile(session.user.id);
-          if (mounted) {
-            setUserProfile(profile);
-            setLoading(false);
-          }
-        } else if (event === 'SIGNED_OUT') {
-          console.log('🚫 User signed out');
-          setSession(null);
-          setUser(null);
-          setUserProfile(null);
-          setImpersonatedRole(null);
-          setLoading(false);
-        } else if (event === 'TOKEN_REFRESHED' && session) {
-          console.log('🔄 Token refreshed');
-          setSession(session);
-          setUser(session.user);
-        }
-      }
-    );
-
-    // Then get the current session
+    // Initialize auth state
     const initializeAuth = async () => {
       try {
+        console.log('📍 Getting initial session...');
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        console.log('📍 Initial session check:', !!currentSession, error ? 'Error: ' + error.message : '');
         
-        if (mounted) {
-          if (currentSession?.user) {
-            console.log('👤 Found existing session for:', currentSession.user.email);
-            setSession(currentSession);
-            setUser(currentSession.user);
-            
-            const profile = await fetchUserProfile(currentSession.user.id);
-            if (mounted) {
-              setUserProfile(profile);
-            }
-          } else {
-            console.log('🚫 No existing session found');
+        if (error) {
+          console.error('❌ Error getting session:', error);
+          if (mounted) {
+            setLoading(false);
           }
-          setLoading(false);
+          return;
+        }
+
+        console.log('📍 Initial session check:', !!currentSession);
+        
+        if (currentSession?.user && mounted) {
+          console.log('👤 Found existing session for:', currentSession.user.email);
+          setSession(currentSession);
+          setUser(currentSession.user);
+          
+          // Fetch user profile
+          const profile = await fetchUserProfile(currentSession.user.id);
+          
+          if (mounted) {
+            setUserProfile(profile);
+            console.log('✅ Session and profile loaded. Setting loading to false.');
+            setLoading(false);
+          }
+        } else {
+          console.log('🚫 No existing session found');
+          if (mounted) {
+            setLoading(false);
+          }
         }
       } catch (error) {
         console.error('❌ Auth initialization error:', error);
@@ -121,6 +104,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
+    // Set up auth state listener (but don't set loading here)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('🔔 Auth state change:', event, 'Session exists:', !!session);
+        
+        if (!mounted) return;
+        
+        // Only handle auth state changes, don't interfere with initial loading
+        if (event === 'SIGNED_IN' && session) {
+          console.log('✅ User signed in via auth state change:', session.user.email);
+          setSession(session);
+          setUser(session.user);
+          
+          // Fetch profile for new sign-ins
+          const profile = await fetchUserProfile(session.user.id);
+          if (mounted) {
+            setUserProfile(profile);
+            // Only set loading false if we're currently loading
+            if (loading) {
+              console.log('✅ New sign-in complete. Setting loading to false.');
+              setLoading(false);
+            }
+          }
+        } else if (event === 'SIGNED_OUT') {
+          console.log('🚫 User signed out');
+          setSession(null);
+          setUser(null);
+          setUserProfile(null);
+          setImpersonatedRole(null);
+          // Don't set loading false on sign out
+        } else if (event === 'TOKEN_REFRESHED' && session) {
+          console.log('🔄 Token refreshed');
+          setSession(session);
+          setUser(session.user);
+        }
+      }
+    );
+
+    // Initialize auth
     initializeAuth();
 
     return () => {
@@ -128,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('🧹 Cleaning up auth subscription');
       subscription.unsubscribe();
     };
-  }, []);
+  }, []); // Remove loading from dependency array to prevent loops
 
   const signInWithGoogle = async () => {
     try {
@@ -244,6 +266,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const effectiveRole = impersonatedRole || userProfile?.role;
+
+  // Add console logs for debugging
+  console.log('🔍 AuthContext state:', {
+    hasUser: !!user,
+    hasSession: !!session,
+    hasProfile: !!userProfile,
+    loading,
+    userEmail: user?.email,
+    profileRole: userProfile?.role
+  });
 
   const value = {
     user,
