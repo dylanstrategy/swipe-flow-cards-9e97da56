@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, User, Bell, Shield, Palette, Database, Globe, HelpCircle, ChevronRight, Calendar, Building } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import ResidentIdentitySetup from '@/components/resident/ResidentIdentitySetup';
 import PropertySetupModule from '@/components/property/PropertySetupModule';
 
@@ -15,6 +15,13 @@ type SettingsSection = 'overview' | 'identity' | 'notifications' | 'privacy' | '
 
 const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) => {
   const [currentSection, setCurrentSection] = useState<SettingsSection>('overview');
+  
+  // Data sharing preferences state
+  const [dataSharing, setDataSharing] = useState({
+    adSharing: false,
+    thirdPartySharing: false,
+    buildingAds: true
+  });
 
   const handleBack = () => {
     if (currentSection !== 'overview') {
@@ -87,7 +94,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="font-medium">Two-Factor Authentication</h4>
@@ -95,14 +102,67 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
                   </div>
                   <Button variant="outline" size="sm">Enable</Button>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Data Sharing</h4>
-                    <p className="text-sm text-gray-600">Control how your data is shared</p>
+                
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-4">Data Sharing Preferences</h4>
+                  <div className="space-y-4">
+                    <div className="flex items-start space-x-3">
+                      <Checkbox 
+                        id="adSharing"
+                        checked={dataSharing.adSharing}
+                        onCheckedChange={(checked) => 
+                          setDataSharing({ ...dataSharing, adSharing: checked as boolean })
+                        }
+                      />
+                      <div className="flex-1">
+                        <label htmlFor="adSharing" className="font-medium cursor-pointer">
+                          Ad Sharing
+                        </label>
+                        <p className="text-sm text-gray-600">
+                          Share your data with advertising partners for personalized ads
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3">
+                      <Checkbox 
+                        id="thirdPartySharing"
+                        checked={dataSharing.thirdPartySharing}
+                        onCheckedChange={(checked) => 
+                          setDataSharing({ ...dataSharing, thirdPartySharing: checked as boolean })
+                        }
+                      />
+                      <div className="flex-1">
+                        <label htmlFor="thirdPartySharing" className="font-medium cursor-pointer">
+                          Share with Third Parties
+                        </label>
+                        <p className="text-sm text-gray-600">
+                          Allow sharing of your information with trusted third-party services
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3">
+                      <Checkbox 
+                        id="buildingAds"
+                        checked={dataSharing.buildingAds}
+                        onCheckedChange={(checked) => 
+                          setDataSharing({ ...dataSharing, buildingAds: checked as boolean })
+                        }
+                      />
+                      <div className="flex-1">
+                        <label htmlFor="buildingAds" className="font-medium cursor-pointer">
+                          Building-Targeted Ads
+                        </label>
+                        <p className="text-sm text-gray-600">
+                          Receive ads and offers relevant to your building and neighborhood
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <input type="checkbox" className="rounded" />
                 </div>
-                <div className="flex items-center justify-between">
+
+                <div className="flex items-center justify-between border-t pt-4">
                   <div>
                     <h4 className="font-medium">Location Services</h4>
                     <p className="text-sm text-gray-600">Allow location-based features</p>
