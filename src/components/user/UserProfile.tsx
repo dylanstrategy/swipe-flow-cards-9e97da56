@@ -112,222 +112,250 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onSave, onDelet
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <ScrollArea className="h-screen">
-        <div className="p-4 pb-20">
-          <Card className="max-w-2xl mx-auto">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Button variant="outline" size="sm" onClick={onBack}>
-                    <ArrowLeft className="w-4 h-4" />
-                  </Button>
-                  <Avatar className="w-12 h-12">
-                    <AvatarFallback className="text-lg font-semibold bg-blue-600 text-white">
-                      {formData.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-lg">User Profile</CardTitle>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge className={`${getRoleColor(formData.role)} text-xs`}>
-                        {formData.role === 'senior_operator' ? 'Senior Operator' : formData.role.charAt(0).toUpperCase() + formData.role.slice(1)}
-                      </Badge>
-                      <Badge className={`${getStatusColor(formData.status)} text-xs`}>
-                        {formData.status}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex gap-2">
-                  {!isEditing ? (
-                    <>
-                      <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                        <Edit className="w-4 h-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700" onClick={() => onDelete(user.id)}>
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Delete
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button variant="outline" size="sm" onClick={handleCancel}>
-                        <X className="w-4 h-4 mr-1" />
-                        Cancel
-                      </Button>
-                      <Button size="sm" onClick={handleSave}>
-                        <Save className="w-4 h-4 mr-1" />
-                        Save
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
+      <div className="max-w-2xl mx-auto p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Button variant="outline" size="sm" onClick={onBack} className="flex-shrink-0">
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">User Profile</h1>
+              <p className="text-sm text-gray-600">Manage user details and permissions</p>
+            </div>
+          </div>
+          
+          <div className="flex gap-3">
+            {!isEditing ? (
+              <>
+                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
+                <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700" onClick={() => onDelete(user.id)}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" size="sm" onClick={handleCancel}>
+                  <X className="w-4 h-4 mr-2" />
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleSave}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Changes
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
 
-            <CardContent className="space-y-6">
-              {/* Basic Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <User className="w-5 h-5" />
-                  Basic Information
-                </h3>
-                
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      disabled={!isEditing}
-                      className="mt-1"
-                    />
+        {/* Profile Header Card */}
+        <Card className="mb-8">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-6">
+              <Avatar className="w-20 h-20 flex-shrink-0">
+                <AvatarFallback className="text-2xl font-bold bg-blue-600 text-white">
+                  {formData.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">{formData.name}</h2>
+                <div className="flex flex-wrap gap-3 mb-4">
+                  <Badge className={`${getRoleColor(formData.role)} px-3 py-1`}>
+                    {formData.role === 'senior_operator' ? 'Senior Operator' : formData.role.charAt(0).toUpperCase() + formData.role.slice(1)}
+                  </Badge>
+                  <Badge className={`${getStatusColor(formData.status)} px-3 py-1`}>
+                    {formData.status.charAt(0).toUpperCase() + formData.status.slice(1)}
+                  </Badge>
+                </div>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    <span>{formData.email}</span>
                   </div>
-                  
-                  <div>
-                    <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
-                    <Input
-                      id="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      disabled={!isEditing}
-                      className="mt-1"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
-                    <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      disabled={!isEditing}
-                      className="mt-1"
-                    />
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-4 h-4" />
+                    <span>{formData.phone}</span>
                   </div>
                 </div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
 
-              {/* Role & Status */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Shield className="w-5 h-5" />
-                  Role & Status
-                </h3>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="role" className="text-sm font-medium">Role</Label>
-                    {isEditing ? (
-                      <select
-                        id="role"
-                        value={formData.role}
-                        onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
-                        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        {availableRoles.map(role => (
-                          <option key={role} value={role}>
-                            {role === 'senior_operator' ? 'Senior Operator' : role.charAt(0).toUpperCase() + role.slice(1)}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <div className="mt-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-900">
-                        {formData.role === 'senior_operator' ? 'Senior Operator' : formData.role.charAt(0).toUpperCase() + formData.role.slice(1)}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="status" className="text-sm font-medium">Status</Label>
-                    {isEditing ? (
-                      <select
-                        id="status"
-                        value={formData.status}
-                        onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })}
-                        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                      </select>
-                    ) : (
-                      <div className="mt-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-900">
-                        {formData.status.charAt(0).toUpperCase() + formData.status.slice(1)}
-                      </div>
-                    )}
-                  </div>
-                </div>
+        {/* Basic Information */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <User className="w-5 h-5" />
+              Basic Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 gap-6">
+              <div>
+                <Label htmlFor="name" className="text-sm font-medium text-gray-700 mb-2 block">Full Name</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  disabled={!isEditing}
+                  className="text-base"
+                />
               </div>
+              
+              <div>
+                <Label htmlFor="email" className="text-sm font-medium text-gray-700 mb-2 block">Email Address</Label>
+                <Input
+                  id="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  disabled={!isEditing}
+                  className="text-base"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="phone" className="text-sm font-medium text-gray-700 mb-2 block">Phone Number</Label>
+                <Input
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  disabled={!isEditing}
+                  className="text-base"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-              {/* Permissions */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Permissions</h3>
+        {/* Role & Status */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Shield className="w-5 h-5" />
+              Role & Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label htmlFor="role" className="text-sm font-medium text-gray-700 mb-2 block">Role</Label>
                 {isEditing ? (
-                  <div className="space-y-3 max-h-64 overflow-y-auto border rounded-lg p-3">
-                    {allPermissions.map((permission) => (
-                      <div key={permission.id} className="flex items-start gap-3">
-                        <Checkbox
-                          id={permission.id}
-                          checked={formData.permissions.includes(permission.id)}
-                          onCheckedChange={(checked) => 
-                            handlePermissionChange(permission.id, checked as boolean)
-                          }
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <Label htmlFor={permission.id} className="text-sm font-medium cursor-pointer">
-                              {permission.name}
-                            </Label>
-                            <Badge className={`${getPermissionLevelColor(permission.level)} text-xs`}>
-                              {permission.level}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-gray-600">{permission.description}</p>
-                        </div>
-                      </div>
+                  <select
+                    id="role"
+                    value={formData.role}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                  >
+                    {availableRoles.map(role => (
+                      <option key={role} value={role}>
+                        {role === 'senior_operator' ? 'Senior Operator' : role.charAt(0).toUpperCase() + role.slice(1)}
+                      </option>
                     ))}
-                  </div>
+                  </select>
                 ) : (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="space-y-3">
-                      {user.permissions.map((permission) => (
-                        <div key={permission.id} className="flex items-center justify-between flex-wrap gap-2">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <Badge variant="outline" className="text-xs flex-shrink-0">
-                              {permission.name}
-                            </Badge>
-                            <Badge className={`text-xs flex-shrink-0 ${getPermissionLevelColor(permission.level)}`}>
-                              {permission.level}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-900 text-base">
+                    {formData.role === 'senior_operator' ? 'Senior Operator' : formData.role.charAt(0).toUpperCase() + formData.role.slice(1)}
                   </div>
                 )}
               </div>
-
-              {/* Account Info */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Account Information</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <Label className="text-sm font-medium">Created</Label>
-                    <p className="text-gray-600 mt-1">{user.createdAt.toLocaleDateString()}</p>
+              
+              <div>
+                <Label htmlFor="status" className="text-sm font-medium text-gray-700 mb-2 block">Status</Label>
+                {isEditing ? (
+                  <select
+                    id="status"
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                ) : (
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-900 text-base">
+                    {formData.status.charAt(0).toUpperCase() + formData.status.slice(1)}
                   </div>
-                  <div>
-                    <Label className="text-sm font-medium">Last Login</Label>
-                    <p className="text-gray-600 mt-1">{user.lastLogin?.toLocaleDateString() || 'Never'}</p>
-                  </div>
-                </div>
+                )}
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </ScrollArea>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Permissions */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="text-lg">Permissions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isEditing ? (
+              <ScrollArea className="h-80 border rounded-lg p-4">
+                <div className="space-y-4">
+                  {allPermissions.map((permission) => (
+                    <div key={permission.id} className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg">
+                      <Checkbox
+                        id={permission.id}
+                        checked={formData.permissions.includes(permission.id)}
+                        onCheckedChange={(checked) => 
+                          handlePermissionChange(permission.id, checked as boolean)
+                        }
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-1 flex-wrap">
+                          <Label htmlFor={permission.id} className="font-medium cursor-pointer">
+                            {permission.name}
+                          </Label>
+                          <Badge className={`${getPermissionLevelColor(permission.level)} text-xs`}>
+                            {permission.level}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-600">{permission.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            ) : (
+              <div className="space-y-3">
+                {user.permissions.map((permission) => (
+                  <div key={permission.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <span className="font-medium">{permission.name}</span>
+                      <Badge className={`${getPermissionLevelColor(permission.level)} text-xs`}>
+                        {permission.level}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Account Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Account Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label className="text-sm font-medium text-gray-700 mb-1 block">Created</Label>
+                <p className="text-gray-900">{user.createdAt.toLocaleDateString()}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-700 mb-1 block">Last Login</Label>
+                <p className="text-gray-900">{user.lastLogin?.toLocaleDateString() || 'Never'}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
