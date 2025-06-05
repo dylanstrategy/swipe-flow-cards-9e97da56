@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ChevronLeft, User, Calendar, Smartphone, Bell, CreditCard, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -116,7 +117,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
       case 'calendar':
         return (
           <div className="space-y-4 max-w-4xl mx-auto">
-            <div className="sticky top-0 bg-white z-10 pb-4 border-b">
+            <div className="bg-white pb-4 border-b">
               <h2 className="text-xl font-bold text-gray-900">Calendar Preferences</h2>
               <p className="text-sm text-gray-600">Set your availability and working hours</p>
             </div>
@@ -168,7 +169,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
               </CardContent>
             </Card>
 
-            <div className="sticky bottom-0 bg-white pt-4 border-t">
+            <div className="bg-white pt-4 border-t">
               <Button onClick={() => setCurrentSection('overview')} variant="outline" className="w-full">
                 Back to Overview
               </Button>
@@ -179,7 +180,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
       case 'swipes':
         return (
           <div className="space-y-4 max-w-2xl mx-auto">
-            <div className="sticky top-0 bg-white z-10 pb-4 border-b">
+            <div className="bg-white pb-4 border-b">
               <h2 className="text-xl font-bold text-gray-900">Swipe Gestures</h2>
               <p className="text-sm text-gray-600">Customize swipe actions for different event types</p>
             </div>
@@ -229,7 +230,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
               ))}
             </div>
 
-            <div className="sticky bottom-0 bg-white pt-4 border-t">
+            <div className="bg-white pt-4 border-t">
               <Button onClick={() => setCurrentSection('overview')} variant="outline" className="w-full">
                 Back to Overview
               </Button>
@@ -240,7 +241,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
       case 'notifications':
         return (
           <div className="space-y-4 max-w-2xl mx-auto">
-            <div className="sticky top-0 bg-white z-10 pb-4 border-b">
+            <div className="bg-white pb-4 border-b">
               <h2 className="text-xl font-bold text-gray-900">Notification Preferences</h2>
               <p className="text-sm text-gray-600">Configure your alert preferences</p>
             </div>
@@ -293,7 +294,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
               </CardContent>
             </Card>
 
-            <div className="sticky bottom-0 bg-white pt-4 border-t">
+            <div className="bg-white pt-4 border-t">
               <Button onClick={() => setCurrentSection('overview')} variant="outline" className="w-full">
                 Back to Overview
               </Button>
@@ -304,7 +305,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
       case 'identity':
         return (
           <div className="space-y-4 max-w-2xl mx-auto">
-            <div className="sticky top-0 bg-white z-10 pb-4 border-b">
+            <div className="bg-white pb-4 border-b">
               <h2 className="text-xl font-bold text-gray-900">Identity & Access</h2>
               <p className="text-sm text-gray-600">Profile and preferences</p>
             </div>
@@ -457,7 +458,7 @@ const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) 
               </CardContent>
             </Card>
 
-            <div className="sticky bottom-0 bg-white pt-4 border-t">
+            <div className="bg-white pt-4 border-t">
               <Button onClick={() => setCurrentSection('overview')} variant="outline" className="w-full">
                 Back to Overview
               </Button>
