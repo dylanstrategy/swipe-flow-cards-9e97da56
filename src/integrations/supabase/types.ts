@@ -70,6 +70,166 @@ export type Database = {
           },
         ]
       }
+      files: {
+        Row: {
+          category: string
+          created_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          resident_id: string | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          resident_id?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          resident_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "files_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "files_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inspections: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          images: string[] | null
+          notes: string | null
+          performed_by: string
+          resident_id: string | null
+          type: string
+          unit_id: string
+          videos: string[] | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          images?: string[] | null
+          notes?: string | null
+          performed_by: string
+          resident_id?: string | null
+          type: string
+          unit_id: string
+          videos?: string[] | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          images?: string[] | null
+          notes?: string | null
+          performed_by?: string
+          resident_id?: string | null
+          type?: string
+          unit_id?: string
+          videos?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspections_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspections_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspections_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          body: string
+          created_at: string | null
+          from_id: string
+          id: string
+          status: string | null
+          timestamp: string | null
+          to_id: string
+          topic: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string | null
+          from_id: string
+          id?: string
+          status?: string | null
+          timestamp?: string | null
+          to_id: string
+          topic?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string | null
+          from_id?: string
+          id?: string
+          status?: string | null
+          timestamp?: string | null
+          to_id?: string
+          topic?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_from_id_fkey"
+            columns: ["from_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_to_id_fkey"
+            columns: ["to_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       move_ins: {
         Row: {
           balance_due: number
@@ -187,7 +347,8 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          operator_id: string
+          senior_operator_id: string | null
+          timezone: string | null
           updated_at: string
         }
         Insert: {
@@ -195,7 +356,8 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
-          operator_id: string
+          senior_operator_id?: string | null
+          timezone?: string | null
           updated_at?: string
         }
         Update: {
@@ -203,13 +365,131 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
-          operator_id?: string
+          senior_operator_id?: string | null
+          timezone?: string | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "properties_operator_id_fkey"
-            columns: ["operator_id"]
+            foreignKeyName: "properties_senior_operator_id_fkey"
+            columns: ["senior_operator_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prospects: {
+        Row: {
+          application_status: string | null
+          converted_to_resident: boolean | null
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          property_id: string | null
+          tour_date: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          application_status?: string | null
+          converted_to_resident?: boolean | null
+          created_at?: string | null
+          email: string
+          id?: string
+          name: string
+          phone?: string | null
+          property_id?: string | null
+          tour_date?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          application_status?: string | null
+          converted_to_resident?: boolean | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          property_id?: string | null
+          tour_date?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospects_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      residents: {
+        Row: {
+          created_at: string | null
+          id: string
+          insurance_uploaded: boolean | null
+          lease_end: string | null
+          lease_start: string | null
+          move_in_checklist_complete: boolean | null
+          move_out_checklist_complete: boolean | null
+          onboarding_status: string | null
+          property_id: string
+          status: string | null
+          unit_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          insurance_uploaded?: boolean | null
+          lease_end?: string | null
+          lease_start?: string | null
+          move_in_checklist_complete?: boolean | null
+          move_out_checklist_complete?: boolean | null
+          onboarding_status?: string | null
+          property_id: string
+          status?: string | null
+          unit_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          insurance_uploaded?: boolean | null
+          lease_end?: string | null
+          lease_start?: string | null
+          move_in_checklist_complete?: boolean | null
+          move_out_checklist_complete?: boolean | null
+          onboarding_status?: string | null
+          property_id?: string
+          status?: string | null
+          unit_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "residents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "residents_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "residents_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -263,40 +543,46 @@ export type Database = {
       }
       units: {
         Row: {
-          bath_count: number
-          bed_count: number
+          bath_type: string | null
+          bedroom_type: string | null
           created_at: string
           current_resident_id: string | null
+          floor: number | null
           id: string
           lease_end: string | null
           lease_start: string | null
           property_id: string
+          sq_ft: number | null
           status: Database["public"]["Enums"]["unit_status"]
           unit_number: string
           updated_at: string
         }
         Insert: {
-          bath_count?: number
-          bed_count?: number
+          bath_type?: string | null
+          bedroom_type?: string | null
           created_at?: string
           current_resident_id?: string | null
+          floor?: number | null
           id?: string
           lease_end?: string | null
           lease_start?: string | null
           property_id: string
+          sq_ft?: number | null
           status?: Database["public"]["Enums"]["unit_status"]
           unit_number: string
           updated_at?: string
         }
         Update: {
-          bath_count?: number
-          bed_count?: number
+          bath_type?: string | null
+          bedroom_type?: string | null
           created_at?: string
           current_resident_id?: string | null
+          floor?: number | null
           id?: string
           lease_end?: string | null
           lease_start?: string | null
           property_id?: string
+          sq_ft?: number | null
           status?: Database["public"]["Enums"]["unit_status"]
           unit_number?: string
           updated_at?: string
@@ -320,6 +606,7 @@ export type Database = {
       }
       users: {
         Row: {
+          company_domain: string | null
           created_at: string
           email: string
           first_name: string
@@ -330,6 +617,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          company_domain?: string | null
           created_at?: string
           email: string
           first_name: string
@@ -340,6 +628,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          company_domain?: string | null
           created_at?: string
           email?: string
           first_name?: string
@@ -350,6 +639,80 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      work_orders: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          created_at: string | null
+          created_by: string
+          description: string
+          due_date: string | null
+          id: string
+          images: string[] | null
+          resident_id: string | null
+          status: string | null
+          unit_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          category: string
+          created_at?: string | null
+          created_by: string
+          description: string
+          due_date?: string | null
+          id?: string
+          images?: string[] | null
+          resident_id?: string | null
+          status?: string | null
+          unit_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string | null
+          created_by?: string
+          description?: string
+          due_date?: string | null
+          id?: string
+          images?: string[] | null
+          resident_id?: string | null
+          status?: string | null
+          unit_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_orders_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -368,6 +731,7 @@ export type Database = {
         | "prospect"
         | "resident"
         | "former_resident"
+        | "vendor"
       move_in_status: "pending" | "approved" | "canceled"
       move_out_status: "scheduled" | "completed" | "canceled"
       unit_status:
@@ -501,6 +865,7 @@ export const Constants = {
         "prospect",
         "resident",
         "former_resident",
+        "vendor",
       ],
       move_in_status: ["pending", "approved", "canceled"],
       move_out_status: ["scheduled", "completed", "canceled"],

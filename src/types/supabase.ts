@@ -7,7 +7,8 @@ export type AppRole =
   | 'leasing'
   | 'prospect'
   | 'resident'
-  | 'former_resident';
+  | 'former_resident'
+  | 'vendor';
 
 export type UnitStatus = 
   | 'available'
@@ -20,6 +21,13 @@ export type UnitStatus =
 export type MoveInStatus = 'pending' | 'approved' | 'canceled';
 export type MoveOutStatus = 'scheduled' | 'completed' | 'canceled';
 
+export type WorkOrderStatus = 'open' | 'in_progress' | 'completed' | 'cancelled';
+export type InspectionType = 'move_in' | 'move_out' | 'routine' | 'maintenance';
+export type MessageStatus = 'sent' | 'delivered' | 'read';
+export type ResidentStatus = 'active' | 'notice' | 'past';
+export type ProspectStatus = 'new' | 'touring' | 'applied' | 'approved' | 'denied' | 'converted';
+export type FileCategory = 'lease' | 'insurance' | 'inspection' | 'work_order' | 'notice' | 'profile' | 'marketing';
+
 export interface User {
   id: string;
   email: string;
@@ -27,6 +35,36 @@ export interface User {
   first_name: string;
   last_name: string;
   phone?: string;
+  company_domain?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Resident {
+  id: string;
+  user_id: string;
+  property_id: string;
+  unit_id?: string;
+  lease_start?: string;
+  lease_end?: string;
+  status: ResidentStatus;
+  insurance_uploaded: boolean;
+  onboarding_status: string;
+  move_in_checklist_complete: boolean;
+  move_out_checklist_complete: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Prospect {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  property_id?: string;
+  tour_date?: string;
+  application_status: ProspectStatus;
+  converted_to_resident: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -35,7 +73,8 @@ export interface Property {
   id: string;
   name: string;
   address: string;
-  operator_id: string;
+  senior_operator_id?: string;
+  timezone?: string;
   created_at: string;
   updated_at: string;
 }
@@ -44,14 +83,67 @@ export interface Unit {
   id: string;
   property_id: string;
   unit_number: string;
-  bed_count: number;
-  bath_count: number;
+  floor?: number;
+  sq_ft?: number;
+  bedroom_type?: string;
+  bath_type?: string;
   status: UnitStatus;
   lease_start?: string;
   lease_end?: string;
   current_resident_id?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface WorkOrder {
+  id: string;
+  unit_id: string;
+  resident_id?: string;
+  category: string;
+  description: string;
+  images?: string[];
+  status: WorkOrderStatus;
+  created_by: string;
+  assigned_to?: string;
+  due_date?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Inspection {
+  id: string;
+  type: InspectionType;
+  performed_by: string;
+  resident_id?: string;
+  unit_id: string;
+  images?: string[];
+  videos?: string[];
+  notes?: string;
+  completed_at: string;
+  created_at: string;
+}
+
+export interface Message {
+  id: string;
+  from_id: string;
+  to_id: string;
+  topic?: string;
+  body: string;
+  timestamp: string;
+  status: MessageStatus;
+  created_at: string;
+}
+
+export interface FileRecord {
+  id: string;
+  user_id: string;
+  resident_id?: string;
+  file_path: string;
+  file_name: string;
+  file_size?: number;
+  mime_type?: string;
+  category: FileCategory;
+  created_at: string;
 }
 
 export interface UnitStatusLog {

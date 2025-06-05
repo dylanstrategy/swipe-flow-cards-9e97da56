@@ -32,7 +32,8 @@ const RoleImpersonation = () => {
     { role: 'operator', label: 'Operator', description: 'Property management staff' },
     { role: 'leasing', label: 'Leasing', description: 'Leasing specialist view' },
     { role: 'maintenance', label: 'Maintenance', description: 'Maintenance staff view' },
-    { role: 'senior_operator', label: 'Senior Operator', description: 'Senior management view' }
+    { role: 'senior_operator', label: 'Senior Operator', description: 'Senior management view' },
+    { role: 'vendor', label: 'Vendor', description: 'External service provider view' }
   ];
 
   const formatRoleName = (role: AppRole) => {

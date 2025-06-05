@@ -50,6 +50,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (email.includes('@client') || email.endsWith('.property.com')) {
       return 'operator';
     }
+    // Check for vendor domains
+    if (email.includes('@vendor') || email.includes('@contractor')) {
+      return 'vendor';
+    }
     // Public emails (Gmail, Yahoo, etc.) get resident role
     if (email.endsWith('@gmail.com') || email.endsWith('@yahoo.com') || 
         email.endsWith('@hotmail.com') || email.endsWith('@outlook.com')) {

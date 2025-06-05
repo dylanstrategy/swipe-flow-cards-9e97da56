@@ -59,6 +59,12 @@ const Login = () => {
         case 'maintenance':
           navigate('/maintenance');
           break;
+        case 'leasing':
+          navigate('/operator'); // Leasing uses operator dashboard
+          break;
+        case 'vendor':
+          navigate('/maintenance'); // Vendors see maintenance-focused view
+          break;
         case 'resident':
           navigate('/');
           break;
