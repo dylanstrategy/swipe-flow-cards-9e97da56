@@ -1,527 +1,1190 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChevronLeft, User, Calendar, Smartphone, Bell, Building, Wrench, Home, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, Bell, Shield, Palette, Database, Globe, HelpCircle, ChevronRight, Calendar, Building } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
-import ResidentIdentitySetup from '@/components/resident/ResidentIdentitySetup';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import PropertySetupModule from '@/components/property/PropertySetupModule';
-import CalendarSettingsModule from '@/components/settings/CalendarSettingsModule';
 
 interface PersonalizedSettingsProps {
-  onClose?: () => void;
-  userRole?: string;
+  onClose: () => void;
+  userRole: 'operator' | 'resident' | 'maintenance' | 'prospect';
 }
 
-type SettingsSection = 'overview' | 'identity' | 'notifications' | 'privacy' | 'theme' | 'language' | 'calendar' | 'data' | 'help' | 'property';
+type SettingsSection = 'overview' | 'calendar' | 'swipes' | 'notifications' | 'identity' | 'property' | 'maintenance' | 'resident' | 'prospect' | 'resident-lease' | 'resident-services' | 'resident-community';
 
 const PersonalizedSettings = ({ onClose, userRole }: PersonalizedSettingsProps) => {
   const [currentSection, setCurrentSection] = useState<SettingsSection>('overview');
   
-  // Data sharing preferences state
-  const [dataSharing, setDataSharing] = useState({
-    adSharing: false,
-    thirdPartySharing: false,
-    buildingAds: true
+  const [settings, setSettings] = useState({
+    profilePhoto: '',
+    availability: {
+      monday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      tuesday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      wednesday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      thursday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      friday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      saturday: { enabled: false, startTime: '10:00', endTime: '14:00' },
+      sunday: { enabled: false, startTime: '10:00', endTime: '14:00' }
+    },
+    calendarIntegration: {
+      googleConnected: false,
+      outlookConnected: false,
+      syncWorkOrders: true,
+      syncMessages: true,
+      syncEvents: true,
+      syncMaintenanceAppointments: true
+    },
+    swipeGestures: {
+      workOrder: { leftAction: 'snooze', rightAction: 'reschedule' },
+      management: { leftAction: 'reply', rightAction: 'archive' },
+      lease: { leftAction: 'remind', rightAction: 'accept' },
+      payment: { leftAction: 'remind', rightAction: 'pay' },
+      community: { leftAction: 'maybe', rightAction: 'attend' },
+      pointOfSale: { leftAction: 'ignore', rightAction: 'save' },
+      petService: { leftAction: 'ignore', rightAction: 'book' }
+    },
+    notifications: {
+      push: true,
+      email: true,
+      inApp: true
+    },
+    payment: {
+      method: 'ach', // 'ach' or 'card'
+      achRouting: '',
+      achAccount: '',
+      cardNumber: '',
+      cardExpiry: '',
+      cardCvc: ''
+    },
+    adPreferences: 'both', // 'both', 'building', 'none'
+    // Resident-specific settings
+    lease: {
+      preferredBudget: '2500',
+      hasPets: true,
+      petDetails: 'Golden Retriever - Max',
+      emergencyContact: 'Jane Doe - 555-0123'
+    },
+    services: {
+      maintenanceAccess: 'scheduled',
+      deliveryInstructions: 'Leave at door',
+      cleaningService: true,
+      petWalking: false,
+      packageHolding: true,
+      guestParking: false,
+      storageUnit: true
+    },
+    community: {
+      eventNotifications: true,
+      volunteerInterest: true,
+      socialMediaSharing: false,
+      newsletterSubscription: true,
+      amenityBooking: true
+    }
   });
 
-  const handleBack = () => {
-    if (currentSection !== 'overview') {
-      setCurrentSection('overview');
-      return;
+  const getSettingsSections = () => {
+    const baseSections = [
+      {
+        id: 'calendar' as const,
+        title: 'Calendar Preferences',
+        description: userRole === 'resident' 
+          ? 'Set availability for work orders, management messages, and sync external calendars'
+          : 'Set your availability and working hours',
+        icon: Calendar,
+        status: 'incomplete'
+      },
+      {
+        id: 'identity' as const,
+        title: 'Identity & Access',
+        description: 'Profile photo, payment details, preferences',
+        icon: User,
+        status: 'incomplete'
+      },
+      {
+        id: 'swipes' as const,
+        title: 'Swipe Gestures',
+        description: 'Customize swipe actions for different event types',
+        icon: Smartphone,
+        status: 'complete'
+      },
+      {
+        id: 'notifications' as const,
+        title: 'Notifications',
+        description: 'Push, email, and in-app alert preferences',
+        icon: Bell,
+        status: 'complete'
+      }
+    ];
+
+    // Role-specific sections
+    const roleSpecificSections = [];
+
+    if (userRole === 'operator') {
+      roleSpecificSections.push({
+        id: 'property' as const,
+        title: 'Property Setup',
+        description: 'Documents, branding, messaging, and CRM settings',
+        icon: Building,
+        status: 'incomplete'
+      });
     }
-    if (onClose) {
-      onClose();
+
+    if (userRole === 'maintenance') {
+      roleSpecificSections.push({
+        id: 'maintenance' as const,
+        title: 'Maintenance Setup',
+        description: 'Tools, inventory, schedules, and work order preferences',
+        icon: Wrench,
+        status: 'incomplete'
+      });
     }
+
+    if (userRole === 'resident') {
+      roleSpecificSections.push({
+        id: 'resident' as const,
+        title: 'Resident Setup',
+        description: 'Personal preferences, services, community participation',
+        icon: Home,
+        status: 'incomplete'
+      });
+    }
+
+    if (userRole === 'prospect') {
+      roleSpecificSections.push({
+        id: 'prospect' as const,
+        title: 'Prospect Setup',
+        description: 'Search preferences, tour scheduling, application tracking',
+        icon: Search,
+        status: 'incomplete'
+      });
+    }
+
+    return [...baseSections, ...roleSpecificSections];
   };
 
-  const handleSectionSelect = (section: SettingsSection) => {
-    setCurrentSection(section);
+  const settingsSections = getSettingsSections();
+
+  const updateDayAvailability = (day: string, field: string, value: string | boolean) => {
+    setSettings(prev => ({
+      ...prev,
+      availability: {
+        ...prev.availability,
+        [day]: {
+          ...prev.availability[day as keyof typeof prev.availability],
+          [field]: value
+        }
+      }
+    }));
   };
 
-  if (currentSection === 'identity') {
-    return <ResidentIdentitySetup onBack={handleBack} />;
-  }
+  const updateSwipeGesture = (eventType: string, direction: 'leftAction' | 'rightAction', action: string) => {
+    setSettings(prev => ({
+      ...prev,
+      swipeGestures: {
+        ...prev.swipeGestures,
+        [eventType]: {
+          ...prev.swipeGestures[eventType as keyof typeof prev.swipeGestures],
+          [direction]: action
+        }
+      }
+    }));
+  };
 
-  if (currentSection === 'property') {
-    return <PropertySetupModule onClose={handleBack} />;
-  }
-
-  if (currentSection === 'calendar') {
-    return <CalendarSettingsModule onBack={handleBack} userRole={userRole} />;
-  }
-
-  const renderSectionContent = () => {
+  const renderCurrentSection = () => {
     switch (currentSection) {
+      case 'property':
+        return <PropertySetupModule onClose={() => setCurrentSection('overview')} />;
+      
+      case 'maintenance':
+        return (
+          <div className="space-y-4 max-w-4xl mx-auto">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Maintenance Setup</h2>
+              <p className="text-gray-600">Configure your maintenance tools and preferences</p>
+            </div>
+            
+            <div className="grid gap-4">
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Tool & Equipment Setup</h3>
+                  <p className="text-sm text-gray-600 mb-3">Manage your tools, equipment, and inventory</p>
+                  <Button variant="outline" size="sm">Configure Tools</Button>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Work Order Preferences</h3>
+                  <p className="text-sm text-gray-600 mb-3">Set default priorities, categories, and scheduling</p>
+                  <Button variant="outline" size="sm">Configure Preferences</Button>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Vendor & Contractor Setup</h3>
+                  <p className="text-sm text-gray-600 mb-3">Manage vendor contacts and preferred contractors</p>
+                  <Button variant="outline" size="sm">Manage Vendors</Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="pt-4">
+              <Button onClick={() => setCurrentSection('overview')} variant="outline" className="w-full">
+                Back to Overview
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'resident':
+        return (
+          <div className="space-y-4 max-w-4xl mx-auto">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Resident Setup</h2>
+              <p className="text-gray-600">Configure your personal preferences and services</p>
+            </div>
+            
+            <div className="grid gap-4">
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Personal Information</h3>
+                  <p className="text-sm text-gray-600 mb-3">Update your personal details and preferences</p>
+                  <Button variant="outline" size="sm" onClick={() => setCurrentSection('resident-lease')}>
+                    Update Details
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Service Preferences</h3>
+                  <p className="text-sm text-gray-600 mb-3">Set preferences for maintenance, delivery, and services</p>
+                  <Button variant="outline" size="sm" onClick={() => setCurrentSection('resident-services')}>
+                    Configure Services
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Community Participation</h3>
+                  <p className="text-sm text-gray-600 mb-3">Manage event preferences and community involvement</p>
+                  <Button variant="outline" size="sm" onClick={() => setCurrentSection('resident-community')}>
+                    Set Preferences
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="pt-4">
+              <Button onClick={() => setCurrentSection('overview')} variant="outline" className="w-full">
+                Back to Overview
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'resident-lease':
+        return (
+          <div className="space-y-4 max-w-2xl mx-auto">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Personal Information</h2>
+              <p className="text-gray-600">Update your personal details and preferences</p>
+            </div>
+            
+            <Card className="shadow-sm">
+              <CardContent className="p-4 space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">Preferred Monthly Budget ($)</Label>
+                  <p className="text-xs text-gray-500 mb-1">For future lease renewals or upgrades</p>
+                  <Input
+                    value={settings.lease.preferredBudget}
+                    onChange={(e) => setSettings(prev => ({
+                      ...prev,
+                      lease: { ...prev.lease, preferredBudget: e.target.value }
+                    }))}
+                    className="mt-1"
+                    placeholder="e.g., 2500"
+                  />
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <Switch
+                    checked={settings.lease.hasPets}
+                    onCheckedChange={(checked) => setSettings(prev => ({
+                      ...prev,
+                      lease: { ...prev.lease, hasPets: checked }
+                    }))}
+                  />
+                  <Label className="text-sm font-medium">I have pets</Label>
+                </div>
+
+                {settings.lease.hasPets && (
+                  <div>
+                    <Label className="text-sm font-medium">Pet Details</Label>
+                    <p className="text-xs text-gray-500 mb-1">Describe your pets (breed, name, size, etc.)</p>
+                    <Textarea
+                      placeholder="e.g., Golden Retriever - Max, 70 lbs, very friendly"
+                      value={settings.lease.petDetails}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        lease: { ...prev.lease, petDetails: e.target.value }
+                      }))}
+                      className="mt-1"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <Label className="text-sm font-medium">Emergency Contact</Label>
+                  <p className="text-xs text-gray-500 mb-1">Name and phone number</p>
+                  <Input
+                    placeholder="e.g., Jane Doe - 555-0123"
+                    value={settings.lease.emergencyContact}
+                    onChange={(e) => setSettings(prev => ({
+                      ...prev,
+                      lease: { ...prev.lease, emergencyContact: e.target.value }
+                    }))}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Current Lease Information</h4>
+                  <div className="text-xs text-gray-600 space-y-1">
+                    <p><span className="font-medium">Unit:</span> Apt 204</p>
+                    <p><span className="font-medium">Lease Term:</span> Jan 1, 2024 - Dec 31, 2024</p>
+                    <p><span className="font-medium">Monthly Rent:</span> $2,500</p>
+                    <p className="text-xs text-gray-500 mt-2">Contact management to modify lease terms</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="pt-4">
+              <Button onClick={() => setCurrentSection('resident')} variant="outline" className="w-full">
+                Back to Resident Setup
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'resident-services':
+        return (
+          <div className="space-y-4 max-w-2xl mx-auto">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Service Preferences</h2>
+              <p className="text-gray-600">Configure your service and delivery preferences</p>
+            </div>
+            
+            <Card className="shadow-sm">
+              <CardContent className="p-4 space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">Maintenance Access Preference</Label>
+                  <p className="text-xs text-gray-500 mb-1">How would you prefer maintenance staff to access your unit?</p>
+                  <select
+                    value={settings.services.maintenanceAccess}
+                    onChange={(e) => setSettings(prev => ({
+                      ...prev,
+                      services: { ...prev.services, maintenanceAccess: e.target.value }
+                    }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md mt-1 text-sm"
+                  >
+                    <option value="scheduled">Scheduled appointments only</option>
+                    <option value="emergency">Emergency access allowed</option>
+                    <option value="restricted">Restricted access - contact first</option>
+                  </select>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Package Delivery Instructions</Label>
+                  <p className="text-xs text-gray-500 mb-1">Special instructions for package deliveries</p>
+                  <Textarea
+                    placeholder="e.g., Leave at door, Ring doorbell, etc."
+                    value={settings.services.deliveryInstructions}
+                    onChange={(e) => setSettings(prev => ({
+                      ...prev,
+                      services: { ...prev.services, deliveryInstructions: e.target.value }
+                    }))}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700">Optional Services</h4>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Cleaning Service</Label>
+                      <p className="text-xs text-gray-500">Weekly cleaning service</p>
+                    </div>
+                    <Switch
+                      checked={settings.services.cleaningService}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        services: { ...prev.services, cleaningService: checked }
+                      }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Pet Walking Service</Label>
+                      <p className="text-xs text-gray-500">Daily pet walking service</p>
+                    </div>
+                    <Switch
+                      checked={settings.services.petWalking}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        services: { ...prev.services, petWalking: checked }
+                      }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Package Holding</Label>
+                      <p className="text-xs text-gray-500">Hold packages at front desk</p>
+                    </div>
+                    <Switch
+                      checked={settings.services.packageHolding}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        services: { ...prev.services, packageHolding: checked }
+                      }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Guest Parking Requests</Label>
+                      <p className="text-xs text-gray-500">Request guest parking spots when available</p>
+                    </div>
+                    <Switch
+                      checked={settings.services.guestParking}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        services: { ...prev.services, guestParking: checked }
+                      }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Storage Unit Interest</Label>
+                      <p className="text-xs text-gray-500">Notify me when storage units become available</p>
+                    </div>
+                    <Switch
+                      checked={settings.services.storageUnit}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        services: { ...prev.services, storageUnit: checked }
+                      }))}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="pt-4">
+              <Button onClick={() => setCurrentSection('resident')} variant="outline" className="w-full">
+                Back to Resident Setup
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'resident-community':
+        return (
+          <div className="space-y-4 max-w-2xl mx-auto">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Community Participation</h2>
+              <p className="text-gray-600">Manage your community involvement preferences</p>
+            </div>
+            
+            <Card className="shadow-sm">
+              <CardContent className="p-4 space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Event Notifications</Label>
+                      <p className="text-xs text-gray-500">Receive notifications about community events</p>
+                    </div>
+                    <Switch
+                      checked={settings.community.eventNotifications}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        community: { ...prev.community, eventNotifications: checked }
+                      }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Volunteer Interest</Label>
+                      <p className="text-xs text-gray-500">Interested in volunteering for community events</p>
+                    </div>
+                    <Switch
+                      checked={settings.community.volunteerInterest}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        community: { ...prev.community, volunteerInterest: checked }
+                      }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Social Media Sharing</Label>
+                      <p className="text-xs text-gray-500">Allow sharing photos on community social media</p>
+                    </div>
+                    <Switch
+                      checked={settings.community.socialMediaSharing}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        community: { ...prev.community, socialMediaSharing: checked }
+                      }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Newsletter Subscription</Label>
+                      <p className="text-xs text-gray-500">Receive monthly community newsletter</p>
+                    </div>
+                    <Switch
+                      checked={settings.community.newsletterSubscription}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        community: { ...prev.community, newsletterSubscription: checked }
+                      }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Amenity Booking Notifications</Label>
+                      <p className="text-xs text-gray-500">Get notified about amenity availability and bookings</p>
+                    </div>
+                    <Switch
+                      checked={settings.community.amenityBooking}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        community: { ...prev.community, amenityBooking: checked }
+                      }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Amenity Access</h4>
+                  <div className="text-xs text-gray-600 space-y-1">
+                    <p><span className="font-medium">Gym Access:</span> 24/7</p>
+                    <p><span className="font-medium">Pool Access:</span> 6 AM - 10 PM</p>
+                    <p><span className="font-medium">Rooftop Access:</span> 8 AM - 9 PM</p>
+                    <p className="text-xs text-gray-500 mt-2">Access hours are set by property management</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="pt-4">
+              <Button onClick={() => setCurrentSection('resident')} variant="outline" className="w-full">
+                Back to Resident Setup
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'prospect':
+        return (
+          <div className="space-y-4 max-w-4xl mx-auto">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Prospect Setup</h2>
+              <p className="text-gray-600">Configure your search and application preferences</p>
+            </div>
+            
+            <div className="grid gap-4">
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Search Preferences</h3>
+                  <p className="text-sm text-gray-600 mb-3">Set your preferred locations, price range, and amenities</p>
+                  <Button variant="outline" size="sm">Update Search</Button>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Tour Scheduling</h3>
+                  <p className="text-sm text-gray-600 mb-3">Set availability for property tours and viewings</p>
+                  <Button variant="outline" size="sm">Set Availability</Button>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">Application Tracking</h3>
+                  <p className="text-sm text-gray-600 mb-3">Monitor application status and requirements</p>
+                  <Button variant="outline" size="sm">View Applications</Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="pt-4">
+              <Button onClick={() => setCurrentSection('overview')} variant="outline" className="w-full">
+                Back to Overview
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'calendar':
+        return (
+          <div className="space-y-4 max-w-4xl mx-auto">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Calendar Preferences</h2>
+              <p className="text-gray-600">
+                {userRole === 'resident' 
+                  ? 'Set your availability for work orders, management messages, and sync external calendars'
+                  : 'Set your availability and working hours'
+                }
+              </p>
+            </div>
+            
+            {userRole === 'resident' && (
+              <Card className="shadow-sm mb-6">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">External Calendar Integration</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">Google Calendar</Label>
+                        <p className="text-xs text-gray-500">Sync with your Google Calendar</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={settings.calendarIntegration.googleConnected}
+                          onCheckedChange={(checked) => setSettings(prev => ({
+                            ...prev,
+                            calendarIntegration: { ...prev.calendarIntegration, googleConnected: checked }
+                          }))}
+                        />
+                        {settings.calendarIntegration.googleConnected ? (
+                          <Badge className="bg-green-100 text-green-800 text-xs">Connected</Badge>
+                        ) : (
+                          <Button variant="outline" size="sm" className="text-xs">Connect</Button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium">Outlook Calendar</Label>
+                        <p className="text-xs text-gray-500">Sync with your Outlook Calendar</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={settings.calendarIntegration.outlookConnected}
+                          onCheckedChange={(checked) => setSettings(prev => ({
+                            ...prev,
+                            calendarIntegration: { ...prev.calendarIntegration, outlookConnected: checked }
+                          }))}
+                        />
+                        {settings.calendarIntegration.outlookConnected ? (
+                          <Badge className="bg-green-100 text-green-800 text-xs">Connected</Badge>
+                        ) : (
+                          <Button variant="outline" size="sm" className="text-xs">Connect</Button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-4">
+                      <h4 className="text-sm font-medium mb-3">Sync Preferences</h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-sm font-medium">Work Orders</Label>
+                            <p className="text-xs text-gray-500">Sync maintenance appointments to external calendar</p>
+                          </div>
+                          <Switch
+                            checked={settings.calendarIntegration.syncWorkOrders}
+                            onCheckedChange={(checked) => setSettings(prev => ({
+                              ...prev,
+                              calendarIntegration: { ...prev.calendarIntegration, syncWorkOrders: checked }
+                            }))}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-sm font-medium">Management Messages</Label>
+                            <p className="text-xs text-gray-500">Sync scheduled management communications</p>
+                          </div>
+                          <Switch
+                            checked={settings.calendarIntegration.syncMessages}
+                            onCheckedChange={(checked) => setSettings(prev => ({
+                              ...prev,
+                              calendarIntegration: { ...prev.calendarIntegration, syncMessages: checked }
+                            }))}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-sm font-medium">Community Events</Label>
+                            <p className="text-xs text-gray-500">Sync community events and activities</p>
+                          </div>
+                          <Switch
+                            checked={settings.calendarIntegration.syncEvents}
+                            onCheckedChange={(checked) => setSettings(prev => ({
+                              ...prev,
+                              calendarIntegration: { ...prev.calendarIntegration, syncEvents: checked }
+                            }))}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-sm font-medium">Maintenance Appointments</Label>
+                            <p className="text-xs text-gray-500">Sync all maintenance-related appointments</p>
+                          </div>
+                          <Switch
+                            checked={settings.calendarIntegration.syncMaintenanceAppointments}
+                            onCheckedChange={(checked) => setSettings(prev => ({
+                              ...prev,
+                              calendarIntegration: { ...prev.calendarIntegration, syncMaintenanceAppointments: checked }
+                            }))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            <Card className="shadow-sm">
+              <CardContent className="p-4">
+                <h3 className="text-lg font-semibold mb-3">
+                  {userRole === 'resident' 
+                    ? 'Availability for Work Orders & Management Communications'
+                    : 'Weekly Availability'
+                  }
+                </h3>
+                
+                <div className="space-y-3">
+                  {Object.entries(settings.availability).map(([day, daySettings]) => (
+                    <div key={day} className="flex items-center space-x-3 p-3 border rounded-lg bg-gray-50">
+                      <div className="w-16 flex-shrink-0">
+                        <Switch
+                          checked={daySettings.enabled}
+                          onCheckedChange={(checked) => updateDayAvailability(day, 'enabled', checked)}
+                        />
+                        <Label className="capitalize text-xs font-medium mt-1 block">{day.slice(0, 3)}</Label>
+                      </div>
+                      
+                      {daySettings.enabled ? (
+                        <div className="flex gap-2 flex-1">
+                          <div className="flex-1">
+                            <Label className="text-xs text-gray-500">Start</Label>
+                            <Input
+                              type="time"
+                              value={daySettings.startTime}
+                              onChange={(e) => updateDayAvailability(day, 'startTime', e.target.value)}
+                              className="mt-1 h-8 text-sm"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <Label className="text-xs text-gray-500">End</Label>
+                            <Input
+                              type="time"
+                              value={daySettings.endTime}
+                              onChange={(e) => updateDayAvailability(day, 'endTime', e.target.value)}
+                              className="mt-1 h-8 text-sm"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex-1 text-gray-400 text-sm">
+                          Not available
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="pt-4">
+              <Button onClick={() => setCurrentSection('overview')} variant="outline" className="w-full">
+                Back to Overview
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'swipes':
+        return (
+          <div className="space-y-4 max-w-2xl mx-auto">
+            <div className="bg-white pb-4 border-b">
+              <h2 className="text-xl font-bold text-gray-900">Swipe Gestures</h2>
+              <p className="text-sm text-gray-600">Customize swipe actions for different event types</p>
+            </div>
+            
+            <div className="space-y-4">
+              {[
+                { key: 'workOrder', label: 'Work Orders', leftOptions: ['snooze', 'cancel', 'reschedule'], rightOptions: ['reschedule', 'complete', 'assign'] },
+                { key: 'management', label: 'Management Messages', leftOptions: ['reply', 'forward', 'snooze'], rightOptions: ['archive', 'mark-read', 'priority'] },
+                { key: 'lease', label: 'Lease Items', leftOptions: ['remind', 'forward', 'snooze'], rightOptions: ['accept', 'review', 'schedule'] },
+                { key: 'payment', label: 'Payments', leftOptions: ['remind', 'schedule', 'snooze'], rightOptions: ['pay', 'autopay', 'split'] },
+                { key: 'community', label: 'Community Events', leftOptions: ['maybe', 'ignore', 'share'], rightOptions: ['attend', 'rsvp', 'calendar'] },
+                { key: 'pointOfSale', label: 'Offers & Deals', leftOptions: ['ignore', 'later', 'share'], rightOptions: ['save', 'redeem', 'visit'] },
+                { key: 'petService', label: 'Pet Services', leftOptions: ['ignore', 'later', 'share'], rightOptions: ['book', 'save', 'call'] }
+              ].map((eventType) => (
+                <Card key={eventType.key} className="shadow-sm">
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold text-gray-900 mb-3">{eventType.label}</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm font-medium">Swipe Left Action</Label>
+                        <select
+                          value={settings.swipeGestures[eventType.key as keyof typeof settings.swipeGestures]?.leftAction || eventType.leftOptions[0]}
+                          onChange={(e) => updateSwipeGesture(eventType.key, 'leftAction', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md mt-1 text-sm"
+                        >
+                          {eventType.leftOptions.map(option => (
+                            <option key={option} value={option}>{option.charAt(0).toUpperCase() + option.slice(1)}</option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <Label className="text-sm font-medium">Swipe Right Action</Label>
+                        <select
+                          value={settings.swipeGestures[eventType.key as keyof typeof settings.swipeGestures]?.rightAction || eventType.rightOptions[0]}
+                          onChange={(e) => updateSwipeGesture(eventType.key, 'rightAction', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md mt-1 text-sm"
+                        >
+                          {eventType.rightOptions.map(option => (
+                            <option key={option} value={option}>{option.charAt(0).toUpperCase() + option.slice(1)}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div className="bg-white pt-4 border-t">
+              <Button onClick={() => setCurrentSection('overview')} variant="outline" className="w-full">
+                Back to Overview
+              </Button>
+            </div>
+          </div>
+        );
+
       case 'notifications':
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="w-5 h-5" />
-                Notifications
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Push Notifications</h4>
-                    <p className="text-sm text-gray-600">Receive notifications on your device</p>
+          <div className="space-y-4 max-w-2xl mx-auto">
+            <div className="bg-white pb-4 border-b">
+              <h2 className="text-xl font-bold text-gray-900">Notification Preferences</h2>
+              <p className="text-sm text-gray-600">Configure your alert preferences</p>
+            </div>
+            
+            <Card className="shadow-sm">
+              <CardContent className="p-4">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between py-2">
+                    <div>
+                      <Label className="text-sm font-medium">Push Notifications</Label>
+                      <p className="text-xs text-gray-500">Receive alerts on your device</p>
+                    </div>
+                    <Switch
+                      checked={settings.notifications.push}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        notifications: { ...prev.notifications, push: checked }
+                      }))}
+                    />
                   </div>
-                  <input type="checkbox" className="rounded" defaultChecked />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Email Notifications</h4>
-                    <p className="text-sm text-gray-600">Receive notifications via email</p>
+                  
+                  <div className="flex items-center justify-between py-2">
+                    <div>
+                      <Label className="text-sm font-medium">Email Notifications</Label>
+                      <p className="text-xs text-gray-500">Receive updates via email</p>
+                    </div>
+                    <Switch
+                      checked={settings.notifications.email}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        notifications: { ...prev.notifications, email: checked }
+                      }))}
+                    />
                   </div>
-                  <input type="checkbox" className="rounded" defaultChecked />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Maintenance Updates</h4>
-                    <p className="text-sm text-gray-600">Get notified about work order updates</p>
+                  
+                  <div className="flex items-center justify-between py-2">
+                    <div>
+                      <Label className="text-sm font-medium">In-App Notifications</Label>
+                      <p className="text-xs text-gray-500">Show notifications within the app</p>
+                    </div>
+                    <Switch
+                      checked={settings.notifications.inApp}
+                      onCheckedChange={(checked) => setSettings(prev => ({
+                        ...prev,
+                        notifications: { ...prev.notifications, inApp: checked }
+                      }))}
+                    />
                   </div>
-                  <input type="checkbox" className="rounded" defaultChecked />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            <div className="bg-white pt-4 border-t">
+              <Button onClick={() => setCurrentSection('overview')} variant="outline" className="w-full">
+                Back to Overview
+              </Button>
+            </div>
+          </div>
         );
 
-      case 'privacy':
+      case 'identity':
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="w-5 h-5" />
-                Privacy & Security
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Two-Factor Authentication</h4>
-                    <p className="text-sm text-gray-600">Add an extra layer of security</p>
+          <div className="space-y-4 max-w-2xl mx-auto">
+            <div className="bg-white pb-4 border-b">
+              <h2 className="text-xl font-bold text-gray-900">Identity & Access</h2>
+              <p className="text-sm text-gray-600">Profile and preferences</p>
+            </div>
+            
+            <Card className="shadow-sm">
+              <CardContent className="p-4 space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">Profile Photo</Label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center mt-2">
+                    <User className="w-6 h-6 text-gray-400 mx-auto mb-2" />
+                    <p className="text-xs text-gray-600 mb-2">Upload a profile photo</p>
+                    <Button variant="outline" size="sm" className="text-xs">
+                      Choose File
+                    </Button>
                   </div>
-                  <Button variant="outline" size="sm">Enable</Button>
                 </div>
                 
-                <div className="border-t pt-4">
-                  <h4 className="font-medium mb-4">Data Sharing Preferences</h4>
-                  <div className="space-y-4">
-                    <div className="flex items-start space-x-3">
-                      <Checkbox 
-                        id="adSharing"
-                        checked={dataSharing.adSharing}
-                        onCheckedChange={(checked) => 
-                          setDataSharing({ ...dataSharing, adSharing: checked as boolean })
-                        }
-                      />
-                      <div className="flex-1">
-                        <label htmlFor="adSharing" className="font-medium cursor-pointer">
-                          Ad Sharing
-                        </label>
-                        <p className="text-sm text-gray-600">
-                          Share your data with advertising partners for personalized ads
-                        </p>
-                      </div>
-                    </div>
+                <div>
+                  <Label className="text-sm font-medium">Payment Method</Label>
+                  <p className="text-xs text-gray-500 mb-2">For payments and reimbursements</p>
+                  
+                  <div className="space-y-3">
+                    <select
+                      value={settings.payment.method}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        payment: { ...prev.payment, method: e.target.value as 'ach' | 'card' }
+                      }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    >
+                      <option value="ach">ACH Bank Transfer</option>
+                      <option value="card">Credit/Debit Card</option>
+                    </select>
                     
-                    <div className="flex items-start space-x-3">
-                      <Checkbox 
-                        id="thirdPartySharing"
-                        checked={dataSharing.thirdPartySharing}
-                        onCheckedChange={(checked) => 
-                          setDataSharing({ ...dataSharing, thirdPartySharing: checked as boolean })
-                        }
-                      />
-                      <div className="flex-1">
-                        <label htmlFor="thirdPartySharing" className="font-medium cursor-pointer">
-                          Share with Third Parties
-                        </label>
-                        <p className="text-sm text-gray-600">
-                          Allow sharing of your information with trusted third-party services
-                        </p>
+                    {settings.payment.method === 'ach' ? (
+                      <div className="grid grid-cols-1 gap-3">
+                        <div>
+                          <Label className="text-xs text-gray-600">Routing Number</Label>
+                          <Input
+                            placeholder="9-digit routing number"
+                            value={settings.payment.achRouting}
+                            onChange={(e) => setSettings(prev => ({
+                              ...prev,
+                              payment: { ...prev.payment, achRouting: e.target.value }
+                            }))}
+                            className="text-sm h-8"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-gray-600">Account Number</Label>
+                          <Input
+                            placeholder="Bank account number"
+                            value={settings.payment.achAccount}
+                            onChange={(e) => setSettings(prev => ({
+                              ...prev,
+                              payment: { ...prev.payment, achAccount: e.target.value }
+                            }))}
+                            className="text-sm h-8"
+                          />
+                        </div>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <Checkbox 
-                        id="buildingAds"
-                        checked={dataSharing.buildingAds}
-                        onCheckedChange={(checked) => 
-                          setDataSharing({ ...dataSharing, buildingAds: checked as boolean })
-                        }
-                      />
-                      <div className="flex-1">
-                        <label htmlFor="buildingAds" className="font-medium cursor-pointer">
-                          Building-Targeted Ads
-                        </label>
-                        <p className="text-sm text-gray-600">
-                          Receive ads and offers relevant to your building and neighborhood
-                        </p>
+                    ) : (
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-xs text-gray-600">Card Number</Label>
+                          <Input
+                            placeholder="1234 5678 9012 3456"
+                            value={settings.payment.cardNumber}
+                            onChange={(e) => setSettings(prev => ({
+                              ...prev,
+                              payment: { ...prev.payment, cardNumber: e.target.value }
+                            }))}
+                            className="text-sm h-8"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-xs text-gray-600">Expiry</Label>
+                            <Input
+                              placeholder="MM/YY"
+                              value={settings.payment.cardExpiry}
+                              onChange={(e) => setSettings(prev => ({
+                                ...prev,
+                                payment: { ...prev.payment, cardExpiry: e.target.value }
+                              }))}
+                              className="text-sm h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs text-gray-600">CVC</Label>
+                            <Input
+                              placeholder="123"
+                              value={settings.payment.cardCvc}
+                              onChange={(e) => setSettings(prev => ({
+                                ...prev,
+                                payment: { ...prev.payment, cardCvc: e.target.value }
+                              }))}
+                              className="text-sm h-8"
+                            />
+                          </div>
+                        </div>
                       </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-medium">Advertisement Preferences</Label>
+                  <p className="text-xs text-gray-500 mb-3">Choose what type of ads you'd like to see</p>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id="ads-both"
+                        name="adPreferences"
+                        value="both"
+                        checked={settings.adPreferences === 'both'}
+                        onChange={(e) => setSettings(prev => ({ ...prev, adPreferences: e.target.value as any }))}
+                        className="w-3 h-3 text-blue-600"
+                      />
+                      <Label htmlFor="ads-both" className="text-xs">Building & Third-party ads</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id="ads-building"
+                        name="adPreferences"
+                        value="building"
+                        checked={settings.adPreferences === 'building'}
+                        onChange={(e) => setSettings(prev => ({ ...prev, adPreferences: e.target.value as any }))}
+                        className="w-3 h-3 text-blue-600"
+                      />
+                      <Label htmlFor="ads-building" className="text-xs">Building ads only</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id="ads-none"
+                        name="adPreferences"
+                        value="none"
+                        checked={settings.adPreferences === 'none'}
+                        onChange={(e) => setSettings(prev => ({ ...prev, adPreferences: e.target.value as any }))}
+                        className="w-3 h-3 text-blue-600"
+                      />
+                      <Label htmlFor="ads-none" className="text-xs">No advertisements</Label>
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                <div className="flex items-center justify-between border-t pt-4">
-                  <div>
-                    <h4 className="font-medium">Location Services</h4>
-                    <p className="text-sm text-gray-600">Allow location-based features</p>
-                  </div>
-                  <input type="checkbox" className="rounded" defaultChecked />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 'theme':
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Palette className="w-5 h-5" />
-                Theme & Display
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium mb-2">Theme</h4>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Button variant="outline" size="sm" className="bg-blue-50 border-blue-300">Light</Button>
-                    <Button variant="outline" size="sm">Dark</Button>
-                    <Button variant="outline" size="sm">Auto</Button>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">Font Size</h4>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Button variant="outline" size="sm">Small</Button>
-                    <Button variant="outline" size="sm" className="bg-blue-50 border-blue-300">Medium</Button>
-                    <Button variant="outline" size="sm">Large</Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 'language':
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="w-5 h-5" />
-                Language & Region
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium mb-2">Language</h4>
-                  <select className="w-full p-2 border rounded">
-                    <option>English (US)</option>
-                    <option>Spanish</option>
-                    <option>French</option>
-                  </select>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">Date Format</h4>
-                  <select className="w-full p-2 border rounded">
-                    <option>MM/DD/YYYY</option>
-                    <option>DD/MM/YYYY</option>
-                    <option>YYYY-MM-DD</option>
-                  </select>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">Time Format</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button variant="outline" size="sm" className="bg-blue-50 border-blue-300">12 Hour</Button>
-                    <Button variant="outline" size="sm">24 Hour</Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 'data':
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="w-5 h-5" />
-                Data Management
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Auto Backup</h4>
-                    <p className="text-sm text-gray-600">Automatically backup your data</p>
-                  </div>
-                  <input type="checkbox" className="rounded" defaultChecked />
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">Storage Usage</h4>
-                  <div className="bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: '45%' }}></div>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-1">4.5 GB of 10 GB used</p>
-                </div>
-                <Button variant="outline" className="w-full">Export Data</Button>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 'help':
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <HelpCircle className="w-5 h-5" />
-                Getting Started
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <Button variant="outline" className="w-full justify-start">
-                  📖 User Guide
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  💬 Contact Support
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  🎥 Video Tutorials
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  ❓ FAQ
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+            <div className="bg-white pt-4 border-t">
+              <Button onClick={() => setCurrentSection('overview')} variant="outline" className="w-full">
+                Back to Overview
+              </Button>
+            </div>
+          </div>
         );
 
       default:
         return (
-          <>
-            {/* Personal Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Personal Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-between h-auto min-h-[3rem] px-4 py-3"
-                  onClick={() => handleSectionSelect('identity')}
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <User className="w-5 h-5 text-gray-600 flex-shrink-0" />
-                    <div className="text-left min-w-0 flex-1">
-                      <div className="font-medium truncate">Identity & Access</div>
-                      <div className="text-sm text-gray-600 truncate">Manage your personal information and account settings</div>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                </Button>
+          <div className="space-y-4 max-w-4xl mx-auto">
+            <div className="mb-4">
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">Personal Settings</h1>
+              <p className="text-sm text-gray-600">Configure your profile and preferences</p>
+            </div>
 
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-between h-auto min-h-[3rem] px-4 py-3"
-                  onClick={() => handleSectionSelect('notifications')}
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <Bell className="w-5 h-5 text-gray-600 flex-shrink-0" />
-                    <div className="text-left min-w-0 flex-1">
-                      <div className="font-medium truncate">Notifications</div>
-                      <div className="text-sm text-gray-600 truncate">Configure how and when you receive notifications</div>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                </Button>
-
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-between h-auto min-h-[3rem] px-4 py-3"
-                  onClick={() => handleSectionSelect('privacy')}
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <Shield className="w-5 h-5 text-gray-600 flex-shrink-0" />
-                    <div className="text-left min-w-0 flex-1">
-                      <div className="font-medium truncate">Privacy & Security</div>
-                      <div className="text-sm text-gray-600 truncate">Control your privacy settings and security preferences</div>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Appearance & Interface */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Appearance & Interface</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-between h-auto min-h-[3rem] px-4 py-3"
-                  onClick={() => handleSectionSelect('theme')}
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <Palette className="w-5 h-5 text-gray-600 flex-shrink-0" />
-                    <div className="text-left min-w-0 flex-1">
-                      <div className="font-medium truncate">Theme & Display</div>
-                      <div className="text-sm text-gray-600 truncate">Customize colors, fonts, and layout preferences</div>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                </Button>
-
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-between h-auto min-h-[3rem] px-4 py-3"
-                  onClick={() => handleSectionSelect('language')}
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <Globe className="w-5 h-5 text-gray-600 flex-shrink-0" />
-                    <div className="text-left min-w-0 flex-1">
-                      <div className="font-medium truncate">Language & Region</div>
-                      <div className="text-sm text-gray-600 truncate">Set your preferred language and regional settings</div>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                </Button>
-
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-between h-auto min-h-[3rem] px-4 py-3"
-                  onClick={() => handleSectionSelect('calendar')}
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <Calendar className="w-5 h-5 text-gray-600 flex-shrink-0" />
-                    <div className="text-left min-w-0 flex-1">
-                      <div className="font-medium truncate">Calendar & Time Slots</div>
-                      <div className="text-sm text-gray-600 truncate">Configure availability and time slot preferences</div>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Property Management (for operators) */}
-            {(userRole === 'operator' || userRole === 'senior_operator') && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Property Management</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-between h-auto min-h-[3rem] px-4 py-3"
-                    onClick={() => handleSectionSelect('property')}
+            <div className="grid gap-3">
+              {settingsSections.map((section) => {
+                const Icon = section.icon;
+                
+                return (
+                  <Card 
+                    key={section.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow shadow-sm"
+                    onClick={() => setCurrentSection(section.id)}
                   >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <Building className="w-5 h-5 text-gray-600 flex-shrink-0" />
-                      <div className="text-left min-w-0 flex-1">
-                        <div className="font-medium truncate">Property Setup</div>
-                        <div className="text-sm text-gray-600 truncate">Configure property settings, branding, and amenities</div>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="p-2 bg-blue-50 rounded-lg flex-shrink-0">
+                            <Icon className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="text-sm font-semibold text-gray-900 truncate">{section.title}</h3>
+                              <Badge className={section.status === 'complete' ? 'bg-green-100 text-green-800 text-xs' : 'bg-orange-100 text-orange-800 text-xs'}>
+                                {section.status === 'complete' ? 'Complete' : 'Incomplete'}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-gray-600 truncate">{section.description}</p>
+                          </div>
+                        </div>
+                        <Button variant="outline" size="sm" className="text-xs px-3 py-1 flex-shrink-0">
+                          Configure
+                        </Button>
                       </div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Data & Storage */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Data & Storage</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-between h-auto min-h-[3rem] px-4 py-3"
-                  onClick={() => handleSectionSelect('data')}
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <Database className="w-5 h-5 text-gray-600 flex-shrink-0" />
-                    <div className="text-left min-w-0 flex-1">
-                      <div className="font-medium truncate">Data Management</div>
-                      <div className="text-sm text-gray-600 truncate">Manage your data storage and backup preferences</div>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Help & Support */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Help & Support</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-between h-auto min-h-[3rem] px-4 py-3"
-                  onClick={() => handleSectionSelect('help')}
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <HelpCircle className="w-5 h-5 text-gray-600 flex-shrink-0" />
-                    <div className="text-left min-w-0 flex-1">
-                      <div className="font-medium truncate">Getting Started</div>
-                      <div className="text-sm text-gray-600 truncate">Learn how to use the platform and get tips</div>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                </Button>
-              </CardContent>
-            </Card>
-          </>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
         );
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      <div className="max-w-2xl mx-auto p-4 space-y-6">
+    <div className="fixed inset-0 bg-white z-50 overflow-hidden">
+      <div className="h-full flex flex-col">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" onClick={handleBack} className="flex-shrink-0">
-            <ArrowLeft className="w-4 h-4" />
+        <div className="flex-shrink-0 flex items-center justify-between p-3 border-b border-gray-200 bg-white">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={currentSection === 'overview' ? onClose : () => setCurrentSection('overview')}
+            className="flex items-center gap-2 text-sm"
+          >
+            <ChevronLeft size={18} />
+            {currentSection === 'overview' ? 'Back' : 'Back to Settings'}
           </Button>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900">
-              {currentSection === 'overview' ? 'Setup & Configuration' : 
-               currentSection === 'identity' ? 'Identity & Access' :
-               currentSection === 'notifications' ? 'Notifications' :
-               currentSection === 'privacy' ? 'Privacy & Security' :
-               currentSection === 'theme' ? 'Theme & Display' :
-               currentSection === 'language' ? 'Language & Region' :
-               currentSection === 'calendar' ? 'Calendar & Time Slots' :
-               currentSection === 'data' ? 'Data Management' :
-               currentSection === 'property' ? 'Property Setup' :
-               currentSection === 'help' ? 'Getting Started' : 'Setup & Configuration'}
-            </h1>
-            <p className="text-sm text-gray-600">
-              {currentSection === 'overview' ? 'Personalize your experience and manage settings' : 
-               'Configure your preferences and settings'}
-            </p>
-          </div>
         </div>
 
-        {renderSectionContent()}
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-3">
+          {renderCurrentSection()}
+        </div>
       </div>
     </div>
   );

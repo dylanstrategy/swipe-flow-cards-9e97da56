@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -15,46 +15,13 @@ interface ScheduleStepProps {
   setSelectedTime: (time: string) => void;
 }
 
-interface TimeSlot {
-  id: string;
-  start: string;
-  end: string;
-  enabled: boolean;
-  taskTypes?: string[];
-}
-
 const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, setSelectedTime }: ScheduleStepProps) => {
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [calendarSettings, setCalendarSettings] = useState<any>(null);
   
-  useEffect(() => {
-    // Load calendar settings from localStorage
-    const savedSettings = localStorage.getItem('calendarSettings');
-    if (savedSettings) {
-      setCalendarSettings(JSON.parse(savedSettings));
-    }
-  }, []);
-
-  // Get available time slots based on calendar settings or fallback to default
+  // Dynamic time slots based on day of week
   const getAvailableTimeSlots = (date: Date) => {
     const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const dayKey = dayNames[dayOfWeek];
     
-    // If calendar settings exist, use them
-    if (calendarSettings && calendarSettings[dayKey]) {
-      return calendarSettings[dayKey]
-        .filter((slot: TimeSlot) => slot.enabled)
-        .map((slot: TimeSlot) => {
-          const [hours, minutes] = slot.start.split(':');
-          const hour = parseInt(hours);
-          const ampm = hour >= 12 ? 'PM' : 'AM';
-          const displayHour = hour % 12 || 12;
-          return `${displayHour}:${minutes} ${ampm}`;
-        });
-    }
-    
-    // Fallback to original dynamic time slots
     switch (dayOfWeek) {
       case 1: // Monday - Limited availability
         return ['9:00 AM', '2:00 PM', '4:00 PM'];
@@ -125,25 +92,18 @@ const ScheduleStep = ({ onNext, selectedDate, setSelectedDate, selectedTime, set
             <h4 className="font-medium text-gray-900 mb-2 text-sm">
               Available Times for {format(selectedDate, 'EEEE, MMM do')}
             </h4>
-            {availableTimes.length > 0 ? (
-              <div className="grid grid-cols-2 gap-2">
-                {availableTimes.map((time) => (
-                  <Button
-                    key={time}
-                    variant={selectedTime === time ? "default" : "outline"}
-                    onClick={() => setSelectedTime(time)}
-                    className="h-9 text-xs font-medium"
-                  >
-                    {time}
-                  </Button>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-sm text-gray-500">No availability on {format(selectedDate, 'EEEE')}</p>
-                <p className="text-xs text-gray-400 mt-1">Please select a different date</p>
-              </div>
-            )}
+            <div className="grid grid-cols-2 gap-2">
+              {availableTimes.map((time) => (
+                <Button
+                  key={time}
+                  variant={selectedTime === time ? "default" : "outline"}
+                  onClick={() => setSelectedTime(time)}
+                  className="h-9 text-xs font-medium"
+                >
+                  {time}
+                </Button>
+              ))}
+            </div>
           </div>
         )}
       </div>
