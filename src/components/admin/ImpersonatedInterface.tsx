@@ -3,7 +3,7 @@ import React from 'react';
 import type { AppRole } from '@/types/supabase';
 
 // Import the page components
-import Index from '@/pages/Index';
+import ResidentPreview from '@/components/admin/ResidentPreview';
 import Discovery from '@/pages/Discovery';
 import Matches from '@/pages/Matches';
 import MoveIn from '@/pages/MoveIn';
@@ -22,10 +22,10 @@ const ImpersonatedInterface: React.FC<ImpersonatedInterfaceProps> = ({ role }) =
     try {
       switch (role) {
         case 'resident':
-          console.log('🏠 Rendering resident interface (Index)');
+          console.log('🏠 Rendering resident interface (ResidentPreview)');
           return (
             <div className="h-full">
-              <Index />
+              <ResidentPreview />
             </div>
           );
         case 'prospect':
@@ -52,17 +52,17 @@ const ImpersonatedInterface: React.FC<ImpersonatedInterfaceProps> = ({ role }) =
             </div>
           );
         case 'vendor':
-          console.log('🏪 Rendering vendor interface (Index fallback)');
+          console.log('🏪 Rendering vendor interface (ResidentPreview fallback)');
           return (
             <div className="h-full">
-              <Index />
+              <ResidentPreview />
             </div>
           );
         default:
-          console.log('❓ Unknown role, rendering default interface (Index)');
+          console.log('❓ Unknown role, rendering default interface (ResidentPreview)');
           return (
             <div className="h-full">
-              <Index />
+              <ResidentPreview />
             </div>
           );
       }
