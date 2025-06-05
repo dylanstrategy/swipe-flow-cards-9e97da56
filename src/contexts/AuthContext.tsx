@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -57,24 +58,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     console.log('🚀 AuthProvider initializing...');
-    let mounted = true;
     
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      
-      console.log('🔍 Initial session:', !!session);
-      setSession(session);
-      setUser(session?.user ?? null);
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log('🔍 Initial session:', !!session, 'Error:', error);
       
       if (session?.user) {
+        setSession(session);
+        setUser(session.user);
+        
         fetchUserProfile(session.user.id).then(profile => {
-          if (mounted) {
-            setUserProfile(profile);
-            setLoading(false);
-          }
+          console.log('📋 Initial profile fetch result:', profile);
+          setUserProfile(profile);
+          setLoading(false);
+        }).catch(err => {
+          console.error('❌ Initial profile fetch error:', err);
+          setUserProfile(null);
+          setLoading(false);
         });
       } else {
+        setSession(null);
+        setUser(null);
+        setUserProfile(null);
         setLoading(false);
       }
     });
@@ -82,20 +87,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (!mounted) return;
-        
         console.log('🔔 Auth state change:', event, 'Session:', !!session);
-        setSession(session);
-        setUser(session?.user ?? null);
         
         if (session?.user) {
-          fetchUserProfile(session.user.id).then(profile => {
-            if (mounted) {
+          setSession(session);
+          setUser(session.user);
+          
+          // Only fetch profile if we don't have one or it's a different user
+          if (!userProfile || userProfile.id !== session.user.id) {
+            fetchUserProfile(session.user.id).then(profile => {
+              console.log('📋 Auth change profile fetch result:', profile);
               setUserProfile(profile);
               setLoading(false);
-            }
-          });
+            }).catch(err => {
+              console.error('❌ Auth change profile fetch error:', err);
+              setUserProfile(null);
+              setLoading(false);
+            });
+          } else {
+            setLoading(false);
+          }
         } else {
+          setSession(null);
+          setUser(null);
           setUserProfile(null);
           setImpersonatedRole(null);
           setLoading(false);
@@ -104,7 +118,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -112,6 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       console.log('🔄 Starting Google sign in...');
+      setLoading(true);
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -122,12 +136,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         console.error('❌ Google sign in error:', error);
+        setLoading(false);
         throw error;
       }
       
       console.log('✅ Google sign in initiated');
     } catch (error: any) {
       console.error('❌ Google sign in error:', error);
+      setLoading(false);
       toast({
         title: "Authentication Error",
         description: error.message || "Failed to sign in with Google",
@@ -147,6 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
+        setLoading(false);
         throw error;
       }
     } catch (error: any) {
@@ -168,6 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
+        setLoading(false);
         throw error;
       }
 

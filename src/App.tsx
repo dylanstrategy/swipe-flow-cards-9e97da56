@@ -36,21 +36,18 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
     return <Navigate to="/login" replace />;
   }
 
-  // Allow access if no specific roles required or if user has profile with allowed role
-  if (!allowedRoles || (userProfile && allowedRoles.includes(userProfile.role))) {
+  // If no userProfile, show unknown role page
+  if (!userProfile) {
+    console.log('🚫 No user profile, redirecting to unknown role');
+    return <Navigate to="/unknown-role" replace />;
+  }
+
+  // Allow access if no specific roles required or if user has allowed role
+  if (!allowedRoles || allowedRoles.includes(userProfile.role)) {
     return <>{children}</>;
   }
   
-  // If user doesn't have profile yet, show loading
-  if (!userProfile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-  
-  // User has profile but wrong role
+  // User has profile but wrong role - redirect to their default route
   console.log('🚫 Role not allowed, redirecting to default route');
   return <Navigate to={getDefaultRouteForRole(userProfile)} replace />;
 }
@@ -80,40 +77,10 @@ function getDefaultRouteForRole(userProfile: any): string {
   }
 }
 
-function AuthenticatedRedirect() {
+function AppRoutes() {
   const { user, loading, userProfile } = useAuth();
   
-  console.log('🏠 AuthenticatedRedirect - User:', !!user, 'Profile:', !!userProfile, 'Loading:', loading);
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (!userProfile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  const defaultRoute = getDefaultRouteForRole(userProfile);
-  console.log('🎯 Redirecting authenticated user to:', defaultRoute);
-  return <Navigate to={defaultRoute} replace />;
-}
-
-function AppRoutes() {
-  const { user, loading } = useAuth();
-  
-  console.log('🏠 AppRoutes render - User:', !!user, 'Loading:', loading);
+  console.log('🏠 AppRoutes render - User:', !!user, 'Profile:', !!userProfile, 'Loading:', loading);
   
   // Show loading while checking auth state
   if (loading) {
@@ -127,7 +94,9 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/login" element={user ? <AuthenticatedRedirect /> : <Login />} />
+      <Route path="/login" element={
+        user ? <Navigate to={userProfile ? getDefaultRouteForRole(userProfile) : "/unknown-role"} replace /> : <Login />
+      } />
       <Route path="/owner-login" element={<OwnerLogin />} />
       <Route path="/unknown-role" element={
         <ProtectedRoute>
