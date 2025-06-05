@@ -409,6 +409,7 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const submitNoticeToVacate = (residentId: string, data: any) => {
     console.log(`📋 SUBMIT NOTICE TO VACATE - Starting process for resident ${residentId}`, data);
     
+    // Create the updated resident with all necessary changes
     const updatedResidents = allResidents.map(resident => {
       if (resident.id === residentId) {
         console.log(`📋 SUBMIT NOTICE TO VACATE - Found resident ${residentId}, updating status and creating checklist`);
@@ -448,7 +449,33 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
     
     console.log('📋 SUBMIT NOTICE TO VACATE - Calling centralized update mechanism');
-    updateResidentData(updatedResidents);
+    
+    // Immediately update state and localStorage
+    setAllResidents(updatedResidents);
+    localStorage.setItem('allResidents', JSON.stringify(updatedResidents));
+    
+    // Update profile if it's the current resident
+    const updatedCurrentResident = updatedResidents.find(r => r.id === profile.id);
+    if (updatedCurrentResident) {
+      setProfile(updatedCurrentResident);
+      localStorage.setItem('residentProfile', JSON.stringify(updatedCurrentResident));
+      console.log('✅ IMMEDIATE Profile update - NEW STATUS:', updatedCurrentResident.status);
+    }
+    
+    // Force multiple re-renders to ensure UI updates
+    setForceUpdateCounter(prev => prev + 1);
+    
+    setTimeout(() => {
+      setForceUpdateCounter(prev => prev + 1);
+      console.log('🔄 First delayed force update');
+    }, 50);
+    
+    setTimeout(() => {
+      setForceUpdateCounter(prev => prev + 1);
+      console.log('🔄 Second delayed force update');
+    }, 150);
+    
+    console.log('📋 SUBMIT NOTICE TO VACATE - State updates completed');
   };
 
   const cancelMoveOut = (residentId: string) => {
