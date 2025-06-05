@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +13,8 @@ import {
   Eye,
   Settings,
   BarChart3,
-  AlertTriangle
+  AlertTriangle,
+  LogOut
 } from 'lucide-react';
 import { useUsers, useProperties } from '@/hooks/useSupabaseData';
 import CreateUserModal from '@/components/admin/CreateUserModal';
@@ -24,7 +24,7 @@ import RoleImpersonation from '@/components/RoleImpersonation';
 import type { Property } from '@/types/supabase';
 
 const SuperAdmin = () => {
-  const { userProfile, user } = useAuth();
+  const { userProfile, user, signOut } = useAuth();
   const { users, loading: usersLoading, refetch: refetchUsers } = useUsers();
   const { properties, loading: propertiesLoading, refetch: refetchProperties } = useProperties();
   
@@ -37,6 +37,14 @@ const SuperAdmin = () => {
   console.log('Current user:', user);
   console.log('Current userProfile:', userProfile);
   console.log('User role:', userProfile?.role);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
 
   // Show debug information if access is denied
   if (!userProfile || userProfile.role !== 'super_admin') {
@@ -84,6 +92,15 @@ const SuperAdmin = () => {
                   </p>
                 </div>
               )}
+
+              <Button 
+                onClick={handleSignOut}
+                className="w-full flex items-center justify-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                variant="outline"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -133,13 +150,23 @@ const SuperAdmin = () => {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
-      {/* Header with Role Impersonation */}
+      {/* Header with Role Impersonation and Sign Out */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Super Admin Dashboard</h1>
           <p className="text-gray-600">Manage users, properties, and system configuration</p>
         </div>
-        <RoleImpersonation />
+        <div className="flex items-center gap-3">
+          <RoleImpersonation />
+          <Button 
+            onClick={handleSignOut}
+            variant="outline"
+            className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+          >
+            <LogOut className="w-4 h-4" />
+            Sign Out
+          </Button>
+        </div>
       </div>
 
       {/* Stats Overview */}
