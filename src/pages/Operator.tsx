@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TabNavigation from '@/components/TabNavigation';
@@ -20,6 +19,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User, Settings, LogOut, Users } from 'lucide-react';
 import { UserProfile, ROLE_PERMISSIONS } from '@/types/users';
+import { Button, ArrowLeft } from '@/components/ui/button';
 
 const Operator = () => {
   const navigate = useNavigate();
@@ -29,14 +29,14 @@ const Operator = () => {
   const [showContactProfile, setShowContactProfile] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
-  // Mock current user profile
+  // Mock current user profile - updated to senior_operator
   const [currentUserProfile] = useState<UserProfile>({
     id: '1',
     name: 'John Smith',
     email: 'john.smith@meridian.com',
     phone: '(555) 123-4567',
-    role: 'operator',
-    permissions: ROLE_PERMISSIONS.operator,
+    role: 'senior_operator',
+    permissions: ROLE_PERMISSIONS.senior_operator,
     contactInfo: {
       email: 'john.smith@meridian.com',
       phone: '(555) 123-4567',
@@ -88,7 +88,23 @@ const Operator = () => {
   }
 
   if (showUserManagement) {
-    return <UserManagement />;
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white shadow-sm px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Applaud Operations</h1>
+              <p className="text-sm text-gray-600">The Meridian • Property Management</p>
+            </div>
+            <Button variant="outline" onClick={() => setShowUserManagement(false)}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
+        </div>
+        <UserManagement />
+      </div>
+    );
   }
 
   if (showContactProfile) {

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,9 @@ const UserManagement = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('all');
+
+  // Mock current user role - in real app this would come from auth context
+  const currentUserRole: UserRole = 'senior_operator';
 
   // Mock data - in real app this would come from backend
   const [users] = useState<UserProfile[]>([
@@ -100,11 +102,16 @@ const UserManagement = () => {
     setShowCreateForm(false);
   };
 
+  const handleBackToManagement = () => {
+    setShowCreateForm(false);
+  };
+
   if (showCreateForm) {
     return (
       <CreateUserForm
         onSubmit={handleCreateUser}
-        onCancel={() => setShowCreateForm(false)}
+        onCancel={handleBackToManagement}
+        currentUserRole={currentUserRole}
       />
     );
   }

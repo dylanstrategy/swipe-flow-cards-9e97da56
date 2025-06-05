@@ -13,9 +13,10 @@ import { ArrowLeft, User, Mail, Phone, Shield, Send } from 'lucide-react';
 interface CreateUserFormProps {
   onSubmit: (userData: CreateUserRequest) => void;
   onCancel: () => void;
+  currentUserRole?: UserRole;
 }
 
-const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel }) => {
+const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel, currentUserRole = 'senior_operator' }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -25,11 +26,24 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel }) =
     sendWelcomeEmail: true
   });
 
+  // Determine which roles the current user can create
+  const getAvailableRoles = (): UserRole[] => {
+    const allRoles: UserRole[] = ['maintenance', 'leasing', 'operator', 'senior_operator'];
+    
+    if (currentUserRole === 'senior_operator' || currentUserRole === 'management') {
+      return allRoles;
+    } else if (currentUserRole === 'operator') {
+      return ['maintenance', 'leasing'];
+    }
+    
+    return ['maintenance', 'leasing'];
+  };
+
   const handleRoleChange = (role: UserRole) => {
     setFormData({
       ...formData,
       role,
-      customPermissions: [] // Reset custom permissions when role changes
+      customPermissions: []
     });
   };
 
@@ -53,7 +67,6 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel }) =
       .flat()
       .filter(p => formData.customPermissions.includes(p.id));
     
-    // Combine and deduplicate
     const allPermissions = [...rolePermissions, ...customPermissions];
     return allPermissions.filter((permission, index, array) =>
       array.findIndex(p => p.id === permission.id) === index
@@ -84,6 +97,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel }) =
       resident: 'bg-blue-100 text-blue-800',
       maintenance: 'bg-orange-100 text-orange-800',
       operator: 'bg-purple-100 text-purple-800',
+      senior_operator: 'bg-indigo-100 text-indigo-800',
       leasing: 'bg-green-100 text-green-800',
       management: 'bg-red-100 text-red-800',
       prospect: 'bg-gray-100 text-gray-800'
@@ -91,10 +105,21 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel }) =
     return colors[role] || 'bg-gray-100 text-gray-800';
   };
 
+  const getPermissionLevelColor = (level: string) => {
+    const colors = {
+      basic: 'bg-gray-100 text-gray-700',
+      advanced: 'bg-blue-100 text-blue-700',
+      admin: 'bg-red-100 text-red-700'
+    };
+    return colors[level as keyof typeof colors] || 'bg-gray-100 text-gray-700';
+  };
+
   const allAvailablePermissions = Object.values(ROLE_PERMISSIONS).flat()
     .filter((permission, index, array) =>
       array.findIndex(p => p.id === permission.id) === index
     );
+
+  const availableRoles = getAvailableRoles();
 
   return (
     <div className="flex flex-col h-full">
@@ -170,7 +195,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel }) =
                   <div>
                     <Label>Select Role</Label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
-                      {(Object.keys(ROLE_PERMISSIONS) as UserRole[]).filter(role => role !== 'resident' && role !== 'prospect').map((role) => (
+                      {availableRoles.map((role) => (
                         <button
                           key={role}
                           type="button"
@@ -182,7 +207,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel }) =
                           }`}
                         >
                           <Badge className={getRoleColor(role)}>
-                            {role.charAt(0).toUpperCase() + role.slice(1)}
+                            {role === 'senior_operator' ? 'Senior Operator' : role.charAt(0).toUpperCase() + role.slice(1)}
                           </Badge>
                           <div className="text-xs text-gray-600 mt-1">
                             {ROLE_PERMISSIONS[role].length} permissions
@@ -194,13 +219,20 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel }) =
 
                   {/* Default Permissions */}
                   <div>
-                    <Label>Default Permissions for {formData.role}</Label>
+                    <Label>Default Permissions for {formData.role === 'senior_operator' ? 'Senior Operator' : formData.role}</Label>
                     <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                      <div className="flex flex-wrap gap-2">
+                      <div className="space-y-2">
                         {ROLE_PERMISSIONS[formData.role].map((permission) => (
-                          <Badge key={permission.id} variant="outline" className="text-xs">
-                            {permission.name}
-                          </Badge>
+                          <div key={permission.id} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs">
+                                {permission.name}
+                              </Badge>
+                              <Badge className={getPermissionLevelColor(permission.level)}>
+                                {permission.level}
+                              </Badge>
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -222,9 +254,14 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel }) =
                             }
                           />
                           <div className="flex-1">
-                            <Label htmlFor={permission.id} className="text-sm font-medium cursor-pointer">
-                              {permission.name}
-                            </Label>
+                            <div className="flex items-center gap-2 mb-1">
+                              <Label htmlFor={permission.id} className="text-sm font-medium cursor-pointer">
+                                {permission.name}
+                              </Label>
+                              <Badge className={getPermissionLevelColor(permission.level)}>
+                                {permission.level}
+                              </Badge>
+                            </div>
                             <p className="text-xs text-gray-600">{permission.description}</p>
                           </div>
                         </div>
@@ -258,7 +295,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel }) =
                   <div className="text-sm text-gray-600 space-y-1">
                     <p><strong>Name:</strong> {formData.name || 'Not specified'}</p>
                     <p><strong>Email:</strong> {formData.email || 'Not specified'}</p>
-                    <p><strong>Role:</strong> {formData.role.charAt(0).toUpperCase() + formData.role.slice(1)}</p>
+                    <p><strong>Role:</strong> {formData.role === 'senior_operator' ? 'Senior Operator' : formData.role.charAt(0).toUpperCase() + formData.role.slice(1)}</p>
                     <p><strong>Total Permissions:</strong> {getSelectedPermissions().length}</p>
                   </div>
                 </div>
