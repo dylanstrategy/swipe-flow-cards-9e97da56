@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Calculator, Settings, TrendingUp, AlertTriangle, CheckCircle, Edit, Building, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,75 +15,73 @@ interface PricingDashboardProps {
 }
 
 const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
-  // Core pricing parameters
+  // Current occupancy for the property
   const [currentOccupancy, setCurrentOccupancy] = useState(96.5);
-  const [selectedMoveInDate, setSelectedMoveInDate] = useState(new Date());
-  const [selectedUnitType, setSelectedUnitType] = useState('1BR');
   
-  // Occupancy thresholds with pricing adjustments
-  const [occupancyThresholds, setOccupancyThresholds] = useState([
-    { threshold: 98, adjustment: 15, type: 'percent' },
-    { threshold: 97, adjustment: 10, type: 'percent' },
-    { threshold: 95, adjustment: 5, type: 'percent' },
-    { threshold: 93, adjustment: 0, type: 'percent' },
-    { threshold: 90, adjustment: -5, type: 'percent' },
-    { threshold: 85, adjustment: -10, type: 'percent' }
-  ]);
-
-  // Market comps with detailed configuration
+  // Market comparables configuration
   const [marketComps, setMarketComps] = useState([
     { 
-      name: 'The Meridian East', 
-      studio: 2650, 
-      oneBR: 3250, 
-      twoBR: 4150, 
-      threeBR: 5200,
-      weight: 25, 
+      name: 'Journal Squared 1', 
+      studioMin: 2597, studioMax: 2601,
+      oneBRMin: 3056, oneBRMax: 3100,
+      twoBRMin: 4309, twoBRMax: 0,
+      threeBRMin: 5745, threeBRMax: 5745,
+      weight: 20, 
       quality: 9 
     },
     { 
-      name: 'Downtown Lofts', 
-      studio: 2580, 
-      oneBR: 3180, 
-      twoBR: 4080, 
-      threeBR: 5100,
-      weight: 20, 
+      name: 'Journal Squared 2', 
+      studioMin: 2597, studioMax: 2783,
+      oneBRMin: 3056, oneBRMax: 3068,
+      twoBRMin: 4300, twoBRMax: 0,
+      threeBRMin: 0, threeBRMax: 0,
+      weight: 15, 
+      quality: 9 
+    },
+    { 
+      name: '28 Cottage Street', 
+      studioMin: 2200, studioMax: 2300,
+      oneBRMin: 2400, oneBRMax: 2500,
+      twoBRMin: 5890, twoBRMax: 0,
+      threeBRMin: 6000, threeBRMax: 6038,
+      weight: 25, 
       quality: 8 
     },
     { 
-      name: 'City Center Apartments', 
-      studio: 2720, 
-      oneBR: 3320, 
-      twoBR: 4220, 
-      threeBR: 5350,
-      weight: 30, 
-      quality: 9 
-    },
-    { 
-      name: 'Urban Heights', 
-      studio: 2550, 
-      oneBR: 3150, 
-      twoBR: 4050, 
-      threeBR: 5050,
-      weight: 15, 
+      name: 'MetroVue', 
+      studioMin: 1990, studioMax: 0,
+      oneBRMin: 1867, oneBRMax: 0,
+      twoBRMin: 2755, twoBRMax: 2896,
+      threeBRMin: 0, threeBRMax: 0,
+      weight: 10, 
       quality: 7 
     },
     { 
-      name: 'Metro Commons', 
-      studio: 2680, 
-      oneBR: 3280, 
-      twoBR: 4180, 
-      threeBR: 5250,
-      weight: 10, 
-      quality: 8 
+      name: 'Urby JSQ', 
+      studioMin: 2700, studioMax: 2700,
+      oneBRMin: 2745, oneBRMax: 2995,
+      twoBRMin: 4345, twoBRMax: 4465,
+      threeBRMin: 4414, threeBRMax: 4690,
+      weight: 30, 
+      quality: 9 
     }
-  ];
+  ]);
 
-  // Unit type pricing configuration with min/max
+  // Occupancy thresholds with pricing adjustments
+  const [occupancyThresholds, setOccupancyThresholds] = useState([
+    { threshold: 98, adjustment: 5, type: 'percent' },
+    { threshold: 97, adjustment: 2, type: 'percent' },
+    { threshold: 95, adjustment: 0, type: 'percent' },
+    { threshold: 93, adjustment: -2, type: 'percent' },
+    { threshold: 90, adjustment: -5, type: 'percent' },
+    { threshold: 85, adjustment: -8, type: 'percent' }
+  ]);
+
+  // Unit type pricing configuration with market rent
   const [unitTypePricing, setUnitTypePricing] = useState([
     { 
       type: 'Studio', 
-      baseRent: 2650, 
+      marketRent: 2650, 
       minRent: 2400, 
       maxRent: 2900, 
       available: true,
@@ -90,7 +89,7 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
     },
     { 
       type: '1BR', 
-      baseRent: 3200, 
+      marketRent: 3200, 
       minRent: 2950, 
       maxRent: 3500, 
       available: true,
@@ -98,7 +97,7 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
     },
     { 
       type: '2BR', 
-      baseRent: 4100, 
+      marketRent: 4100, 
       minRent: 3800, 
       maxRent: 4500, 
       available: true,
@@ -106,7 +105,7 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
     },
     { 
       type: '3BR', 
-      baseRent: 5200, 
+      marketRent: 5200, 
       minRent: 4800, 
       maxRent: 5700, 
       available: true,
@@ -114,7 +113,7 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
     }
   ]);
 
-  // Expiration allocation by month
+  // Monthly expiration allocation limits
   const [expirationAllocation, setExpirationAllocation] = useState([
     { month: 'Jan', percentage: 8, maxUnits: 24, currentCount: 18 },
     { month: 'Feb', percentage: 12, maxUnits: 36, currentCount: 32 },
@@ -144,7 +143,15 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
     { term: 15, adjustment: 75, type: 'dollar' }
   ]);
 
-  // 18-week forecast data with occupancy
+  // Promotions and concessions
+  const [promotions, setPromotions] = useState([
+    { name: '2 Months Free', value: 2, type: 'months_free', active: true },
+    { name: '1 Month Free', value: 1, type: 'months_free', active: true },
+    { name: '$500 Deposit Special', value: 500, type: 'deposit_discount', active: false },
+    { name: 'Waived App Fee', value: 100, type: 'fee_waiver', active: true }
+  ]);
+
+  // 18-week forecast with occupancy projections
   const [weeklyForecast] = useState(() => {
     const weeks = [];
     for (let i = 1; i <= 18; i++) {
@@ -153,7 +160,7 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
       weeks.push({
         week: i,
         date: date.toDateString(),
-        occupancy: Math.max(85, 96.5 - Math.random() * 8 + Math.random() * 3),
+        occupancy: Math.max(85, currentOccupancy - Math.random() * 8 + Math.random() * 3),
         moveIns: Math.floor(Math.random() * 8) + 2,
         moveOuts: Math.floor(Math.random() * 6) + 1
       });
@@ -161,18 +168,32 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
     return weeks;
   });
 
-  // Calculate comp-based pricing for selected unit type
-  const calculateCompPrice = () => {
-    const unitTypeKey = selectedUnitType === 'Studio' ? 'studio' :
-                       selectedUnitType === '1BR' ? 'oneBR' :
-                       selectedUnitType === '2BR' ? 'twoBR' : 'threeBR';
-    
-    // Calculate weighted average
+  // Calculate blended comp price for a unit type
+  const calculateCompPrice = (unitType: string) => {
     const totalWeight = marketComps.reduce((sum, comp) => sum + comp.weight, 0);
-    const weightedPrice = marketComps.reduce((sum, comp) => {
-      const unitPrice = comp[unitTypeKey] || 0;
-      return sum + (unitPrice * comp.weight / totalWeight);
-    }, 0);
+    
+    let weightedPrice = 0;
+    marketComps.forEach(comp => {
+      let price = 0;
+      switch (unitType) {
+        case 'Studio':
+          price = comp.studioMin || comp.studioMax || 0;
+          break;
+        case '1BR':
+          price = comp.oneBRMin || comp.oneBRMax || 0;
+          break;
+        case '2BR':
+          price = comp.twoBRMin || comp.twoBRMax || 0;
+          break;
+        case '3BR':
+          price = comp.threeBRMin || comp.threeBRMax || 0;
+          break;
+      }
+      
+      if (price > 0) {
+        weightedPrice += (price * comp.weight / totalWeight);
+      }
+    });
 
     return Math.round(weightedPrice);
   };
@@ -187,23 +208,23 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
       : threshold.adjustment;
   };
 
-  // Calculate pricing suggestions with all factors
-  const calculatePricingSuggestions = () => {
-    const selectedUnit = unitTypePricing.find(unit => unit.type === selectedUnitType);
+  // Calculate final pricing for a unit type with all factors
+  const calculateFinalPricing = (unitType: string) => {
+    const selectedUnit = unitTypePricing.find(unit => unit.type === unitType);
     if (!selectedUnit) return [];
 
-    const compPrice = calculateCompPrice();
-    const baseRent = selectedUnit.baseRent;
+    const compPrice = calculateCompPrice(unitType);
+    const marketRent = selectedUnit.marketRent;
     
-    // North Star price from comp analysis
-    const northStarPrice = Math.round((baseRent + compPrice) / 2);
+    // North Star price (blended market and comp)
+    const northStarPrice = Math.round((marketRent + compPrice) / 2);
     const occupancyAdjustment = getOccupancyAdjustment(northStarPrice);
 
-    const suggestions = [];
+    const pricing = [];
 
     for (const termAdj of leaseTermAdjustments) {
       // Calculate expiration month
-      const expirationDate = new Date(selectedMoveInDate);
+      const expirationDate = new Date();
       expirationDate.setMonth(expirationDate.getMonth() + termAdj.term);
       const expirationMonth = expirationDate.toLocaleDateString('en-US', { month: 'short' });
       
@@ -220,34 +241,29 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
       // Apply min/max constraints
       finalRent = Math.max(selectedUnit.minRent, Math.min(selectedUnit.maxRent, finalRent));
 
-      suggestions.push({
+      pricing.push({
         term: termAdj.term,
         rent: Math.round(finalRent),
         expirationMonth,
         isAllowed: isTermAllowed,
-        breakdown: {
-          northStarPrice,
-          compPrice,
-          baseRent,
-          occupancyAdjustment,
-          termAdjustment: termAdj.adjustment,
-          constraints: `${selectedUnit.minRent} - ${selectedUnit.maxRent}`
-        }
+        compPrice,
+        marketRent,
+        northStarPrice,
+        occupancyAdjustment,
+        termAdjustment: termAdj.adjustment
       });
     }
 
-    return suggestions.sort((a, b) => b.rent - a.rent);
+    return pricing.sort((a, b) => b.rent - a.rent);
   };
-
-  const pricingSuggestions = calculatePricingSuggestions();
 
   const addNewComp = () => {
     setMarketComps([...marketComps, {
       name: 'New Property',
-      studio: 2500,
-      oneBR: 3000,
-      twoBR: 3800,
-      threeBR: 4800,
+      studioMin: 2500, studioMax: 0,
+      oneBRMin: 3000, oneBRMax: 0,
+      twoBRMin: 3800, twoBRMax: 0,
+      threeBRMin: 4800, threeBRMax: 0,
       weight: 0,
       quality: 5
     }]);
@@ -255,6 +271,15 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
 
   const removeComp = (index: number) => {
     setMarketComps(marketComps.filter((_, i) => i !== index));
+  };
+
+  const addNewPromotion = () => {
+    setPromotions([...promotions, {
+      name: 'New Promotion',
+      value: 0,
+      type: 'months_free',
+      active: false
+    }]);
   };
 
   return (
@@ -280,153 +305,17 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Dynamic Pricing Dashboard</h1>
-          <p className="text-gray-600">Advanced pricing engine with occupancy thresholds, comp analysis, and unit-specific constraints</p>
+          <p className="text-gray-600">Comprehensive pricing engine with comp analysis, occupancy thresholds, and PPF management</p>
         </div>
 
-        <Tabs defaultValue="pricing" className="space-y-6">
+        <Tabs defaultValue="comps" className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="pricing">Pricing Engine</TabsTrigger>
             <TabsTrigger value="comps">Comp Analysis</TabsTrigger>
-            <TabsTrigger value="thresholds">Occupancy Rules</TabsTrigger>
+            <TabsTrigger value="occupancy">Occupancy Rules</TabsTrigger>
             <TabsTrigger value="expiration">Expiration Control</TabsTrigger>
-            <TabsTrigger value="forecast">18-Week Forecast</TabsTrigger>
+            <TabsTrigger value="promotions">Promotions</TabsTrigger>
+            <TabsTrigger value="pricing">Pricing Engine</TabsTrigger>
           </TabsList>
-
-          {/* Pricing Engine Tab */}
-          <TabsContent value="pricing" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Current Parameters */}
-              <Card className="lg:col-span-1">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="w-5 h-5" />
-                    Current Parameters
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label>Current Occupancy (%)</Label>
-                    <Input
-                      type="number"
-                      value={currentOccupancy}
-                      onChange={(e) => setCurrentOccupancy(parseFloat(e.target.value))}
-                      step="0.1"
-                      min="0"
-                      max="100"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Threshold: {occupancyThresholds.find(t => currentOccupancy >= t.threshold)?.adjustment || 0}% adjustment
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <Label>Unit Type</Label>
-                    <Select value={selectedUnitType} onValueChange={setSelectedUnitType}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {unitTypePricing.filter(unit => unit.available).map(unit => (
-                          <SelectItem key={unit.type} value={unit.type}>
-                            {unit.type} ({unit.unitCount} units)
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label>Move-In Date</Label>
-                    <Input
-                      type="date"
-                      value={selectedMoveInDate.toISOString().split('T')[0]}
-                      onChange={(e) => setSelectedMoveInDate(new Date(e.target.value))}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* North Star Pricing */}
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5" />
-                    North Star Pricing Analysis
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <div className="text-sm text-gray-600">Comp Average</div>
-                      <div className="text-xl font-semibold">${calculateCompPrice().toLocaleString()}</div>
-                    </div>
-                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <div className="text-sm text-gray-600">Base Rent</div>
-                      <div className="text-xl font-semibold">
-                        ${unitTypePricing.find(u => u.type === selectedUnitType)?.baseRent.toLocaleString() || 0}
-                      </div>
-                    </div>
-                    <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                      <div className="text-sm text-gray-600">North Star</div>
-                      <div className="text-xl font-semibold text-yellow-700">
-                        ${Math.round((calculateCompPrice() + (unitTypePricing.find(u => u.type === selectedUnitType)?.baseRent || 0)) / 2).toLocaleString()}
-                      </div>
-                    </div>
-                    <div className="text-center p-4 bg-purple-50 rounded-lg">
-                      <div className="text-sm text-gray-600">Occupancy Impact</div>
-                      <div className="text-xl font-semibold text-purple-700">
-                        {getOccupancyAdjustment(Math.round((calculateCompPrice() + (unitTypePricing.find(u => u.type === selectedUnitType)?.baseRent || 0)) / 2)) >= 0 ? '+' : ''}
-                        ${getOccupancyAdjustment(Math.round((calculateCompPrice() + (unitTypePricing.find(u => u.type === selectedUnitType)?.baseRent || 0)) / 2)).toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Term</TableHead>
-                        <TableHead>Suggested Rent</TableHead>
-                        <TableHead>Expires</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {pricingSuggestions.slice(0, 6).map((suggestion) => (
-                        <TableRow key={suggestion.term}>
-                          <TableCell className="font-medium">{suggestion.term} months</TableCell>
-                          <TableCell className="font-semibold text-lg">
-                            ${suggestion.rent.toLocaleString()}
-                          </TableCell>
-                          <TableCell>{suggestion.expirationMonth}</TableCell>
-                          <TableCell>
-                            {suggestion.isAllowed ? (
-                              <Badge className="bg-green-100 text-green-800">
-                                <CheckCircle className="w-3 h-3 mr-1" />
-                                Available
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-red-100 text-red-800">
-                                <AlertTriangle className="w-3 h-3 mr-1" />
-                                Restricted
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {suggestion.isAllowed && (
-                              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                                Apply
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
 
           {/* Comp Analysis Tab */}
           <TabsContent value="comps" className="space-y-6">
@@ -434,7 +323,7 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Market Comparables Configuration</CardTitle>
-                  <p className="text-sm text-gray-600">Configure competitor properties and their pricing by unit type</p>
+                  <p className="text-sm text-gray-600">Configure competitor properties with min/max pricing by unit type</p>
                 </div>
                 <Button onClick={addNewComp} className="flex items-center gap-2">
                   <Plus className="w-4 h-4" />
@@ -446,12 +335,15 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Property</TableHead>
-                      <TableHead>Studio</TableHead>
-                      <TableHead>1BR</TableHead>
-                      <TableHead>2BR</TableHead>
-                      <TableHead>3BR</TableHead>
+                      <TableHead>Studio Min</TableHead>
+                      <TableHead>Studio Max</TableHead>
+                      <TableHead>1BR Min</TableHead>
+                      <TableHead>1BR Max</TableHead>
+                      <TableHead>2BR Min</TableHead>
+                      <TableHead>2BR Max</TableHead>
+                      <TableHead>3BR Min</TableHead>
+                      <TableHead>3BR Max</TableHead>
                       <TableHead>Weight (%)</TableHead>
-                      <TableHead>Quality</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -472,10 +364,10 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
                         <TableCell>
                           <Input
                             type="number"
-                            value={comp.studio}
+                            value={comp.studioMin}
                             onChange={(e) => {
                               const newComps = [...marketComps];
-                              newComps[index].studio = parseInt(e.target.value);
+                              newComps[index].studioMin = parseInt(e.target.value) || 0;
                               setMarketComps(newComps);
                             }}
                             className="w-20"
@@ -484,10 +376,10 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
                         <TableCell>
                           <Input
                             type="number"
-                            value={comp.oneBR}
+                            value={comp.studioMax}
                             onChange={(e) => {
                               const newComps = [...marketComps];
-                              newComps[index].oneBR = parseInt(e.target.value);
+                              newComps[index].studioMax = parseInt(e.target.value) || 0;
                               setMarketComps(newComps);
                             }}
                             className="w-20"
@@ -496,10 +388,10 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
                         <TableCell>
                           <Input
                             type="number"
-                            value={comp.twoBR}
+                            value={comp.oneBRMin}
                             onChange={(e) => {
                               const newComps = [...marketComps];
-                              newComps[index].twoBR = parseInt(e.target.value);
+                              newComps[index].oneBRMin = parseInt(e.target.value) || 0;
                               setMarketComps(newComps);
                             }}
                             className="w-20"
@@ -508,10 +400,58 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
                         <TableCell>
                           <Input
                             type="number"
-                            value={comp.threeBR}
+                            value={comp.oneBRMax}
                             onChange={(e) => {
                               const newComps = [...marketComps];
-                              newComps[index].threeBR = parseInt(e.target.value);
+                              newComps[index].oneBRMax = parseInt(e.target.value) || 0;
+                              setMarketComps(newComps);
+                            }}
+                            className="w-20"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            value={comp.twoBRMin}
+                            onChange={(e) => {
+                              const newComps = [...marketComps];
+                              newComps[index].twoBRMin = parseInt(e.target.value) || 0;
+                              setMarketComps(newComps);
+                            }}
+                            className="w-20"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            value={comp.twoBRMax}
+                            onChange={(e) => {
+                              const newComps = [...marketComps];
+                              newComps[index].twoBRMax = parseInt(e.target.value) || 0;
+                              setMarketComps(newComps);
+                            }}
+                            className="w-20"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            value={comp.threeBRMin}
+                            onChange={(e) => {
+                              const newComps = [...marketComps];
+                              newComps[index].threeBRMin = parseInt(e.target.value) || 0;
+                              setMarketComps(newComps);
+                            }}
+                            className="w-20"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            value={comp.threeBRMax}
+                            onChange={(e) => {
+                              const newComps = [...marketComps];
+                              newComps[index].threeBRMax = parseInt(e.target.value) || 0;
                               setMarketComps(newComps);
                             }}
                             className="w-20"
@@ -523,16 +463,13 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
                             value={comp.weight}
                             onChange={(e) => {
                               const newComps = [...marketComps];
-                              newComps[index].weight = parseInt(e.target.value);
+                              newComps[index].weight = parseInt(e.target.value) || 0;
                               setMarketComps(newComps);
                             }}
                             className="w-16"
                             min="0"
                             max="100"
                           />
-                        </TableCell>
-                        <TableCell>
-                          <Badge>{comp.quality}/10</Badge>
                         </TableCell>
                         <TableCell>
                           <Button 
@@ -550,23 +487,23 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
                 </Table>
 
                 <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-semibold mb-2">Weighted Averages by Unit Type</h4>
+                  <h4 className="font-semibold mb-2">Blended Rates by Unit Type</h4>
                   <div className="grid grid-cols-4 gap-4">
                     <div className="text-center">
                       <div className="text-sm text-gray-600">Studio</div>
-                      <div className="text-lg font-semibold">${Math.round(marketComps.reduce((sum, comp) => sum + (comp.studio * comp.weight / 100), 0)).toLocaleString()}</div>
+                      <div className="text-lg font-semibold">${calculateCompPrice('Studio').toLocaleString()}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-sm text-gray-600">1BR</div>
-                      <div className="text-lg font-semibold">${Math.round(marketComps.reduce((sum, comp) => sum + (comp.oneBR * comp.weight / 100), 0)).toLocaleString()}</div>
+                      <div className="text-lg font-semibold">${calculateCompPrice('1BR').toLocaleString()}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-sm text-gray-600">2BR</div>
-                      <div className="text-lg font-semibold">${Math.round(marketComps.reduce((sum, comp) => sum + (comp.twoBR * comp.weight / 100), 0)).toLocaleString()}</div>
+                      <div className="text-lg font-semibold">${calculateCompPrice('2BR').toLocaleString()}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-sm text-gray-600">3BR</div>
-                      <div className="text-lg font-semibold">${Math.round(marketComps.reduce((sum, comp) => sum + (comp.threeBR * comp.weight / 100), 0)).toLocaleString()}</div>
+                      <div className="text-lg font-semibold">${calculateCompPrice('3BR').toLocaleString()}</div>
                     </div>
                   </div>
                 </div>
@@ -574,8 +511,8 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
             </Card>
           </TabsContent>
 
-          {/* Occupancy Thresholds Tab */}
-          <TabsContent value="thresholds" className="space-y-6">
+          {/* Occupancy Rules Tab */}
+          <TabsContent value="occupancy" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
@@ -583,6 +520,18 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
                   <p className="text-sm text-gray-600">Configure pricing adjustments based on occupancy levels</p>
                 </CardHeader>
                 <CardContent>
+                  <div className="mb-4">
+                    <Label>Current Occupancy (%)</Label>
+                    <Input
+                      type="number"
+                      value={currentOccupancy}
+                      onChange={(e) => setCurrentOccupancy(parseFloat(e.target.value))}
+                      step="0.1"
+                      min="0"
+                      max="100"
+                    />
+                  </div>
+                  
                   <div className="space-y-3">
                     {occupancyThresholds.map((threshold, index) => (
                       <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
@@ -610,8 +559,8 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Unit Type Constraints</CardTitle>
-                  <p className="text-sm text-gray-600">Set minimum and maximum rent limits by unit type</p>
+                  <CardTitle>Unit Type Market Rents</CardTitle>
+                  <p className="text-sm text-gray-600">Set market rent and constraints by unit type</p>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -636,13 +585,13 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
                             />
                           </div>
                           <div>
-                            <Label className="text-xs">Base Rent</Label>
+                            <Label className="text-xs">Market Rent</Label>
                             <Input
                               type="number"
-                              value={unit.baseRent}
+                              value={unit.marketRent}
                               onChange={(e) => {
                                 const newUnits = [...unitTypePricing];
-                                newUnits[index].baseRent = parseInt(e.target.value);
+                                newUnits[index].marketRent = parseInt(e.target.value);
                                 setUnitTypePricing(newUnits);
                               }}
                               className="h-8"
@@ -723,57 +672,135 @@ const PricingDashboard = ({ onBack }: PricingDashboardProps) => {
             </Card>
           </TabsContent>
 
-          {/* 18-Week Forecast Tab */}
-          <TabsContent value="forecast" className="space-y-6">
+          {/* Promotions Tab */}
+          <TabsContent value="promotions" className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5" />
-                  18-Week Occupancy Forecast
-                </CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Promotions & Concessions</CardTitle>
+                  <p className="text-sm text-gray-600">Configure available promotions and concessions</p>
+                </div>
+                <Button onClick={addNewPromotion} className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Promotion
+                </Button>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Week</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Projected Occupancy</TableHead>
-                      <TableHead>Pricing Impact</TableHead>
-                      <TableHead>Move-Ins</TableHead>
-                      <TableHead>Move-Outs</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {weeklyForecast.map((week) => {
-                      const threshold = occupancyThresholds.find(t => week.occupancy >= t.threshold);
-                      return (
-                        <TableRow key={week.week}>
-                          <TableCell className="font-medium">Week {week.week}</TableCell>
-                          <TableCell>{week.date}</TableCell>
-                          <TableCell>
-                            <span className={
-                              week.occupancy >= 98 ? 'text-red-600 font-semibold' :
-                              week.occupancy >= 95 ? 'text-green-600 font-semibold' :
-                              'text-yellow-600 font-semibold'
-                            }>
-                              {week.occupancy.toFixed(1)}%
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <span className={threshold?.adjustment > 0 ? 'text-green-600' : threshold?.adjustment < 0 ? 'text-red-600' : 'text-gray-600'}>
-                              {threshold?.adjustment >= 0 ? '+' : ''}{threshold?.adjustment || 0}%
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-green-600">+{week.moveIns}</TableCell>
-                          <TableCell className="text-red-600">-{week.moveOuts}</TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                <div className="space-y-3">
+                  {promotions.map((promo, index) => (
+                    <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
+                      <div className="flex-1">
+                        <Input
+                          value={promo.name}
+                          onChange={(e) => {
+                            const newPromos = [...promotions];
+                            newPromos[index].name = e.target.value;
+                            setPromotions(newPromos);
+                          }}
+                          placeholder="Promotion name"
+                        />
+                      </div>
+                      <div className="w-24">
+                        <Input
+                          type="number"
+                          value={promo.value}
+                          onChange={(e) => {
+                            const newPromos = [...promotions];
+                            newPromos[index].value = parseInt(e.target.value);
+                            setPromotions(newPromos);
+                          }}
+                          placeholder="Value"
+                        />
+                      </div>
+                      <div className="w-32">
+                        <Select 
+                          value={promo.type} 
+                          onValueChange={(value) => {
+                            const newPromos = [...promotions];
+                            newPromos[index].type = value;
+                            setPromotions(newPromos);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="months_free">Months Free</SelectItem>
+                            <SelectItem value="deposit_discount">Deposit Discount</SelectItem>
+                            <SelectItem value="fee_waiver">Fee Waiver</SelectItem>
+                            <SelectItem value="rent_discount">Rent Discount</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Badge className={promo.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                        {promo.active ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Pricing Engine Tab */}
+          <TabsContent value="pricing" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {unitTypePricing.filter(unit => unit.available).map((unit) => {
+                const pricing = calculateFinalPricing(unit.type);
+                return (
+                  <Card key={unit.type}>
+                    <CardHeader>
+                      <CardTitle className="text-lg">{unit.type} Pricing</CardTitle>
+                      <p className="text-sm text-gray-600">{unit.unitCount} units available</p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3 mb-4">
+                        <div className="text-center p-3 bg-blue-50 rounded-lg">
+                          <div className="text-xs text-gray-600">North Star Price</div>
+                          <div className="text-lg font-semibold text-blue-700">
+                            ${pricing[0]?.northStarPrice?.toLocaleString() || 0}
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="text-center">
+                            <div className="text-gray-600">Market</div>
+                            <div className="font-medium">${unit.marketRent.toLocaleString()}</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-gray-600">Comp</div>
+                            <div className="font-medium">${calculateCompPrice(unit.type).toLocaleString()}</div>
+                          </div>
+                        </div>
+                        
+                        <div className="text-center text-xs">
+                          <div className="text-gray-600">Occupancy Adjustment</div>
+                          <div className="font-medium text-purple-700">
+                            {pricing[0]?.occupancyAdjustment >= 0 ? '+' : ''}
+                            ${pricing[0]?.occupancyAdjustment?.toLocaleString() || 0}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <h5 className="text-sm font-medium">Lease Terms</h5>
+                        {pricing.slice(0, 5).map((p) => (
+                          <div key={p.term} className="flex justify-between items-center text-sm p-2 border rounded">
+                            <span>{p.term}mo</span>
+                            <span className="font-semibold">${p.rent.toLocaleString()}</span>
+                            {!p.isAllowed && (
+                              <Badge className="bg-red-100 text-red-800 text-xs">
+                                Restricted
+                              </Badge>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
           </TabsContent>
         </Tabs>
 
