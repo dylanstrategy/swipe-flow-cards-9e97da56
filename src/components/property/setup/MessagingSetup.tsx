@@ -127,7 +127,7 @@ const MessagingSetup = ({ onBack }: MessagingSetupProps) => {
                 placeholder="Hi {{resident_name}}, your tour is scheduled for {{date}} at {{time}}..."
               />
               <p className="text-sm text-gray-500 mt-1">
-                Use variables like {{`resident_name`}}, {{`date`}}, {{`time`}}, {{`property_name`}}
+                Use variables like resident_name, date, time, property_name wrapped in double curly braces
               </p>
             </div>
 
