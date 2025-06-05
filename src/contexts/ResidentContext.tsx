@@ -407,19 +407,31 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const submitNoticeToVacate = (residentId: string, data: any) => {
-    console.log(`📋 NOTICE TO VACATE SUBMISSION - Resident ${residentId}`, data);
+    console.log(`📋 SUBMIT NOTICE TO VACATE - Starting process for resident ${residentId}`, data);
     
     const updatedResidents = allResidents.map(resident => {
       if (resident.id === residentId) {
+        console.log(`📋 SUBMIT NOTICE TO VACATE - Found resident ${residentId}, updating status and creating checklist`);
+        
         const updatedResident = {
           ...resident,
           status: 'notice' as ResidentProfile['status'],
           noticeToVacateSubmitted: true,
           moveOutDate: data.moveOutDate,
           forwardingAddress: data.forwardingAddress || '',
+          moveOutChecklistComplete: false,
+          finalInspectionComplete: false,
           moveOutChecklist: {
-            'notice-to-vacate': { completed: true, completedBy: 'resident', completedDate: new Date().toISOString().split('T')[0] },
-            'forwarding-address': { completed: !!data.forwardingAddress, completedBy: 'resident', completedDate: data.forwardingAddress ? new Date().toISOString().split('T')[0] : undefined },
+            'notice-to-vacate': { 
+              completed: true, 
+              completedBy: 'resident', 
+              completedDate: new Date().toISOString().split('T')[0] 
+            },
+            'forwarding-address': { 
+              completed: !!data.forwardingAddress, 
+              completedBy: data.forwardingAddress ? 'resident' : undefined, 
+              completedDate: data.forwardingAddress ? new Date().toISOString().split('T')[0] : undefined 
+            },
             'final-inspection': { completed: false },
             'exit-survey': { completed: false },
             'key-return': { completed: false },
@@ -428,13 +440,14 @@ export const ResidentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             'move-out-confirmation': { completed: false }
           }
         };
-        console.log(`📋 NOTICE TO VACATE - Updated resident:`, updatedResident);
+        
+        console.log(`📋 SUBMIT NOTICE TO VACATE - Created complete resident update:`, updatedResident);
         return updatedResident;
       }
       return resident;
     });
     
-    console.log('📋 Notice to vacate - calling centralized update mechanism');
+    console.log('📋 SUBMIT NOTICE TO VACATE - Calling centralized update mechanism');
     updateResidentData(updatedResidents);
   };
 

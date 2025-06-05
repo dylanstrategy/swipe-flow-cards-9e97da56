@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -28,7 +27,7 @@ interface NoticeFormData {
 const NoticeToVacateForm = ({ residentName, isOperator = false, onClose }: NoticeToVacateFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { submitNoticeToVacate, profile, updateProfile, forceStateUpdate, updateResidentStatus } = useResident();
+  const { submitNoticeToVacate, profile, updateProfile, forceStateUpdate, updateResidentStatus, generateMoveOutChecklist } = useResident();
   
   const form = useForm<NoticeFormData>({
     defaultValues: {
@@ -41,47 +40,64 @@ const NoticeToVacateForm = ({ residentName, isOperator = false, onClose }: Notic
   });
 
   const onSubmit = async (data: NoticeFormData) => {
-    console.log('📋 FORM SUBMISSION - Notice to Vacate form submitted', data);
+    console.log('📋 NOTICE TO VACATE FORM - Starting submission process', data);
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // First, update the status using the dedicated status update function
-    console.log('📋 FORM SUBMISSION - Calling updateResidentStatus');
-    updateResidentStatus(profile.id, 'notice');
-    
-    // Then, submit notice to vacate - this will create the move-out checklist automatically
-    console.log('📋 FORM SUBMISSION - Calling submitNoticeToVacate');
-    submitNoticeToVacate(profile.id, data);
-    
-    // Force multiple state updates to ensure UI refresh
-    setTimeout(() => {
-      console.log('📋 FORM SUBMISSION - Force state update #1');
-      forceStateUpdate();
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Additional update with profile changes
+      console.log('📋 NOTICE TO VACATE FORM - Step 1: Update resident status to notice');
+      updateResidentStatus(profile.id, 'notice');
+      
+      console.log('📋 NOTICE TO VACATE FORM - Step 2: Submit notice to vacate with data');
+      submitNoticeToVacate(profile.id, data);
+      
+      console.log('📋 NOTICE TO VACATE FORM - Step 3: Generate move-out checklist');
+      generateMoveOutChecklist(profile.id);
+      
+      console.log('📋 NOTICE TO VACATE FORM - Step 4: Update profile with notice data');
       updateProfile({ 
         status: 'notice',
         noticeToVacateSubmitted: true,
         moveOutDate: data.moveOutDate,
         forwardingAddress: data.forwardingAddress || ''
       });
-    }, 100);
-    
-    // Final force update to ensure everything is synced
-    setTimeout(() => {
-      console.log('📋 FORM SUBMISSION - Force state update #2');
-      forceStateUpdate();
-    }, 300);
-    
-    toast({
-      title: "Notice to Vacate Submitted",
-      description: `Notice ${isOperator ? 'sent' : 'submitted'} successfully. Move-out checklist has been created.`,
-    });
-    
-    setIsSubmitting(false);
-    onClose?.();
+      
+      // Multiple force updates to ensure UI refresh
+      setTimeout(() => {
+        console.log('📋 NOTICE TO VACATE FORM - Force state update #1');
+        forceStateUpdate();
+      }, 100);
+      
+      setTimeout(() => {
+        console.log('📋 NOTICE TO VACATE FORM - Force state update #2');
+        forceStateUpdate();
+      }, 300);
+      
+      setTimeout(() => {
+        console.log('📋 NOTICE TO VACATE FORM - Force state update #3');
+        forceStateUpdate();
+      }, 500);
+      
+      toast({
+        title: "Notice to Vacate Submitted",
+        description: `Notice ${isOperator ? 'sent' : 'submitted'} successfully. Move-out checklist has been created.`,
+      });
+      
+      console.log('📋 NOTICE TO VACATE FORM - Submission completed successfully');
+      
+    } catch (error) {
+      console.error('📋 NOTICE TO VACATE FORM - Error during submission:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit notice. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+      onClose?.();
+    }
   };
 
   const reasonOptions = isOperator 
