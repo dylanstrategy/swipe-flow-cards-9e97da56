@@ -4,10 +4,12 @@ import ServiceModule from '../service/ServiceModule';
 import WorkOrderFlow from '../schedule/WorkOrderFlow';
 import WorkOrdersReview from './today/WorkOrdersReview';
 import MoveCalendarEvents from '../calendar/MoveCalendarEvents';
+import PullToRefresh from '../PullToRefresh';
 import { useToast } from '@/hooks/use-toast';
 import { format, addDays, isSameDay, differenceInDays, isPast, isToday } from 'date-fns';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useResident } from '@/contexts/ResidentContext';
+import { useCalendarEvents } from '@/hooks/useSupabaseData';
 import ResidentTimeline from '../ResidentTimeline';
 import TodayHeader from './today/TodayHeader';
 import QuickActionsGrid from './today/QuickActionsGrid';
@@ -19,6 +21,7 @@ const TodayTab = () => {
   const { toast } = useToast();
   const { profile, getPersonalizedContext } = useProfile();
   const { canMoveIn, canMoveOut, profile: residentProfile } = useResident();
+  const { events: dbEvents, refetch: refetchEvents } = useCalendarEvents();
   
   const [showTimeline, setShowTimeline] = useState(false);
   const [showMessageModule, setShowMessageModule] = useState(false);
@@ -179,6 +182,14 @@ const TodayTab = () => {
     category: 'Payment',
     priority: 'high',
     dueDate: addDays(new Date(), 3) // Due in 3 days
+  };
+
+  // Pull to refresh handler
+  const handleRefresh = async () => {
+    await Promise.all([
+      refetchEvents(),
+      // Add other data refresh calls here as needed
+    ]);
   };
 
   const handleAction = (action: string, item: string) => {
@@ -439,54 +450,56 @@ const TodayTab = () => {
   const selectedDateEvents = getEventsForDate(selectedDate);
 
   return (
-    <div className="px-4 py-6 pb-24">
-      <TodayHeader 
-        selectedDate={selectedDate}
-        weather={weather}
-        onTimelineClick={() => setShowTimeline(true)}
-      />
-
-      <QuickActionsGrid 
-        onAction={() => {}}
-        onServiceClick={() => setShowServiceModule(true)}
-        onMaintenanceClick={() => setShowWorkOrdersReview(true)}
-        getRentUrgencyClass={() => ''}
-      />
-
-      {/* Personalized offers based on lifestyle tags */}
-      {renderPersonalizedOffers()}
-
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
-          {isSameDay(selectedDate, new Date()) ? 'Resident Calendar' : 'Calendar'}
-        </h2>
-        
-        <MiniCalendar 
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="px-4 py-6 pb-24">
+        <TodayHeader 
           selectedDate={selectedDate}
-          onDateSelect={setSelectedDate}
-          getEventsForDate={getEventsForDate}
+          weather={weather}
+          onTimelineClick={() => setShowTimeline(true)}
         />
 
-        {/* Regular Events */}
-        <EventsList 
-          events={selectedDateEvents}
+        <QuickActionsGrid 
           onAction={() => {}}
-          onQuickReply={() => {}}
-          getSwipeActionsForEvent={() => ({})}
+          onServiceClick={() => setShowServiceModule(true)}
+          onMaintenanceClick={() => setShowWorkOrdersReview(true)}
+          getRentUrgencyClass={() => ''}
         />
 
-        {/* Move-In/Move-Out Calendar Events */}
-        <MoveCalendarEvents 
-          selectedDate={selectedDate}
-          onEventClick={(event) => {
-            toast({
-              title: "Move Task",
-              description: `${event.title} - ${event.description}`,
-            });
-          }}
-        />
+        {/* Personalized offers based on lifestyle tags */}
+        {renderPersonalizedOffers()}
+
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            {isSameDay(selectedDate, new Date()) ? 'Resident Calendar' : 'Calendar'}
+          </h2>
+          
+          <MiniCalendar 
+            selectedDate={selectedDate}
+            onDateSelect={setSelectedDate}
+            getEventsForDate={getEventsForDate}
+          />
+
+          {/* Regular Events */}
+          <EventsList 
+            events={selectedDateEvents}
+            onAction={() => {}}
+            onQuickReply={() => {}}
+            getSwipeActionsForEvent={() => ({})}
+          />
+
+          {/* Move-In/Move-Out Calendar Events */}
+          <MoveCalendarEvents 
+            selectedDate={selectedDate}
+            onEventClick={(event) => {
+              toast({
+                title: "Move Task",
+                description: `${event.title} - ${event.description}`,
+              });
+            }}
+          />
+        </div>
       </div>
-    </div>
+    </PullToRefresh>
   );
 };
 

@@ -1,20 +1,27 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRealtimeSync } from './useRealtimeSync';
 import type { User, Property, Unit, MoveIn, MoveOut, CalendarEvent } from '@/types/supabase';
+
+// Debounce utility
+function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
+  let timeout: NodeJS.Timeout;
+  return ((...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  }) as T;
+}
 
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const { userProfile } = useAuth();
 
-  useEffect(() => {
-    fetchUsers();
-  }, [userProfile]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -27,7 +34,27 @@ export function useUsers() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const debouncedFetch = useCallback(debounce(fetchUsers, 300), [fetchUsers]);
+
+  const handleRealtimeChange = useCallback((table: string, event: string, payload: any) => {
+    if (table === 'users') {
+      debouncedFetch();
+    }
+  }, [debouncedFetch]);
+
+  useRealtimeSync({
+    tables: ['users'],
+    onDataChange: handleRealtimeChange,
+    enabled: !!userProfile
+  });
+
+  useEffect(() => {
+    if (userProfile) {
+      fetchUsers();
+    }
+  }, [userProfile, fetchUsers]);
 
   return { users, loading, refetch: fetchUsers };
 }
@@ -36,12 +63,9 @@ export function useProperties() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchProperties();
-  }, []);
-
-  const fetchProperties = async () => {
+  const fetchProperties = useCallback(async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('properties')
         .select('*')
@@ -54,7 +78,24 @@ export function useProperties() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const debouncedFetch = useCallback(debounce(fetchProperties, 300), [fetchProperties]);
+
+  const handleRealtimeChange = useCallback((table: string, event: string, payload: any) => {
+    if (table === 'properties') {
+      debouncedFetch();
+    }
+  }, [debouncedFetch]);
+
+  useRealtimeSync({
+    tables: ['properties'],
+    onDataChange: handleRealtimeChange
+  });
+
+  useEffect(() => {
+    fetchProperties();
+  }, [fetchProperties]);
 
   return { properties, loading, refetch: fetchProperties };
 }
@@ -63,12 +104,9 @@ export function useUnits(propertyId?: string) {
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchUnits();
-  }, [propertyId]);
-
-  const fetchUnits = async () => {
+  const fetchUnits = useCallback(async () => {
     try {
+      setLoading(true);
       let query = supabase
         .from('units')
         .select('*')
@@ -87,7 +125,24 @@ export function useUnits(propertyId?: string) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [propertyId]);
+
+  const debouncedFetch = useCallback(debounce(fetchUnits, 300), [fetchUnits]);
+
+  const handleRealtimeChange = useCallback((table: string, event: string, payload: any) => {
+    if (table === 'units') {
+      debouncedFetch();
+    }
+  }, [debouncedFetch]);
+
+  useRealtimeSync({
+    tables: ['units'],
+    onDataChange: handleRealtimeChange
+  });
+
+  useEffect(() => {
+    fetchUnits();
+  }, [fetchUnits]);
 
   return { units, loading, refetch: fetchUnits };
 }
@@ -96,12 +151,9 @@ export function useMoveIns(residentId?: string) {
   const [moveIns, setMoveIns] = useState<MoveIn[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchMoveIns();
-  }, [residentId]);
-
-  const fetchMoveIns = async () => {
+  const fetchMoveIns = useCallback(async () => {
     try {
+      setLoading(true);
       let query = supabase
         .from('move_ins')
         .select('*')
@@ -120,7 +172,24 @@ export function useMoveIns(residentId?: string) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [residentId]);
+
+  const debouncedFetch = useCallback(debounce(fetchMoveIns, 300), [fetchMoveIns]);
+
+  const handleRealtimeChange = useCallback((table: string, event: string, payload: any) => {
+    if (table === 'move_ins') {
+      debouncedFetch();
+    }
+  }, [debouncedFetch]);
+
+  useRealtimeSync({
+    tables: ['move_ins'],
+    onDataChange: handleRealtimeChange
+  });
+
+  useEffect(() => {
+    fetchMoveIns();
+  }, [fetchMoveIns]);
 
   return { moveIns, loading, refetch: fetchMoveIns };
 }
@@ -129,12 +198,9 @@ export function useMoveOuts(residentId?: string) {
   const [moveOuts, setMoveOuts] = useState<MoveOut[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchMoveOuts();
-  }, [residentId]);
-
-  const fetchMoveOuts = async () => {
+  const fetchMoveOuts = useCallback(async () => {
     try {
+      setLoading(true);
       let query = supabase
         .from('move_outs')
         .select('*')
@@ -153,7 +219,24 @@ export function useMoveOuts(residentId?: string) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [residentId]);
+
+  const debouncedFetch = useCallback(debounce(fetchMoveOuts, 300), [fetchMoveOuts]);
+
+  const handleRealtimeChange = useCallback((table: string, event: string, payload: any) => {
+    if (table === 'move_outs') {
+      debouncedFetch();
+    }
+  }, [debouncedFetch]);
+
+  useRealtimeSync({
+    tables: ['move_outs'],
+    onDataChange: handleRealtimeChange
+  });
+
+  useEffect(() => {
+    fetchMoveOuts();
+  }, [fetchMoveOuts]);
 
   return { moveOuts, loading, refetch: fetchMoveOuts };
 }
@@ -163,14 +246,9 @@ export function useCalendarEvents() {
   const [loading, setLoading] = useState(true);
   const { userProfile } = useAuth();
 
-  useEffect(() => {
-    if (userProfile) {
-      fetchEvents();
-    }
-  }, [userProfile]);
-
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('calendar_events')
         .select('*')
@@ -183,7 +261,27 @@ export function useCalendarEvents() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const debouncedFetch = useCallback(debounce(fetchEvents, 300), [fetchEvents]);
+
+  const handleRealtimeChange = useCallback((table: string, event: string, payload: any) => {
+    if (table === 'calendar_events') {
+      debouncedFetch();
+    }
+  }, [debouncedFetch]);
+
+  useRealtimeSync({
+    tables: ['calendar_events'],
+    onDataChange: handleRealtimeChange,
+    enabled: !!userProfile
+  });
+
+  useEffect(() => {
+    if (userProfile) {
+      fetchEvents();
+    }
+  }, [userProfile, fetchEvents]);
 
   return { events, loading, refetch: fetchEvents };
 }
