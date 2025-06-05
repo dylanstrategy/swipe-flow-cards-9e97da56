@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ResidentProvider } from "@/contexts/ResidentContext";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Discovery from "./pages/Discovery";
 import Matches from "./pages/Matches";
@@ -28,27 +29,6 @@ function LoadingScreen() {
       </div>
     </div>
   );
-}
-
-// Protected route wrapper
-function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole?: string }) {
-  const { user, userProfile, loading } = useAuth();
-
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
-  // If no user, redirect to login
-  if (!user || !userProfile) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // If role is required and doesn't match, redirect to unknown role
-  if (requiredRole && userProfile.role !== requiredRole) {
-    return <Navigate to="/unknown-role" replace />;
-  }
-
-  return <>{children}</>;
 }
 
 // App routes component that uses auth context - moved inside AuthProvider
