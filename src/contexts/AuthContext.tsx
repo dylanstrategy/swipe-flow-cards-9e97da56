@@ -81,8 +81,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     let mounted = true;
 
-    // Get initial session first
-    const getInitialAuth = async () => {
+    // Get initial session and profile together
+    const initializeAuth = async () => {
       try {
         console.log('🔑 Getting initial session');
         const { data: { session } } = await supabase.auth.getSession();
@@ -94,11 +94,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (session?.user) {
             console.log('👤 Fetching profile for initial user:', session.user.id);
             const profile = await fetchProfile(session.user.id);
-            if (mounted && profile) {
+            if (mounted) {
               setUserProfile(profile);
+              setLoading(false); // Only set loading false after profile is fetched
+            }
+          } else {
+            if (mounted) {
+              setLoading(false); // No user, safe to set loading false
             }
           }
-          setLoading(false);
         }
       } catch (error) {
         console.error('🔥 Error during auth initialization:', error);
@@ -108,50 +112,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    // Set up auth state listener - MUST be synchronous to avoid deadlock
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('👂 Auth state change event:', event, 'Session:', session ? 'present' : 'none');
         
         if (!mounted) return;
 
-        // Only synchronous state updates here
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Defer Supabase calls with setTimeout to avoid deadlock
-          setTimeout(async () => {
+          console.log('👤 Auth state change - fetching profile for:', session.user.id);
+          try {
+            const profile = await fetchProfile(session.user.id);
             if (mounted) {
-              console.log('👤 Auth state change - fetching profile for:', session.user.id);
-              try {
-                const profile = await fetchProfile(session.user.id);
-                if (mounted && profile) {
-                  setUserProfile(profile);
-                } else if (mounted) {
-                  setUserProfile(null);
-                }
-              } catch (error) {
-                console.error('❌ Error fetching profile in auth state change:', error);
-                if (mounted) {
-                  setUserProfile(null);
-                }
-              }
+              setUserProfile(profile);
             }
-          }, 0);
+          } catch (error) {
+            console.error('❌ Error fetching profile in auth state change:', error);
+            if (mounted) {
+              setUserProfile(null);
+            }
+          }
         } else {
-          setUserProfile(null);
-          setIsDevMode(false);
-          setDevModeRole(null);
-          setDevModeProperty(null);
-        }
-        
-        if (mounted) {
-          setLoading(false);
+          if (mounted) {
+            setUserProfile(null);
+            setIsDevMode(false);
+            setDevModeRole(null);
+            setDevModeProperty(null);
+          }
         }
       }
     );
 
-    getInitialAuth();
+    initializeAuth();
 
     return () => {
       mounted = false;
