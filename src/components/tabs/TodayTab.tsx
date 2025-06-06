@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
@@ -451,7 +452,7 @@ const TodayTab = () => {
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-      <div className="px-4 py-6 pb-32"> {/* Increased bottom padding from pb-24 to pb-32 */}
+      <div className="px-4 py-6 pb-40"> {/* Increased bottom padding from pb-32 to pb-40 for better clearance */}
         <TodayHeader 
           selectedDate={selectedDate}
           weather={weather}
