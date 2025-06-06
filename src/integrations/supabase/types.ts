@@ -68,6 +68,12 @@ export type Database = {
         | "vendor"
       move_in_status: "pending" | "approved" | "canceled"
       move_out_status: "scheduled" | "completed" | "canceled"
+      resident_status:
+        | "active"
+        | "notice_given"
+        | "moved_out"
+        | "evicted"
+        | "transferred"
       unit_status:
         | "available"
         | "occupied"
@@ -203,6 +209,13 @@ export const Constants = {
       ],
       move_in_status: ["pending", "approved", "canceled"],
       move_out_status: ["scheduled", "completed", "canceled"],
+      resident_status: [
+        "active",
+        "notice_given",
+        "moved_out",
+        "evicted",
+        "transferred",
+      ],
       unit_status: [
         "available",
         "occupied",
