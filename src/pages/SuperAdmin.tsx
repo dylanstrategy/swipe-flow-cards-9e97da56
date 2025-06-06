@@ -30,8 +30,8 @@ import { useNavigate } from 'react-router-dom';
 
 const SuperAdmin = () => {
   const { userProfile, user, signOut, isImpersonating, impersonatedRole } = useAuth();
-  const { users, loading: usersLoading, refetch: refetchUsers } = useUsers();
-  const { properties, loading: propertiesLoading, refetch: refetchProperties } = useProperties();
+  const { users = [], loading: usersLoading, refetch: refetchUsers } = useUsers();
+  const { properties = [], loading: propertiesLoading, refetch: refetchProperties } = useProperties();
   const navigate = useNavigate();
   
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
@@ -54,13 +54,13 @@ const SuperAdmin = () => {
     }
   };
 
-  // Calculate stats from real data
-  const totalUsers = users.length;
-  const totalProperties = properties.length;
-  const activeResidents = users.filter(user => user.role === 'resident').length;
+  // Calculate stats from real data (with fallbacks)
+  const totalUsers = users.length || 0;
+  const totalProperties = properties.length || 0;
+  const activeResidents = users.filter(user => user.role === 'resident').length || 0;
   const operatorStaff = users.filter(user => 
     ['senior_operator', 'operator', 'maintenance', 'leasing'].includes(user.role)
-  ).length;
+  ).length || 0;
 
   const handlePropertyClick = (property: Property) => {
     setSelectedProperty(property);
@@ -189,7 +189,7 @@ const SuperAdmin = () => {
       </div>
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="users" className="space-y-6">
+      <Tabs defaultValue="bulk-import" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="users">Users Management</TabsTrigger>
           <TabsTrigger value="properties">Properties</TabsTrigger>
@@ -329,7 +329,7 @@ const SuperAdmin = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {Object.entries(
+                  {totalUsers > 0 ? Object.entries(
                     users.reduce((acc, user) => {
                       acc[user.role] = (acc[user.role] || 0) + 1;
                       return acc;
@@ -347,7 +347,11 @@ const SuperAdmin = () => {
                         <span className="text-sm text-gray-600 w-8">{count}</span>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="text-center py-8 text-gray-500">
+                      No user data available
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -358,7 +362,7 @@ const SuperAdmin = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {users
+                  {users.length > 0 ? users
                     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
                     .slice(0, 5)
                     .map((user) => (
@@ -372,7 +376,11 @@ const SuperAdmin = () => {
                           {new Date(user.created_at).toLocaleDateString()}
                         </span>
                       </div>
-                    ))}
+                    )) : (
+                    <div className="text-center py-8 text-gray-500">
+                      No activity data available
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
