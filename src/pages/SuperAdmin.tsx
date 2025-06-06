@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +15,8 @@ import {
   Settings,
   BarChart3,
   AlertTriangle,
-  LogOut
+  LogOut,
+  Upload
 } from 'lucide-react';
 import { useUsers, useProperties } from '@/hooks/useSupabaseData';
 import CreateUserModal from '@/components/admin/CreateUserModal';
@@ -22,6 +24,7 @@ import CreatePropertyModal from '@/components/admin/CreatePropertyModal';
 import PropertyDetailModal from '@/components/admin/PropertyDetailModal';
 import RoleImpersonation from '@/components/RoleImpersonation';
 import ImpersonatedInterface from '@/components/admin/ImpersonatedInterface';
+import CSVUploader from '@/components/admin/CSVUploader';
 import type { Property } from '@/types/supabase';
 import { useNavigate } from 'react-router-dom';
 
@@ -187,9 +190,10 @@ const SuperAdmin = () => {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="users">Users Management</TabsTrigger>
           <TabsTrigger value="properties">Properties</TabsTrigger>
+          <TabsTrigger value="bulk-import">Bulk Import</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
@@ -306,6 +310,11 @@ const SuperAdmin = () => {
               </ScrollArea>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Bulk Import Tab */}
+        <TabsContent value="bulk-import">
+          <CSVUploader />
         </TabsContent>
 
         {/* Analytics Tab */}
