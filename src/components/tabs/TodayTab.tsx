@@ -451,7 +451,7 @@ const TodayTab = () => {
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-      <div className="px-4 py-6 pb-24">
+      <div className="px-4 py-6 pb-32"> {/* Increased bottom padding from pb-24 to pb-32 */}
         <TodayHeader 
           selectedDate={selectedDate}
           weather={weather}
