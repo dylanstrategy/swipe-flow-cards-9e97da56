@@ -1,7 +1,11 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { Property, Unit, Resident, CalendarEvent } from '@/types/supabase';
 
+/**
+ * Hook to fetch users data from Supabase
+ */
 export const useUsers = () => {
   const { data: users = [], isLoading: loading, error, refetch } = useQuery({
     queryKey: ['users'],
@@ -25,6 +29,9 @@ export const useUsers = () => {
   return { users, loading, error, refetch };
 };
 
+/**
+ * Hook to fetch properties data from Supabase with complete field mapping
+ */
 export const useProperties = () => {
   const { data: properties = [], isLoading: loading, error, refetch } = useQuery({
     queryKey: ['properties'],
@@ -45,7 +52,7 @@ export const useProperties = () => {
         ...property,
         name: property.property_name, // Legacy compatibility
         address: property.address_line_1, // Legacy compatibility
-      })) || [];
+      })) as Property[];
 
       console.log('✅ Properties mapped for compatibility:', mappedData);
       return mappedData;
@@ -55,6 +62,10 @@ export const useProperties = () => {
   return { properties, loading, error, refetch };
 };
 
+/**
+ * Hook to fetch residents data from Supabase with optional property filter
+ * Includes unit and property relationship data
+ */
 export const useResidents = (propertyId?: string) => {
   const { data: residents = [], isLoading: loading, error, refetch } = useQuery({
     queryKey: ['residents', propertyId],
@@ -67,14 +78,25 @@ export const useResidents = (propertyId?: string) => {
         .select(`
           *,
           units (
+            id,
             unit_number,
+            unit_type,
             bedrooms,
             bathrooms,
-            sq_ft
+            sq_ft,
+            floor,
+            unit_status,
+            unit_ready_status,
+            market_rent,
+            inspection_completed
           ),
           properties (
+            id,
             property_name,
-            address_line_1
+            address_line_1,
+            city,
+            state,
+            zip_code
           )
         `);
 
@@ -90,13 +112,16 @@ export const useResidents = (propertyId?: string) => {
       }
 
       console.log('✅ Residents fetched:', data);
-      return data || [];
+      return data as Resident[];
     },
   });
 
   return { residents, loading, error, refetch };
 };
 
+/**
+ * Hook to fetch calendar events from Supabase
+ */
 export const useCalendarEvents = () => {
   const { data: events = [], isLoading: loading, error, refetch } = useQuery({
     queryKey: ['calendar_events'],
@@ -113,13 +138,17 @@ export const useCalendarEvents = () => {
       }
 
       console.log('✅ Calendar events fetched:', data);
-      return data || [];
+      return data as CalendarEvent[];
     },
   });
 
   return { events, loading, error, refetch };
 };
 
+/**
+ * Hook to fetch units data from Supabase with optional property filter
+ * Includes property and resident relationship data
+ */
 export const useUnits = (propertyId?: string) => {
   const { data: units = [], isLoading: loading, error, refetch } = useQuery({
     queryKey: ['units', propertyId],
@@ -132,10 +161,15 @@ export const useUnits = (propertyId?: string) => {
         .select(`
           *,
           properties (
+            id,
             property_name,
-            address_line_1
+            address_line_1,
+            city,
+            state,
+            zip_code
           ),
-          residents!units_unit_id_fkey (
+          residents (
+            id,
             first_name,
             last_name,
             email,
@@ -164,7 +198,7 @@ export const useUnits = (propertyId?: string) => {
         status: unit.unit_status, // Legacy compatibility
         bedroom_type: unit.bedrooms ? `${unit.bedrooms}BR` : null,
         bath_type: unit.bathrooms ? `${unit.bathrooms}BA` : null,
-      })) || [];
+      })) as Unit[];
 
       console.log('✅ Units mapped for compatibility:', mappedData);
       return mappedData;
