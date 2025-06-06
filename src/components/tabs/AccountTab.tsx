@@ -10,12 +10,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import ResidentIdentitySetup from '@/components/resident/ResidentIdentitySetup';
 import ResidentNotificationSetup from '@/components/resident/ResidentNotificationSetup';
 import ResidentPrivacySetup from '@/components/resident/ResidentPrivacySetup';
+import ResidentPaymentSetup from '@/components/resident/ResidentPaymentSetup';
 import { getFullName } from '@/utils/nameUtils';
 
 const AccountTab = () => {
   const { profile } = useResident();
   const { signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<'main' | 'identity' | 'notifications' | 'privacy'>('main');
+  const [currentView, setCurrentView] = useState<'main' | 'identity' | 'notifications' | 'privacy' | 'payment'>('main');
 
   const handleSignOut = async () => {
     try {
@@ -33,6 +34,8 @@ const AccountTab = () => {
         return <ResidentNotificationSetup onBack={() => setCurrentView('main')} />;
       case 'privacy':
         return <ResidentPrivacySetup onBack={() => setCurrentView('main')} />;
+      case 'payment':
+        return <ResidentPaymentSetup onBack={() => setCurrentView('main')} />;
       default:
         return (
           <div className="max-w-full overflow-hidden">
@@ -119,12 +122,16 @@ const AccountTab = () => {
                     <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
                   </Button>
 
-                  <Button variant="ghost" className="w-full justify-between h-auto min-h-[3rem] px-4 py-3">
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-between h-auto min-h-[3rem] px-4 py-3"
+                    onClick={() => setCurrentView('payment')}
+                  >
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <CreditCard className="w-5 h-5 text-gray-600 flex-shrink-0" />
                       <div className="text-left min-w-0 flex-1">
                         <div className="font-medium truncate">Payment Methods</div>
-                        <div className="text-sm text-gray-600 truncate">Manage rent payment options</div>
+                        <div className="text-sm text-gray-600 truncate">Manage rent payment options and auto-pay settings</div>
                       </div>
                     </div>
                     <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
