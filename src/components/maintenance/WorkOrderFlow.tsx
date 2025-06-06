@@ -98,11 +98,15 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
 
   // Auto-show prompt when content is ready and not already showing
   React.useEffect(() => {
-    if (canProceedFromCurrentStep() && !showPrompt) {
-      setShowPrompt(true);
-    } else if (!canProceedFromCurrentStep() && showPrompt) {
-      setShowPrompt(false);
-    }
+    const timer = setTimeout(() => {
+      if (canProceedFromCurrentStep() && !showPrompt) {
+        setShowPrompt(true);
+      } else if (!canProceedFromCurrentStep() && showPrompt) {
+        setShowPrompt(false);
+      }
+    }, 500); // Small delay to ensure state is stable
+
+    return () => clearTimeout(timer);
   }, [currentStep, diagnosisNotes, resolutionType, completionPhoto, selectedVendor, vendorCost, showReschedule, rescheduleDate, rescheduleTime, showPrompt]);
 
   const getStepTitle = () => {

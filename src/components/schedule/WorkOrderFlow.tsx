@@ -64,7 +64,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   };
 
   const nextStep = () => {
-    if (currentStep < 4) {
+    if (currentStep < 4 && canProceedFromCurrentStep()) {
       onNextStep();
       setShowPrompt(false);
     }
@@ -99,21 +99,25 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
 
   // Auto-show prompt when content is ready and not already showing
   useEffect(() => {
-    if (currentStep < 4 && canProceedFromCurrentStep() && !showPrompt) {
-      setShowPrompt(true);
-    } else if (!canProceedFromCurrentStep() && showPrompt) {
-      setShowPrompt(false);
-    }
+    const timer = setTimeout(() => {
+      if (currentStep < 4 && canProceedFromCurrentStep() && !showPrompt) {
+        setShowPrompt(true);
+      } else if (!canProceedFromCurrentStep() && showPrompt) {
+        setShowPrompt(false);
+      }
+    }, 500); // Small delay to ensure state is stable
+
+    return () => clearTimeout(timer);
   }, [currentStep, photoCaptured, workOrderDetails, selectedDate, selectedTime, showPrompt]);
 
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <PhotoCaptureStep onNext={onNextStep} onPhotoCaptured={setPhotoCaptured} />;
+        return <PhotoCaptureStep onNext={nextStep} onPhotoCaptured={setPhotoCaptured} />;
       case 2:
         return (
           <DetailsStep 
-            onNext={onNextStep}
+            onNext={nextStep}
             workOrderDetails={workOrderDetails}
             setWorkOrderDetails={setWorkOrderDetails}
           />
@@ -121,7 +125,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
       case 3:
         return (
           <ScheduleStep 
-            onNext={onNextStep}
+            onNext={nextStep}
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
             selectedTime={selectedTime}
