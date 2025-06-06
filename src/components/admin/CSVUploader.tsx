@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import Papa from 'papaparse';
 import type { AppRole, UnitStatus } from '@/types/supabase';
 
-type ImportType = 'users' | 'properties' | 'units';
+type ImportType = 'users' | 'properties' | 'units' | 'residents';
 
 interface ImportResult {
   successful: number;
@@ -41,13 +40,18 @@ const CSVUploader = () => {
         'Jane,Smith,jane.smith@example.com,555-0124,operator,property-management.com'
       ],
       properties: [
-        'name,address,timezone,website,management_company,property_manager_name,property_manager_email,property_manager_phone,emergency_contact,emergency_phone,maintenance_company,maintenance_contact,maintenance_phone,leasing_office_hours,amenities,parking_info,pet_policy,smoking_policy,special_instructions',
-        'Sunset Apartments,123 Main St\\, City\\, State 12345,America/New_York,https://sunset-apts.com,ABC Property Management,John Manager,john@abc-pm.com,555-0100,Emergency Line,555-0911,Fix-It-All,Bob Maintenance,555-0200,Mon-Fri: 9AM-6PM\\, Sat: 10AM-4PM,Pool\\, Gym\\, Concierge,Covered parking available,$50/month,Pets allowed with deposit,No smoking in units,Key pickup at front desk'
+        'property_name,address_line_1,city,state,zip_code,timezone,website,management_company,property_manager_name,property_manager_email,property_manager_phone,emergency_contact,emergency_phone,maintenance_company,maintenance_contact,maintenance_phone,leasing_office_hours,amenities,parking_info,pet_policy,smoking_policy,special_instructions',
+        'Sunset Apartments,123 Main St,City,State,12345,America/New_York,https://sunset-apts.com,ABC Property Management,John Manager,john@abc-pm.com,555-0100,Emergency Line,555-0911,Fix-It-All,Bob Maintenance,555-0200,Mon-Fri: 9AM-6PM\\, Sat: 10AM-4PM,Pool\\, Gym\\, Concierge,Covered parking available,$50/month,Pets allowed with deposit,No smoking in units,Key pickup at front desk'
       ],
       units: [
-        'property_name,unit_number,bedroom_type,bath_type,sq_ft,floor,status',
-        'Sunset Apartments,101,1BR,1BA,850,1,available',
-        'Sunset Apartments,102,2BR,2BA,1200,1,occupied'
+        'property_name,unit_number,unit_type,bedrooms,bathrooms,sq_ft,floor,unit_status,market_rent',
+        'Sunset Apartments,101,1BR,1,1,850,1,available,2500.00',
+        'Sunset Apartments,102,2BR,2,2,1200,1,occupied,3200.00'
+      ],
+      residents: [
+        'property_name,unit_number,first_name,last_name,email,phone,lease_start_date,lease_end_date,monthly_rent,move_in_date,is_active',
+        'Sunset Apartments,101,John,Doe,john.doe@example.com,555-0123,2024-01-01,2024-12-31,2500.00,2024-01-01,true',
+        'Sunset Apartments,102,Jane,Smith,jane.smith@example.com,555-0124,2024-02-01,2025-01-31,3200.00,2024-02-01,true'
       ]
     };
 
@@ -124,13 +128,17 @@ const CSVUploader = () => {
       const row = data[i];
       
       try {
-        if (!row.name || !row.address) {
-          throw new Error('Missing required fields: name, address');
+        if (!row.property_name || !row.address_line_1 || !row.city || !row.state || !row.zip_code) {
+          throw new Error('Missing required fields: property_name, address_line_1, city, state, zip_code');
         }
 
         const propertyData = {
-          name: row.name?.trim(),
-          address: row.address?.trim(),
+          property_name: row.property_name?.trim(),
+          address_line_1: row.address_line_1?.trim(),
+          address_line_2: row.address_line_2?.trim() || null,
+          city: row.city?.trim(),
+          state: row.state?.trim(),
+          zip_code: row.zip_code?.trim(),
           timezone: row.timezone?.trim() || 'America/New_York',
           website: row.website?.trim() || null,
           management_company: row.management_company?.trim() || null,
@@ -189,7 +197,7 @@ const CSVUploader = () => {
         const { data: propertyData, error: propertyError } = await supabase
           .from('properties')
           .select('id')
-          .eq('name', row.property_name.trim())
+          .eq('property_name', row.property_name.trim())
           .single();
 
         if (propertyError || !propertyData) {
@@ -199,11 +207,13 @@ const CSVUploader = () => {
         const unitData = {
           property_id: propertyData.id,
           unit_number: row.unit_number?.trim(),
-          bedroom_type: row.bedroom_type?.trim() || null,
-          bath_type: row.bath_type?.trim() || null,
+          unit_type: row.unit_type?.trim() || null,
+          bedrooms: row.bedrooms ? parseInt(row.bedrooms) : null,
+          bathrooms: row.bathrooms ? parseFloat(row.bathrooms) : null,
           sq_ft: row.sq_ft ? parseFloat(row.sq_ft) : null,
           floor: row.floor ? parseInt(row.floor) : null,
-          status: validateUnitStatus(row.status?.trim() || 'available')
+          unit_status: validateUnitStatus(row.unit_status?.trim() || 'available'),
+          market_rent: row.market_rent ? parseFloat(row.market_rent) : null
         };
 
         console.log(`Creating unit ${i + 1}:`, unitData);
@@ -222,6 +232,82 @@ const CSVUploader = () => {
         const errorMessage = `Row ${i + 1}: ${error.message}`;
         errors.push(errorMessage);
         console.error(`Error processing unit row ${i + 1}:`, error);
+      }
+    }
+
+    return { successful, failed, errors };
+  };
+
+  const processResidents = async (data: any[]): Promise<ImportResult> => {
+    let successful = 0;
+    let failed = 0;
+    const errors: string[] = [];
+
+    for (let i = 0; i < data.length; i++) {
+      const row = data[i];
+      
+      try {
+        if (!row.property_name || !row.first_name || !row.last_name || !row.email) {
+          throw new Error('Missing required fields: property_name, first_name, last_name, email');
+        }
+
+        // Find the property
+        const { data: propertyData, error: propertyError } = await supabase
+          .from('properties')
+          .select('id')
+          .eq('property_name', row.property_name.trim())
+          .single();
+
+        if (propertyError || !propertyData) {
+          throw new Error(`Property "${row.property_name}" not found`);
+        }
+
+        // Find the unit if specified
+        let unitId = null;
+        if (row.unit_number) {
+          const { data: unitData, error: unitError } = await supabase
+            .from('units')
+            .select('id')
+            .eq('property_id', propertyData.id)
+            .eq('unit_number', row.unit_number.trim())
+            .single();
+
+          if (unitError || !unitData) {
+            throw new Error(`Unit "${row.unit_number}" not found in property "${row.property_name}"`);
+          }
+          unitId = unitData.id;
+        }
+
+        const residentData = {
+          property_id: propertyData.id,
+          unit_id: unitId,
+          first_name: row.first_name?.trim(),
+          last_name: row.last_name?.trim(),
+          email: row.email?.trim().toLowerCase(),
+          phone: row.phone?.trim() || null,
+          lease_start_date: row.lease_start_date ? new Date(row.lease_start_date).toISOString().split('T')[0] : null,
+          lease_end_date: row.lease_end_date ? new Date(row.lease_end_date).toISOString().split('T')[0] : null,
+          monthly_rent: row.monthly_rent ? parseFloat(row.monthly_rent) : null,
+          move_in_date: row.move_in_date ? new Date(row.move_in_date).toISOString().split('T')[0] : null,
+          is_active: row.is_active ? row.is_active.toLowerCase() === 'true' : true
+        };
+
+        console.log(`Creating resident ${i + 1}:`, residentData);
+
+        const { error } = await supabase
+          .from('residents')
+          .insert([residentData]);
+
+        if (error) {
+          throw error;
+        }
+
+        successful++;
+      } catch (error: any) {
+        failed++;
+        const errorMessage = `Row ${i + 1}: ${error.message}`;
+        errors.push(errorMessage);
+        console.error(`Error processing resident row ${i + 1}:`, error);
       }
     }
 
@@ -273,6 +359,9 @@ const CSVUploader = () => {
                 break;
               case 'units':
                 result = await processUnits(results.data);
+                break;
+              case 'residents':
+                result = await processResidents(results.data);
                 break;
               default:
                 throw new Error(`Unsupported import type: ${importType}`);
@@ -344,6 +433,7 @@ const CSVUploader = () => {
                 <SelectItem value="users">Users</SelectItem>
                 <SelectItem value="properties">Properties</SelectItem>
                 <SelectItem value="units">Units</SelectItem>
+                <SelectItem value="residents">Residents</SelectItem>
               </SelectContent>
             </Select>
           </div>

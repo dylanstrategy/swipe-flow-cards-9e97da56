@@ -22,8 +22,12 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
   onPropertyUpdated
 }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    address: '',
+    property_name: '',
+    address_line_1: '',
+    address_line_2: '',
+    city: '',
+    state: '',
+    zip_code: '',
     website: '',
     timezone: '',
     management_company: '',
@@ -48,8 +52,12 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
   useEffect(() => {
     if (property && isOpen) {
       setFormData({
-        name: property.name || '',
-        address: property.address || '',
+        property_name: property.property_name || property.name || '',
+        address_line_1: property.address_line_1 || property.address || '',
+        address_line_2: property.address_line_2 || '',
+        city: property.city || '',
+        state: property.state || '',
+        zip_code: property.zip_code || '',
         website: property.website || '',
         timezone: property.timezone || '',
         management_company: property.management_company || '',
@@ -116,17 +124,17 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Property: {property.name}</DialogTitle>
+          <DialogTitle>Edit Property: {property.property_name || property.name}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="name">Property Name</Label>
+              <Label htmlFor="property_name">Property Name</Label>
               <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
+                id="property_name"
+                value={formData.property_name}
+                onChange={(e) => handleInputChange('property_name', e.target.value)}
                 required
               />
             </div>
@@ -142,13 +150,52 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="address">Address</Label>
+            <Label htmlFor="address_line_1">Address Line 1</Label>
             <Input
-              id="address"
-              value={formData.address}
-              onChange={(e) => handleInputChange('address', e.target.value)}
+              id="address_line_1"
+              value={formData.address_line_1}
+              onChange={(e) => handleInputChange('address_line_1', e.target.value)}
               required
             />
+          </div>
+
+          <div>
+            <Label htmlFor="address_line_2">Address Line 2</Label>
+            <Input
+              id="address_line_2"
+              value={formData.address_line_2}
+              onChange={(e) => handleInputChange('address_line_2', e.target.value)}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="city">City</Label>
+              <Input
+                id="city"
+                value={formData.city}
+                onChange={(e) => handleInputChange('city', e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="state">State</Label>
+              <Input
+                id="state"
+                value={formData.state}
+                onChange={(e) => handleInputChange('state', e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="zip_code">Zip Code</Label>
+              <Input
+                id="zip_code"
+                value={formData.zip_code}
+                onChange={(e) => handleInputChange('zip_code', e.target.value)}
+                required
+              />
+            </div>
           </div>
 
           <div>

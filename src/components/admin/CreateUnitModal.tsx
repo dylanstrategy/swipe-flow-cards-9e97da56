@@ -19,11 +19,13 @@ interface CreateUnitModalProps {
 const CreateUnitModal: React.FC<CreateUnitModalProps> = ({ isOpen, onClose, onUnitCreated, propertyId }) => {
   const [formData, setFormData] = useState({
     unit_number: '',
-    bedroom_type: '',
-    bath_type: '',
+    unit_type: '',
+    bedrooms: '',
+    bathrooms: '',
     sq_ft: '',
     floor: '',
-    status: 'available' as UnitStatus,
+    unit_status: 'available' as UnitStatus,
+    market_rent: '',
     property_id: propertyId || ''
   });
   const [loading, setLoading] = useState(false);
@@ -32,7 +34,7 @@ const CreateUnitModal: React.FC<CreateUnitModalProps> = ({ isOpen, onClose, onUn
 
   React.useEffect(() => {
     const fetchProperties = async () => {
-      const { data } = await supabase.from('properties').select('id, name');
+      const { data } = await supabase.from('properties').select('id, property_name');
       setProperties(data || []);
     };
     
@@ -50,11 +52,13 @@ const CreateUnitModal: React.FC<CreateUnitModalProps> = ({ isOpen, onClose, onUn
         .from('units')
         .insert([{
           unit_number: formData.unit_number,
-          bedroom_type: formData.bedroom_type,
-          bath_type: formData.bath_type,
+          unit_type: formData.unit_type || null,
+          bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
+          bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
           sq_ft: formData.sq_ft ? parseFloat(formData.sq_ft) : null,
           floor: formData.floor ? parseInt(formData.floor) : null,
-          status: formData.status,
+          unit_status: formData.unit_status,
+          market_rent: formData.market_rent ? parseFloat(formData.market_rent) : null,
           property_id: formData.property_id
         }]);
 
@@ -69,11 +73,13 @@ const CreateUnitModal: React.FC<CreateUnitModalProps> = ({ isOpen, onClose, onUn
       onClose();
       setFormData({
         unit_number: '',
-        bedroom_type: '',
-        bath_type: '',
+        unit_type: '',
+        bedrooms: '',
+        bathrooms: '',
         sq_ft: '',
         floor: '',
-        status: 'available',
+        unit_status: 'available',
+        market_rent: '',
         property_id: propertyId || ''
       });
     } catch (error: any) {
@@ -105,7 +111,7 @@ const CreateUnitModal: React.FC<CreateUnitModalProps> = ({ isOpen, onClose, onUn
                 <SelectContent>
                   {properties.map((property) => (
                     <SelectItem key={property.id} value={property.id}>
-                      {property.name}
+                      {property.property_name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -123,24 +129,39 @@ const CreateUnitModal: React.FC<CreateUnitModalProps> = ({ isOpen, onClose, onUn
               required
             />
           </div>
+
+          <div>
+            <Label htmlFor="unit_type">Unit Type</Label>
+            <Input
+              id="unit_type"
+              value={formData.unit_type}
+              onChange={(e) => setFormData({ ...formData, unit_type: e.target.value })}
+              placeholder="e.g., Studio, 1BR, 2BR"
+            />
+          </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="bedroom_type">Bedrooms</Label>
+              <Label htmlFor="bedrooms">Bedrooms</Label>
               <Input
-                id="bedroom_type"
-                value={formData.bedroom_type}
-                onChange={(e) => setFormData({ ...formData, bedroom_type: e.target.value })}
-                placeholder="e.g., 1BR, 2BR"
+                id="bedrooms"
+                type="number"
+                value={formData.bedrooms}
+                onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
+                placeholder="1"
+                min="0"
               />
             </div>
             <div>
-              <Label htmlFor="bath_type">Bathrooms</Label>
+              <Label htmlFor="bathrooms">Bathrooms</Label>
               <Input
-                id="bath_type"
-                value={formData.bath_type}
-                onChange={(e) => setFormData({ ...formData, bath_type: e.target.value })}
-                placeholder="e.g., 1BA, 1.5BA"
+                id="bathrooms"
+                type="number"
+                step="0.5"
+                value={formData.bathrooms}
+                onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
+                placeholder="1"
+                min="0"
               />
             </div>
           </div>
@@ -167,10 +188,22 @@ const CreateUnitModal: React.FC<CreateUnitModalProps> = ({ isOpen, onClose, onUn
               />
             </div>
           </div>
+
+          <div>
+            <Label htmlFor="market_rent">Market Rent</Label>
+            <Input
+              id="market_rent"
+              type="number"
+              step="0.01"
+              value={formData.market_rent}
+              onChange={(e) => setFormData({ ...formData, market_rent: e.target.value })}
+              placeholder="2500.00"
+            />
+          </div>
           
           <div>
-            <Label htmlFor="status">Status</Label>
-            <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value as UnitStatus })}>
+            <Label htmlFor="unit_status">Status</Label>
+            <Select value={formData.unit_status} onValueChange={(value) => setFormData({ ...formData, unit_status: value as UnitStatus })}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

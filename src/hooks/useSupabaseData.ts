@@ -40,12 +40,60 @@ export const useProperties = () => {
         throw error;
       }
 
-      console.log('✅ Properties fetched successfully:', data);
-      return data || [];
+      // Map new schema to legacy field names for backward compatibility
+      const mappedData = data?.map(property => ({
+        ...property,
+        name: property.property_name, // Legacy compatibility
+        address: property.address_line_1, // Legacy compatibility
+      })) || [];
+
+      console.log('✅ Properties fetched successfully:', mappedData);
+      return mappedData;
     },
   });
 
   return { properties, loading, error, refetch };
+};
+
+export const useResidents = (propertyId?: string) => {
+  const { data: residents = [], isLoading: loading, error, refetch } = useQuery({
+    queryKey: ['residents', propertyId],
+    queryFn: async () => {
+      console.log('Fetching residents from Supabase...');
+      let query = supabase
+        .from('residents')
+        .select(`
+          *,
+          units (
+            unit_number,
+            bedrooms,
+            bathrooms,
+            sq_ft
+          ),
+          properties (
+            property_name,
+            address_line_1
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (propertyId) {
+        query = query.eq('property_id', propertyId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Supabase residents fetch error:', error);
+        throw error;
+      }
+
+      console.log('✅ Residents fetched successfully:', data);
+      return data || [];
+    },
+  });
+
+  return { residents, loading, error, refetch };
 };
 
 export const useCalendarEvents = () => {
@@ -78,7 +126,23 @@ export const useUnits = (propertyId?: string) => {
       console.log('Fetching units from Supabase...');
       let query = supabase
         .from('units')
-        .select('*')
+        .select(`
+          *,
+          properties (
+            property_name,
+            address_line_1
+          ),
+          residents!units_unit_id_fkey (
+            first_name,
+            last_name,
+            email,
+            phone,
+            lease_start_date,
+            lease_end_date,
+            monthly_rent,
+            is_active
+          )
+        `)
         .order('unit_number');
 
       if (propertyId) {
@@ -92,8 +156,16 @@ export const useUnits = (propertyId?: string) => {
         throw error;
       }
 
-      console.log('✅ Units fetched successfully:', data);
-      return data || [];
+      // Map new schema to legacy field names for backward compatibility
+      const mappedData = data?.map(unit => ({
+        ...unit,
+        status: unit.unit_status, // Legacy compatibility
+        bedroom_type: unit.bedrooms ? `${unit.bedrooms}BR` : null,
+        bath_type: unit.bathrooms ? `${unit.bathrooms}BA` : null,
+      })) || [];
+
+      console.log('✅ Units fetched successfully:', mappedData);
+      return mappedData;
     },
   });
 
