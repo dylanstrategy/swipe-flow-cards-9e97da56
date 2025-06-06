@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Save, Bell, Mail, MessageSquare, Gesture } from 'lucide-react';
+import { ChevronLeft, Save, Bell, Mail, MessageSquare, Hand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -267,7 +268,7 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ onBack }) => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Gesture className="w-5 h-5" />
+              <Hand className="w-5 h-5" />
               Swipe Gesture Settings
             </CardTitle>
           </CardHeader>
