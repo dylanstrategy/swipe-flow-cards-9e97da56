@@ -58,6 +58,64 @@ const TodayTab = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Add mock events for testing hold interaction
+  const mockTodayEvents = [
+    {
+      id: 'mock-1',
+      date: new Date(),
+      time: '09:00',
+      title: 'Apartment Inspection',
+      description: 'Annual inspection of unit 204B',
+      category: 'inspection',
+      type: 'inspection',
+      priority: 'high',
+      unit: 'Unit 204B',
+      building: 'Building A'
+    },
+    {
+      id: 'mock-2', 
+      date: new Date(),
+      time: '14:30',
+      title: 'Maintenance Request',
+      description: 'Kitchen faucet repair scheduled',
+      category: 'maintenance',
+      type: 'maintenance',
+      priority: 'medium',
+      unit: 'Unit 204B'
+    },
+    {
+      id: 'mock-3',
+      date: new Date(), 
+      time: '16:00',
+      title: 'Lease Renewal Meeting',
+      description: 'Discussion about lease terms for next year',
+      category: 'lease',
+      type: 'lease',
+      priority: 'high',
+      unit: 'Unit 204B'
+    },
+    {
+      id: 'mock-4',
+      date: new Date(),
+      time: '11:15',
+      title: 'Property Management Message',
+      description: 'Important notice about building maintenance',
+      category: 'message',
+      type: 'message', 
+      priority: 'normal'
+    },
+    {
+      id: 'mock-5',
+      date: new Date(),
+      time: '18:00',
+      title: 'Community Event',
+      description: 'Resident happy hour in the clubhouse',
+      category: 'Community Event',
+      type: 'meeting',
+      priority: 'low'
+    }
+  ];
+
   // Convert live calendar events to the format expected by the UI
   const processedEvents = liveEvents.map(event => ({
     id: event.id,
@@ -92,7 +150,7 @@ const TodayTab = () => {
     }
   ] : [];
 
-  const allEvents = [...processedEvents, ...petEvents];
+  const allEvents = [...processedEvents, ...petEvents, ...mockTodayEvents];
 
   // Add move-in/move-out blockers as urgent events based on live resident data
   if (liveResident) {
@@ -322,6 +380,7 @@ const TodayTab = () => {
     }
   };
 
+  // Render personalized offers based on user's pets or lifestyle tags
   const renderPersonalizedOffers = () => {
     if (hasPets) {
       return (
