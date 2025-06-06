@@ -344,7 +344,7 @@ const SuperAdmin = () => {
                             style={{ width: `${((count as number) / totalUsers) * 100}%` }}
                           />
                         </div>
-                        <span className="text-sm text-gray-600 w-8">{count}</span>
+                        <span className="text-sm text-gray-600 w-8">{count as number}</span>
                       </div>
                     </div>
                   )) : (
