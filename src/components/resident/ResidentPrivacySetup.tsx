@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Save, Eye, Shield, Bell, Lock, Smartphone } from 'lucide-react';
+import { ChevronLeft, Save, Eye, Shield, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -31,10 +31,6 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
     personalizedAds: false,
     localBusinessAds: false,
     propertyServicesAds: true,
-    // Notification preferences
-    maintenanceUpdates: true,
-    rentReminders: true,
-    communityEvents: true,
     // Security preferences
     twoFactorAuth: false,
     loginNotifications: true
@@ -226,54 +222,6 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
                 <Switch 
                   checked={currentSettings.propertyServicesAds}
                   onCheckedChange={(checked) => handleToggleChange('propertyServicesAds', checked)}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Notification Preferences */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="w-5 h-5" />
-              Notification Preferences
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Maintenance Updates</div>
-                  <div className="text-sm text-gray-600">Receive notifications about maintenance requests and updates</div>
-                </div>
-                <Switch 
-                  checked={currentSettings.maintenanceUpdates}
-                  onCheckedChange={(checked) => handleToggleChange('maintenanceUpdates', checked)}
-                />
-              </div>
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Rent Reminders</div>
-                  <div className="text-sm text-gray-600">Get reminders about rent due dates and payment confirmations</div>
-                </div>
-                <Switch 
-                  checked={currentSettings.rentReminders}
-                  onCheckedChange={(checked) => handleToggleChange('rentReminders', checked)}
-                />
-              </div>
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Community Events</div>
-                  <div className="text-sm text-gray-600">Stay updated on property events and community announcements</div>
-                </div>
-                <Switch 
-                  checked={currentSettings.communityEvents}
-                  onCheckedChange={(checked) => handleToggleChange('communityEvents', checked)}
                 />
               </div>
             </div>
