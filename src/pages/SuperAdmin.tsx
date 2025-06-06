@@ -330,10 +330,10 @@ const SuperAdmin = () => {
               <CardContent>
                 <div className="space-y-3">
                   {totalUsers > 0 ? Object.entries(
-                    users.reduce((acc, user) => {
+                    users.reduce((acc: Record<string, number>, user) => {
                       acc[user.role] = (acc[user.role] || 0) + 1;
                       return acc;
-                    }, {} as Record<string, number>)
+                    }, {})
                   ).map(([role, count]) => (
                     <div key={role} className="flex items-center justify-between">
                       <span className="text-sm font-medium">{formatRole(role)}</span>
@@ -341,7 +341,7 @@ const SuperAdmin = () => {
                         <div className="w-24 bg-gray-200 rounded-full h-2">
                           <div 
                             className="bg-blue-600 h-2 rounded-full" 
-                            style={{ width: `${(count / totalUsers) * 100}%` }}
+                            style={{ width: `${((count as number) / totalUsers) * 100}%` }}
                           />
                         </div>
                         <span className="text-sm text-gray-600 w-8">{count}</span>
