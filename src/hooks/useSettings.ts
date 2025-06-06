@@ -1,124 +1,110 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
-export interface SettingsData {
-  [key: string]: any;
+type SettingsType = 'identity' | 'notifications' | 'privacy' | 'payment';
+
+interface SettingsHook {
+  settings: any;
+  saveSettings: (data: any) => Promise<void>;
+  loading: boolean;
+  error: string | null;
 }
 
-export const useSettings = (settingType: 'privacy' | 'notifications' | 'identity') => {
-  const [settings, setSettings] = useState<SettingsData>({});
+export const useSettings = (settingType: SettingsType): SettingsHook => {
+  const { user } = useAuth();
+  const [settings, setSettings] = useState({});
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
 
-  // Load settings from Supabase
-  const loadSettings = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
+  // Load settings from localStorage or database
+  useEffect(() => {
+    const loadSettings = async () => {
       if (!user) {
-        // If no user, try to load from localStorage as fallback
-        const localData = localStorage.getItem(`resident${settingType.charAt(0).toUpperCase() + settingType.slice(1)}`);
-        if (localData) {
-          setSettings(JSON.parse(localData));
-        }
         setLoading(false);
         return;
       }
 
-      const { data, error } = await supabase
-        .from('user_settings')
-        .select('settings')
-        .eq('user_id', user.id)
-        .eq('setting_type', settingType)
-        .single();
-
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-        console.error('Error loading settings:', error);
-        toast({
-          title: "Error loading settings",
-          description: "Using local settings as fallback.",
-          duration: 3000,
-        });
-        // Fallback to localStorage
-        const localData = localStorage.getItem(`resident${settingType.charAt(0).toUpperCase() + settingType.slice(1)}`);
-        if (localData) {
-          setSettings(JSON.parse(localData));
+      try {
+        setLoading(true);
+        
+        // Try to load from localStorage first (for immediate access)
+        const localStorageKey = `${user.id}_${settingType}_settings`;
+        const localSettings = localStorage.getItem(localStorageKey);
+        
+        if (localSettings) {
+          setSettings(JSON.parse(localSettings));
         }
-      } else if (data) {
-        setSettings(data.settings);
-        // Also save to localStorage as backup
-        localStorage.setItem(`resident${settingType.charAt(0).toUpperCase() + settingType.slice(1)}`, JSON.stringify(data.settings));
+
+        // Then load from database (for persistence across devices)
+        const { data, error: dbError } = await supabase
+          .from('user_settings')
+          .select('settings')
+          .eq('user_id', user.id)
+          .eq('setting_type', settingType)
+          .single();
+
+        if (dbError && dbError.code !== 'PGRST116') { // PGRST116 is "not found"
+          console.error('Error loading settings from database:', dbError);
+          setError(dbError.message);
+        } else if (data) {
+          setSettings(data.settings || {});
+          // Update localStorage with database data
+          localStorage.setItem(localStorageKey, JSON.stringify(data.settings || {}));
+        }
+      } catch (err) {
+        console.error('Error loading settings:', err);
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error in loadSettings:', error);
-      // Fallback to localStorage
-      const localData = localStorage.getItem(`resident${settingType.charAt(0).toUpperCase() + settingType.slice(1)}`);
-      if (localData) {
-        setSettings(JSON.parse(localData));
-      }
+    };
+
+    loadSettings();
+  }, [user, settingType]);
+
+  const saveSettings = async (data: any) => {
+    if (!user) {
+      throw new Error('User not authenticated');
     }
-    setLoading(false);
-  };
 
-  // Save settings to Supabase
-  const saveSettings = async (newSettings: SettingsData) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      setError(null);
       
-      // Always save to localStorage immediately for instant UI updates
-      localStorage.setItem(`resident${settingType.charAt(0).toUpperCase() + settingType.slice(1)}`, JSON.stringify(newSettings));
-      setSettings(newSettings);
+      // Save to localStorage immediately
+      const localStorageKey = `${user.id}_${settingType}_settings`;
+      localStorage.setItem(localStorageKey, JSON.stringify(data));
+      setSettings(data);
 
-      // Trigger storage event for other components
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: `resident${settingType.charAt(0).toUpperCase() + settingType.slice(1)}`,
-        newValue: JSON.stringify(newSettings),
-        oldValue: localStorage.getItem(`resident${settingType.charAt(0).toUpperCase() + settingType.slice(1)}`)
-      }));
-
-      if (!user) {
-        console.log('No user logged in, settings saved locally only');
-        return;
-      }
-
-      // Save to Supabase for persistence
-      const { error } = await supabase
+      // Save to database for persistence
+      const { error: dbError } = await supabase
         .from('user_settings')
         .upsert({
           user_id: user.id,
           setting_type: settingType,
-          settings: newSettings
+          settings: data,
+          updated_at: new Date().toISOString()
         });
 
-      if (error) {
-        console.error('Error saving settings to database:', error);
-        toast({
-          title: "Settings saved locally",
-          description: "Could not sync to cloud, but changes are saved on this device.",
-          duration: 3000,
-        });
-      } else {
-        console.log('Settings successfully saved to database');
+      if (dbError) {
+        console.error('Error saving settings to database:', dbError);
+        setError(dbError.message);
+        throw dbError;
       }
-    } catch (error) {
-      console.error('Error in saveSettings:', error);
-      toast({
-        title: "Settings saved locally",
-        description: "Could not sync to cloud, but changes are saved on this device.",
-        duration: 3000,
-      });
+
+      console.log(`Successfully saved ${settingType} settings`);
+    } catch (err) {
+      console.error('Error saving settings:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      throw err;
     }
   };
 
-  useEffect(() => {
-    loadSettings();
-  }, [settingType]);
-
   return {
     settings,
-    setSettings,
     saveSettings,
-    loading
+    loading,
+    error
   };
 };
