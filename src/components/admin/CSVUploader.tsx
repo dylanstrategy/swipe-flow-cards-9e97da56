@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Upload, Download, AlertCircle, CheckCircle, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import Papa from 'papaparse';
 import type { AppRole, UnitStatus } from '@/types/supabase';
 
@@ -26,6 +28,7 @@ const CSVUploader = () => {
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [useAdvancedIngestion, setUseAdvancedIngestion] = useState(false);
   const { toast } = useToast();
+  const { user, userProfile } = useAuth();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -41,8 +44,8 @@ const CSVUploader = () => {
         'Jane,Smith,jane.smith@example.com,555-0124,operator,property-management.com'
       ],
       properties: [
-        'property_name,property_code,address_line_1,address_line_2,city,state,zip_code,timezone,property_type,management_company,unit_count,door_access_system,on_site_support_hours,property_tags,move_in_instructions,trash_pickup_schedule,recycling_pickup_schedule,amenity_wifi_name,amenity_wifi_password,utility_company,utility_contact,super_contact,late_fee_policy,late_fee_threshold',
-        'Le Leo,210,123 Main St,,Jersey City,NJ,07302,America/New_York,apartment,Applaud Living,50,ButterflyMX,"Mon-Fri 9am-6pm","concierge,secure-entry","Check in at front desk, get keys from concierge","Mon/Wed/Fri 6am","Tues/Fri 7am",LeeLeo_Guest,password123,PSE&G,(800) 436-7734,"John Smith (555) 123-4567","$50 late fee after 5 days",50'
+        'property_name,property_code,address_line_1,address_line_2,city,state,zip_code,timezone,property_type,management_company,unit_count,door_access_system,on_site_support_hours,property_tags,move_in_instructions,trash_pickup_schedule,recycling_pickup_schedule,amenity_wifi_name,amenity_wifi_password,utility_company,utility_contact,super_contact,late_fee_policy,late_fee_threshold,inspection_required,concierge_available,guest_policy,smoking_policy,pet_policy,parking_info,leasing_office_hours,maintenance_company,maintenance_contact,emergency_contact,emergency_phone,wifi_management_vendor',
+        'Le Leo,210,123 Main St,,Jersey City,NJ,07302,America/New_York,apartment,Applaud Living,50,ButterflyMX,"Mon-Fri 9am-6pm","concierge,secure-entry","Check in at front desk, get keys from concierge","Mon/Wed/Fri 6am","Tues/Fri 7am",LeeLeo_Guest,password123,PSE&G,(800) 436-7734,"John Smith (555) 123-4567","$50 late fee after 5 days",50,true,false,"Guests must register at front desk","No smoking in units","Pets allowed with deposit","Garage parking available","Mon-Fri 9am-6pm","ABC Maintenance","maintenance@abc.com","John Manager","(555) 123-4567","WiFi Corp"'
       ],
       units: [
         'property_code,unit_number,unit_type,bedrooms,bathrooms,floor,sq_ft,market_rent,unit_status,unit_ready_status',
@@ -364,11 +367,43 @@ const CSVUploader = () => {
       return;
     }
 
+    // Check authentication
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to import data.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if user profile is loaded and has proper permissions
+    if (!userProfile) {
+      toast({
+        title: "Profile loading",
+        description: "Please wait for your profile to load before importing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check permissions
+    if (userProfile.role !== 'super_admin') {
+      toast({
+        title: "Insufficient permissions",
+        description: "Only super admins can import data.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsUploading(true);
     setImportResult(null);
 
     try {
       console.log(`Starting ${importType} import from file:`, selectedFile.name);
+      console.log('User authenticated:', user.email);
+      console.log('User role:', userProfile.role);
 
       // For residents with advanced ingestion enabled, use the Edge function
       if (importType === 'residents' && useAdvancedIngestion) {
@@ -468,6 +503,50 @@ const CSVUploader = () => {
       setIsUploading(false);
     }
   };
+
+  // Show authentication warning if not properly authenticated
+  if (!user || !userProfile) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Upload className="w-5 h-5" />
+            Bulk Import Data
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert className="border-yellow-200 bg-yellow-50">
+            <AlertCircle className="w-4 h-4 text-yellow-600" />
+            <AlertDescription className="text-yellow-800">
+              Please sign in and wait for your profile to load before using the import feature.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show permission warning if not super admin
+  if (userProfile.role !== 'super_admin') {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Upload className="w-5 h-5" />
+            Bulk Import Data
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert className="border-red-200 bg-red-50">
+            <AlertCircle className="w-4 h-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              Only super administrators can import data. Current role: {userProfile.role}
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
