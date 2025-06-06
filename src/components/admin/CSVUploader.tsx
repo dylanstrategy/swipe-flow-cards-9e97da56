@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, Download, AlertCircle, CheckCircle } from 'lucide-react';
+import { Upload, Download, AlertCircle, CheckCircle, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Papa from 'papaparse';
 import type { AppRole, UnitStatus } from '@/types/supabase';
@@ -24,6 +24,7 @@ const CSVUploader = () => {
   const [importType, setImportType] = useState<ImportType>('users');
   const [isUploading, setIsUploading] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [useAdvancedIngestion, setUseAdvancedIngestion] = useState(false);
   const { toast } = useToast();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,18 +41,18 @@ const CSVUploader = () => {
         'Jane,Smith,jane.smith@example.com,555-0124,operator,property-management.com'
       ],
       properties: [
-        'property_name,address_line_1,city,state,zip_code,timezone,website,management_company,property_manager_name,property_manager_email,property_manager_phone,emergency_contact,emergency_phone,maintenance_company,maintenance_contact,maintenance_phone,leasing_office_hours,amenities,parking_info,pet_policy,smoking_policy,special_instructions',
-        'Sunset Apartments,123 Main St,City,State,12345,America/New_York,https://sunset-apts.com,ABC Property Management,John Manager,john@abc-pm.com,555-0100,Emergency Line,555-0911,Fix-It-All,Bob Maintenance,555-0200,Mon-Fri: 9AM-6PM\\, Sat: 10AM-4PM,Pool\\, Gym\\, Concierge,Covered parking available,$50/month,Pets allowed with deposit,No smoking in units,Key pickup at front desk'
+        'property_name,property_code,address_line_1,city,state,zip_code,timezone,property_type,door_access_system,on_site_support_hours,property_tags',
+        'Le Leo,210,123 Main St,Jersey City,NJ,07302,America/New_York,apartment,ButterflyMX,"Mon-Fri 9am-6pm","concierge,secure-entry"'
       ],
       units: [
-        'property_name,unit_number,unit_type,bedrooms,bathrooms,sq_ft,floor,unit_status,market_rent',
-        'Sunset Apartments,101,1BR,1,1,850,1,available,2500.00',
-        'Sunset Apartments,102,2BR,2,2,1200,1,occupied,3200.00'
+        'property_code,unit_number,unit_type,bedrooms,bathrooms,floor,sq_ft,market_rent,unit_status,unit_ready_status',
+        '210,201,1B,1,1,2,660,2450,available,ready',
+        '210,202,1B,1,1,2,660,2450,available,ready'
       ],
       residents: [
-        'property_name,unit_number,first_name,last_name,email,phone,lease_start_date,lease_end_date,monthly_rent,move_in_date,is_active',
-        'Sunset Apartments,101,John,Doe,john.doe@example.com,555-0123,2024-01-01,2024-12-31,2500.00,2024-01-01,true',
-        'Sunset Apartments,102,Jane,Smith,jane.smith@example.com,555-0124,2024-02-01,2025-01-31,3200.00,2024-02-01,true'
+        'email,first_name,last_name,phone,unit_number,property_code,move_in_date,lease_start_date,lease_end_date,lease_term,monthly_rent,concession_amount,payment_status,status',
+        'kiana@example.com,Kiana,Taveras,2012120935,201,210,2024-06-01,2024-06-01,2025-05-31,12,2450,0,current,active',
+        'john@example.com,John,Smith,5551234567,202,210,2024-07-01,2024-07-01,2025-06-30,12,2450,100,current,active'
       ]
     };
 
@@ -73,6 +74,43 @@ const CSVUploader = () => {
   const validateUnitStatus = (status: string): UnitStatus => {
     const validStatuses: UnitStatus[] = ['available', 'occupied', 'maintenance', 'turn', 'leased_not_moved_in', 'off_market'];
     return validStatuses.includes(status as UnitStatus) ? status as UnitStatus : 'available';
+  };
+
+  const uploadFileToStorage = async (file: File): Promise<string> => {
+    const fileName = `${Date.now()}_${file.name}`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from('admin-uploads')
+      .upload(fileName, file);
+
+    if (uploadError) {
+      throw new Error(`Failed to upload file: ${uploadError.message}`);
+    }
+
+    return fileName;
+  };
+
+  const processResidentsWithEdgeFunction = async (fileName: string): Promise<ImportResult> => {
+    console.log('Calling ingest_residents Edge function with file:', fileName);
+    
+    const { data, error } = await supabase.functions.invoke('ingest_residents', {
+      body: { file_path: fileName }
+    });
+
+    if (error) {
+      console.error('Edge function error:', error);
+      throw new Error(`Edge function failed: ${error.message}`);
+    }
+
+    if (!data.success) {
+      throw new Error(data.error || 'Edge function returned failure');
+    }
+
+    return {
+      successful: data.successful,
+      failed: data.failed,
+      errors: data.errors || []
+    };
   };
 
   const processUsers = async (data: any[]): Promise<ImportResult> => {
@@ -128,34 +166,22 @@ const CSVUploader = () => {
       const row = data[i];
       
       try {
-        if (!row.property_name || !row.address_line_1 || !row.city || !row.state || !row.zip_code) {
-          throw new Error('Missing required fields: property_name, address_line_1, city, state, zip_code');
+        if (!row.property_name || !row.property_code || !row.address_line_1 || !row.city || !row.state || !row.zip_code) {
+          throw new Error('Missing required fields: property_name, property_code, address_line_1, city, state, zip_code');
         }
 
         const propertyData = {
           property_name: row.property_name?.trim(),
+          property_code: row.property_code?.trim(),
           address_line_1: row.address_line_1?.trim(),
-          address_line_2: row.address_line_2?.trim() || null,
           city: row.city?.trim(),
           state: row.state?.trim(),
           zip_code: row.zip_code?.trim(),
           timezone: row.timezone?.trim() || 'America/New_York',
-          website: row.website?.trim() || null,
-          management_company: row.management_company?.trim() || null,
-          property_manager_name: row.property_manager_name?.trim() || null,
-          property_manager_email: row.property_manager_email?.trim() || null,
-          property_manager_phone: row.property_manager_phone?.trim() || null,
-          emergency_contact: row.emergency_contact?.trim() || null,
-          emergency_phone: row.emergency_phone?.trim() || null,
-          maintenance_company: row.maintenance_company?.trim() || null,
-          maintenance_contact: row.maintenance_contact?.trim() || null,
-          maintenance_phone: row.maintenance_phone?.trim() || null,
-          leasing_office_hours: row.leasing_office_hours?.trim() || null,
-          amenities: row.amenities?.trim() || null,
-          parking_info: row.parking_info?.trim() || null,
-          pet_policy: row.pet_policy?.trim() || null,
-          smoking_policy: row.smoking_policy?.trim() || null,
-          special_instructions: row.special_instructions?.trim() || null
+          property_type: row.property_type?.trim() || 'apartment',
+          door_access_system: row.door_access_system?.trim() || null,
+          on_site_support_hours: row.on_site_support_hours?.trim() || null,
+          property_tags: row.property_tags ? row.property_tags.split(',').map((tag: string) => tag.trim()) : null
         };
 
         console.log(`Creating property ${i + 1}:`, propertyData);
@@ -189,19 +215,19 @@ const CSVUploader = () => {
       const row = data[i];
       
       try {
-        if (!row.property_name || !row.unit_number) {
-          throw new Error('Missing required fields: property_name, unit_number');
+        if (!row.property_code || !row.unit_number) {
+          throw new Error('Missing required fields: property_code, unit_number');
         }
 
-        // First, find the property by name
+        // First, find the property by property_code
         const { data: propertyData, error: propertyError } = await supabase
           .from('properties')
           .select('id')
-          .eq('property_name', row.property_name.trim())
+          .eq('property_code', row.property_code.trim())
           .single();
 
         if (propertyError || !propertyData) {
-          throw new Error(`Property "${row.property_name}" not found`);
+          throw new Error(`Property with code "${row.property_code}" not found`);
         }
 
         const unitData = {
@@ -210,10 +236,11 @@ const CSVUploader = () => {
           unit_type: row.unit_type?.trim() || null,
           bedrooms: row.bedrooms ? parseInt(row.bedrooms) : null,
           bathrooms: row.bathrooms ? parseFloat(row.bathrooms) : null,
-          sq_ft: row.sq_ft ? parseFloat(row.sq_ft) : null,
           floor: row.floor ? parseInt(row.floor) : null,
+          sq_ft: row.sq_ft ? parseFloat(row.sq_ft) : null,
+          market_rent: row.market_rent ? parseFloat(row.market_rent) : null,
           unit_status: validateUnitStatus(row.unit_status?.trim() || 'available'),
-          market_rent: row.market_rent ? parseFloat(row.market_rent) : null
+          unit_ready_status: row.unit_ready_status?.trim() || 'ready'
         };
 
         console.log(`Creating unit ${i + 1}:`, unitData);
@@ -247,19 +274,19 @@ const CSVUploader = () => {
       const row = data[i];
       
       try {
-        if (!row.property_name || !row.first_name || !row.last_name || !row.email) {
-          throw new Error('Missing required fields: property_name, first_name, last_name, email');
+        if (!row.property_code || !row.first_name || !row.last_name || !row.email) {
+          throw new Error('Missing required fields: property_code, first_name, last_name, email');
         }
 
         // Find the property
         const { data: propertyData, error: propertyError } = await supabase
           .from('properties')
           .select('id')
-          .eq('property_name', row.property_name.trim())
+          .eq('property_code', row.property_code.trim())
           .single();
 
         if (propertyError || !propertyData) {
-          throw new Error(`Property "${row.property_name}" not found`);
+          throw new Error(`Property with code "${row.property_code}" not found`);
         }
 
         // Find the unit if specified
@@ -273,7 +300,7 @@ const CSVUploader = () => {
             .single();
 
           if (unitError || !unitData) {
-            throw new Error(`Unit "${row.unit_number}" not found in property "${row.property_name}"`);
+            throw new Error(`Unit "${row.unit_number}" not found in property "${row.property_code}"`);
           }
           unitId = unitData.id;
         }
@@ -330,6 +357,22 @@ const CSVUploader = () => {
     try {
       console.log(`Starting ${importType} import from file:`, selectedFile.name);
 
+      // For residents with advanced ingestion enabled, use the Edge function
+      if (importType === 'residents' && useAdvancedIngestion) {
+        const fileName = await uploadFileToStorage(selectedFile);
+        const result = await processResidentsWithEdgeFunction(fileName);
+        setImportResult(result);
+        
+        toast({
+          title: "Import completed via Edge Function",
+          description: `Successfully imported ${result.successful} residents. ${result.failed} failed.`,
+          variant: result.failed > 0 ? "default" : "default",
+        });
+        
+        return;
+      }
+
+      // Standard CSV processing
       Papa.parse(selectedFile, {
         header: true,
         skipEmptyLines: true,
@@ -438,6 +481,21 @@ const CSVUploader = () => {
             </Select>
           </div>
 
+          {importType === 'residents' && (
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="advancedIngestion"
+                checked={useAdvancedIngestion}
+                onChange={(e) => setUseAdvancedIngestion(e.target.checked)}
+                className="rounded"
+              />
+              <Label htmlFor="advancedIngestion" className="text-sm">
+                Use Advanced Ingestion (Edge Function with auto user creation)
+              </Label>
+            </div>
+          )}
+
           <div>
             <Label htmlFor="csvFile">CSV File</Label>
             <Input
@@ -496,6 +554,35 @@ const CSVUploader = () => {
               </div>
             </Alert>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            Upload Workflow Guide
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="font-semibold text-blue-900 mb-2">Phase 3: Upload Workflow by Stage</h3>
+              <div className="space-y-2 text-sm text-blue-800">
+                <div><strong>Step 1:</strong> Upload Properties (properties_upload.csv)</div>
+                <div><strong>Step 2:</strong> Upload Units (units_upload.csv)</div>
+                <div><strong>Step 3:</strong> Upload Residents/Rent Roll (residents_upload.csv)</div>
+              </div>
+            </div>
+            
+            <div className="bg-green-50 p-4 rounded-lg">
+              <h3 className="font-semibold text-green-900 mb-2">Advanced Resident Ingestion</h3>
+              <p className="text-sm text-green-800">
+                When enabled, the system will automatically create user accounts for residents and link them properly.
+                This uses the Edge Function for more robust processing and better error handling.
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
