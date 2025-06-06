@@ -39,21 +39,25 @@ interface ExtendedResidentProfile {
   };
 }
 
+interface DaySchedule {
+  enabled: boolean;
+  startTime: string;
+  endTime: string;
+}
+
 interface SchedulingPreferences {
-  workStartTime: string;
-  workEndTime: string;
   timeZone: string;
   lunchBreakStart: string;
   lunchBreakEnd: string;
   enableLunchBreak: boolean;
-  workDays: {
-    monday: boolean;
-    tuesday: boolean;
-    wednesday: boolean;
-    thursday: boolean;
-    friday: boolean;
-    saturday: boolean;
-    sunday: boolean;
+  weeklySchedule: {
+    monday: DaySchedule;
+    tuesday: DaySchedule;
+    wednesday: DaySchedule;
+    thursday: DaySchedule;
+    friday: DaySchedule;
+    saturday: DaySchedule;
+    sunday: DaySchedule;
   };
   autoScheduling: boolean;
   bufferTime: string;
@@ -94,20 +98,18 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
   });
 
   const [scheduleData, setScheduleData] = useState<SchedulingPreferences>({
-    workStartTime: '09:00',
-    workEndTime: '17:00',
     timeZone: 'America/New_York',
     lunchBreakStart: '12:00',
     lunchBreakEnd: '13:00',
     enableLunchBreak: true,
-    workDays: {
-      monday: true,
-      tuesday: true,
-      wednesday: true,
-      thursday: true,
-      friday: true,
-      saturday: false,
-      sunday: false
+    weeklySchedule: {
+      monday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      tuesday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      wednesday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      thursday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      friday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      saturday: { enabled: false, startTime: '10:00', endTime: '14:00' },
+      sunday: { enabled: false, startTime: '10:00', endTime: '14:00' }
     },
     autoScheduling: true,
     bufferTime: '10',
@@ -270,12 +272,15 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
     }));
   };
 
-  const handleWorkDayChange = (day: keyof typeof scheduleData.workDays, checked: boolean) => {
+  const handleDayScheduleChange = (day: keyof typeof scheduleData.weeklySchedule, field: keyof DaySchedule, value: string | boolean) => {
     setScheduleData({
       ...scheduleData,
-      workDays: {
-        ...scheduleData.workDays,
-        [day]: checked
+      weeklySchedule: {
+        ...scheduleData.weeklySchedule,
+        [day]: {
+          ...scheduleData.weeklySchedule[day],
+          [field]: value
+        }
       }
     });
   };
@@ -459,72 +464,107 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Available Hours */}
+            {/* Time Zone */}
             <div>
-              <h4 className="font-medium mb-3">Available Hours</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="workStart" className="text-sm font-medium text-gray-700 mb-2 block">
-                    Start Time
-                  </Label>
-                  <Input
-                    id="workStart"
-                    type="time"
-                    value={scheduleData.workStartTime}
-                    onChange={(e) => setScheduleData({ ...scheduleData, workStartTime: e.target.value })}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="workEnd" className="text-sm font-medium text-gray-700 mb-2 block">
-                    End Time
-                  </Label>
-                  <Input
-                    id="workEnd"
-                    type="time"
-                    value={scheduleData.workEndTime}
-                    onChange={(e) => setScheduleData({ ...scheduleData, workEndTime: e.target.value })}
-                  />
-                </div>
-              </div>
+              <Label htmlFor="timeZone" className="text-sm font-medium text-gray-700 mb-2 block">
+                Time Zone
+              </Label>
+              <select 
+                id="timeZone"
+                value={scheduleData.timeZone}
+                onChange={(e) => setScheduleData({ ...scheduleData, timeZone: e.target.value })}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+              >
+                <option value="America/New_York">Eastern Time (ET)</option>
+                <option value="America/Chicago">Central Time (CT)</option>
+                <option value="America/Denver">Mountain Time (MT)</option>
+                <option value="America/Los_Angeles">Pacific Time (PT)</option>
+              </select>
+            </div>
 
-              <div className="mt-4">
-                <Label htmlFor="timeZone" className="text-sm font-medium text-gray-700 mb-2 block">
-                  Time Zone
-                </Label>
-                <select 
-                  id="timeZone"
-                  value={scheduleData.timeZone}
-                  onChange={(e) => setScheduleData({ ...scheduleData, timeZone: e.target.value })}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                >
-                  <option value="America/New_York">Eastern Time (ET)</option>
-                  <option value="America/Chicago">Central Time (CT)</option>
-                  <option value="America/Denver">Mountain Time (MT)</option>
-                  <option value="America/Los_Angeles">Pacific Time (PT)</option>
-                </select>
+            <Separator />
+
+            {/* Daily Available Hours */}
+            <div>
+              <h4 className="font-medium mb-3">Available Hours by Day</h4>
+              <div className="space-y-4">
+                {Object.entries(scheduleData.weeklySchedule).map(([day, schedule]) => (
+                  <div key={day} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="font-medium capitalize">{day}</div>
+                      <Switch 
+                        checked={schedule.enabled}
+                        onCheckedChange={(checked) => handleDayScheduleChange(day as keyof typeof scheduleData.weeklySchedule, 'enabled', checked)}
+                      />
+                    </div>
+                    
+                    {schedule.enabled && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs text-gray-600">Start Time</Label>
+                          <Input
+                            type="time"
+                            value={schedule.startTime}
+                            onChange={(e) => handleDayScheduleChange(day as keyof typeof scheduleData.weeklySchedule, 'startTime', e.target.value)}
+                            className="text-sm"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-gray-600">End Time</Label>
+                          <Input
+                            type="time"
+                            value={schedule.endTime}
+                            onChange={(e) => handleDayScheduleChange(day as keyof typeof scheduleData.weeklySchedule, 'endTime', e.target.value)}
+                            className="text-sm"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
 
             <Separator />
 
-            {/* Available Days */}
+            {/* Lunch Break */}
             <div>
-              <h4 className="font-medium mb-3">Available Days</h4>
-              <div className="space-y-3">
-                {Object.entries(scheduleData.workDays).map(([day, isEnabled]) => (
-                  <div key={day}>
-                    <div className="flex items-center justify-between">
-                      <div className="font-medium capitalize">{day}</div>
-                      <Switch 
-                        checked={isEnabled}
-                        onCheckedChange={(checked) => handleWorkDayChange(day as keyof typeof scheduleData.workDays, checked)}
-                      />
-                    </div>
-                    {day !== 'sunday' && <Separator className="mt-3" />}
-                  </div>
-                ))}
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <div className="font-medium">Lunch Break</div>
+                  <div className="text-sm text-gray-600">Block time for lunch during available hours</div>
+                </div>
+                <Switch 
+                  checked={scheduleData.enableLunchBreak}
+                  onCheckedChange={(checked) => setScheduleData({ ...scheduleData, enableLunchBreak: checked })}
+                />
               </div>
+
+              {scheduleData.enableLunchBreak && (
+                <div className="grid grid-cols-2 gap-4 pl-4 border-l-2 border-gray-200">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Lunch Start
+                    </Label>
+                    <Input
+                      type="time"
+                      value={scheduleData.lunchBreakStart}
+                      onChange={(e) => setScheduleData({ ...scheduleData, lunchBreakStart: e.target.value })}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Lunch End
+                    </Label>
+                    <Input
+                      type="time"
+                      value={scheduleData.lunchBreakEnd}
+                      onChange={(e) => setScheduleData({ ...scheduleData, lunchBreakEnd: e.target.value })}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <Separator />
