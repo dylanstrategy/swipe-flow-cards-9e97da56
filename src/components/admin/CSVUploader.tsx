@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +18,7 @@ import {
   Home
 } from 'lucide-react';
 import * as Papa from 'papaparse';
+import { supabase } from '@/integrations/supabase/client';
 import type { AppRole } from '@/types/supabase';
 
 interface CSVRow {
@@ -88,7 +88,6 @@ interface ProcessingResult {
   skippedRows: number;
 }
 
-// More flexible - we'll check what data is available per row
 const ALL_SUPPORTED_HEADERS = [
   'id_number', 'unit_status', 'first_name', 'last_name', 'email', 'phone', 
   'property_name', 'property_code', 'unit_number', 'unit_type', 'bedrooms', 
@@ -160,7 +159,6 @@ const CSVUploader: React.FC = () => {
       header: true,
       skipEmptyLines: true,
       transformHeader: (header: string) => {
-        // Normalize headers by trimming whitespace and converting to lowercase for comparison
         return header.trim().toLowerCase();
       },
       complete: (results) => {
@@ -184,7 +182,6 @@ const CSVUploader: React.FC = () => {
     const lastName = row.last_name?.trim();
     const email = row.email?.trim();
     
-    // Check if it's explicitly marked as vacant or if there's no resident data
     return status === 'vacant' || 
            status === 'available' || 
            status === 'empty' ||
@@ -203,15 +200,13 @@ const CSVUploader: React.FC = () => {
     console.log('Processing data with headers:', headers);
 
     data.forEach((row, index) => {
-      const rowNum = index + 2; // +2 for 1-based indexing and header row
+      const rowNum = index + 2;
 
       try {
-        // Check if this is a vacant unit
         const isVacant = isVacantUnit(row);
         
         console.log(`Row ${rowNum}: isVacant=${isVacant}, status=${row.unit_status}, first_name=${row.first_name}`);
 
-        // Always try to parse property data if available
         if (row.property_name?.trim()) {
           const property: ParsedProperty = {
             property_name: row.property_name.trim(),
@@ -233,7 +228,6 @@ const CSVUploader: React.FC = () => {
           }
         }
 
-        // Always try to parse unit data if available
         if (row.unit_number?.trim()) {
           const unit: ParsedUnit = {
             unit_number: row.unit_number.trim(),
@@ -253,13 +247,11 @@ const CSVUploader: React.FC = () => {
           }
         }
 
-        // For vacant units, skip user/resident processing but don't count as error
         if (isVacant) {
           warnings.push(`Row ${rowNum}: Vacant unit detected, skipping resident data`);
           return;
         }
 
-        // For non-vacant units, require user data
         const firstName = row.first_name?.trim();
         const lastName = row.last_name?.trim();
         const email = row.email?.trim();
@@ -270,7 +262,6 @@ const CSVUploader: React.FC = () => {
           return;
         }
 
-        // Parse user data
         const user: ParsedUser = {
           id_number: row.id_number?.trim() || `auto_${Date.now()}_${index}`,
           first_name: firstName,
@@ -284,7 +275,6 @@ const CSVUploader: React.FC = () => {
           is_active: row.is_active?.toLowerCase().trim() === 'true' || true
         };
 
-        // Validate role
         const validRoles = ['super_admin', 'senior_operator', 'operator', 'maintenance', 'leasing', 'resident', 'prospect', 'vendor'];
         if (row.role?.trim() && !validRoles.includes(user.role)) {
           warnings.push(`Row ${rowNum}: Invalid role '${row.role}', defaulting to 'resident'`);
@@ -293,7 +283,6 @@ const CSVUploader: React.FC = () => {
 
         users.push(user);
 
-        // Parse resident data if this is a resident with unit data
         if (user.role === 'resident' && row.unit_number?.trim()) {
           const resident: ParsedResident = {
             id_number: user.id_number,
@@ -319,7 +308,6 @@ const CSVUploader: React.FC = () => {
       }
     });
 
-    // Only add to errors if there are serious issues that prevent import
     if (users.length === 0 && properties.length === 0 && units.length === 0) {
       errors.push('No valid data found to import. Please check your CSV format.');
     }
@@ -344,35 +332,215 @@ const CSVUploader: React.FC = () => {
     setUploadProgress(0);
 
     try {
-      // This would implement the actual Supabase import logic
-      // For now, we'll simulate the process
-      
-      console.log('Starting import process...');
-      setUploadProgress(25);
+      console.log('Starting actual Supabase import process...');
+      let importedCounts = { users: 0, properties: 0, units: 0, residents: 0 };
       
       // Import properties first
-      console.log('Importing properties:', processingResult.properties);
-      setUploadProgress(50);
+      setUploadProgress(15);
+      if (processingResult.properties.length > 0) {
+        console.log('Importing properties:', processingResult.properties);
+        
+        for (const property of processingResult.properties) {
+          try {
+            const { data, error } = await supabase
+              .from('properties')
+              .insert({
+                name: property.property_name,
+                address: `${property.address_line_1}${property.address_line_2 ? ', ' + property.address_line_2 : ''}, ${property.city}, ${property.state} ${property.zip_code}`,
+                timezone: property.timezone,
+                management_company: property.management_company,
+              })
+              .select();
+
+            if (error) {
+              console.error('Property insert error:', error);
+              if (!error.message.includes('duplicate')) {
+                throw error;
+              }
+            } else {
+              importedCounts.properties++;
+            }
+          } catch (error) {
+            console.error('Error importing property:', property.property_name, error);
+          }
+        }
+      }
       
       // Import units
-      console.log('Importing units:', processingResult.units);
-      setUploadProgress(75);
+      setUploadProgress(35);
+      if (processingResult.units.length > 0) {
+        console.log('Importing units:', processingResult.units);
+        
+        // First get property IDs for linking
+        const { data: propertiesData } = await supabase
+          .from('properties')
+          .select('id, name');
+        
+        for (const unit of processingResult.units) {
+          try {
+            // Find property by name if property_code not available
+            const propertyName = processingResult.properties.find(p => 
+              p.property_code === unit.property_code
+            )?.property_name;
+            
+            const property = propertiesData?.find(p => 
+              p.name === propertyName || 
+              p.name.includes(unit.property_code || '')
+            );
+            
+            if (!property) {
+              console.warn('Property not found for unit:', unit.unit_number);
+              continue;
+            }
+
+            const { data, error } = await supabase
+              .from('units')
+              .insert({
+                property_id: property.id,
+                unit_number: unit.unit_number,
+                floor: unit.floor,
+                bedroom_type: unit.bedrooms?.toString(),
+                bath_type: unit.bathrooms?.toString(),
+                sq_ft: unit.market_rent, // Using market_rent as sq_ft for now
+                status: unit.unit_status === 'vacant' ? 'available' : 'occupied'
+              })
+              .select();
+
+            if (error) {
+              console.error('Unit insert error:', error);
+              if (!error.message.includes('duplicate')) {
+                throw error;
+              }
+            } else {
+              importedCounts.units++;
+            }
+          } catch (error) {
+            console.error('Error importing unit:', unit.unit_number, error);
+          }
+        }
+      }
       
-      // Import users and residents
-      console.log('Importing users:', processingResult.users);
-      console.log('Importing residents:', processingResult.residents);
+      // Import users
+      setUploadProgress(65);
+      if (processingResult.users.length > 0) {
+        console.log('Importing users:', processingResult.users);
+        
+        for (const user of processingResult.users) {
+          try {
+            const { data, error } = await supabase
+              .from('users')
+              .insert({
+                email: user.email,
+                first_name: user.first_name,
+                last_name: user.last_name,
+                phone: user.phone,
+                role: user.role,
+              })
+              .select();
+
+            if (error) {
+              console.error('User insert error:', error);
+              if (!error.message.includes('duplicate')) {
+                throw error;
+              }
+            } else {
+              importedCounts.users++;
+            }
+          } catch (error) {
+            console.error('Error importing user:', user.email, error);
+          }
+        }
+      }
+      
+      // Import residents
+      setUploadProgress(85);
+      if (processingResult.residents.length > 0) {
+        console.log('Importing residents:', processingResult.residents);
+        
+        // Get user and property/unit data for linking
+        const { data: usersData } = await supabase
+          .from('users')
+          .select('id, email');
+          
+        const { data: propertiesData } = await supabase
+          .from('properties')
+          .select('id, name');
+          
+        const { data: unitsData } = await supabase
+          .from('units')
+          .select('id, unit_number, property_id');
+        
+        for (const resident of processingResult.residents) {
+          try {
+            const user = usersData?.find(u => 
+              processingResult.users.find(pu => 
+                pu.id_number === resident.id_number && pu.email === u.email
+              )
+            );
+            
+            if (!user) {
+              console.warn('User not found for resident:', resident.id_number);
+              continue;
+            }
+
+            const propertyName = processingResult.properties.find(p => 
+              p.property_code === resident.property_code
+            )?.property_name;
+            
+            const property = propertiesData?.find(p => 
+              p.name === propertyName || 
+              p.name.includes(resident.property_code || '')
+            );
+            
+            const unit = unitsData?.find(u => 
+              u.unit_number === resident.unit_number && 
+              u.property_id === property?.id
+            );
+
+            const { data, error } = await supabase
+              .from('residents')
+              .insert({
+                user_id: user.id,
+                property_id: property?.id,
+                unit_id: unit?.id,
+                lease_start: resident.lease_start_date,
+                lease_end: resident.lease_end_date,
+                status: 'active',
+                insurance_uploaded: resident.renter_insurance_uploaded,
+                move_in_checklist_complete: resident.move_in_checklist_complete,
+                move_out_checklist_complete: resident.move_out_checklist_complete,
+              })
+              .select();
+
+            if (error) {
+              console.error('Resident insert error:', error);
+              if (!error.message.includes('duplicate')) {
+                throw error;
+              }
+            } else {
+              importedCounts.residents++;
+            }
+          } catch (error) {
+            console.error('Error importing resident:', resident.id_number, error);
+          }
+        }
+      }
+
       setUploadProgress(100);
 
-      const totalImported = processingResult.users.length + processingResult.properties.length + processingResult.units.length;
+      const totalImported = Object.values(importedCounts).reduce((sum, count) => sum + count, 0);
       const skippedMessage = processingResult.skippedRows > 0 ? ` (${processingResult.skippedRows} rows skipped)` : '';
       
-      toast.success(`Successfully imported ${totalImported} records${skippedMessage}`);
+      toast.success(`Successfully imported ${totalImported} records to database${skippedMessage}. Details: ${importedCounts.users} users, ${importedCounts.properties} properties, ${importedCounts.units} units, ${importedCounts.residents} residents.`);
       
       // Reset form
       setFile(null);
       setCsvData([]);
       setProcessingResult(null);
       setShowPreview(false);
+      
+      // Refresh the page to show new data
+      window.location.reload();
       
     } catch (error) {
       console.error('Import error:', error);
@@ -385,7 +553,6 @@ const CSVUploader: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Bulk Data Import</h2>
@@ -400,7 +567,6 @@ const CSVUploader: React.FC = () => {
         </Button>
       </div>
 
-      {/* Upload Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -440,7 +606,6 @@ const CSVUploader: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Preview Section */}
       {showPreview && processingResult && (
         <Card>
           <CardHeader>
@@ -450,7 +615,6 @@ const CSVUploader: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Summary Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg text-center">
                 <Users className="w-8 h-8 mx-auto mb-2 text-blue-600" />
@@ -474,7 +638,6 @@ const CSVUploader: React.FC = () => {
               </div>
             </div>
 
-            {/* Processing Summary */}
             {processingResult.skippedRows > 0 && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -488,7 +651,6 @@ const CSVUploader: React.FC = () => {
               </div>
             )}
 
-            {/* Errors and Warnings */}
             {processingResult.errors.length > 0 && (
               <Alert className="border-red-200 bg-red-50">
                 <XCircle className="h-4 w-4 text-red-600" />
@@ -527,7 +689,6 @@ const CSVUploader: React.FC = () => {
               </Alert>
             )}
 
-            {/* Sample Data Preview */}
             <div className="space-y-4">
               <h4 className="font-medium text-gray-900">Sample Records:</h4>
               <ScrollArea className="h-64 border rounded-lg">
@@ -552,7 +713,6 @@ const CSVUploader: React.FC = () => {
               </ScrollArea>
             </div>
 
-            {/* Import Button */}
             <div className="flex items-center justify-end gap-4">
               <Button 
                 variant="outline" 
@@ -571,12 +731,12 @@ const CSVUploader: React.FC = () => {
                 {isProcessing ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Importing...
+                    Importing to Database...
                   </>
                 ) : (
                   <>
                     <Upload className="w-4 h-4" />
-                    Import {processingResult.users.length + processingResult.properties.length + processingResult.units.length} Records
+                    Import {processingResult.users.length + processingResult.properties.length + processingResult.units.length} Records to Database
                   </>
                 )}
               </Button>
