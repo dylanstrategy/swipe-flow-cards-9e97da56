@@ -130,6 +130,7 @@ const CSVUploader: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
+  const [importResults, setImportResults] = useState<{[key: string]: number}>({});
 
   const downloadTemplate = () => {
     const csvContent = ALL_SUPPORTED_HEADERS.join(',');
@@ -334,6 +335,7 @@ const CSVUploader: React.FC = () => {
     try {
       console.log('Starting actual Supabase import process...');
       let importedCounts = { users: 0, properties: 0, units: 0, residents: 0 };
+      let errorCount = 0;
       
       // Import properties first
       setUploadProgress(15);
@@ -354,14 +356,19 @@ const CSVUploader: React.FC = () => {
 
             if (error) {
               console.error('Property insert error:', error);
-              if (!error.message.includes('duplicate')) {
+              if (error.message.includes('duplicate') || error.code === '23505') {
+                console.log('Property already exists, skipping:', property.property_name);
+              } else {
+                errorCount++;
                 throw error;
               }
             } else {
+              console.log('Successfully inserted property:', property.property_name);
               importedCounts.properties++;
             }
           } catch (error) {
             console.error('Error importing property:', property.property_name, error);
+            errorCount++;
           }
         }
       }
@@ -408,14 +415,19 @@ const CSVUploader: React.FC = () => {
 
             if (error) {
               console.error('Unit insert error:', error);
-              if (!error.message.includes('duplicate')) {
+              if (error.message.includes('duplicate') || error.code === '23505') {
+                console.log('Unit already exists, skipping:', unit.unit_number);
+              } else {
+                errorCount++;
                 throw error;
               }
             } else {
+              console.log('Successfully inserted unit:', unit.unit_number);
               importedCounts.units++;
             }
           } catch (error) {
             console.error('Error importing unit:', unit.unit_number, error);
+            errorCount++;
           }
         }
       }
@@ -430,6 +442,7 @@ const CSVUploader: React.FC = () => {
             const { data, error } = await supabase
               .from('users')
               .insert({
+                id: crypto.randomUUID(), // Generate UUID for user
                 email: user.email,
                 first_name: user.first_name,
                 last_name: user.last_name,
@@ -440,14 +453,19 @@ const CSVUploader: React.FC = () => {
 
             if (error) {
               console.error('User insert error:', error);
-              if (!error.message.includes('duplicate')) {
+              if (error.message.includes('duplicate') || error.code === '23505') {
+                console.log('User already exists, skipping:', user.email);
+              } else {
+                errorCount++;
                 throw error;
               }
             } else {
+              console.log('Successfully inserted user:', user.email);
               importedCounts.users++;
             }
           } catch (error) {
             console.error('Error importing user:', user.email, error);
+            errorCount++;
           }
         }
       }
@@ -514,24 +532,35 @@ const CSVUploader: React.FC = () => {
 
             if (error) {
               console.error('Resident insert error:', error);
-              if (!error.message.includes('duplicate')) {
+              if (error.message.includes('duplicate') || error.code === '23505') {
+                console.log('Resident already exists, skipping:', resident.id_number);
+              } else {
+                errorCount++;
                 throw error;
               }
             } else {
+              console.log('Successfully inserted resident:', resident.id_number);
               importedCounts.residents++;
             }
           } catch (error) {
             console.error('Error importing resident:', resident.id_number, error);
+            errorCount++;
           }
         }
       }
 
       setUploadProgress(100);
+      setImportResults(importedCounts);
 
       const totalImported = Object.values(importedCounts).reduce((sum, count) => sum + count, 0);
       const skippedMessage = processingResult.skippedRows > 0 ? ` (${processingResult.skippedRows} rows skipped)` : '';
+      const errorMessage = errorCount > 0 ? ` (${errorCount} errors)` : '';
       
-      toast.success(`Successfully imported ${totalImported} records to database${skippedMessage}. Details: ${importedCounts.users} users, ${importedCounts.properties} properties, ${importedCounts.units} units, ${importedCounts.residents} residents.`);
+      if (totalImported > 0) {
+        toast.success(`Successfully imported ${totalImported} records to database${skippedMessage}${errorMessage}. Details: ${importedCounts.users} users, ${importedCounts.properties} properties, ${importedCounts.units} units, ${importedCounts.residents} residents.`);
+      } else {
+        toast.error(`No records were imported${errorMessage ? errorMessage : '. All records may already exist in the database.'}`);
+      }
       
       // Reset form
       setFile(null);
@@ -540,11 +569,13 @@ const CSVUploader: React.FC = () => {
       setShowPreview(false);
       
       // Refresh the page to show new data
-      window.location.reload();
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
       
     } catch (error) {
       console.error('Import error:', error);
-      toast.error('Error importing data. Please check the console for details.');
+      toast.error(`Error importing data: ${error instanceof Error ? error.message : 'Unknown error'}. Check the console for details.`);
     } finally {
       setIsProcessing(false);
       setUploadProgress(0);
