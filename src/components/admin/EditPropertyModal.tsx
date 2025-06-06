@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -79,7 +78,6 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
     setLoading(true);
     try {
       const { error } = await supabase
-        .schema('api')
         .from('properties')
         .update({
           ...formData,
