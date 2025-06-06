@@ -133,21 +133,25 @@ export interface Property {
   late_fee_policy?: string;
   late_fee_threshold?: number;
   
+  // LATEST NEW FIELDS
+  inspection_required?: boolean;
+  guest_policy?: string;
+  smoking_policy?: string;
+  pet_policy?: string;
+  parking_info?: string;
+  leasing_office_hours?: string;
+  maintenance_company?: string;
+  maintenance_contact?: string;
+  emergency_contact?: string;
+  emergency_phone?: string;
+  wifi_management_vendor?: string;
+  
   // Legacy fields for compatibility
   name?: string; // Alias for property_name
   address?: string; // Alias for address_line_1
   website?: string;
   amenities?: string;
-  parking_info?: string;
-  pet_policy?: string;
-  smoking_policy?: string;
   special_instructions?: string;
-  emergency_contact?: string;
-  emergency_phone?: string;
-  maintenance_company?: string;
-  maintenance_contact?: string;
-  maintenance_phone?: string;
-  leasing_office_hours?: string;
   property_manager_name?: string;
   property_manager_email?: string;
   property_manager_phone?: string;

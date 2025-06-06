@@ -274,8 +274,10 @@ export type Database = {
           door_access_system: string | null
           emergency_contact: string | null
           emergency_phone: string | null
+          guest_policy: string | null
           guest_wifi_available: boolean | null
           id: string
+          inspection_required: boolean | null
           late_fee_policy: string | null
           late_fee_threshold: number | null
           leasing_office_hours: string | null
@@ -313,6 +315,7 @@ export type Database = {
           utility_company: string | null
           utility_contact: string | null
           website: string | null
+          wifi_management_vendor: string | null
           zip_code: string
         }
         Insert: {
@@ -337,8 +340,10 @@ export type Database = {
           door_access_system?: string | null
           emergency_contact?: string | null
           emergency_phone?: string | null
+          guest_policy?: string | null
           guest_wifi_available?: boolean | null
           id?: string
+          inspection_required?: boolean | null
           late_fee_policy?: string | null
           late_fee_threshold?: number | null
           leasing_office_hours?: string | null
@@ -376,6 +381,7 @@ export type Database = {
           utility_company?: string | null
           utility_contact?: string | null
           website?: string | null
+          wifi_management_vendor?: string | null
           zip_code: string
         }
         Update: {
@@ -400,8 +406,10 @@ export type Database = {
           door_access_system?: string | null
           emergency_contact?: string | null
           emergency_phone?: string | null
+          guest_policy?: string | null
           guest_wifi_available?: boolean | null
           id?: string
+          inspection_required?: boolean | null
           late_fee_policy?: string | null
           late_fee_threshold?: number | null
           leasing_office_hours?: string | null
@@ -439,6 +447,7 @@ export type Database = {
           utility_company?: string | null
           utility_contact?: string | null
           website?: string | null
+          wifi_management_vendor?: string | null
           zip_code?: string
         }
         Relationships: []
