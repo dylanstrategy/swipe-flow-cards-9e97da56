@@ -61,13 +61,13 @@ const TodayTab = () => {
   // Convert live calendar events to the format expected by the UI
   const processedEvents = liveEvents.map(event => ({
     id: event.id,
-    date: new Date(event.start_time),
-    time: format(new Date(event.start_time), 'HH:mm'),
+    date: new Date(event.event_date),
+    time: event.event_time || format(new Date(event.event_date), 'HH:mm'),
     title: event.title,
     description: event.description || '',
     category: event.event_type,
     priority: event.event_type === 'maintenance' ? 'high' : 'medium',
-    dueDate: event.end_time ? new Date(event.end_time) : undefined
+    dueDate: event.event_date ? new Date(event.event_date) : undefined
   }));
 
   // Add pet-specific events if user has pets
