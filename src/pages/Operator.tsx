@@ -66,7 +66,7 @@ const Operator = () => {
         navigate('/discovery');
         break;
       case 'resident':
-        navigate('/');
+        navigate('/resident');
         break;
       case 'operator':
         // Already in operator view
