@@ -202,126 +202,124 @@ const ScheduleTab = () => {
   }
 
   return (
-    <div className="relative min-h-screen">
-      <PullToRefresh onRefresh={handleRefresh}>
-        <div className="px-4 py-6 pb-32 overflow-y-auto max-h-screen">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Schedule</h1>
-          </div>
-          
-          {/* Calendar */}
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Calendar</h2>
-            <MiniCalendar
-              selectedDate={selectedDate}
-              onDateSelect={setSelectedDate}
-              getEventsForDate={getEventsForDate}
-            />
-          </div>
-
-          {/* Selected Date Events with Swipe Actions */}
-          {selectedDateEvents.length > 0 && (
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                {isSameDay(selectedDate, new Date()) ? "Today's Events" : `Events for ${format(selectedDate, 'MMM d')}`}
-              </h2>
-              <div className="space-y-3">
-                {selectedDateEvents.map((event) => {
-                  const swipeActions = getSwipeActionsForEvent(event);
-                  
-                  return (
-                    <SwipeCard
-                      key={event.id}
-                      onSwipeRight={swipeActions.onSwipeRight}
-                      onSwipeLeft={swipeActions.onSwipeLeft}
-                      onTap={() => handleAction("Viewed", event.title)}
-                      onHold={() => {
-                        // Create context menu for desktop
-                        const contextMenu = document.createElement('div');
-                        contextMenu.className = 'fixed bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-50';
-                        contextMenu.style.left = '50%';
-                        contextMenu.style.top = '50%';
-                        contextMenu.style.transform = 'translate(-50%, -50%)';
-                        
-                        const leftOption = document.createElement('button');
-                        leftOption.className = 'block w-full text-left px-3 py-2 hover:bg-gray-100 rounded';
-                        leftOption.textContent = `${swipeActions.onSwipeLeft.icon} ${swipeActions.onSwipeLeft.label}`;
-                        leftOption.onclick = () => {
-                          swipeActions.onSwipeLeft.action();
-                          document.body.removeChild(contextMenu);
-                        };
-                        
-                        const rightOption = document.createElement('button');
-                        rightOption.className = 'block w-full text-left px-3 py-2 hover:bg-gray-100 rounded';
-                        rightOption.textContent = `${swipeActions.onSwipeRight.icon} ${swipeActions.onSwipeRight.label}`;
-                        rightOption.onclick = () => {
-                          swipeActions.onSwipeRight.action();
-                          document.body.removeChild(contextMenu);
-                        };
-                        
-                        contextMenu.appendChild(leftOption);
-                        contextMenu.appendChild(rightOption);
-                        document.body.appendChild(contextMenu);
-                        
-                        setTimeout(() => {
-                          const handleClickOutside = () => {
-                            if (document.body.contains(contextMenu)) {
-                              document.body.removeChild(contextMenu);
-                            }
-                            document.removeEventListener('click', handleClickOutside);
-                          };
-                          document.addEventListener('click', handleClickOutside);
-                        }, 100);
-                      }}
-                    >
-                      <div className="flex items-center p-4 bg-white rounded-lg border-l-4 border-blue-500">
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-1">
-                            <h3 className="font-semibold text-gray-900">{event.title}</h3>
-                            <span className="text-sm text-gray-500">{formatTime(event.time)}</span>
-                          </div>
-                          <p className="text-gray-600 text-sm">{event.description}</p>
-                          <div className="mt-2">
-                            <span className={cn(
-                              "text-xs px-2 py-1 rounded-full",
-                              event.priority === 'high' ? "bg-red-100 text-red-800" :
-                              event.priority === 'medium' ? "bg-yellow-100 text-yellow-800" :
-                              "bg-green-100 text-green-800"
-                            )}>
-                              {event.category}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </SwipeCard>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Daily Suggestions */}
-          <SuggestionsSection 
-            onSchedule={startScheduling}
-            onAction={handleAction}
-          />
-
-          {/* Scheduled Items */}
-          <ScheduledItemsTimeline
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="px-4 py-6 pb-32">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">Schedule</h1>
+        </div>
+        
+        {/* Calendar */}
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Calendar</h2>
+          <MiniCalendar
             selectedDate={selectedDate}
-            onAction={handleAction}
+            onDateSelect={setSelectedDate}
+            getEventsForDate={getEventsForDate}
           />
         </div>
-      </PullToRefresh>
 
-      {/* Floating Plus Button */}
-      <button 
-        onClick={() => setShowScheduleMenu(true)}
-        className="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-700 transition-all duration-200 hover:scale-110 z-40"
-      >
-        <Plus className="text-white" size={28} />
-      </button>
-    </div>
+        {/* Selected Date Events with Swipe Actions */}
+        {selectedDateEvents.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              {isSameDay(selectedDate, new Date()) ? "Today's Events" : `Events for ${format(selectedDate, 'MMM d')}`}
+            </h2>
+            <div className="space-y-3">
+              {selectedDateEvents.map((event) => {
+                const swipeActions = getSwipeActionsForEvent(event);
+                
+                return (
+                  <SwipeCard
+                    key={event.id}
+                    onSwipeRight={swipeActions.onSwipeRight}
+                    onSwipeLeft={swipeActions.onSwipeLeft}
+                    onTap={() => handleAction("Viewed", event.title)}
+                    onHold={() => {
+                      // Create context menu for desktop
+                      const contextMenu = document.createElement('div');
+                      contextMenu.className = 'fixed bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-50';
+                      contextMenu.style.left = '50%';
+                      contextMenu.style.top = '50%';
+                      contextMenu.style.transform = 'translate(-50%, -50%)';
+                      
+                      const leftOption = document.createElement('button');
+                      leftOption.className = 'block w-full text-left px-3 py-2 hover:bg-gray-100 rounded';
+                      leftOption.textContent = `${swipeActions.onSwipeLeft.icon} ${swipeActions.onSwipeLeft.label}`;
+                      leftOption.onclick = () => {
+                        swipeActions.onSwipeLeft.action();
+                        document.body.removeChild(contextMenu);
+                      };
+                      
+                      const rightOption = document.createElement('button');
+                      rightOption.className = 'block w-full text-left px-3 py-2 hover:bg-gray-100 rounded';
+                      rightOption.textContent = `${swipeActions.onSwipeRight.icon} ${swipeActions.onSwipeRight.label}`;
+                      rightOption.onclick = () => {
+                        swipeActions.onSwipeRight.action();
+                        document.body.removeChild(contextMenu);
+                      };
+                      
+                      contextMenu.appendChild(leftOption);
+                      contextMenu.appendChild(rightOption);
+                      document.body.appendChild(contextMenu);
+                      
+                      setTimeout(() => {
+                        const handleClickOutside = () => {
+                          if (document.body.contains(contextMenu)) {
+                            document.body.removeChild(contextMenu);
+                          }
+                          document.removeEventListener('click', handleClickOutside);
+                        };
+                        document.addEventListener('click', handleClickOutside);
+                      }, 100);
+                    }}
+                  >
+                    <div className="flex items-center p-4 bg-white rounded-lg border-l-4 border-blue-500">
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="font-semibold text-gray-900">{event.title}</h3>
+                          <span className="text-sm text-gray-500">{formatTime(event.time)}</span>
+                        </div>
+                        <p className="text-gray-600 text-sm">{event.description}</p>
+                        <div className="mt-2">
+                          <span className={cn(
+                            "text-xs px-2 py-1 rounded-full",
+                            event.priority === 'high' ? "bg-red-100 text-red-800" :
+                            event.priority === 'medium' ? "bg-yellow-100 text-yellow-800" :
+                            "bg-green-100 text-green-800"
+                          )}>
+                            {event.category}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </SwipeCard>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Daily Suggestions */}
+        <SuggestionsSection 
+          onSchedule={startScheduling}
+          onAction={handleAction}
+        />
+
+        {/* Scheduled Items */}
+        <ScheduledItemsTimeline
+          selectedDate={selectedDate}
+          onAction={handleAction}
+        />
+
+        {/* Floating Plus Button */}
+        <button 
+          onClick={() => setShowScheduleMenu(true)}
+          className="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-700 transition-all duration-200 hover:scale-110 z-40"
+        >
+          <Plus className="text-white" size={28} />
+        </button>
+      </div>
+    </PullToRefresh>
   );
 };
 
