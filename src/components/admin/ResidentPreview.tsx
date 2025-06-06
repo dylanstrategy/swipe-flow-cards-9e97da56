@@ -5,7 +5,6 @@ import TodayTab from '@/components/tabs/TodayTab';
 import ScheduleTab from '@/components/tabs/ScheduleTab';
 import MessagesTab from '@/components/tabs/MessagesTab';
 import AccountTab from '@/components/tabs/AccountTab';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 const ResidentPreview = () => {
   console.log('🏠 ResidentPreview rendering...');
@@ -53,18 +52,14 @@ const ResidentPreview = () => {
   try {
     return (
       <div className="flex flex-col h-full relative">
-        <ScrollArea className="flex-1 overflow-y-auto">
-          <div className="pb-24"> {/* Reduced padding since we're using fixed positioning */}
-            {renderActiveTab()}
-          </div>
-        </ScrollArea>
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t z-[9999]">
-          <TabNavigation 
-            tabs={tabs} 
-            activeTab={activeTab} 
-            onTabChange={setActiveTab} 
-          />
+        <div className="flex-1 overflow-y-auto overscroll-y-contain" style={{ paddingBottom: '88px' }}>
+          {renderActiveTab()}
         </div>
+        <TabNavigation 
+          tabs={tabs} 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab} 
+        />
       </div>
     );
   } catch (error) {
