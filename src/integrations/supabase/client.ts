@@ -14,12 +14,12 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     debug: true,
   },
   db: {
-    schema: 'api'
+    schema: 'public'
   },
   global: {
     headers: { 
       'x-my-custom-header': 'my-app-name',
-      'Accept-Profile': 'api'
+      'Accept-Profile': 'public'
     },
   }
 });
