@@ -1,4 +1,5 @@
 
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://msujdvczbmnhkfpjikwb.supabase.co';
@@ -13,13 +14,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     flowType: 'pkce',
     debug: true,
   },
-  db: {
-    schema: 'public'
-  },
   global: {
     headers: { 
       'x-my-custom-header': 'my-app-name',
-      'Accept-Profile': 'public'
     },
   }
 });
+
