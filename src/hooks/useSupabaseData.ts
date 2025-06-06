@@ -8,7 +8,7 @@ export const useUsers = () => {
     queryFn: async () => {
       console.log('Fetching users from Supabase...');
       const { data, error } = await supabase
-        .from('api.users')
+        .from('users')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -31,7 +31,7 @@ export const useProperties = () => {
     queryFn: async () => {
       console.log('Fetching properties from Supabase...');
       const { data, error } = await supabase
-        .from('api.properties')
+        .from('properties')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -54,7 +54,7 @@ export const useCalendarEvents = () => {
     queryFn: async () => {
       console.log('Fetching calendar events from Supabase...');
       const { data, error } = await supabase
-        .from('api.calendar_events')
+        .from('calendar_events')
         .select('*')
         .order('event_date', { ascending: true });
 
