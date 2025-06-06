@@ -281,11 +281,11 @@ const Register = () => {
               />
             </div>
 
-            <div>
+            <div className="space-y-1">
               <Label className="text-sm font-medium text-gray-700">Assigned Role</Label>
-              <p className="mt-1 text-sm font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded px-3 py-1 w-fit">
-                {formatRole(formData.role)} (auto-assigned)
-              </p>
+              <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800">
+                {formatRole(formData.role)}
+              </div>
             </div>
             
             <div>
