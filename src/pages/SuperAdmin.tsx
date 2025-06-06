@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +23,8 @@ import PropertyDetailModal from '@/components/admin/PropertyDetailModal';
 import RoleImpersonation from '@/components/RoleImpersonation';
 import ImpersonatedInterface from '@/components/admin/ImpersonatedInterface';
 import CSVUploader from '@/components/admin/CSVUploader';
+import CreateAccountModal from '@/components/admin/CreateAccountModal';
+import RegistrationLinkGenerator from '@/components/admin/RegistrationLinkGenerator';
 import type { Property } from '@/types/supabase';
 import { useNavigate } from 'react-router-dom';
 
@@ -37,6 +38,7 @@ const SuperAdmin = () => {
   const [isCreatePropertyModalOpen, setIsCreatePropertyModalOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [isPropertyDetailModalOpen, setIsPropertyDetailModalOpen] = useState(false);
+  const [isCreateAccountModalOpen, setIsCreateAccountModalOpen] = useState(false);
 
   // Debug information - show current user state
   console.log('Current user:', user);
@@ -202,9 +204,10 @@ const SuperAdmin = () => {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="bulk-import" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="users">Users Management</TabsTrigger>
           <TabsTrigger value="properties">Properties</TabsTrigger>
+          <TabsTrigger value="accounts">Account Creation</TabsTrigger>
           <TabsTrigger value="bulk-import">Bulk Import</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
@@ -324,6 +327,44 @@ const SuperAdmin = () => {
           </Card>
         </TabsContent>
 
+        {/* Account Creation Tab */}
+        <TabsContent value="accounts">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Plus className="w-5 h-5" />
+                  Create New Account
+                </CardTitle>
+                <Button 
+                  onClick={() => setIsCreateAccountModalOpen(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Account
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 mb-4">
+                  Create user accounts directly with pre-configured roles and property assignments.
+                </p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span>Default Password:</span>
+                    <code className="bg-gray-100 px-2 py-1 rounded">Applaud123!</code>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Email Confirmation:</span>
+                    <span className="text-green-600">Auto-confirmed</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <RegistrationLinkGenerator />
+          </div>
+        </TabsContent>
+
         {/* Bulk Import Tab */}
         <TabsContent value="bulk-import">
           <CSVUploader />
@@ -421,6 +462,12 @@ const SuperAdmin = () => {
           setSelectedProperty(null);
         }}
         onPropertyUpdated={refetchProperties}
+      />
+      
+      <CreateAccountModal
+        isOpen={isCreateAccountModalOpen}
+        onClose={() => setIsCreateAccountModalOpen(false)}
+        onAccountCreated={refetchUsers}
       />
     </div>
   );
