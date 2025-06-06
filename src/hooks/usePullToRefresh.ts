@@ -15,6 +15,7 @@ export function usePullToRefresh({ onRefresh, threshold = 100, enabled = true }:
   const currentY = useRef(0);
   const isPulling = useRef(false);
   const hasStartedPull = useRef(false);
+  const containerElement = useRef<HTMLElement | null>(null);
   const { toast } = useToast();
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
@@ -24,8 +25,13 @@ export function usePullToRefresh({ onRefresh, threshold = 100, enabled = true }:
     startY.current = touch.clientY;
     hasStartedPull.current = false;
     
-    // Only consider this a potential pull if we're at the very top
-    isPulling.current = window.scrollY === 0;
+    // Find the scroll container
+    const scrollContainer = document.querySelector('[data-scroll-container]') as HTMLElement;
+    containerElement.current = scrollContainer;
+    
+    // Only consider this a potential pull if we're at the very top of the scroll container
+    const isAtTop = scrollContainer ? scrollContainer.scrollTop <= 2 : window.scrollY <= 2;
+    isPulling.current = isAtTop;
   }, [enabled, isRefreshing]);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
@@ -35,15 +41,19 @@ export function usePullToRefresh({ onRefresh, threshold = 100, enabled = true }:
     currentY.current = touch.clientY;
     const diff = currentY.current - startY.current;
 
+    // Check if we're still at the top
+    const scrollContainer = containerElement.current;
+    const isStillAtTop = scrollContainer ? scrollContainer.scrollTop <= 2 : window.scrollY <= 2;
+
     // Only activate pull-to-refresh if:
-    // 1. We're scrolling down (diff > 0)
-    // 2. We're still at the top of the page
-    // 3. The movement is significant enough (> 10px)
-    if (diff > 10 && window.scrollY === 0) {
+    // 1. We're scrolling down significantly (diff > 30px)
+    // 2. We're still at the top of the scroll container
+    // 3. The movement is a clear downward pull
+    if (diff > 30 && isStillAtTop) {
       hasStartedPull.current = true;
-      e.preventDefault(); // Only prevent default when we're actually pulling
-      setPullDistance(Math.min(diff, threshold * 1.5));
-    } else if (diff <= 0 || window.scrollY > 0) {
+      e.preventDefault(); // Only prevent default when we're actually pulling for refresh
+      setPullDistance(Math.min(diff - 30, threshold * 1.5)); // Start counting after 30px
+    } else if (diff <= 10 || !isStillAtTop) {
       // If scrolling up or not at top, stop pull-to-refresh
       isPulling.current = false;
       hasStartedPull.current = false;
