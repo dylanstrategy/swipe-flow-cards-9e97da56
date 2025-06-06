@@ -124,6 +124,15 @@ export interface Property {
   unit_feature_tags?: string[];
   lifestyle_tags?: string[];
   
+  // NEW FIELDS ADDED
+  unit_count?: number;
+  recycling_pickup_schedule?: string;
+  utility_company?: string;
+  utility_contact?: string;
+  super_contact?: string;
+  late_fee_policy?: string;
+  late_fee_threshold?: number;
+  
   // Legacy fields for compatibility
   name?: string; // Alias for property_name
   address?: string; // Alias for address_line_1

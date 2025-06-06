@@ -31,6 +31,7 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
     website: '',
     timezone: '',
     management_company: '',
+    unit_count: '',
     property_manager_name: '',
     property_manager_email: '',
     property_manager_phone: '',
@@ -44,7 +45,17 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
     parking_info: '',
     pet_policy: '',
     smoking_policy: '',
-    special_instructions: ''
+    special_instructions: '',
+    move_in_instructions: '',
+    trash_pickup_schedule: '',
+    recycling_pickup_schedule: '',
+    amenity_wifi_name: '',
+    amenity_wifi_password: '',
+    utility_company: '',
+    utility_contact: '',
+    super_contact: '',
+    late_fee_policy: '',
+    late_fee_threshold: ''
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -61,6 +72,7 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
         website: property.website || '',
         timezone: property.timezone || '',
         management_company: property.management_company || '',
+        unit_count: property.unit_count?.toString() || '',
         property_manager_name: property.property_manager_name || '',
         property_manager_email: property.property_manager_email || '',
         property_manager_phone: property.property_manager_phone || '',
@@ -74,7 +86,17 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
         parking_info: property.parking_info || '',
         pet_policy: property.pet_policy || '',
         smoking_policy: property.smoking_policy || '',
-        special_instructions: property.special_instructions || ''
+        special_instructions: property.special_instructions || '',
+        move_in_instructions: property.move_in_instructions || '',
+        trash_pickup_schedule: property.trash_pickup_schedule || '',
+        recycling_pickup_schedule: property.recycling_pickup_schedule || '',
+        amenity_wifi_name: property.amenity_wifi_name || '',
+        amenity_wifi_password: property.amenity_wifi_password || '',
+        utility_company: property.utility_company || '',
+        utility_contact: property.utility_contact || '',
+        super_contact: property.super_contact || '',
+        late_fee_policy: property.late_fee_policy || '',
+        late_fee_threshold: property.late_fee_threshold?.toString() || ''
       });
     }
   }, [property, isOpen]);
@@ -85,12 +107,16 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
 
     setLoading(true);
     try {
+      const updateData = {
+        ...formData,
+        unit_count: formData.unit_count ? parseInt(formData.unit_count) : null,
+        late_fee_threshold: formData.late_fee_threshold ? parseFloat(formData.late_fee_threshold) : null,
+        updated_at: new Date().toISOString()
+      };
+
       const { error } = await supabase
         .from('properties')
-        .update({
-          ...formData,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', property.id);
 
       if (error) throw error;
@@ -139,12 +165,33 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
               />
             </div>
             <div>
+              <Label htmlFor="unit_count">Unit Count</Label>
+              <Input
+                id="unit_count"
+                type="number"
+                value={formData.unit_count}
+                onChange={(e) => handleInputChange('unit_count', e.target.value)}
+                placeholder="50"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
               <Label htmlFor="timezone">Timezone</Label>
               <Input
                 id="timezone"
                 value={formData.timezone}
                 onChange={(e) => handleInputChange('timezone', e.target.value)}
                 placeholder="America/New_York"
+              />
+            </div>
+            <div>
+              <Label htmlFor="management_company">Management Company</Label>
+              <Input
+                id="management_company"
+                value={formData.management_company}
+                onChange={(e) => handleInputChange('management_company', e.target.value)}
               />
             </div>
           </div>
@@ -199,6 +246,113 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
           </div>
 
           <div>
+            <Label htmlFor="move_in_instructions">Move-In Instructions</Label>
+            <Textarea
+              id="move_in_instructions"
+              value={formData.move_in_instructions}
+              onChange={(e) => handleInputChange('move_in_instructions', e.target.value)}
+              placeholder="Check in at front desk, get keys from concierge"
+              rows={2}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="trash_pickup_schedule">Trash Pickup Schedule</Label>
+              <Input
+                id="trash_pickup_schedule"
+                value={formData.trash_pickup_schedule}
+                onChange={(e) => handleInputChange('trash_pickup_schedule', e.target.value)}
+                placeholder="Mon/Wed/Fri 6am"
+              />
+            </div>
+            <div>
+              <Label htmlFor="recycling_pickup_schedule">Recycling Schedule</Label>
+              <Input
+                id="recycling_pickup_schedule"
+                value={formData.recycling_pickup_schedule}
+                onChange={(e) => handleInputChange('recycling_pickup_schedule', e.target.value)}
+                placeholder="Tues/Fri 7am"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="amenity_wifi_name">Amenity WiFi Name</Label>
+              <Input
+                id="amenity_wifi_name"
+                value={formData.amenity_wifi_name}
+                onChange={(e) => handleInputChange('amenity_wifi_name', e.target.value)}
+                placeholder="PropertyName_Guest"
+              />
+            </div>
+            <div>
+              <Label htmlFor="amenity_wifi_password">Amenity WiFi Password</Label>
+              <Input
+                id="amenity_wifi_password"
+                value={formData.amenity_wifi_password}
+                onChange={(e) => handleInputChange('amenity_wifi_password', e.target.value)}
+                placeholder="password123"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="utility_company">Utility Company</Label>
+              <Input
+                id="utility_company"
+                value={formData.utility_company}
+                onChange={(e) => handleInputChange('utility_company', e.target.value)}
+                placeholder="PSE&G"
+              />
+            </div>
+            <div>
+              <Label htmlFor="utility_contact">Utility Contact</Label>
+              <Input
+                id="utility_contact"
+                value={formData.utility_contact}
+                onChange={(e) => handleInputChange('utility_contact', e.target.value)}
+                placeholder="(800) 436-7734"
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="super_contact">Super Contact</Label>
+            <Input
+              id="super_contact"
+              value={formData.super_contact}
+              onChange={(e) => handleInputChange('super_contact', e.target.value)}
+              placeholder="John Smith (555) 123-4567"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="late_fee_policy">Late Fee Policy</Label>
+              <Input
+                id="late_fee_policy"
+                value={formData.late_fee_policy}
+                onChange={(e) => handleInputChange('late_fee_policy', e.target.value)}
+                placeholder="$50 late fee after 5 days"
+              />
+            </div>
+            <div>
+              <Label htmlFor="late_fee_threshold">Late Fee Threshold</Label>
+              <Input
+                id="late_fee_threshold"
+                type="number"
+                step="0.01"
+                value={formData.late_fee_threshold}
+                onChange={(e) => handleInputChange('late_fee_threshold', e.target.value)}
+                placeholder="50.00"
+              />
+            </div>
+          </div>
+
+          <div>
             <Label htmlFor="website">Website</Label>
             <Input
               id="website"
@@ -210,14 +364,6 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="management_company">Management Company</Label>
-              <Input
-                id="management_company"
-                value={formData.management_company}
-                onChange={(e) => handleInputChange('management_company', e.target.value)}
-              />
-            </div>
-            <div>
               <Label htmlFor="property_manager_name">Property Manager</Label>
               <Input
                 id="property_manager_name"
@@ -225,9 +371,6 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
                 onChange={(e) => handleInputChange('property_manager_name', e.target.value)}
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="property_manager_email">Manager Email</Label>
               <Input
@@ -237,14 +380,15 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
                 onChange={(e) => handleInputChange('property_manager_email', e.target.value)}
               />
             </div>
-            <div>
-              <Label htmlFor="property_manager_phone">Manager Phone</Label>
-              <Input
-                id="property_manager_phone"
-                value={formData.property_manager_phone}
-                onChange={(e) => handleInputChange('property_manager_phone', e.target.value)}
-              />
-            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="property_manager_phone">Manager Phone</Label>
+            <Input
+              id="property_manager_phone"
+              value={formData.property_manager_phone}
+              onChange={(e) => handleInputChange('property_manager_phone', e.target.value)}
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -41,8 +41,8 @@ const CSVUploader = () => {
         'Jane,Smith,jane.smith@example.com,555-0124,operator,property-management.com'
       ],
       properties: [
-        'property_name,property_code,address_line_1,city,state,zip_code,timezone,property_type,door_access_system,on_site_support_hours,property_tags',
-        'Le Leo,210,123 Main St,Jersey City,NJ,07302,America/New_York,apartment,ButterflyMX,"Mon-Fri 9am-6pm","concierge,secure-entry"'
+        'property_name,property_code,address_line_1,address_line_2,city,state,zip_code,timezone,property_type,management_company,unit_count,door_access_system,on_site_support_hours,property_tags,move_in_instructions,trash_pickup_schedule,recycling_pickup_schedule,amenity_wifi_name,amenity_wifi_password,utility_company,utility_contact,super_contact,late_fee_policy,late_fee_threshold',
+        'Le Leo,210,123 Main St,,Jersey City,NJ,07302,America/New_York,apartment,Applaud Living,50,ButterflyMX,"Mon-Fri 9am-6pm","concierge,secure-entry","Check in at front desk, get keys from concierge","Mon/Wed/Fri 6am","Tues/Fri 7am",LeeLeo_Guest,password123,PSE&G,(800) 436-7734,"John Smith (555) 123-4567","$50 late fee after 5 days",50'
       ],
       units: [
         'property_code,unit_number,unit_type,bedrooms,bathrooms,floor,sq_ft,market_rent,unit_status,unit_ready_status',
@@ -174,14 +174,27 @@ const CSVUploader = () => {
           property_name: row.property_name?.trim(),
           property_code: row.property_code?.trim(),
           address_line_1: row.address_line_1?.trim(),
+          address_line_2: row.address_line_2?.trim() || null,
           city: row.city?.trim(),
           state: row.state?.trim(),
           zip_code: row.zip_code?.trim(),
           timezone: row.timezone?.trim() || 'America/New_York',
           property_type: row.property_type?.trim() || 'apartment',
+          management_company: row.management_company?.trim() || null,
+          unit_count: row.unit_count ? parseInt(row.unit_count) : null,
           door_access_system: row.door_access_system?.trim() || null,
           on_site_support_hours: row.on_site_support_hours?.trim() || null,
-          property_tags: row.property_tags ? row.property_tags.split(',').map((tag: string) => tag.trim()) : null
+          property_tags: row.property_tags ? row.property_tags.split(',').map((tag: string) => tag.trim()) : null,
+          move_in_instructions: row.move_in_instructions?.trim() || null,
+          trash_pickup_schedule: row.trash_pickup_schedule?.trim() || null,
+          recycling_pickup_schedule: row.recycling_pickup_schedule?.trim() || null,
+          amenity_wifi_name: row.amenity_wifi_name?.trim() || null,
+          amenity_wifi_password: row.amenity_wifi_password?.trim() || null,
+          utility_company: row.utility_company?.trim() || null,
+          utility_contact: row.utility_contact?.trim() || null,
+          super_contact: row.super_contact?.trim() || null,
+          late_fee_policy: row.late_fee_policy?.trim() || null,
+          late_fee_threshold: row.late_fee_threshold ? parseFloat(row.late_fee_threshold) : null
         };
 
         console.log(`Creating property ${i + 1}:`, propertyData);

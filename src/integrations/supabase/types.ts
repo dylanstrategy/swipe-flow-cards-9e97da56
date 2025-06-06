@@ -276,6 +276,8 @@ export type Database = {
           emergency_phone: string | null
           guest_wifi_available: boolean | null
           id: string
+          late_fee_policy: string | null
+          late_fee_threshold: number | null
           leasing_office_hours: string | null
           lifestyle_tags: string[] | null
           maintenance_company: string | null
@@ -295,16 +297,21 @@ export type Database = {
           property_name: string
           property_tags: string[] | null
           property_type: Database["public"]["Enums"]["property_type"] | null
+          recycling_pickup_schedule: string | null
           recycling_schedule: string | null
           smoking_policy: string | null
           special_instructions: string | null
           state: string
+          super_contact: string | null
           super_operator_email: string | null
           timezone: string | null
           total_units: number | null
           trash_pickup_schedule: string | null
+          unit_count: number | null
           unit_feature_tags: string[] | null
           updated_at: string | null
+          utility_company: string | null
+          utility_contact: string | null
           website: string | null
           zip_code: string
         }
@@ -332,6 +339,8 @@ export type Database = {
           emergency_phone?: string | null
           guest_wifi_available?: boolean | null
           id?: string
+          late_fee_policy?: string | null
+          late_fee_threshold?: number | null
           leasing_office_hours?: string | null
           lifestyle_tags?: string[] | null
           maintenance_company?: string | null
@@ -351,16 +360,21 @@ export type Database = {
           property_name: string
           property_tags?: string[] | null
           property_type?: Database["public"]["Enums"]["property_type"] | null
+          recycling_pickup_schedule?: string | null
           recycling_schedule?: string | null
           smoking_policy?: string | null
           special_instructions?: string | null
           state: string
+          super_contact?: string | null
           super_operator_email?: string | null
           timezone?: string | null
           total_units?: number | null
           trash_pickup_schedule?: string | null
+          unit_count?: number | null
           unit_feature_tags?: string[] | null
           updated_at?: string | null
+          utility_company?: string | null
+          utility_contact?: string | null
           website?: string | null
           zip_code: string
         }
@@ -388,6 +402,8 @@ export type Database = {
           emergency_phone?: string | null
           guest_wifi_available?: boolean | null
           id?: string
+          late_fee_policy?: string | null
+          late_fee_threshold?: number | null
           leasing_office_hours?: string | null
           lifestyle_tags?: string[] | null
           maintenance_company?: string | null
@@ -407,16 +423,21 @@ export type Database = {
           property_name?: string
           property_tags?: string[] | null
           property_type?: Database["public"]["Enums"]["property_type"] | null
+          recycling_pickup_schedule?: string | null
           recycling_schedule?: string | null
           smoking_policy?: string | null
           special_instructions?: string | null
           state?: string
+          super_contact?: string | null
           super_operator_email?: string | null
           timezone?: string | null
           total_units?: number | null
           trash_pickup_schedule?: string | null
+          unit_count?: number | null
           unit_feature_tags?: string[] | null
           updated_at?: string | null
+          utility_company?: string | null
+          utility_contact?: string | null
           website?: string | null
           zip_code?: string
         }
