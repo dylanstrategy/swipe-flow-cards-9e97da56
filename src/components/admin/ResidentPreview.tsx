@@ -52,13 +52,13 @@ const ResidentPreview = () => {
 
   try {
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full relative">
         <ScrollArea className="flex-1 overflow-y-auto">
-          <div className="pb-20"> {/* Add padding to ensure content isn't hidden by the tab navigation */}
+          <div className="pb-24"> {/* Reduced padding since we're using fixed positioning */}
             {renderActiveTab()}
           </div>
         </ScrollArea>
-        <div className="sticky bottom-0 bg-white border-t">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t z-[9999]">
           <TabNavigation 
             tabs={tabs} 
             activeTab={activeTab} 
