@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -41,7 +40,6 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
     emergency_phone: '',
     maintenance_company: '',
     maintenance_contact: '',
-    maintenance_phone: '',
     leasing_office_hours: '',
     amenities: '',
     parking_info: '',
@@ -86,7 +84,6 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
         emergency_phone: property.emergency_phone || '',
         maintenance_company: property.maintenance_company || '',
         maintenance_contact: property.maintenance_contact || '',
-        maintenance_phone: property.maintenance_phone || '',
         leasing_office_hours: property.leasing_office_hours || '',
         amenities: property.amenities || '',
         parking_info: property.parking_info || '',
@@ -388,15 +385,6 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
                   onChange={(e) => handleInputChange('maintenance_contact', e.target.value)}
                 />
               </div>
-            </div>
-
-            <div>
-              <Label htmlFor="maintenance_phone">Maintenance Phone</Label>
-              <Input
-                id="maintenance_phone"
-                value={formData.maintenance_phone}
-                onChange={(e) => handleInputChange('maintenance_phone', e.target.value)}
-              />
             </div>
 
             <div>
