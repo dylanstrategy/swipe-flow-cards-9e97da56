@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -345,7 +346,7 @@ const CSVUploader: React.FC = () => {
         for (const property of processingResult.properties) {
           try {
             const { data, error } = await supabase
-              .from('properties')
+              .from('api.properties')
               .insert({
                 name: property.property_name,
                 address: `${property.address_line_1}${property.address_line_2 ? ', ' + property.address_line_2 : ''}, ${property.city}, ${property.state} ${property.zip_code}`,
@@ -380,7 +381,7 @@ const CSVUploader: React.FC = () => {
         
         // First get property IDs for linking
         const { data: propertiesData } = await supabase
-          .from('properties')
+          .from('api.properties')
           .select('id, name');
         
         for (const unit of processingResult.units) {
@@ -401,7 +402,7 @@ const CSVUploader: React.FC = () => {
             }
 
             const { data, error } = await supabase
-              .from('units')
+              .from('api.units')
               .insert({
                 property_id: property.id,
                 unit_number: unit.unit_number,
@@ -440,7 +441,7 @@ const CSVUploader: React.FC = () => {
         for (const user of processingResult.users) {
           try {
             const { data, error } = await supabase
-              .from('users')
+              .from('api.users')
               .insert({
                 id: crypto.randomUUID(), // Generate UUID for user
                 email: user.email,
@@ -477,15 +478,15 @@ const CSVUploader: React.FC = () => {
         
         // Get user and property/unit data for linking
         const { data: usersData } = await supabase
-          .from('users')
+          .from('api.users')
           .select('id, email');
           
         const { data: propertiesData } = await supabase
-          .from('properties')
+          .from('api.properties')
           .select('id, name');
           
         const { data: unitsData } = await supabase
-          .from('units')
+          .from('api.units')
           .select('id, unit_number, property_id');
         
         for (const resident of processingResult.residents) {
@@ -516,7 +517,7 @@ const CSVUploader: React.FC = () => {
             );
 
             const { data, error } = await supabase
-              .from('residents')
+              .from('api.residents')
               .insert({
                 user_id: user.id,
                 property_id: property?.id,
