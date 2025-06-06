@@ -13,10 +13,13 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     flowType: 'pkce',
     debug: true,
   },
+  db: {
+    schema: 'api'
+  },
   global: {
     headers: { 
       'x-my-custom-header': 'my-app-name',
-      'Accept-Profile': 'public'
+      'Accept-Profile': 'api'
     },
   }
 });
