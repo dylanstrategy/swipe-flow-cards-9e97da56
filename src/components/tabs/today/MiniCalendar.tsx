@@ -35,10 +35,16 @@ const MiniCalendar = ({ selectedDate, onDateSelect, getEventsForDate }: MiniCale
       const isTodayDate = isToday(day);
       const hasEvents = getEventsForDate(day).length > 0;
 
+      const handleDayClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onDateSelect(cloneDay);
+      };
+
       days.push(
         <div
           key={day.toString()}
-          className={`relative h-12 w-12 flex items-center justify-center cursor-pointer rounded-lg text-sm font-medium transition-all ${
+          className={`relative h-12 w-12 flex items-center justify-center cursor-pointer rounded-lg text-sm font-medium transition-all hover:scale-105 ${
             !isCurrentMonth 
               ? 'text-gray-300 hover:text-gray-400' 
               : isSelected 
@@ -49,7 +55,7 @@ const MiniCalendar = ({ selectedDate, onDateSelect, getEventsForDate }: MiniCale
                     ? 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200' 
                     : 'text-gray-700 hover:bg-gray-100'
           }`}
-          onClick={() => onDateSelect(cloneDay)}
+          onClick={handleDayClick}
         >
           <span className="relative z-10">{formattedDate}</span>
           {hasEvents && !isSelected && (
