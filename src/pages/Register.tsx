@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -5,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, UserPlus } from 'lucide-react';
 import type { AppRole } from '@/types/supabase';
@@ -139,6 +139,8 @@ const Register = () => {
     setLoading(true);
 
     try {
+      console.log('REGISTER: Assigned Role →', formData.role);
+      
       // Sign up user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
@@ -280,12 +282,10 @@ const Register = () => {
             </div>
 
             <div>
-              <Label>Role</Label>
-              <div className="mt-1">
-                <Badge variant="outline" className="px-3 py-1">
-                  {formatRole(formData.role)}
-                </Badge>
-              </div>
+              <Label className="text-sm font-medium text-gray-700">Assigned Role</Label>
+              <p className="mt-1 text-sm font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded px-3 py-1 w-fit">
+                {formatRole(formData.role)} (auto-assigned)
+              </p>
             </div>
             
             <div>
