@@ -17,8 +17,9 @@ export const useLiveCalendarEvents = () => {
       const { data, error } = await supabase
         .from('calendar_events')
         .select('*')
-        .or(`created_by.eq.${user.id},related_user_id.eq.${user.id}`)
-        .order('start_time', { ascending: true });
+        .or(`created_by.eq.${user.id},user_id.eq.${user.id},related_user_id.eq.${user.id}`)
+        .order('event_date', { ascending: true })
+        .order('event_time', { ascending: true });
 
       if (error) {
         console.error('Error fetching calendar events:', error);
@@ -42,19 +43,32 @@ export const useCreateCalendarEvent = () => {
     mutationFn: async (eventData: {
       title: string;
       description?: string;
-      start_time: string;
-      end_time?: string;
+      event_date: string;
+      event_time?: string;
       event_type: string;
       related_user_id?: string;
       related_unit_id?: string;
+      property_id?: string;
+      unit_id?: string;
     }) => {
       if (!user) throw new Error('User not authenticated');
+
+      // Calculate start_time and end_time from event_date and event_time
+      const eventDateTime = eventData.event_time 
+        ? `${eventData.event_date}T${eventData.event_time}:00`
+        : `${eventData.event_date}T09:00:00`;
+      
+      const startTime = new Date(eventDateTime).toISOString();
+      const endTime = new Date(new Date(eventDateTime).getTime() + 60 * 60 * 1000).toISOString(); // +1 hour
 
       const { data, error } = await supabase
         .from('calendar_events')
         .insert({
           ...eventData,
           created_by: user.id,
+          user_id: user.id,
+          start_time: startTime,
+          end_time: endTime,
           created_at: new Date().toISOString()
         })
         .select()
@@ -74,6 +88,25 @@ export const useUpdateCalendarEvent = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: { id: string; [key: string]: any }) => {
+      // If updating event_date or event_time, recalculate start_time and end_time
+      if (updates.event_date || updates.event_time) {
+        const { data: currentEvent } = await supabase
+          .from('calendar_events')
+          .select('event_date, event_time')
+          .eq('id', id)
+          .single();
+
+        const eventDate = updates.event_date || currentEvent?.event_date;
+        const eventTime = updates.event_time || currentEvent?.event_time || '09:00';
+        
+        const eventDateTime = `${eventDate}T${eventTime}:00`;
+        const startTime = new Date(eventDateTime).toISOString();
+        const endTime = new Date(new Date(eventDateTime).getTime() + 60 * 60 * 1000).toISOString();
+        
+        updates.start_time = startTime;
+        updates.end_time = endTime;
+      }
+
       const { data, error } = await supabase
         .from('calendar_events')
         .update(updates)

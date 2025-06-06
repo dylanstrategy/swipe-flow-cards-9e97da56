@@ -62,7 +62,7 @@ const TodayTab = () => {
   const processedEvents = liveEvents.map(event => ({
     id: event.id,
     date: new Date(event.event_date),
-    time: event.event_time || format(new Date(event.event_date), 'HH:mm'),
+    time: event.event_time || format(new Date(event.start_time), 'HH:mm'),
     title: event.title,
     description: event.description || '',
     category: event.event_type,
@@ -143,7 +143,6 @@ const TodayTab = () => {
   const handleRefresh = async () => {
     await Promise.all([
       refetchEvents(),
-      // Add other data refresh calls here as needed
     ]);
   };
 

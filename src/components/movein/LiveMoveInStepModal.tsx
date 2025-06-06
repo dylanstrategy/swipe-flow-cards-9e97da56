@@ -199,6 +199,20 @@ const LiveMoveInStepModal = ({ stepId, onComplete, onClose }: LiveMoveInStepModa
                 {resident.status || 'pending'}
               </Badge>
             </div>
+            {resident.monthly_rent && (
+              <div className="flex justify-between items-center text-sm mt-1">
+                <span>Monthly Rent:</span>
+                <span className="font-medium">${resident.monthly_rent}</span>
+              </div>
+            )}
+            {resident.payment_status && (
+              <div className="flex justify-between items-center text-sm mt-1">
+                <span>Payment Status:</span>
+                <Badge variant={resident.payment_status === 'current' ? 'default' : 'destructive'}>
+                  {resident.payment_status}
+                </Badge>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2 pt-4">

@@ -10,7 +10,7 @@ export const useUsers = () => {
   const { data: users = [], isLoading: loading, error, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      console.log('Fetching users...');
+      console.log('Fetching users from public.users...');
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -21,7 +21,7 @@ export const useUsers = () => {
         return [];
       }
 
-      console.log('✅ Users fetched:', data);
+      console.log('✅ Users fetched from live data:', data);
       return data || [];
     },
   });
@@ -36,7 +36,7 @@ export const useProperties = () => {
   const { data: properties = [], isLoading: loading, error, refetch } = useQuery({
     queryKey: ['properties'],
     queryFn: async () => {
-      console.log('Fetching properties...');
+      console.log('Fetching properties from public.properties...');
       const { data, error } = await supabase
         .from('properties')
         .select('*')
@@ -54,7 +54,7 @@ export const useProperties = () => {
         address: property.address_line_1, // Legacy compatibility
       })) as Property[];
 
-      console.log('✅ Properties mapped for compatibility:', mappedData);
+      console.log('✅ Properties fetched and mapped for compatibility:', mappedData);
       return mappedData;
     },
   });
@@ -70,7 +70,7 @@ export const useResidents = (propertyId?: string) => {
   const { data: residents = [], isLoading: loading, error, refetch } = useQuery({
     queryKey: ['residents', propertyId],
     queryFn: async () => {
-      console.log('Fetching residents...');
+      console.log('Fetching residents from public.residents...');
       
       // Build the query
       let query = supabase
@@ -111,7 +111,7 @@ export const useResidents = (propertyId?: string) => {
         return [];
       }
 
-      console.log('✅ Residents fetched:', data);
+      console.log('✅ Residents fetched from live data:', data);
       return data as Resident[];
     },
   });
@@ -126,18 +126,19 @@ export const useCalendarEvents = () => {
   const { data: events = [], isLoading: loading, error, refetch } = useQuery({
     queryKey: ['calendar_events'],
     queryFn: async () => {
-      console.log('Fetching calendar events...');
+      console.log('Fetching calendar events from public.calendar_events...');
       const { data, error } = await supabase
         .from('calendar_events')
         .select('*')
-        .order('event_date', { ascending: true });
+        .order('event_date', { ascending: true })
+        .order('event_time', { ascending: true });
 
       if (error) {
         console.error('Error fetching calendar events:', error);
         return [];
       }
 
-      console.log('✅ Calendar events fetched:', data);
+      console.log('✅ Calendar events fetched from live data:', data);
       return data as CalendarEvent[];
     },
   });
@@ -153,7 +154,7 @@ export const useUnits = (propertyId?: string) => {
   const { data: units = [], isLoading: loading, error, refetch } = useQuery({
     queryKey: ['units', propertyId],
     queryFn: async () => {
-      console.log('Fetching units...');
+      console.log('Fetching units from public.units...');
       
       // Build the query
       let query = supabase
@@ -177,7 +178,8 @@ export const useUnits = (propertyId?: string) => {
             lease_start_date,
             lease_end_date,
             monthly_rent,
-            is_active
+            is_active,
+            status
           )
         `);
 
@@ -200,10 +202,89 @@ export const useUnits = (propertyId?: string) => {
         bath_type: unit.bathrooms ? `${unit.bathrooms}BA` : null,
       })) as Unit[];
 
-      console.log('✅ Units mapped for compatibility:', mappedData);
+      console.log('✅ Units fetched and mapped for compatibility:', mappedData);
       return mappedData;
     },
   });
 
   return { units, loading, error, refetch };
+};
+
+/**
+ * Hook to fetch service orders (work orders) from Supabase
+ */
+export const useServiceOrders = (userId?: string) => {
+  const { data: serviceOrders = [], isLoading: loading, error, refetch } = useQuery({
+    queryKey: ['service_orders', userId],
+    queryFn: async () => {
+      console.log('Fetching service orders from public.service_orders...');
+      
+      let query = supabase
+        .from('service_orders')
+        .select(`
+          *,
+          units (
+            id,
+            unit_number,
+            property_id,
+            properties (
+              id,
+              property_name,
+              address_line_1
+            )
+          ),
+          vendors (
+            id,
+            name,
+            email,
+            phone,
+            category
+          )
+        `);
+
+      if (userId) {
+        query = query.eq('user_id', userId);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching service orders:', error);
+        return [];
+      }
+
+      console.log('✅ Service orders fetched from live data:', data);
+      return data;
+    },
+    enabled: !!userId,
+  });
+
+  return { serviceOrders, loading, error, refetch };
+};
+
+/**
+ * Hook to fetch vendors from Supabase
+ */
+export const useVendors = () => {
+  const { data: vendors = [], isLoading: loading, error, refetch } = useQuery({
+    queryKey: ['vendors'],
+    queryFn: async () => {
+      console.log('Fetching vendors from public.vendors...');
+      const { data, error } = await supabase
+        .from('vendors')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) {
+        console.error('Error fetching vendors:', error);
+        return [];
+      }
+
+      console.log('✅ Vendors fetched from live data:', data);
+      return data;
+    },
+  });
+
+  return { vendors, loading, error, refetch };
 };
