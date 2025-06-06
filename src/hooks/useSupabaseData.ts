@@ -1,10 +1,58 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import type { User, Property, Unit, Resident, MoveIn, MoveOut } from '@/types/supabase';
+
+// Mock data since Supabase tables don't exist or aren't accessible
+const mockUsers = [
+  {
+    id: '1',
+    first_name: 'John',
+    last_name: 'Doe',
+    email: 'john.doe@example.com',
+    phone: '(555) 123-4567',
+    role: 'super_admin',
+    created_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '2',
+    first_name: 'Jane',
+    last_name: 'Smith',
+    email: 'jane.smith@example.com',
+    phone: '(555) 234-5678',
+    role: 'operator',
+    created_at: '2024-01-15T00:00:00Z'
+  },
+  {
+    id: '3',
+    first_name: 'Mike',
+    last_name: 'Johnson',
+    email: 'mike.johnson@example.com',
+    phone: '(555) 345-6789',
+    role: 'maintenance',
+    created_at: '2024-02-01T00:00:00Z'
+  }
+];
+
+const mockProperties = [
+  {
+    id: '1',
+    name: 'Sunset Apartments',
+    address: '123 Main St, City, State 12345',
+    website: 'https://sunsetapts.com',
+    timezone: 'America/New_York',
+    created_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '2',
+    name: 'Riverside Complex',
+    address: '456 River Rd, City, State 12346',
+    website: 'https://riverside.com',
+    timezone: 'America/Chicago',
+    created_at: '2024-01-10T00:00:00Z'
+  }
+];
 
 export function useUsers() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -13,19 +61,11 @@ export function useUsers() {
       setLoading(true);
       setError(null);
       
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching users:', error);
-        setError(error.message);
-        setUsers([]);
-      } else {
-        console.log('📊 Users fetched:', data?.length || 0);
-        setUsers(data || []);
-      }
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      console.log('📊 Users fetched (mock data):', mockUsers.length);
+      setUsers(mockUsers);
     } catch (err) {
       console.error('Exception fetching users:', err);
       setError('Failed to fetch users');
@@ -43,7 +83,7 @@ export function useUsers() {
 }
 
 export function useProperties() {
-  const [properties, setProperties] = useState<Property[]>([]);
+  const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,19 +92,11 @@ export function useProperties() {
       setLoading(true);
       setError(null);
       
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching properties:', error);
-        setError(error.message);
-        setProperties([]);
-      } else {
-        console.log('🏢 Properties fetched:', data?.length || 0);
-        setProperties(data || []);
-      }
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      console.log('🏢 Properties fetched (mock data):', mockProperties.length);
+      setProperties(mockProperties);
     } catch (err) {
       console.error('Exception fetching properties:', err);
       setError('Failed to fetch properties');
@@ -82,7 +114,7 @@ export function useProperties() {
 }
 
 export function useUnits() {
-  const [units, setUnits] = useState<Unit[]>([]);
+  const [units, setUnits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -91,33 +123,8 @@ export function useUnits() {
       setLoading(true);
       setError(null);
       
-      const { data, error } = await supabase
-        .from('units')
-        .select(`
-          *,
-          residents!inner(
-            id,
-            user_id,
-            status,
-            users!inner(
-              id,
-              first_name,
-              last_name,
-              email,
-              phone
-            )
-          )
-        `)
-        .order('unit_number', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching units:', error);
-        setError(error.message);
-        setUnits([]);
-      } else {
-        console.log('🏠 Units fetched:', data?.length || 0);
-        setUnits(data || []);
-      }
+      console.log('🏠 Units fetched (mock data):', 0);
+      setUnits([]);
     } catch (err) {
       console.error('Exception fetching units:', err);
       setError('Failed to fetch units');
@@ -135,7 +142,7 @@ export function useUnits() {
 }
 
 export function useResidents() {
-  const [residents, setResidents] = useState<Resident[]>([]);
+  const [residents, setResidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -144,34 +151,8 @@ export function useResidents() {
       setLoading(true);
       setError(null);
       
-      const { data, error } = await supabase
-        .from('residents')
-        .select(`
-          *,
-          users!inner(
-            id,
-            first_name,
-            last_name,
-            email,
-            phone
-          ),
-          units(
-            id,
-            unit_number,
-            bedroom_type,
-            bath_type
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching residents:', error);
-        setError(error.message);
-        setResidents([]);
-      } else {
-        console.log('👥 Residents fetched:', data?.length || 0);
-        setResidents(data || []);
-      }
+      console.log('👥 Residents fetched (mock data):', 0);
+      setResidents([]);
     } catch (err) {
       console.error('Exception fetching residents:', err);
       setError('Failed to fetch residents');
@@ -189,7 +170,7 @@ export function useResidents() {
 }
 
 export function useMoveIns() {
-  const [moveIns, setMoveIns] = useState<MoveIn[]>([]);
+  const [moveIns, setMoveIns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -198,35 +179,8 @@ export function useMoveIns() {
       setLoading(true);
       setError(null);
       
-      const { data, error } = await supabase
-        .from('move_ins')
-        .select(`
-          *,
-          residents!inner(
-            id,
-            users!inner(
-              id,
-              first_name,
-              last_name,
-              email
-            )
-          ),
-          units!inner(
-            id,
-            unit_number,
-            bedroom_type
-          )
-        `)
-        .order('lease_start_date', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching move-ins:', error);
-        setError(error.message);
-        setMoveIns([]);
-      } else {
-        console.log('📦 Move-ins fetched:', data?.length || 0);
-        setMoveIns(data || []);
-      }
+      console.log('📦 Move-ins fetched (mock data):', 0);
+      setMoveIns([]);
     } catch (err) {
       console.error('Exception fetching move-ins:', err);
       setError('Failed to fetch move-ins');
@@ -244,7 +198,7 @@ export function useMoveIns() {
 }
 
 export function useMoveOuts() {
-  const [moveOuts, setMoveOuts] = useState<MoveOut[]>([]);
+  const [moveOuts, setMoveOuts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -253,35 +207,8 @@ export function useMoveOuts() {
       setLoading(true);
       setError(null);
       
-      const { data, error } = await supabase
-        .from('move_outs')
-        .select(`
-          *,
-          residents!inner(
-            id,
-            users!inner(
-              id,
-              first_name,
-              last_name,
-              email
-            )
-          ),
-          units!inner(
-            id,
-            unit_number,
-            bedroom_type
-          )
-        `)
-        .order('move_out_date', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching move-outs:', error);
-        setError(error.message);
-        setMoveOuts([]);
-      } else {
-        console.log('📤 Move-outs fetched:', data?.length || 0);
-        setMoveOuts(data || []);
-      }
+      console.log('📤 Move-outs fetched (mock data):', 0);
+      setMoveOuts([]);
     } catch (err) {
       console.error('Exception fetching move-outs:', err);
       setError('Failed to fetch move-outs');
@@ -308,19 +235,8 @@ export function useCalendarEvents() {
       setLoading(true);
       setError(null);
       
-      const { data, error } = await supabase
-        .from('calendar_events')
-        .select('*')
-        .order('event_date', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching calendar events:', error);
-        setError(error.message);
-        setEvents([]);
-      } else {
-        console.log('📅 Calendar events fetched:', data?.length || 0);
-        setEvents(data || []);
-      }
+      console.log('📅 Calendar events fetched (mock data):', 0);
+      setEvents([]);
     } catch (err) {
       console.error('Exception fetching calendar events:', err);
       setError('Failed to fetch calendar events');
