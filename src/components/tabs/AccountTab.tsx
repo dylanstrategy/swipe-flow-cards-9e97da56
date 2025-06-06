@@ -38,8 +38,8 @@ const AccountTab = () => {
         return <ResidentPaymentSetup onBack={() => setCurrentView('main')} />;
       default:
         return (
-          <div className="max-w-full overflow-hidden">
-            <div className="p-4 space-y-6 pb-24 max-w-2xl mx-auto">
+          <div className="w-full">
+            <div className="p-4 space-y-6 max-w-2xl mx-auto">
               {/* Profile Header */}
               <Card>
                 <CardContent className="p-6">

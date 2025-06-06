@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import SwipeCard from '../SwipeCard';
 import MessageModule from '../message/MessageModule';
@@ -77,7 +78,7 @@ const MessagesTab = () => {
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-      <div className="px-4 py-6 pb-24">
+      <div className="px-4 py-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Messages</h1>
         <p className="text-gray-600 mb-6">Your conversations and updates</p>
         
