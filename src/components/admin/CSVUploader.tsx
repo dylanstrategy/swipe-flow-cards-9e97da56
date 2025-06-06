@@ -160,10 +160,15 @@ const CSVUploader: React.FC = () => {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
+      transformHeader: (header: string) => {
+        // Normalize headers by trimming whitespace and converting to lowercase for comparison
+        return header.trim().toLowerCase();
+      },
       complete: (results) => {
         console.log('Parsed CSV data:', results.data);
+        console.log('CSV headers found:', results.meta.fields);
         setCsvData(results.data as CSVRow[]);
-        processData(results.data as CSVRow[]);
+        processData(results.data as CSVRow[], results.meta.fields || []);
         setIsProcessing(false);
       },
       error: (error) => {
@@ -174,7 +179,7 @@ const CSVUploader: React.FC = () => {
     });
   };
 
-  const processData = (data: CSVRow[]) => {
+  const processData = (data: CSVRow[], headers: string[]) => {
     const users: ParsedUser[] = [];
     const properties: ParsedProperty[] = [];
     const units: ParsedUnit[] = [];
@@ -182,15 +187,22 @@ const CSVUploader: React.FC = () => {
     const errors: string[] = [];
     const warnings: string[] = [];
 
-    // Check for basic required headers only
+    console.log('Processing data with headers:', headers);
+
+    // Normalize headers for comparison (trim whitespace and convert to lowercase)
+    const normalizedHeaders = headers.map(h => h.trim().toLowerCase());
+    const normalizedRequiredHeaders = BASIC_REQUIRED_HEADERS.map(h => h.toLowerCase());
+    
+    // Check for basic required headers with case-insensitive comparison
     if (data.length > 0) {
-      const headers = Object.keys(data[0]);
-      const missingBasicHeaders = BASIC_REQUIRED_HEADERS.filter(h => !headers.includes(h));
+      const missingBasicHeaders = normalizedRequiredHeaders.filter(h => !normalizedHeaders.includes(h));
       if (missingBasicHeaders.length > 0) {
-        errors.push(`Missing basic required headers: ${missingBasicHeaders.join(', ')}`);
+        console.log('Missing headers:', missingBasicHeaders);
+        console.log('Available headers:', normalizedHeaders);
+        errors.push(`Missing basic required headers: ${missingBasicHeaders.join(', ')}. Found headers: ${normalizedHeaders.join(', ')}`);
         setProcessingResult({ users, properties, units, residents, errors, warnings });
         setShowPreview(true);
-        return; // Stop processing if basic headers are missing
+        return;
       }
     }
 
@@ -198,14 +210,14 @@ const CSVUploader: React.FC = () => {
       const rowNum = index + 2; // +2 for 1-based indexing and header row
 
       try {
-        // Validate only basic required fields - trim whitespace
+        // Access data using normalized header names (Papa.parse already transformed them)
         const firstName = row.first_name?.trim();
         const lastName = row.last_name?.trim();
         const email = row.email?.trim();
 
         if (!firstName || !lastName || !email) {
           errors.push(`Row ${rowNum}: Missing required user fields (first_name, last_name, email)`);
-          return; // Skip this row but continue processing others
+          return;
         }
 
         // Parse user data with more flexible approach
@@ -236,11 +248,11 @@ const CSVUploader: React.FC = () => {
           const property: ParsedProperty = {
             property_name: row.property_name.trim(),
             property_code: row.property_code?.trim(),
-            address_line_1: row.address_line_1?.trim() || row.Personal_Information_Address?.trim() || 'Address not provided',
+            address_line_1: row.address_line_1?.trim() || row.personal_information_address?.trim() || 'Address not provided',
             address_line_2: row.address_line_2?.trim(),
-            city: row.city?.trim() || row.Personal_Information_City?.trim() || 'City not provided',
-            state: row.state?.trim() || row.Personal_Information_State?.trim() || 'State not provided',
-            zip_code: row.zip_code?.trim() || row.Personal_information_zip?.trim() || '00000',
+            city: row.city?.trim() || row.personal_information_city?.trim() || 'City not provided',
+            state: row.state?.trim() || row.personal_information_state?.trim() || 'State not provided',
+            zip_code: row.zip_code?.trim() || row.personal_information_zip?.trim() || '00000',
             timezone: row.timezone?.trim() || 'America/New_York',
             management_company: row.management_company?.trim(),
             total_units: row.total_units ? parseInt(row.total_units) : undefined,
