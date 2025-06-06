@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ResidentProvider } from "@/contexts/ResidentContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { LiveResidentProvider } from "@/contexts/LiveResidentContext";
 import Index from "./pages/Index";
 import Resident from "./pages/Resident";
 import Discovery from "./pages/Discovery";
@@ -26,19 +27,21 @@ const App = () => (
         <AuthProvider>
           <ProfileProvider>
             <ResidentProvider>
-              <Routes>
-                {/* All routes are now open without authentication */}
-                <Route path="/" element={<Index />} />
-                <Route path="/resident" element={<Resident />} />
-                <Route path="/discovery" element={<Discovery />} />
-                <Route path="/matches" element={<Matches />} />
-                <Route path="/movein" element={<MoveIn />} />
-                <Route path="/movein/:homeId" element={<MoveIn />} />
-                <Route path="/maintenance" element={<Maintenance />} />
-                <Route path="/operator" element={<Operator />} />
-                <Route path="/super-admin" element={<SuperAdmin />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <LiveResidentProvider>
+                <Routes>
+                  {/* All routes are now open without authentication */}
+                  <Route path="/" element={<Index />} />
+                  <Route path="/resident" element={<Resident />} />
+                  <Route path="/discovery" element={<Discovery />} />
+                  <Route path="/matches" element={<Matches />} />
+                  <Route path="/movein" element={<MoveIn />} />
+                  <Route path="/movein/:homeId" element={<MoveIn />} />
+                  <Route path="/maintenance" element={<Maintenance />} />
+                  <Route path="/operator" element={<Operator />} />
+                  <Route path="/super-admin" element={<SuperAdmin />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </LiveResidentProvider>
             </ResidentProvider>
           </ProfileProvider>
         </AuthProvider>
