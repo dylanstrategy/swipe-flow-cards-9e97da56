@@ -334,9 +334,9 @@ const CSVUploader: React.FC = () => {
     setUploadProgress(0);
 
     try {
-      console.log('Starting actual Supabase import process...');
+      console.log('Starting import with bypass auth...');
       let importedCounts = { users: 0, properties: 0, units: 0, residents: 0 };
-      let errorCount = 0;
+      const detailedErrors: string[] = [];
       
       // Import properties first
       setUploadProgress(15);
@@ -345,90 +345,98 @@ const CSVUploader: React.FC = () => {
         
         for (const property of processingResult.properties) {
           try {
+            // Use upsert to handle duplicates gracefully
             const { data, error } = await supabase
               .from('api.properties')
-              .insert({
+              .upsert({
                 name: property.property_name,
                 address: `${property.address_line_1}${property.address_line_2 ? ', ' + property.address_line_2 : ''}, ${property.city}, ${property.state} ${property.zip_code}`,
-                timezone: property.timezone,
+                timezone: property.timezone || 'America/New_York',
                 management_company: property.management_company,
+              }, {
+                onConflict: 'name',
+                ignoreDuplicates: false
               })
               .select();
 
             if (error) {
-              console.error('Property insert error:', error);
-              if (error.message.includes('duplicate') || error.code === '23505') {
-                console.log('Property already exists, skipping:', property.property_name);
-              } else {
-                errorCount++;
-                throw error;
-              }
+              console.error('Property upsert error:', error);
+              detailedErrors.push(`Property "${property.property_name}": ${error.message}`);
             } else {
-              console.log('Successfully inserted property:', property.property_name);
+              console.log('Successfully upserted property:', property.property_name);
               importedCounts.properties++;
             }
           } catch (error) {
-            console.error('Error importing property:', property.property_name, error);
-            errorCount++;
+            console.error('Exception importing property:', property.property_name, error);
+            detailedErrors.push(`Property "${property.property_name}": ${error}`);
           }
         }
       }
+      
+      // Get all properties for linking
+      const { data: allProperties } = await supabase
+        .from('api.properties')
+        .select('id, name');
       
       // Import units
       setUploadProgress(35);
       if (processingResult.units.length > 0) {
         console.log('Importing units:', processingResult.units);
         
-        // First get property IDs for linking
-        const { data: propertiesData } = await supabase
-          .from('api.properties')
-          .select('id, name');
-        
         for (const unit of processingResult.units) {
           try {
-            // Find property by name if property_code not available
+            // Find property by name
             const propertyName = processingResult.properties.find(p => 
               p.property_code === unit.property_code
             )?.property_name;
             
-            const property = propertiesData?.find(p => 
+            const property = allProperties?.find(p => 
               p.name === propertyName || 
-              p.name.includes(unit.property_code || '')
+              (unit.property_code && p.name.includes(unit.property_code))
             );
             
             if (!property) {
-              console.warn('Property not found for unit:', unit.unit_number);
+              detailedErrors.push(`Unit ${unit.unit_number}: No matching property found`);
               continue;
+            }
+
+            // Convert unit status to match enum
+            let unitStatus = 'available';
+            if (unit.unit_status) {
+              const status = unit.unit_status.toLowerCase();
+              if (['occupied', 'maintenance', 'turn', 'leased_not_moved_in', 'off_market'].includes(status)) {
+                unitStatus = status;
+              } else if (['vacant', 'empty'].includes(status)) {
+                unitStatus = 'available';
+              }
             }
 
             const { data, error } = await supabase
               .from('api.units')
-              .insert({
+              .upsert({
                 property_id: property.id,
                 unit_number: unit.unit_number,
                 floor: unit.floor,
                 bedroom_type: unit.bedrooms?.toString(),
                 bath_type: unit.bathrooms?.toString(),
-                sq_ft: unit.market_rent, // Using market_rent as sq_ft for now
-                status: unit.unit_status === 'vacant' ? 'available' : 'occupied'
+                sq_ft: unit.market_rent, 
+                status: unitStatus
+              }, {
+                onConflict: 'property_id,unit_number',
+                ignoreDuplicates: false
               })
               .select();
 
             if (error) {
-              console.error('Unit insert error:', error);
-              if (error.message.includes('duplicate') || error.code === '23505') {
-                console.log('Unit already exists, skipping:', unit.unit_number);
-              } else {
-                errorCount++;
-                throw error;
-              }
+              console.error('Unit upsert error:', error);
+              detailedErrors.push(`Unit ${unit.unit_number}: ${error.message}`);
             } else {
-              console.log('Successfully inserted unit:', unit.unit_number);
+              console.log('Successfully upserted unit:', unit.unit_number);
               importedCounts.units++;
             }
           } catch (error) {
-            console.error('Error importing unit:', unit.unit_number, error);
-            errorCount++;
+            console.error('Exception importing unit:', unit.unit_number, error);
+            detailedErrors.push(`Unit ${unit.unit_number}: ${error}`);
           }
         }
       }
@@ -442,110 +450,103 @@ const CSVUploader: React.FC = () => {
           try {
             const { data, error } = await supabase
               .from('api.users')
-              .insert({
-                id: crypto.randomUUID(), // Generate UUID for user
+              .upsert({
                 email: user.email,
                 first_name: user.first_name,
                 last_name: user.last_name,
-                phone: user.phone,
+                phone: user.phone || null,
                 role: user.role,
+              }, {
+                onConflict: 'email',
+                ignoreDuplicates: false
               })
               .select();
 
             if (error) {
-              console.error('User insert error:', error);
-              if (error.message.includes('duplicate') || error.code === '23505') {
-                console.log('User already exists, skipping:', user.email);
-              } else {
-                errorCount++;
-                throw error;
-              }
+              console.error('User upsert error:', error);
+              detailedErrors.push(`User ${user.email}: ${error.message}`);
             } else {
-              console.log('Successfully inserted user:', user.email);
+              console.log('Successfully upserted user:', user.email);
               importedCounts.users++;
             }
           } catch (error) {
-            console.error('Error importing user:', user.email, error);
-            errorCount++;
+            console.error('Exception importing user:', user.email, error);
+            detailedErrors.push(`User ${user.email}: ${error}`);
           }
         }
       }
+      
+      // Get all data for resident linking
+      const { data: allUsers } = await supabase
+        .from('api.users')
+        .select('id, email');
+        
+      const { data: allUnits } = await supabase
+        .from('api.units')
+        .select('id, unit_number, property_id');
       
       // Import residents
       setUploadProgress(85);
       if (processingResult.residents.length > 0) {
         console.log('Importing residents:', processingResult.residents);
         
-        // Get user and property/unit data for linking
-        const { data: usersData } = await supabase
-          .from('api.users')
-          .select('id, email');
-          
-        const { data: propertiesData } = await supabase
-          .from('api.properties')
-          .select('id, name');
-          
-        const { data: unitsData } = await supabase
-          .from('api.units')
-          .select('id, unit_number, property_id');
-        
         for (const resident of processingResult.residents) {
           try {
-            const user = usersData?.find(u => 
+            // Find user by email
+            const user = allUsers?.find(u => 
               processingResult.users.find(pu => 
                 pu.id_number === resident.id_number && pu.email === u.email
               )
             );
             
             if (!user) {
-              console.warn('User not found for resident:', resident.id_number);
+              detailedErrors.push(`Resident ${resident.id_number}: No matching user found`);
               continue;
             }
 
+            // Find property and unit
             const propertyName = processingResult.properties.find(p => 
               p.property_code === resident.property_code
             )?.property_name;
             
-            const property = propertiesData?.find(p => 
+            const property = allProperties?.find(p => 
               p.name === propertyName || 
-              p.name.includes(resident.property_code || '')
+              (resident.property_code && p.name.includes(resident.property_code))
             );
             
-            const unit = unitsData?.find(u => 
+            const unit = allUnits?.find(u => 
               u.unit_number === resident.unit_number && 
               u.property_id === property?.id
             );
 
             const { data, error } = await supabase
               .from('api.residents')
-              .insert({
+              .upsert({
                 user_id: user.id,
-                property_id: property?.id,
-                unit_id: unit?.id,
-                lease_start: resident.lease_start_date,
-                lease_end: resident.lease_end_date,
+                property_id: property?.id || null,
+                unit_id: unit?.id || null,
+                lease_start: resident.lease_start_date ? new Date(resident.lease_start_date).toISOString().split('T')[0] : null,
+                lease_end: resident.lease_end_date ? new Date(resident.lease_end_date).toISOString().split('T')[0] : null,
                 status: 'active',
-                insurance_uploaded: resident.renter_insurance_uploaded,
-                move_in_checklist_complete: resident.move_in_checklist_complete,
-                move_out_checklist_complete: resident.move_out_checklist_complete,
+                insurance_uploaded: resident.renter_insurance_uploaded || false,
+                move_in_checklist_complete: resident.move_in_checklist_complete || false,
+                move_out_checklist_complete: resident.move_out_checklist_complete || false,
+              }, {
+                onConflict: 'user_id',
+                ignoreDuplicates: false
               })
               .select();
 
             if (error) {
-              console.error('Resident insert error:', error);
-              if (error.message.includes('duplicate') || error.code === '23505') {
-                console.log('Resident already exists, skipping:', resident.id_number);
-              } else {
-                errorCount++;
-                throw error;
-              }
+              console.error('Resident upsert error:', error);
+              detailedErrors.push(`Resident ${resident.id_number}: ${error.message}`);
             } else {
-              console.log('Successfully inserted resident:', resident.id_number);
+              console.log('Successfully upserted resident:', resident.id_number);
               importedCounts.residents++;
             }
           } catch (error) {
-            console.error('Error importing resident:', resident.id_number, error);
-            errorCount++;
+            console.error('Exception importing resident:', resident.id_number, error);
+            detailedErrors.push(`Resident ${resident.id_number}: ${error}`);
           }
         }
       }
@@ -554,13 +555,18 @@ const CSVUploader: React.FC = () => {
       setImportResults(importedCounts);
 
       const totalImported = Object.values(importedCounts).reduce((sum, count) => sum + count, 0);
-      const skippedMessage = processingResult.skippedRows > 0 ? ` (${processingResult.skippedRows} rows skipped)` : '';
-      const errorMessage = errorCount > 0 ? ` (${errorCount} errors)` : '';
+      const errorCount = detailedErrors.length;
       
       if (totalImported > 0) {
-        toast.success(`Successfully imported ${totalImported} records to database${skippedMessage}${errorMessage}. Details: ${importedCounts.users} users, ${importedCounts.properties} properties, ${importedCounts.units} units, ${importedCounts.residents} residents.`);
+        toast.success(`Successfully imported ${totalImported} records! Details: ${importedCounts.users} users, ${importedCounts.properties} properties, ${importedCounts.units} units, ${importedCounts.residents} residents.`);
+        
+        if (errorCount > 0) {
+          console.warn('Import errors:', detailedErrors);
+          toast.warning(`${errorCount} records had issues. Check console for details.`);
+        }
       } else {
-        toast.error(`No records were imported${errorMessage ? errorMessage : '. All records may already exist in the database.'}`);
+        toast.error(`No records were imported. ${errorCount} errors occurred. Check console for details.`);
+        console.error('All import errors:', detailedErrors);
       }
       
       // Reset form
@@ -576,7 +582,7 @@ const CSVUploader: React.FC = () => {
       
     } catch (error) {
       console.error('Import error:', error);
-      toast.error(`Error importing data: ${error instanceof Error ? error.message : 'Unknown error'}. Check the console for details.`);
+      toast.error(`Critical import error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsProcessing(false);
       setUploadProgress(0);
