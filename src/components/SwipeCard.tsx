@@ -15,10 +15,10 @@ interface SwipeCardProps {
   onSwipeLeft?: SwipeAction;
   onSwipeUp?: SwipeAction;
   onTap?: () => void;
-  onHold?: () => void; // New hold action
+  onHold?: () => void;
   className?: string;
   enableSwipeUp?: boolean;
-  holdDuration?: number; // Configurable hold duration
+  holdDuration?: number;
 }
 
 const SwipeCard = ({ 
@@ -41,9 +41,8 @@ const SwipeCard = ({
   const holdTimer = useRef<NodeJS.Timeout | null>(null);
   const startTime = useRef<number>(0);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    startPos.current = { x: touch.clientX, y: touch.clientY };
+  const handleStart = (clientX: number, clientY: number) => {
+    startPos.current = { x: clientX, y: clientY };
     startTime.current = Date.now();
     hasMoved.current = false;
     setIsDragging(true);
@@ -61,12 +60,11 @@ const SwipeCard = ({
     }
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handleMove = (clientX: number, clientY: number) => {
     if (!isDragging) return;
     
-    const touch = e.touches[0];
-    const deltaX = touch.clientX - startPos.current.x;
-    const deltaY = touch.clientY - startPos.current.y;
+    const deltaX = clientX - startPos.current.x;
+    const deltaY = clientY - startPos.current.y;
     
     const horizontalDistance = Math.abs(deltaX);
     const verticalDistance = Math.abs(deltaY);
@@ -105,7 +103,7 @@ const SwipeCard = ({
     }
   };
 
-  const handleTouchEnd = () => {
+  const handleEnd = () => {
     // Clear hold timer
     if (holdTimer.current) {
       clearTimeout(holdTimer.current);
@@ -134,6 +132,46 @@ const SwipeCard = ({
     hasMoved.current = false;
   };
 
+  // Touch handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    handleStart(touch.clientX, touch.clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    handleMove(touch.clientX, touch.clientY);
+  };
+
+  const handleTouchEnd = () => {
+    handleEnd();
+  };
+
+  // Mouse handlers for desktop
+  const handleMouseDown = (e: React.MouseEvent) => {
+    handleStart(e.clientX, e.clientY);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging) {
+      handleMove(e.clientX, e.clientY);
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (isDragging) {
+      handleEnd();
+    }
+  };
+
+  // Context menu for desktop right-click
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onHold) {
+      onHold();
+    }
+  };
+
   const getActionOpacity = () => {
     if (!showAction) return 0;
     const distance = showAction === 'up' ? Math.abs(dragOffset.y) : Math.abs(dragOffset.x);
@@ -157,7 +195,7 @@ const SwipeCard = ({
       <div
         ref={cardRef}
         className={cn(
-          "rounded-xl shadow-lg border border-gray-100 transition-all duration-200 cursor-pointer relative z-10",
+          "rounded-xl shadow-lg border border-gray-100 transition-all duration-200 cursor-pointer relative z-10 select-none",
           isDragging ? "shadow-2xl" : "hover:shadow-xl",
           className
         )}
@@ -170,6 +208,10 @@ const SwipeCard = ({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onContextMenu={handleContextMenu}
         onClick={!hasMoved.current ? onTap : undefined}
       >
         {shouldShowActionState ? (
