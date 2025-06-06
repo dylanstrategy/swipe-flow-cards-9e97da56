@@ -26,6 +26,10 @@ export type Database = {
           floor: number
         }[]
       }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_unit_occupancy_rate: {
         Args: { property_uuid: string }
         Returns: number
