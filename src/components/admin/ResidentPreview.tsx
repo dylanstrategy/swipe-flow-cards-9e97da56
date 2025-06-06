@@ -52,7 +52,11 @@ const ResidentPreview = () => {
   try {
     return (
       <div className="flex flex-col h-full relative">
-        <div className="flex-1 overflow-y-auto overscroll-y-contain" style={{ paddingBottom: '88px' }}>
+        <div 
+          className="flex-1 overflow-y-auto overscroll-y-auto" 
+          style={{ paddingBottom: '88px' }}
+          data-scroll-container
+        >
           {renderActiveTab()}
         </div>
         <TabNavigation 

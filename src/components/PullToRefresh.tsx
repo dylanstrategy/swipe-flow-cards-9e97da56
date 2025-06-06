@@ -24,18 +24,23 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
   } = usePullToRefresh({ onRefresh, enabled });
 
   useEffect(() => {
-    const element = document.body;
+    if (!enabled) return;
+
+    // Only attach to the main content area, not the entire body
+    const contentElement = document.querySelector('[data-scroll-container]') || document.body;
     
-    element.addEventListener('touchstart', handlers.onTouchStart, { passive: false });
-    element.addEventListener('touchmove', handlers.onTouchMove, { passive: false });
-    element.addEventListener('touchend', handlers.onTouchEnd);
+    const options = { passive: false };
+    
+    contentElement.addEventListener('touchstart', handlers.onTouchStart, options);
+    contentElement.addEventListener('touchmove', handlers.onTouchMove, options);
+    contentElement.addEventListener('touchend', handlers.onTouchEnd, options);
 
     return () => {
-      element.removeEventListener('touchstart', handlers.onTouchStart);
-      element.removeEventListener('touchmove', handlers.onTouchMove);
-      element.removeEventListener('touchend', handlers.onTouchEnd);
+      contentElement.removeEventListener('touchstart', handlers.onTouchStart);
+      contentElement.removeEventListener('touchmove', handlers.onTouchMove);
+      contentElement.removeEventListener('touchend', handlers.onTouchEnd);
     };
-  }, [handlers]);
+  }, [handlers, enabled]);
 
   return (
     <div className="relative">

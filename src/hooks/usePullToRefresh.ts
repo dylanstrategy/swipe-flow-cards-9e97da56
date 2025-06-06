@@ -14,6 +14,7 @@ export function usePullToRefresh({ onRefresh, threshold = 100, enabled = true }:
   const startY = useRef(0);
   const currentY = useRef(0);
   const isPulling = useRef(false);
+  const hasStartedPull = useRef(false);
   const { toast } = useToast();
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
@@ -21,6 +22,9 @@ export function usePullToRefresh({ onRefresh, threshold = 100, enabled = true }:
     
     const touch = e.touches[0];
     startY.current = touch.clientY;
+    hasStartedPull.current = false;
+    
+    // Only consider this a potential pull if we're at the very top
     isPulling.current = window.scrollY === 0;
   }, [enabled, isRefreshing]);
 
@@ -31,14 +35,29 @@ export function usePullToRefresh({ onRefresh, threshold = 100, enabled = true }:
     currentY.current = touch.clientY;
     const diff = currentY.current - startY.current;
 
-    if (diff > 0 && window.scrollY === 0) {
-      e.preventDefault();
+    // Only activate pull-to-refresh if:
+    // 1. We're scrolling down (diff > 0)
+    // 2. We're still at the top of the page
+    // 3. The movement is significant enough (> 10px)
+    if (diff > 10 && window.scrollY === 0) {
+      hasStartedPull.current = true;
+      e.preventDefault(); // Only prevent default when we're actually pulling
       setPullDistance(Math.min(diff, threshold * 1.5));
+    } else if (diff <= 0 || window.scrollY > 0) {
+      // If scrolling up or not at top, stop pull-to-refresh
+      isPulling.current = false;
+      hasStartedPull.current = false;
+      setPullDistance(0);
     }
   }, [enabled, isRefreshing, threshold]);
 
   const handleTouchEnd = useCallback(async () => {
-    if (!enabled || isRefreshing || !isPulling.current) return;
+    if (!enabled || isRefreshing || !isPulling.current || !hasStartedPull.current) {
+      setPullDistance(0);
+      isPulling.current = false;
+      hasStartedPull.current = false;
+      return;
+    }
 
     if (pullDistance >= threshold) {
       setIsRefreshing(true);
@@ -62,6 +81,7 @@ export function usePullToRefresh({ onRefresh, threshold = 100, enabled = true }:
 
     setPullDistance(0);
     isPulling.current = false;
+    hasStartedPull.current = false;
   }, [enabled, isRefreshing, pullDistance, threshold, onRefresh, toast]);
 
   const manualRefresh = useCallback(async () => {
