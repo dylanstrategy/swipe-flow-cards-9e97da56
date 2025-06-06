@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -187,6 +188,9 @@ const CSVUploader: React.FC = () => {
       const missingBasicHeaders = BASIC_REQUIRED_HEADERS.filter(h => !headers.includes(h));
       if (missingBasicHeaders.length > 0) {
         errors.push(`Missing basic required headers: ${missingBasicHeaders.join(', ')}`);
+        setProcessingResult({ users, properties, units, residents, errors, warnings });
+        setShowPreview(true);
+        return; // Stop processing if basic headers are missing
       }
     }
 
@@ -194,49 +198,53 @@ const CSVUploader: React.FC = () => {
       const rowNum = index + 2; // +2 for 1-based indexing and header row
 
       try {
-        // Validate only basic required fields
-        if (!row.first_name || !row.last_name || !row.email) {
+        // Validate only basic required fields - trim whitespace
+        const firstName = row.first_name?.trim();
+        const lastName = row.last_name?.trim();
+        const email = row.email?.trim();
+
+        if (!firstName || !lastName || !email) {
           errors.push(`Row ${rowNum}: Missing required user fields (first_name, last_name, email)`);
-          return;
+          return; // Skip this row but continue processing others
         }
 
         // Parse user data with more flexible approach
         const user: ParsedUser = {
-          id_number: row.id_number || `auto_${Date.now()}_${index}`,
-          first_name: row.first_name,
-          last_name: row.last_name,
-          email: row.email,
-          phone: row.phone,
-          role: (row.role as AppRole) || 'resident',
-          assigned_operator_email: row.assigned_operator_email,
-          assigned_vendor_email: row.assigned_vendor_email,
-          employer: row.employer,
-          is_active: row.is_active?.toLowerCase() === 'true' || true
+          id_number: row.id_number?.trim() || `auto_${Date.now()}_${index}`,
+          first_name: firstName,
+          last_name: lastName,
+          email: email,
+          phone: row.phone?.trim(),
+          role: (row.role?.trim() as AppRole) || 'resident',
+          assigned_operator_email: row.assigned_operator_email?.trim(),
+          assigned_vendor_email: row.assigned_vendor_email?.trim(),
+          employer: row.employer?.trim(),
+          is_active: row.is_active?.toLowerCase().trim() === 'true' || true
         };
 
         // Validate role
         const validRoles = ['super_admin', 'senior_operator', 'operator', 'maintenance', 'leasing', 'resident', 'prospect', 'vendor'];
-        if (!validRoles.includes(user.role)) {
-          warnings.push(`Row ${rowNum}: Invalid role '${user.role}', defaulting to 'resident'`);
+        if (row.role?.trim() && !validRoles.includes(user.role)) {
+          warnings.push(`Row ${rowNum}: Invalid role '${row.role}', defaulting to 'resident'`);
           user.role = 'resident';
         }
 
         users.push(user);
 
         // Parse property data (only if property_name is provided)
-        if (row.property_name) {
+        if (row.property_name?.trim()) {
           const property: ParsedProperty = {
-            property_name: row.property_name,
-            property_code: row.property_code,
-            address_line_1: row.address_line_1 || row.Personal_Information_Address || 'Address not provided',
-            address_line_2: row.address_line_2,
-            city: row.city || row.Personal_Information_City || 'City not provided',
-            state: row.state || row.Personal_Information_State || 'State not provided',
-            zip_code: row.zip_code || row.Personal_information_zip || '00000',
-            timezone: row.timezone || 'America/New_York',
-            management_company: row.management_company,
+            property_name: row.property_name.trim(),
+            property_code: row.property_code?.trim(),
+            address_line_1: row.address_line_1?.trim() || row.Personal_Information_Address?.trim() || 'Address not provided',
+            address_line_2: row.address_line_2?.trim(),
+            city: row.city?.trim() || row.Personal_Information_City?.trim() || 'City not provided',
+            state: row.state?.trim() || row.Personal_Information_State?.trim() || 'State not provided',
+            zip_code: row.zip_code?.trim() || row.Personal_information_zip?.trim() || '00000',
+            timezone: row.timezone?.trim() || 'America/New_York',
+            management_company: row.management_company?.trim(),
             total_units: row.total_units ? parseInt(row.total_units) : undefined,
-            super_operator_email: row.super_operator_email
+            super_operator_email: row.super_operator_email?.trim()
           };
 
           const existingProperty = properties.find(p => p.property_name === property.property_name);
@@ -246,16 +254,16 @@ const CSVUploader: React.FC = () => {
         }
 
         // Parse unit data (only if unit_number is provided)
-        if (row.unit_number) {
+        if (row.unit_number?.trim()) {
           const unit: ParsedUnit = {
-            unit_number: row.unit_number,
-            unit_type: row.unit_type,
+            unit_number: row.unit_number.trim(),
+            unit_type: row.unit_type?.trim(),
             bedrooms: row.bedrooms ? parseInt(row.bedrooms) : undefined,
             bathrooms: row.bathrooms ? parseFloat(row.bathrooms) : undefined,
             floor: row.floor ? parseInt(row.floor) : undefined,
             market_rent: row.market_rent ? parseFloat(row.market_rent) : undefined,
-            unit_status: row.unit_status || 'available',
-            property_code: row.property_code
+            unit_status: row.unit_status?.trim() || 'available',
+            property_code: row.property_code?.trim()
           };
 
           const unitKey = `${unit.property_code || 'default'}-${unit.unit_number}`;
@@ -266,20 +274,20 @@ const CSVUploader: React.FC = () => {
         }
 
         // Parse resident data (if role is resident and unit_number is provided)
-        if (user.role === 'resident' && row.unit_number) {
+        if (user.role === 'resident' && row.unit_number?.trim()) {
           const resident: ParsedResident = {
             id_number: user.id_number,
-            unit_number: row.unit_number,
-            property_code: row.property_code,
-            move_in_date: row.move_in_date,
-            lease_start_date: row.lease_start_date,
-            lease_end_date: row.lease_end_date,
+            unit_number: row.unit_number.trim(),
+            property_code: row.property_code?.trim(),
+            move_in_date: row.move_in_date?.trim(),
+            lease_start_date: row.lease_start_date?.trim(),
+            lease_end_date: row.lease_end_date?.trim(),
             monthly_rent: row.monthly_rent ? parseFloat(row.monthly_rent) : undefined,
             deposit_amount: row.deposit_amount ? parseFloat(row.deposit_amount) : undefined,
             balance_due: row.balance_due ? parseFloat(row.balance_due) : undefined,
-            renter_insurance_uploaded: row.renter_insurance_uploaded?.toLowerCase() === 'true',
-            move_in_checklist_complete: row.move_in_checklist_complete?.toLowerCase() === 'true',
-            move_out_checklist_complete: row.move_out_checklist_complete?.toLowerCase() === 'true'
+            renter_insurance_uploaded: row.renter_insurance_uploaded?.toLowerCase().trim() === 'true',
+            move_in_checklist_complete: row.move_in_checklist_complete?.toLowerCase().trim() === 'true',
+            move_out_checklist_complete: row.move_out_checklist_complete?.toLowerCase().trim() === 'true'
           };
 
           residents.push(resident);
