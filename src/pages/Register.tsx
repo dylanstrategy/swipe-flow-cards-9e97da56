@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,6 +28,55 @@ const Register = () => {
   const [propertyName, setPropertyName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        // User is already logged in, redirect based on role
+        const email = session.user.email;
+        if (email === 'info@applaudliving.com') {
+          navigate('/super-admin');
+        } else {
+          // Fetch role from database
+          const { data: userProfile } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+
+          if (userProfile?.role) {
+            switch (userProfile.role) {
+              case 'super_admin':
+                navigate('/super-admin');
+                break;
+              case 'senior_operator':
+              case 'operator':
+              case 'leasing':
+                navigate('/operator');
+                break;
+              case 'maintenance':
+              case 'vendor':
+                navigate('/maintenance');
+                break;
+              case 'resident':
+              case 'former_resident':
+                navigate('/resident');
+                break;
+              default:
+                navigate('/');
+                break;
+            }
+          } else {
+            navigate('/');
+          }
+        }
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   useEffect(() => {
     // Pre-fill form from URL parameters
@@ -138,28 +186,35 @@ const Register = () => {
 
       toast({
         title: "Registration Successful",
-        description: "Your account has been created successfully. You can now log in.",
+        description: "Your account has been created successfully. Redirecting...",
       });
 
-      // Redirect to appropriate page based on role
+      // Redirect based on role after a short delay
       setTimeout(() => {
-        switch (formData.role) {
-          case 'super_admin':
-            navigate('/super-admin');
-            break;
-          case 'senior_operator':
-          case 'operator':
-            navigate('/operator');
-            break;
-          case 'maintenance':
-            navigate('/maintenance');
-            break;
-          case 'resident':
-            navigate('/resident');
-            break;
-          default:
-            navigate('/');
-            break;
+        if (formData.email === 'info@applaudliving.com') {
+          navigate('/super-admin');
+        } else {
+          switch (formData.role) {
+            case 'super_admin':
+              navigate('/super-admin');
+              break;
+            case 'senior_operator':
+            case 'operator':
+            case 'leasing':
+              navigate('/operator');
+              break;
+            case 'maintenance':
+            case 'vendor':
+              navigate('/maintenance');
+              break;
+            case 'resident':
+            case 'former_resident':
+              navigate('/resident');
+              break;
+            default:
+              navigate('/');
+              break;
+          }
         }
       }, 1000);
     } catch (error: any) {
