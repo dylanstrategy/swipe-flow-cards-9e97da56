@@ -85,11 +85,10 @@ interface ProcessingResult {
   residents: ParsedResident[];
   errors: string[];
   warnings: string[];
+  skippedRows: number;
 }
 
-// Only basic fields are required - others are optional
-const BASIC_REQUIRED_HEADERS = ['first_name', 'last_name', 'email'];
-
+// More flexible - we'll check what data is available per row
 const ALL_SUPPORTED_HEADERS = [
   'id_number', 'unit_status', 'first_name', 'last_name', 'email', 'phone', 
   'property_name', 'property_code', 'unit_number', 'unit_type', 'bedrooms', 
@@ -179,6 +178,19 @@ const CSVUploader: React.FC = () => {
     });
   };
 
+  const isVacantUnit = (row: CSVRow): boolean => {
+    const status = row.unit_status?.toLowerCase().trim();
+    const firstName = row.first_name?.trim();
+    const lastName = row.last_name?.trim();
+    const email = row.email?.trim();
+    
+    // Check if it's explicitly marked as vacant or if there's no resident data
+    return status === 'vacant' || 
+           status === 'available' || 
+           status === 'empty' ||
+           (!firstName && !lastName && !email);
+  };
+
   const processData = (data: CSVRow[], headers: string[]) => {
     const users: ParsedUser[] = [];
     const properties: ParsedProperty[] = [];
@@ -186,41 +198,79 @@ const CSVUploader: React.FC = () => {
     const residents: ParsedResident[] = [];
     const errors: string[] = [];
     const warnings: string[] = [];
+    let skippedRows = 0;
 
     console.log('Processing data with headers:', headers);
-
-    // Normalize headers for comparison (trim whitespace and convert to lowercase)
-    const normalizedHeaders = headers.map(h => h.trim().toLowerCase());
-    const normalizedRequiredHeaders = BASIC_REQUIRED_HEADERS.map(h => h.toLowerCase());
-    
-    // Check for basic required headers with case-insensitive comparison
-    if (data.length > 0) {
-      const missingBasicHeaders = normalizedRequiredHeaders.filter(h => !normalizedHeaders.includes(h));
-      if (missingBasicHeaders.length > 0) {
-        console.log('Missing headers:', missingBasicHeaders);
-        console.log('Available headers:', normalizedHeaders);
-        errors.push(`Missing basic required headers: ${missingBasicHeaders.join(', ')}. Found headers: ${normalizedHeaders.join(', ')}`);
-        setProcessingResult({ users, properties, units, residents, errors, warnings });
-        setShowPreview(true);
-        return;
-      }
-    }
 
     data.forEach((row, index) => {
       const rowNum = index + 2; // +2 for 1-based indexing and header row
 
       try {
-        // Access data using normalized header names (Papa.parse already transformed them)
+        // Check if this is a vacant unit
+        const isVacant = isVacantUnit(row);
+        
+        console.log(`Row ${rowNum}: isVacant=${isVacant}, status=${row.unit_status}, first_name=${row.first_name}`);
+
+        // Always try to parse property data if available
+        if (row.property_name?.trim()) {
+          const property: ParsedProperty = {
+            property_name: row.property_name.trim(),
+            property_code: row.property_code?.trim(),
+            address_line_1: row.address_line_1?.trim() || row.personal_information_address?.trim() || 'Address not provided',
+            address_line_2: row.address_line_2?.trim(),
+            city: row.city?.trim() || row.personal_information_city?.trim() || 'City not provided',
+            state: row.state?.trim() || row.personal_information_state?.trim() || 'State not provided',
+            zip_code: row.zip_code?.trim() || row.personal_information_zip?.trim() || '00000',
+            timezone: row.timezone?.trim() || 'America/New_York',
+            management_company: row.management_company?.trim(),
+            total_units: row.total_units ? parseInt(row.total_units) : undefined,
+            super_operator_email: row.super_operator_email?.trim()
+          };
+
+          const existingProperty = properties.find(p => p.property_name === property.property_name);
+          if (!existingProperty) {
+            properties.push(property);
+          }
+        }
+
+        // Always try to parse unit data if available
+        if (row.unit_number?.trim()) {
+          const unit: ParsedUnit = {
+            unit_number: row.unit_number.trim(),
+            unit_type: row.unit_type?.trim(),
+            bedrooms: row.bedrooms ? parseInt(row.bedrooms) : undefined,
+            bathrooms: row.bathrooms ? parseFloat(row.bathrooms) : undefined,
+            floor: row.floor ? parseInt(row.floor) : undefined,
+            market_rent: row.market_rent ? parseFloat(row.market_rent) : undefined,
+            unit_status: row.unit_status?.trim() || (isVacant ? 'vacant' : 'occupied'),
+            property_code: row.property_code?.trim()
+          };
+
+          const unitKey = `${unit.property_code || 'default'}-${unit.unit_number}`;
+          const existingUnit = units.find(u => `${u.property_code || 'default'}-${u.unit_number}` === unitKey);
+          if (!existingUnit) {
+            units.push(unit);
+          }
+        }
+
+        // For vacant units, skip user/resident processing but don't count as error
+        if (isVacant) {
+          warnings.push(`Row ${rowNum}: Vacant unit detected, skipping resident data`);
+          return;
+        }
+
+        // For non-vacant units, require user data
         const firstName = row.first_name?.trim();
         const lastName = row.last_name?.trim();
         const email = row.email?.trim();
 
         if (!firstName || !lastName || !email) {
-          errors.push(`Row ${rowNum}: Missing required user fields (first_name, last_name, email)`);
+          warnings.push(`Row ${rowNum}: Missing required user fields (first_name, last_name, email) - skipping user creation`);
+          skippedRows++;
           return;
         }
 
-        // Parse user data with more flexible approach
+        // Parse user data
         const user: ParsedUser = {
           id_number: row.id_number?.trim() || `auto_${Date.now()}_${index}`,
           first_name: firstName,
@@ -243,49 +293,7 @@ const CSVUploader: React.FC = () => {
 
         users.push(user);
 
-        // Parse property data (only if property_name is provided)
-        if (row.property_name?.trim()) {
-          const property: ParsedProperty = {
-            property_name: row.property_name.trim(),
-            property_code: row.property_code?.trim(),
-            address_line_1: row.address_line_1?.trim() || row.personal_information_address?.trim() || 'Address not provided',
-            address_line_2: row.address_line_2?.trim(),
-            city: row.city?.trim() || row.personal_information_city?.trim() || 'City not provided',
-            state: row.state?.trim() || row.personal_information_state?.trim() || 'State not provided',
-            zip_code: row.zip_code?.trim() || row.personal_information_zip?.trim() || '00000',
-            timezone: row.timezone?.trim() || 'America/New_York',
-            management_company: row.management_company?.trim(),
-            total_units: row.total_units ? parseInt(row.total_units) : undefined,
-            super_operator_email: row.super_operator_email?.trim()
-          };
-
-          const existingProperty = properties.find(p => p.property_name === property.property_name);
-          if (!existingProperty) {
-            properties.push(property);
-          }
-        }
-
-        // Parse unit data (only if unit_number is provided)
-        if (row.unit_number?.trim()) {
-          const unit: ParsedUnit = {
-            unit_number: row.unit_number.trim(),
-            unit_type: row.unit_type?.trim(),
-            bedrooms: row.bedrooms ? parseInt(row.bedrooms) : undefined,
-            bathrooms: row.bathrooms ? parseFloat(row.bathrooms) : undefined,
-            floor: row.floor ? parseInt(row.floor) : undefined,
-            market_rent: row.market_rent ? parseFloat(row.market_rent) : undefined,
-            unit_status: row.unit_status?.trim() || 'available',
-            property_code: row.property_code?.trim()
-          };
-
-          const unitKey = `${unit.property_code || 'default'}-${unit.unit_number}`;
-          const existingUnit = units.find(u => `${u.property_code || 'default'}-${u.unit_number}` === unitKey);
-          if (!existingUnit) {
-            units.push(unit);
-          }
-        }
-
-        // Parse resident data (if role is resident and unit_number is provided)
+        // Parse resident data if this is a resident with unit data
         if (user.role === 'resident' && row.unit_number?.trim()) {
           const resident: ParsedResident = {
             id_number: user.id_number,
@@ -306,9 +314,15 @@ const CSVUploader: React.FC = () => {
         }
 
       } catch (error) {
-        errors.push(`Row ${rowNum}: Error processing data - ${error}`);
+        warnings.push(`Row ${rowNum}: Error processing data - ${error}`);
+        skippedRows++;
       }
     });
+
+    // Only add to errors if there are serious issues that prevent import
+    if (users.length === 0 && properties.length === 0 && units.length === 0) {
+      errors.push('No valid data found to import. Please check your CSV format.');
+    }
 
     setProcessingResult({
       users,
@@ -316,7 +330,8 @@ const CSVUploader: React.FC = () => {
       units,
       residents,
       errors,
-      warnings
+      warnings,
+      skippedRows
     });
 
     setShowPreview(true);
@@ -348,7 +363,10 @@ const CSVUploader: React.FC = () => {
       console.log('Importing residents:', processingResult.residents);
       setUploadProgress(100);
 
-      toast.success(`Successfully imported ${processingResult.users.length} users, ${processingResult.properties.length} properties, and ${processingResult.units.length} units`);
+      const totalImported = processingResult.users.length + processingResult.properties.length + processingResult.units.length;
+      const skippedMessage = processingResult.skippedRows > 0 ? ` (${processingResult.skippedRows} rows skipped)` : '';
+      
+      toast.success(`Successfully imported ${totalImported} records${skippedMessage}`);
       
       // Reset form
       setFile(null);
@@ -372,7 +390,9 @@ const CSVUploader: React.FC = () => {
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Bulk Data Import</h2>
           <p className="text-gray-600">Upload CSV files to bulk import users, properties, and units</p>
-          <p className="text-sm text-gray-500 mt-1">Only first_name, last_name, and email are required. All other fields are optional.</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Smart processing: vacant units are detected automatically, incomplete rows are skipped intelligently
+          </p>
         </div>
         <Button onClick={downloadTemplate} variant="outline" className="flex items-center gap-2">
           <Download className="w-4 h-4" />
@@ -403,7 +423,7 @@ const CSVUploader: React.FC = () => {
                 {file ? file.name : 'Choose CSV file to upload'}
               </p>
               <p className="text-sm text-gray-500">
-                Supports all {ALL_SUPPORTED_HEADERS.length} standard columns for comprehensive data import
+                Supports all {ALL_SUPPORTED_HEADERS.length} standard columns with intelligent data detection
               </p>
             </label>
           </div>
@@ -454,12 +474,26 @@ const CSVUploader: React.FC = () => {
               </div>
             </div>
 
+            {/* Processing Summary */}
+            {processingResult.skippedRows > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle className="w-5 h-5 text-blue-600" />
+                  <span className="font-medium text-blue-900">Smart Processing Summary</span>
+                </div>
+                <p className="text-sm text-blue-800">
+                  Successfully processed {processingResult.users.length + processingResult.properties.length + processingResult.units.length} records. 
+                  {processingResult.skippedRows > 0 && ` Intelligently skipped ${processingResult.skippedRows} problematic rows.`}
+                </p>
+              </div>
+            )}
+
             {/* Errors and Warnings */}
             {processingResult.errors.length > 0 && (
               <Alert className="border-red-200 bg-red-50">
                 <XCircle className="h-4 w-4 text-red-600" />
                 <AlertDescription className="text-red-800">
-                  <div className="font-medium mb-2">Errors found ({processingResult.errors.length}):</div>
+                  <div className="font-medium mb-2">Critical Errors ({processingResult.errors.length}):</div>
                   <ScrollArea className="h-32">
                     <ul className="space-y-1 text-sm">
                       {processingResult.errors.map((error, index) => (
@@ -478,7 +512,7 @@ const CSVUploader: React.FC = () => {
               <Alert className="border-yellow-200 bg-yellow-50">
                 <AlertTriangle className="h-4 w-4 text-yellow-600" />
                 <AlertDescription className="text-yellow-800">
-                  <div className="font-medium mb-2">Warnings ({processingResult.warnings.length}):</div>
+                  <div className="font-medium mb-2">Processing Notes ({processingResult.warnings.length}):</div>
                   <ScrollArea className="h-24">
                     <ul className="space-y-1 text-sm">
                       {processingResult.warnings.map((warning, index) => (
@@ -542,7 +576,7 @@ const CSVUploader: React.FC = () => {
                 ) : (
                   <>
                     <Upload className="w-4 h-4" />
-                    Import {processingResult.users.length} Records
+                    Import {processingResult.users.length + processingResult.properties.length + processingResult.units.length} Records
                   </>
                 )}
               </Button>
