@@ -9,7 +9,7 @@ export const useUsers = () => {
       console.log('Fetching users from Supabase...');
       try {
         const { data, error } = await supabase
-          .from('users')
+          .from('api.users')
           .select('*')
           .order('created_at', { ascending: false });
 
@@ -37,7 +37,7 @@ export const useProperties = () => {
       console.log('Fetching properties from Supabase...');
       try {
         const { data, error } = await supabase
-          .from('properties')
+          .from('api.properties')
           .select('*')
           .order('created_at', { ascending: false });
 
@@ -65,7 +65,7 @@ export const useCalendarEvents = () => {
       console.log('Fetching calendar events from Supabase...');
       try {
         const { data, error } = await supabase
-          .from('calendar_events')
+          .from('api.calendar_events')
           .select('*')
           .order('event_date', { ascending: true });
 
