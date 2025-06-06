@@ -57,3 +57,31 @@ export const useProperties = () => {
 
   return { properties, loading, error, refetch };
 };
+
+export const useCalendarEvents = () => {
+  const { data: events = [], isLoading: loading, error, refetch } = useQuery({
+    queryKey: ['calendar_events'],
+    queryFn: async () => {
+      console.log('Fetching calendar events from Supabase...');
+      try {
+        const { data, error } = await supabase
+          .from('calendar_events')
+          .select('*')
+          .order('event_date', { ascending: true });
+
+        if (error) {
+          console.error('Supabase calendar events fetch error:', error);
+          throw error;
+        }
+
+        console.log('✅ Calendar events fetched successfully:', data);
+        return data || [];
+      } catch (error) {
+        console.error('Exception fetching calendar events:', error);
+        throw error;
+      }
+    },
+  });
+
+  return { events, loading, error, refetch };
+};
