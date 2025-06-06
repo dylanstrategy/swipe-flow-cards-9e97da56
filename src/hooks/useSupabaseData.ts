@@ -2,66 +2,23 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-/**
- * Tries to fetch data from public schema first, then falls back to api schema if needed
- */
-const fetchWithSchemaFallback = async (tableName: string, query: any) => {
-  console.log(`Fetching ${tableName} with schema fallback...`);
-  
-  // Try public schema first
-  const { data: publicData, error: publicError } = await query;
-  
-  if (publicData && publicData.length > 0) {
-    console.log(`✅ ${tableName} fetched from public schema:`, publicData);
-    return publicData;
-  } 
-  
-  if (publicError) {
-    console.error(`Error fetching from public.${tableName}:`, publicError);
-  } else {
-    console.log(`No data found in public.${tableName}, trying api schema...`);
-  }
-  
-  // Fallback to api schema if public schema returned no data
-  try {
-    // Modify the query to use api schema instead
-    const apiQuery = supabase
-      .from(`api.${tableName}`)
-      .select(query._query[0].columns.join(',')) // Get the columns from the original query
-      .order(query._query[0].ordering?.[0]?.column || 'created_at', 
-             { ascending: query._query[0].ordering?.[0]?.ascending || false });
-
-    const { data: apiData, error: apiError } = await apiQuery;
-    
-    if (apiError) {
-      console.error(`Error fetching from api.${tableName}:`, apiError);
-      return publicData || []; // Return whatever we got from public schema (empty array if nothing)
-    }
-    
-    if (apiData && apiData.length > 0) {
-      console.log(`✅ ${tableName} fetched from api schema:`, apiData);
-      return apiData;
-    }
-    
-    console.log(`No data found in api.${tableName} either`);
-    return [];
-  } catch (error) {
-    console.error(`Exception trying to access api.${tableName}:`, error);
-    return publicData || []; // Return whatever we got from public schema (empty array if nothing)
-  }
-};
-
 export const useUsers = () => {
   const { data: users = [], isLoading: loading, error, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      console.log('Fetching users with schema fallback...');
-      const query = supabase
+      console.log('Fetching users...');
+      const { data, error } = await supabase
         .from('users')
         .select('*')
         .order('created_at', { ascending: false });
 
-      return fetchWithSchemaFallback('users', query);
+      if (error) {
+        console.error('Error fetching users:', error);
+        return [];
+      }
+
+      console.log('✅ Users fetched:', data);
+      return data || [];
     },
   });
 
@@ -72,13 +29,16 @@ export const useProperties = () => {
   const { data: properties = [], isLoading: loading, error, refetch } = useQuery({
     queryKey: ['properties'],
     queryFn: async () => {
-      console.log('Fetching properties with schema fallback...');
-      const query = supabase
+      console.log('Fetching properties...');
+      const { data, error } = await supabase
         .from('properties')
         .select('*')
         .order('created_at', { ascending: false });
 
-      const data = await fetchWithSchemaFallback('properties', query);
+      if (error) {
+        console.error('Error fetching properties:', error);
+        return [];
+      }
 
       // Map new schema to legacy field names for backward compatibility
       const mappedData = data?.map(property => ({
@@ -99,10 +59,10 @@ export const useResidents = (propertyId?: string) => {
   const { data: residents = [], isLoading: loading, error, refetch } = useQuery({
     queryKey: ['residents', propertyId],
     queryFn: async () => {
-      console.log('Fetching residents with schema fallback...');
+      console.log('Fetching residents...');
       
-      // Build the query for both schemas
-      let baseQuery = supabase
+      // Build the query
+      let query = supabase
         .from('residents')
         .select(`
           *,
@@ -119,13 +79,18 @@ export const useResidents = (propertyId?: string) => {
         `);
 
       if (propertyId) {
-        baseQuery = baseQuery.eq('property_id', propertyId);
+        query = query.eq('property_id', propertyId);
       }
       
-      baseQuery = baseQuery.order('created_at', { ascending: false });
+      const { data, error } = await query.order('created_at', { ascending: false });
 
-      // Try to fetch with schema fallback
-      return fetchWithSchemaFallback('residents', baseQuery);
+      if (error) {
+        console.error('Error fetching residents:', error);
+        return [];
+      }
+
+      console.log('✅ Residents fetched:', data);
+      return data || [];
     },
   });
 
@@ -136,13 +101,19 @@ export const useCalendarEvents = () => {
   const { data: events = [], isLoading: loading, error, refetch } = useQuery({
     queryKey: ['calendar_events'],
     queryFn: async () => {
-      console.log('Fetching calendar events with schema fallback...');
-      const query = supabase
+      console.log('Fetching calendar events...');
+      const { data, error } = await supabase
         .from('calendar_events')
         .select('*')
         .order('event_date', { ascending: true });
 
-      return fetchWithSchemaFallback('calendar_events', query);
+      if (error) {
+        console.error('Error fetching calendar events:', error);
+        return [];
+      }
+
+      console.log('✅ Calendar events fetched:', data);
+      return data || [];
     },
   });
 
@@ -153,10 +124,10 @@ export const useUnits = (propertyId?: string) => {
   const { data: units = [], isLoading: loading, error, refetch } = useQuery({
     queryKey: ['units', propertyId],
     queryFn: async () => {
-      console.log('Fetching units with schema fallback...');
+      console.log('Fetching units...');
       
-      // Build the query for both schemas
-      let baseQuery = supabase
+      // Build the query
+      let query = supabase
         .from('units')
         .select(`
           *,
@@ -177,13 +148,15 @@ export const useUnits = (propertyId?: string) => {
         `);
 
       if (propertyId) {
-        baseQuery = baseQuery.eq('property_id', propertyId);
+        query = query.eq('property_id', propertyId);
       }
       
-      baseQuery = baseQuery.order('unit_number');
+      const { data, error } = await query.order('unit_number');
 
-      // Try to fetch with schema fallback
-      const data = await fetchWithSchemaFallback('units', baseQuery);
+      if (error) {
+        console.error('Error fetching units:', error);
+        return [];
+      }
 
       // Map new schema to legacy field names for backward compatibility
       const mappedData = data?.map(unit => ({
