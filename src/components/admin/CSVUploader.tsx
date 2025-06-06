@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -87,10 +86,8 @@ interface ProcessingResult {
   warnings: string[];
 }
 
-const REQUIRED_HEADERS = [
-  'id_number', 'first_name', 'last_name', 'email', 'role',
-  'property_name', 'unit_number', 'unit_status'
-];
+// Only basic fields are required - others are optional
+const BASIC_REQUIRED_HEADERS = ['first_name', 'last_name', 'email'];
 
 const ALL_SUPPORTED_HEADERS = [
   'id_number', 'unit_status', 'first_name', 'last_name', 'email', 'phone', 
@@ -184,12 +181,12 @@ const CSVUploader: React.FC = () => {
     const errors: string[] = [];
     const warnings: string[] = [];
 
-    // Check for required headers
+    // Check for basic required headers only
     if (data.length > 0) {
       const headers = Object.keys(data[0]);
-      const missingHeaders = REQUIRED_HEADERS.filter(h => !headers.includes(h));
-      if (missingHeaders.length > 0) {
-        errors.push(`Missing required headers: ${missingHeaders.join(', ')}`);
+      const missingBasicHeaders = BASIC_REQUIRED_HEADERS.filter(h => !headers.includes(h));
+      if (missingBasicHeaders.length > 0) {
+        errors.push(`Missing basic required headers: ${missingBasicHeaders.join(', ')}`);
       }
     }
 
@@ -197,15 +194,15 @@ const CSVUploader: React.FC = () => {
       const rowNum = index + 2; // +2 for 1-based indexing and header row
 
       try {
-        // Validate required fields
-        if (!row.id_number || !row.first_name || !row.last_name || !row.email) {
-          errors.push(`Row ${rowNum}: Missing required user fields`);
+        // Validate only basic required fields
+        if (!row.first_name || !row.last_name || !row.email) {
+          errors.push(`Row ${rowNum}: Missing required user fields (first_name, last_name, email)`);
           return;
         }
 
-        // Parse user data
+        // Parse user data with more flexible approach
         const user: ParsedUser = {
-          id_number: row.id_number,
+          id_number: row.id_number || `auto_${Date.now()}_${index}`,
           first_name: row.first_name,
           last_name: row.last_name,
           email: row.email,
@@ -214,7 +211,7 @@ const CSVUploader: React.FC = () => {
           assigned_operator_email: row.assigned_operator_email,
           assigned_vendor_email: row.assigned_vendor_email,
           employer: row.employer,
-          is_active: row.is_active?.toLowerCase() === 'true'
+          is_active: row.is_active?.toLowerCase() === 'true' || true
         };
 
         // Validate role
@@ -226,16 +223,16 @@ const CSVUploader: React.FC = () => {
 
         users.push(user);
 
-        // Parse property data
+        // Parse property data (only if property_name is provided)
         if (row.property_name) {
           const property: ParsedProperty = {
             property_name: row.property_name,
             property_code: row.property_code,
-            address_line_1: row.address_line_1 || row.Personal_Information_Address || '',
+            address_line_1: row.address_line_1 || row.Personal_Information_Address || 'Address not provided',
             address_line_2: row.address_line_2,
-            city: row.city || row.Personal_Information_City || '',
-            state: row.state || row.Personal_Information_State || '',
-            zip_code: row.zip_code || row.Personal_information_zip || '',
+            city: row.city || row.Personal_Information_City || 'City not provided',
+            state: row.state || row.Personal_Information_State || 'State not provided',
+            zip_code: row.zip_code || row.Personal_information_zip || '00000',
             timezone: row.timezone || 'America/New_York',
             management_company: row.management_company,
             total_units: row.total_units ? parseInt(row.total_units) : undefined,
@@ -248,7 +245,7 @@ const CSVUploader: React.FC = () => {
           }
         }
 
-        // Parse unit data
+        // Parse unit data (only if unit_number is provided)
         if (row.unit_number) {
           const unit: ParsedUnit = {
             unit_number: row.unit_number,
@@ -261,17 +258,17 @@ const CSVUploader: React.FC = () => {
             property_code: row.property_code
           };
 
-          const unitKey = `${unit.property_code}-${unit.unit_number}`;
-          const existingUnit = units.find(u => `${u.property_code}-${u.unit_number}` === unitKey);
+          const unitKey = `${unit.property_code || 'default'}-${unit.unit_number}`;
+          const existingUnit = units.find(u => `${u.property_code || 'default'}-${u.unit_number}` === unitKey);
           if (!existingUnit) {
             units.push(unit);
           }
         }
 
-        // Parse resident data (if role is resident)
+        // Parse resident data (if role is resident and unit_number is provided)
         if (user.role === 'resident' && row.unit_number) {
           const resident: ParsedResident = {
-            id_number: row.id_number,
+            id_number: user.id_number,
             unit_number: row.unit_number,
             property_code: row.property_code,
             move_in_date: row.move_in_date,
@@ -355,6 +352,7 @@ const CSVUploader: React.FC = () => {
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Bulk Data Import</h2>
           <p className="text-gray-600">Upload CSV files to bulk import users, properties, and units</p>
+          <p className="text-sm text-gray-500 mt-1">Only first_name, last_name, and email are required. All other fields are optional.</p>
         </div>
         <Button onClick={downloadTemplate} variant="outline" className="flex items-center gap-2">
           <Download className="w-4 h-4" />
