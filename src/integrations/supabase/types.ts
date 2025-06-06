@@ -9,56 +9,238 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      calendar_events: {
+      ads: {
         Row: {
           created_at: string | null
-          created_by: string
+          cta_url: string | null
           description: string | null
-          event_date: string
-          event_time: string | null
-          event_type: string
+          end_date: string | null
           id: string
-          related_unit_id: string | null
-          related_user_id: string | null
+          image_url: string | null
+          is_active: boolean | null
+          start_date: string | null
+          target_audience: Json | null
           title: string
+          updated_at: string | null
         }
         Insert: {
           created_at?: string | null
-          created_by: string
+          cta_url?: string | null
           description?: string | null
-          event_date: string
-          event_time?: string | null
-          event_type: string
+          end_date?: string | null
           id?: string
-          related_unit_id?: string | null
-          related_user_id?: string | null
+          image_url?: string | null
+          is_active?: boolean | null
+          start_date?: string | null
+          target_audience?: Json | null
           title: string
+          updated_at?: string | null
         }
         Update: {
           created_at?: string | null
-          created_by?: string
+          cta_url?: string | null
           description?: string | null
-          event_date?: string
-          event_time?: string | null
+          end_date?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          start_date?: string | null
+          target_audience?: Json | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      calendar_events: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_time: string
+          event_type: string
+          id: string
+          property_id: string | null
+          start_time: string
+          title: string
+          unit_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_time: string
+          event_type: string
+          id?: string
+          property_id?: string | null
+          start_time: string
+          title: string
+          unit_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_time?: string
           event_type?: string
           id?: string
-          related_unit_id?: string | null
-          related_user_id?: string | null
+          property_id?: string | null
+          start_time?: string
           title?: string
+          unit_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "calendar_events_created_by_fkey"
-            columns: ["created_by"]
+            foreignKeyName: "calendar_events_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inspections: {
+        Row: {
+          created_at: string | null
+          id: string
+          inspected_by: string | null
+          inspection_date: string
+          is_signed_off: boolean | null
+          notes: string | null
+          photo_urls: string[] | null
+          type: string | null
+          unit_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          inspected_by?: string | null
+          inspection_date: string
+          is_signed_off?: boolean | null
+          notes?: string | null
+          photo_urls?: string[] | null
+          type?: string | null
+          unit_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          inspected_by?: string | null
+          inspection_date?: string
+          is_signed_off?: boolean | null
+          notes?: string | null
+          photo_urls?: string[] | null
+          type?: string | null
+          unit_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspections_inspected_by_fkey"
+            columns: ["inspected_by"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "calendar_events_related_user_id_fkey"
-            columns: ["related_user_id"]
+            foreignKeyName: "inspections_unit_id_fkey"
+            columns: ["unit_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      move_in_checklists: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          is_complete: boolean | null
+          resident_id: string | null
+          task: string
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_complete?: boolean | null
+          resident_id?: string | null
+          task: string
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_complete?: boolean | null
+          resident_id?: string | null
+          task?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "move_in_checklists_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      move_out_checklists: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          is_complete: boolean | null
+          resident_id: string | null
+          task: string
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_complete?: boolean | null
+          resident_id?: string | null
+          task: string
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_complete?: boolean | null
+          resident_id?: string | null
+          task?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "move_out_checklists_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
             referencedColumns: ["id"]
           },
         ]
@@ -233,6 +415,35 @@ export type Database = {
           zip_code?: string
         }
         Relationships: []
+      }
+      resident_tags: {
+        Row: {
+          created_at: string | null
+          id: string
+          tag: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          tag: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          tag?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resident_tags_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       residents: {
         Row: {
@@ -463,6 +674,115 @@ export type Database = {
           },
         ]
       }
+      service_orders: {
+        Row: {
+          category: string | null
+          completed_at: string | null
+          created_at: string | null
+          description: string
+          id: string
+          image_url: string | null
+          scheduled_at: string | null
+          status: string | null
+          unit_id: string | null
+          updated_at: string | null
+          user_id: string | null
+          vendor_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          description: string
+          id?: string
+          image_url?: string | null
+          scheduled_at?: string | null
+          status?: string | null
+          unit_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          vendor_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          image_url?: string | null
+          scheduled_at?: string | null
+          status?: string | null
+          unit_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_orders_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_orders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_orders_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      unit_status_logs: {
+        Row: {
+          changed_at: string | null
+          changed_by: string | null
+          id: string
+          notes: string | null
+          status: string
+          unit_id: string | null
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string
+          notes?: string | null
+          status: string
+          unit_id?: string | null
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string
+          notes?: string | null
+          status?: string
+          unit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unit_status_logs_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unit_status_logs_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       units: {
         Row: {
           bathrooms: number | null
@@ -564,6 +884,39 @@ export type Database = {
         }
         Relationships: []
       }
+      vendors: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -580,10 +933,6 @@ export type Database = {
           floor: number
         }[]
       }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: Database["public"]["Enums"]["app_role"]
-      }
       get_unit_occupancy_rate: {
         Args: { property_uuid: string }
         Returns: number
@@ -591,10 +940,6 @@ export type Database = {
       get_user_property_id: {
         Args: { user_id: string }
         Returns: string
-      }
-      get_user_role: {
-        Args: { user_id: string }
-        Returns: Database["public"]["Enums"]["app_role"]
       }
       is_admin_or_operator: {
         Args: { user_id: string }
@@ -607,14 +952,6 @@ export type Database = {
       is_super_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
-      }
-      update_unit_status: {
-        Args: {
-          unit_uuid: string
-          new_status: Database["public"]["Enums"]["unit_status"]
-          notes_text?: string
-        }
-        Returns: undefined
       }
     }
     Enums: {
@@ -639,12 +976,7 @@ export type Database = {
         | "single_family"
         | "condo"
         | "other"
-      resident_status:
-        | "active"
-        | "notice_given"
-        | "moved_out"
-        | "evicted"
-        | "transferred"
+      resident_status: "active" | "notice" | "past"
       unit_ready_status:
         | "ready"
         | "maintenance"
@@ -795,13 +1127,7 @@ export const Constants = {
         "condo",
         "other",
       ],
-      resident_status: [
-        "active",
-        "notice_given",
-        "moved_out",
-        "evicted",
-        "transferred",
-      ],
+      resident_status: ["active", "notice", "past"],
       unit_ready_status: [
         "ready",
         "maintenance",
