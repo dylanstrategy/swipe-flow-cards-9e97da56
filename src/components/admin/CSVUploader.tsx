@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,7 +15,8 @@ import {
   Download,
   Users,
   Building2,
-  Home
+  Home,
+  Database
 } from 'lucide-react';
 import * as Papa from 'papaparse';
 import { supabase } from '@/integrations/supabase/client';
@@ -132,6 +132,69 @@ const CSVUploader: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
   const [importResults, setImportResults] = useState<{[key: string]: number}>({});
+  const [systemStatus, setSystemStatus] = useState<{
+    tablesExist: boolean;
+    authWorking: boolean;
+    permissionsOk: boolean;
+    error?: string;
+  } | null>(null);
+
+  // System audit function
+  const auditSystem = async () => {
+    console.log('🔍 Starting system audit...');
+    const status = {
+      tablesExist: false,
+      authWorking: false,
+      permissionsOk: false,
+      error: undefined as string | undefined
+    };
+
+    try {
+      // Check authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Auth session:', session ? 'Found' : 'Not found');
+      status.authWorking = !!session;
+
+      // Check if tables exist and are accessible
+      console.log('🔍 Checking table accessibility...');
+      
+      const tableChecks = await Promise.allSettled([
+        supabase.from('api.users').select('count', { count: 'exact', head: true }),
+        supabase.from('api.properties').select('count', { count: 'exact', head: true }),
+        supabase.from('api.units').select('count', { count: 'exact', head: true }),
+        supabase.from('api.residents').select('count', { count: 'exact', head: true })
+      ]);
+
+      const allTablesOk = tableChecks.every(result => 
+        result.status === 'fulfilled' && !result.value.error
+      );
+
+      status.tablesExist = allTablesOk;
+      status.permissionsOk = allTablesOk;
+
+      if (!allTablesOk) {
+        const errors = tableChecks
+          .filter(result => result.status === 'rejected' || result.value.error)
+          .map(result => 
+            result.status === 'rejected' 
+              ? result.reason?.message 
+              : result.value.error?.message
+          );
+        
+        status.error = `Table access issues: ${errors.join(', ')}`;
+        console.error('❌ Table check errors:', errors);
+      } else {
+        console.log('✅ All tables accessible');
+      }
+
+    } catch (error) {
+      console.error('❌ System audit failed:', error);
+      status.error = `System audit failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    }
+
+    setSystemStatus(status);
+    return status;
+  };
 
   const downloadTemplate = () => {
     const csvContent = ALL_SUPPORTED_HEADERS.join(',');
@@ -330,22 +393,37 @@ const CSVUploader: React.FC = () => {
   const handleImport = async () => {
     if (!processingResult) return;
 
+    // Run system audit first
+    console.log('🔍 Running pre-import system audit...');
+    const systemCheck = await auditSystem();
+    
+    if (!systemCheck.tablesExist || !systemCheck.permissionsOk) {
+      toast.error(`System not ready for import: ${systemCheck.error || 'Unknown issue'}`);
+      return;
+    }
+
+    if (!systemCheck.authWorking) {
+      toast.error('Authentication required. Please make sure you are logged in.');
+      return;
+    }
+
     setIsProcessing(true);
     setUploadProgress(0);
 
     try {
-      console.log('Starting import with bypass auth...');
+      console.log('🚀 Starting import with system check passed...');
       let importedCounts = { users: 0, properties: 0, units: 0, residents: 0 };
       const detailedErrors: string[] = [];
       
       // Import properties first
       setUploadProgress(15);
       if (processingResult.properties.length > 0) {
-        console.log('Importing properties:', processingResult.properties);
+        console.log('📍 Importing properties:', processingResult.properties.length);
         
         for (const property of processingResult.properties) {
           try {
-            // Use upsert to handle duplicates gracefully
+            console.log(`Creating property: ${property.property_name}`);
+            
             const { data, error } = await supabase
               .from('api.properties')
               .upsert({
@@ -360,31 +438,39 @@ const CSVUploader: React.FC = () => {
               .select();
 
             if (error) {
-              console.error('Property upsert error:', error);
-              detailedErrors.push(`Property "${property.property_name}": ${error.message}`);
+              console.error('❌ Property upsert error:', error);
+              detailedErrors.push(`Property "${property.property_name}": ${error.message} (Code: ${error.code})`);
             } else {
-              console.log('Successfully upserted property:', property.property_name);
+              console.log('✅ Successfully upserted property:', property.property_name);
               importedCounts.properties++;
             }
           } catch (error) {
-            console.error('Exception importing property:', property.property_name, error);
+            console.error('❌ Exception importing property:', property.property_name, error);
             detailedErrors.push(`Property "${property.property_name}": ${error}`);
           }
         }
       }
       
       // Get all properties for linking
-      const { data: allProperties } = await supabase
+      console.log('🔍 Fetching properties for linking...');
+      const { data: allProperties, error: propError } = await supabase
         .from('api.properties')
         .select('id, name');
+      
+      if (propError) {
+        console.error('❌ Error fetching properties:', propError);
+        detailedErrors.push(`Failed to fetch properties: ${propError.message}`);
+      }
       
       // Import units
       setUploadProgress(35);
       if (processingResult.units.length > 0) {
-        console.log('Importing units:', processingResult.units);
+        console.log('📍 Importing units:', processingResult.units.length);
         
         for (const unit of processingResult.units) {
           try {
+            console.log(`Creating unit: ${unit.unit_number}`);
+            
             // Find property by name
             const propertyName = processingResult.properties.find(p => 
               p.property_code === unit.property_code
@@ -414,7 +500,7 @@ const CSVUploader: React.FC = () => {
             const { data, error } = await supabase
               .from('api.units')
               .upsert({
-                property_id: property.id,
+                property_id: property?.id,
                 unit_number: unit.unit_number,
                 floor: unit.floor,
                 bedroom_type: unit.bedrooms?.toString(),
@@ -428,14 +514,14 @@ const CSVUploader: React.FC = () => {
               .select();
 
             if (error) {
-              console.error('Unit upsert error:', error);
-              detailedErrors.push(`Unit ${unit.unit_number}: ${error.message}`);
+              console.error('❌ Unit upsert error:', error);
+              detailedErrors.push(`Unit ${unit.unit_number}: ${error.message} (Code: ${error.code})`);
             } else {
-              console.log('Successfully upserted unit:', unit.unit_number);
+              console.log('✅ Successfully upserted unit:', unit.unit_number);
               importedCounts.units++;
             }
           } catch (error) {
-            console.error('Exception importing unit:', unit.unit_number, error);
+            console.error('❌ Exception importing unit:', unit.unit_number, error);
             detailedErrors.push(`Unit ${unit.unit_number}: ${error}`);
           }
         }
@@ -444,10 +530,12 @@ const CSVUploader: React.FC = () => {
       // Import users
       setUploadProgress(65);
       if (processingResult.users.length > 0) {
-        console.log('Importing users:', processingResult.users);
+        console.log('👥 Importing users:', processingResult.users.length);
         
         for (const user of processingResult.users) {
           try {
+            console.log(`Creating user: ${user.email}`);
+            
             const { data, error } = await supabase
               .from('api.users')
               .upsert({
@@ -463,32 +551,43 @@ const CSVUploader: React.FC = () => {
               .select();
 
             if (error) {
-              console.error('User upsert error:', error);
-              detailedErrors.push(`User ${user.email}: ${error.message}`);
+              console.error('❌ User upsert error:', error);
+              detailedErrors.push(`User ${user.email}: ${error.message} (Code: ${error.code})`);
             } else {
-              console.log('Successfully upserted user:', user.email);
+              console.log('✅ Successfully upserted user:', user.email);
               importedCounts.users++;
             }
           } catch (error) {
-            console.error('Exception importing user:', user.email, error);
+            console.error('❌ Exception importing user:', user.email, error);
             detailedErrors.push(`User ${user.email}: ${error}`);
           }
         }
       }
       
       // Get all data for resident linking
-      const { data: allUsers } = await supabase
+      console.log('🔍 Fetching users and units for linking...');
+      const { data: allUsers, error: userError } = await supabase
         .from('api.users')
         .select('id, email');
         
-      const { data: allUnits } = await supabase
+      if (userError) {
+        console.error('❌ Error fetching users:', userError);
+        detailedErrors.push(`Failed to fetch users: ${userError.message}`);
+      }
+      
+      const { data: allUnits, error: unitError } = await supabase
         .from('api.units')
         .select('id, unit_number, property_id');
+      
+      if (unitError) {
+        console.error('❌ Error fetching units:', unitError);
+        detailedErrors.push(`Failed to fetch units: ${unitError.message}`);
+      }
       
       // Import residents
       setUploadProgress(85);
       if (processingResult.residents.length > 0) {
-        console.log('Importing residents:', processingResult.residents);
+        console.log('📍 Importing residents:', processingResult.residents.length);
         
         for (const resident of processingResult.residents) {
           try {
@@ -538,14 +637,14 @@ const CSVUploader: React.FC = () => {
               .select();
 
             if (error) {
-              console.error('Resident upsert error:', error);
-              detailedErrors.push(`Resident ${resident.id_number}: ${error.message}`);
+              console.error('❌ Resident upsert error:', error);
+              detailedErrors.push(`Resident ${resident.id_number}: ${error.message} (Code: ${error.code})`);
             } else {
-              console.log('Successfully upserted resident:', resident.id_number);
+              console.log('✅ Successfully upserted resident:', resident.id_number);
               importedCounts.residents++;
             }
           } catch (error) {
-            console.error('Exception importing resident:', resident.id_number, error);
+            console.error('❌ Exception importing resident:', resident.id_number, error);
             detailedErrors.push(`Resident ${resident.id_number}: ${error}`);
           }
         }
@@ -557,16 +656,23 @@ const CSVUploader: React.FC = () => {
       const totalImported = Object.values(importedCounts).reduce((sum, count) => sum + count, 0);
       const errorCount = detailedErrors.length;
       
+      console.log('📊 Import Summary:', {
+        totalImported,
+        errorCount,
+        details: importedCounts,
+        errors: detailedErrors
+      });
+      
       if (totalImported > 0) {
         toast.success(`Successfully imported ${totalImported} records! Details: ${importedCounts.users} users, ${importedCounts.properties} properties, ${importedCounts.units} units, ${importedCounts.residents} residents.`);
         
         if (errorCount > 0) {
-          console.warn('Import errors:', detailedErrors);
+          console.warn('⚠️ Import errors:', detailedErrors);
           toast.warning(`${errorCount} records had issues. Check console for details.`);
         }
       } else {
         toast.error(`No records were imported. ${errorCount} errors occurred. Check console for details.`);
-        console.error('All import errors:', detailedErrors);
+        console.error('❌ All import errors:', detailedErrors);
       }
       
       // Reset form
@@ -581,7 +687,7 @@ const CSVUploader: React.FC = () => {
       }, 2000);
       
     } catch (error) {
-      console.error('Import error:', error);
+      console.error('💥 Critical import error:', error);
       toast.error(`Critical import error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsProcessing(false);
@@ -599,11 +705,54 @@ const CSVUploader: React.FC = () => {
             Smart processing: vacant units are detected automatically, incomplete rows are skipped intelligently
           </p>
         </div>
-        <Button onClick={downloadTemplate} variant="outline" className="flex items-center gap-2">
-          <Download className="w-4 h-4" />
-          Download Template
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={auditSystem} variant="outline" className="flex items-center gap-2">
+            <Database className="w-4 h-4" />
+            Test System
+          </Button>
+          <Button onClick={downloadTemplate} variant="outline" className="flex items-center gap-2">
+            <Download className="w-4 h-4" />
+            Download Template
+          </Button>
+        </div>
       </div>
+
+      {/* System Status Display */}
+      {systemStatus && (
+        <Card className={`border-2 ${systemStatus.tablesExist && systemStatus.authWorking && systemStatus.permissionsOk ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {systemStatus.tablesExist && systemStatus.authWorking && systemStatus.permissionsOk ? (
+                <CheckCircle className="w-5 h-5 text-green-600" />
+              ) : (
+                <XCircle className="w-5 h-5 text-red-600" />
+              )}
+              System Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                {systemStatus.authWorking ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-red-600" />}
+                <span>Authentication: {systemStatus.authWorking ? 'Working' : 'Not authenticated'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {systemStatus.tablesExist ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-red-600" />}
+                <span>Database Tables: {systemStatus.tablesExist ? 'Available' : 'Missing or inaccessible'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {systemStatus.permissionsOk ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-red-600" />}
+                <span>Permissions: {systemStatus.permissionsOk ? 'OK' : 'Access denied'}</span>
+              </div>
+              {systemStatus.error && (
+                <div className="mt-2 p-2 bg-red-100 border border-red-200 rounded text-sm text-red-800">
+                  <strong>Error:</strong> {systemStatus.error}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

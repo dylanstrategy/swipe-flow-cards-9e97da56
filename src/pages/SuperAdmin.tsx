@@ -1,11 +1,11 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Users, 
   Building2, 
@@ -16,7 +16,10 @@ import {
   BarChart3,
   AlertTriangle,
   LogOut,
-  Upload
+  Upload,
+  Database,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import { useUsers, useProperties } from '@/hooks/useSupabaseData';
 import CreateUserModal from '@/components/admin/CreateUserModal';
@@ -27,23 +30,64 @@ import ImpersonatedInterface from '@/components/admin/ImpersonatedInterface';
 import CSVUploader from '@/components/admin/CSVUploader';
 import type { Property } from '@/types/supabase';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const SuperAdmin = () => {
   const { userProfile, user, signOut, isImpersonating, impersonatedRole } = useAuth();
-  const { users = [], loading: usersLoading, refetch: refetchUsers } = useUsers();
-  const { properties = [], loading: propertiesLoading, refetch: refetchProperties } = useProperties();
+  const { users = [], loading: usersLoading, refetch: refetchUsers, error: usersError } = useUsers();
+  const { properties = [], loading: propertiesLoading, refetch: refetchProperties, error: propertiesError } = useProperties();
   const navigate = useNavigate();
   
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
   const [isCreatePropertyModalOpen, setIsCreatePropertyModalOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [isPropertyDetailModalOpen, setIsPropertyDetailModalOpen] = useState(false);
+  const [systemHealth, setSystemHealth] = useState<{
+    authenticated: boolean;
+    tablesAccessible: boolean;
+    error?: string;
+  } | null>(null);
 
   // Debug information - show current user state
   console.log('Current user:', user);
   console.log('Current userProfile:', userProfile);
   console.log('User role:', userProfile?.role);
   console.log('Is impersonating:', isImpersonating, 'Role:', impersonatedRole);
+
+  // Check system health on component mount
+  useEffect(() => {
+    const checkSystemHealth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const authenticated = !!session;
+        
+        // Try to access tables
+        const { error: usersTableError } = await supabase
+          .from('api.users')
+          .select('count', { count: 'exact', head: true });
+          
+        const { error: propertiesTableError } = await supabase
+          .from('api.properties')
+          .select('count', { count: 'exact', head: true });
+
+        const tablesAccessible = !usersTableError && !propertiesTableError;
+        
+        setSystemHealth({
+          authenticated,
+          tablesAccessible,
+          error: usersTableError?.message || propertiesTableError?.message
+        });
+      } catch (error) {
+        setSystemHealth({
+          authenticated: false,
+          tablesAccessible: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    };
+
+    checkSystemHealth();
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -153,6 +197,45 @@ const SuperAdmin = () => {
         </div>
       </div>
 
+      {/* System Health Alert */}
+      {systemHealth && (!systemHealth.authenticated || !systemHealth.tablesAccessible) && (
+        <Alert className="mb-6 border-yellow-200 bg-yellow-50">
+          <AlertTriangle className="h-4 w-4 text-yellow-600" />
+          <AlertDescription className="text-yellow-800">
+            <div className="font-medium mb-2">System Setup Issues Detected:</div>
+            <ul className="space-y-1 text-sm">
+              {!systemHealth.authenticated && (
+                <li className="flex items-center gap-2">
+                  <XCircle className="w-4 h-4 text-red-500" />
+                  Authentication not working - Please check Supabase auth configuration
+                </li>
+              )}
+              {!systemHealth.tablesAccessible && (
+                <li className="flex items-center gap-2">
+                  <XCircle className="w-4 h-4 text-red-500" />
+                  Database tables not accessible - Please run the database migration
+                </li>
+              )}
+              {systemHealth.error && (
+                <li className="text-red-600 mt-1">Error: {systemHealth.error}</li>
+              )}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Data Loading Errors */}
+      {(usersError || propertiesError) && (
+        <Alert className="mb-6 border-red-200 bg-red-50">
+          <XCircle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-800">
+            <div className="font-medium mb-2">Data Loading Issues:</div>
+            {usersError && <div className="text-sm">Users: {usersError.message}</div>}
+            {propertiesError && <div className="text-sm">Properties: {propertiesError.message}</div>}
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card>
@@ -160,6 +243,7 @@ const SuperAdmin = () => {
             <Users className="w-8 h-8 mx-auto mb-3 text-blue-600" />
             <div className="text-3xl font-bold text-gray-900">{totalUsers}</div>
             <div className="text-sm text-gray-600">Total Users</div>
+            {usersError && <div className="text-xs text-red-500 mt-1">Error loading</div>}
           </CardContent>
         </Card>
         
@@ -168,6 +252,7 @@ const SuperAdmin = () => {
             <Building2 className="w-8 h-8 mx-auto mb-3 text-green-600" />
             <div className="text-3xl font-bold text-gray-900">{totalProperties}</div>
             <div className="text-sm text-gray-600">Properties</div>
+            {propertiesError && <div className="text-xs text-red-500 mt-1">Error loading</div>}
           </CardContent>
         </Card>
         
