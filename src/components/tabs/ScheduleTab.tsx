@@ -1,5 +1,5 @@
+
 import React, { useState } from 'react';
-import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
@@ -11,6 +11,8 @@ import SuggestionsSection from '../schedule/SuggestionsSection';
 import ScheduledItemsTimeline from '../schedule/ScheduledItemsTimeline';
 import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
+import MiniCalendar from './today/MiniCalendar';
+import { format, isSameDay } from 'date-fns';
 
 const ScheduleTab = () => {
   const { toast } = useToast();
@@ -106,6 +108,22 @@ const ScheduleTab = () => {
     setShowScheduleMenu(false);
   };
 
+  // Convert live calendar events to the format expected by the UI
+  const processedEvents = events.map(event => ({
+    id: event.id,
+    date: new Date(event.event_date),
+    time: event.event_time || '09:00',
+    title: event.title,
+    description: event.description || '',
+    category: event.event_type,
+    priority: event.event_type === 'maintenance' ? 'high' : 'medium'
+  }));
+
+  const getEventsForDate = (date: Date) => {
+    return processedEvents.filter(event => isSameDay(event.date, date))
+      .sort((a, b) => a.time.localeCompare(b.time));
+  };
+
   if (showServiceModule) {
     return <ServiceModule onClose={handleCloseService} />;
   }
@@ -157,17 +175,13 @@ const ScheduleTab = () => {
           <Plus className="text-white" size={28} />
         </button>
         
-        {/* Calendar */}
-        <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-100">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={(date) => date && setSelectedDate(date)}
-            className={cn("p-3 pointer-events-auto")}
-            classNames={{
-              day_today: "bg-blue-600 text-white hover:bg-blue-700",
-              day_selected: "bg-blue-600 text-white hover:bg-blue-700"
-            }}
+        {/* Calendar using the same component as Today tab */}
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Calendar</h2>
+          <MiniCalendar
+            selectedDate={selectedDate}
+            onDateSelect={setSelectedDate}
+            getEventsForDate={getEventsForDate}
           />
         </div>
 
