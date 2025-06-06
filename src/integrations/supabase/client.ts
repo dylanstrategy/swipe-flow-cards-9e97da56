@@ -1,22 +1,21 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-export const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!,
-  {
-    auth: {
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      flowType: 'pkce',
-      debug: true,
+const supabaseUrl = 'https://msujdvczbmnhkfpjikwb.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zdWpkdmN6Ym1uaGtmcGppa3diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxMDIyNDgsImV4cCI6MjA2NDY3ODI0OH0.ONtSG1Hyd5nwUPb_MbFdQWrL9ATrAvJIl_X8HS_9cOk';
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    flowType: 'pkce',
+    debug: true,
+  },
+  global: {
+    headers: {
+      'x-my-custom-header': 'my-app-name',
     },
-    global: {
-      headers: {
-        'x-my-custom-header': 'my-app-name',
-      },
-    },
-  }
-);
+  },
+});
