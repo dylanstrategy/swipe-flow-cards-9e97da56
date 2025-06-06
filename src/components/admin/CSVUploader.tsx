@@ -18,7 +18,7 @@ import {
   Building2,
   Home
 } from 'lucide-react';
-import Papa from 'papaparse';
+import * as Papa from 'papaparse';
 import type { AppRole } from '@/types/supabase';
 
 interface CSVRow {
