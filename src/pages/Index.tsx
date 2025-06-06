@@ -1,6 +1,5 @@
 
 import React from 'react';
-import ResidentPreview from '@/components/admin/ResidentPreview';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
@@ -13,19 +12,20 @@ const Index = () => {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Welcome to Applaud</h1>
         
-        {/* Resident Dashboard */}
-        <Card className="mb-6">
-          <CardContent className="p-0">
-            <ResidentPreview />
-          </CardContent>
-        </Card>
-        
         {/* Navigation Links */}
         <div className="bg-white rounded-lg shadow p-6">
           <p className="text-gray-600 mb-4">
             Residential Living. Never Made Easier.
           </p>
           <div className="grid grid-cols-2 gap-4">
+            <Button 
+              variant="outline" 
+              className="flex justify-between items-center"
+              onClick={() => navigate('/resident')}
+            >
+              <span>Resident Dashboard</span>
+              <span className="text-blue-600">→</span>
+            </Button>
             <Button 
               variant="outline" 
               className="flex justify-between items-center"

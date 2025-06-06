@@ -7,6 +7,7 @@ import { ResidentProvider } from "@/contexts/ResidentContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
+import Resident from "./pages/Resident";
 import Discovery from "./pages/Discovery";
 import Matches from "./pages/Matches";
 import MoveIn from "./pages/MoveIn";
@@ -28,6 +29,7 @@ const App = () => (
               <Routes>
                 {/* All routes are now open without authentication */}
                 <Route path="/" element={<Index />} />
+                <Route path="/resident" element={<Resident />} />
                 <Route path="/discovery" element={<Discovery />} />
                 <Route path="/matches" element={<Matches />} />
                 <Route path="/movein" element={<MoveIn />} />
