@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
@@ -10,7 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { format, addDays, isSameDay, differenceInDays, isPast, isToday } from 'date-fns';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useResident } from '@/contexts/ResidentContext';
-import { useCalendarEvents } from '@/hooks/useSupabaseData';
+import { useLiveCalendarEvents } from '@/hooks/useLiveCalendarEvents';
+import { useLiveResident } from '@/contexts/LiveResidentContext';
 import ResidentTimeline from '../ResidentTimeline';
 import TodayHeader from './today/TodayHeader';
 import QuickActionsGrid from './today/QuickActionsGrid';
@@ -22,7 +22,8 @@ const TodayTab = () => {
   const { toast } = useToast();
   const { profile, getPersonalizedContext } = useProfile();
   const { canMoveIn, canMoveOut, profile: residentProfile } = useResident();
-  const { events: dbEvents, refetch: refetchEvents } = useCalendarEvents();
+  const { events: liveEvents, refetch: refetchEvents } = useLiveCalendarEvents();
+  const { resident: liveResident } = useLiveResident();
   
   const [showTimeline, setShowTimeline] = useState(false);
   const [showMessageModule, setShowMessageModule] = useState(false);
@@ -57,69 +58,17 @@ const TodayTab = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Enhanced calendar events with realistic examples and times
-  const calendarEvents = [
-    {
-      id: 1,
-      date: new Date(),
-      time: '09:00',
-      title: 'Work Order',
-      description: 'Broken outlet - Unit 4B',
-      image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400',
-      category: 'Work Order',
-      priority: 'high',
-      dueDate: addDays(new Date(), -1)
-    },
-    {
-      id: 2,
-      date: new Date(),
-      time: '10:30',
-      title: 'Message from Management',
-      description: 'Please submit your lease renewal documents by Friday',
-      category: 'Management',
-      priority: 'medium'
-    },
-    {
-      id: 3,
-      date: new Date(),
-      time: '11:00',
-      title: 'Lease Renewal',
-      description: 'New rent: $1,550/month starting March 1st',
-      image: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=400',
-      category: 'Lease',
-      priority: 'high',
-      dueDate: addDays(new Date(), 2)
-    },
-    {
-      id: 4,
-      date: new Date(),
-      time: '14:00',
-      title: 'Local Business Offer',
-      description: '20% OFF at Joe\'s Burger Joint - Show this message',
-      image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400',
-      category: 'Point of Sale',
-      priority: 'low'
-    },
-    {
-      id: 5,
-      date: addDays(new Date(), 1),
-      time: '14:00',
-      title: 'Rooftop BBQ Social',
-      description: 'Community event - RSVP required',
-      category: 'Community Event',
-      priority: 'low'
-    },
-    {
-      id: 6,
-      date: addDays(new Date(), 2),
-      time: '09:00',
-      title: 'HVAC Maintenance',
-      description: 'Filter replacement scheduled',
-      image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400',
-      category: 'Work Order',
-      priority: 'medium'
-    }
-  ];
+  // Convert live calendar events to the format expected by the UI
+  const processedEvents = liveEvents.map(event => ({
+    id: event.id,
+    date: new Date(event.start_time),
+    time: format(new Date(event.start_time), 'HH:mm'),
+    title: event.title,
+    description: event.description || '',
+    category: event.event_type,
+    priority: event.event_type === 'maintenance' ? 'high' : 'medium',
+    dueDate: event.end_time ? new Date(event.end_time) : undefined
+  }));
 
   // Add pet-specific events if user has pets
   const petEvents = hasPets ? [
@@ -143,47 +92,52 @@ const TodayTab = () => {
     }
   ] : [];
 
-  const allEvents = [...calendarEvents, ...petEvents];
+  const allEvents = [...processedEvents, ...petEvents];
 
-  // Add move-in/move-out blockers as urgent events
-  const moveInCheck = canMoveIn(residentProfile.id);
-  const moveOutCheck = canMoveOut(residentProfile.id);
+  // Add move-in/move-out blockers as urgent events based on live resident data
+  if (liveResident) {
+    const moveInCheck = canMoveIn(liveResident.id);
+    const moveOutCheck = canMoveOut(liveResident.id);
 
-  if (!moveInCheck.canMove && residentProfile.status === 'future') {
-    allEvents.push({
-      id: 998,
-      date: new Date(),
-      time: '09:00',
-      title: 'Move-In Blocked',
-      description: moveInCheck.blockers.join(', '),
-      category: 'Alert',
-      priority: 'high'
-    });
+    if (!moveInCheck.canMove && liveResident.status === 'active') {
+      allEvents.push({
+        id: 998,
+        date: new Date(),
+        time: '09:00',
+        title: 'Move-In Blocked',
+        description: moveInCheck.blockers.join(', '),
+        category: 'Alert',
+        priority: 'high'
+      });
+    }
+
+    if (!moveOutCheck.canMove && liveResident.status === 'notice') {
+      allEvents.push({
+        id: 997,
+        date: new Date(),
+        time: '09:00',
+        title: 'Move-Out Blocked',
+        description: moveOutCheck.blockers.join(', '),
+        category: 'Alert',
+        priority: 'high'
+      });
+    }
   }
 
-  if (!moveOutCheck.canMove && residentProfile.status === 'notice') {
-    allEvents.push({
-      id: 997,
+  // Add rent due event based on live resident data
+  if (liveResident?.monthly_rent && liveResident?.payment_status !== 'current') {
+    const rentDueEvent = {
+      id: 999,
       date: new Date(),
-      time: '09:00',
-      title: 'Move-Out Blocked',
-      description: moveOutCheck.blockers.join(', '),
-      category: 'Alert',
-      priority: 'high'
-    });
+      time: '14:00',
+      title: 'Rent Payment Due',
+      description: `$${liveResident.monthly_rent} due soon`,
+      category: 'Payment',
+      priority: 'high',
+      dueDate: addDays(new Date(), 3)
+    };
+    allEvents.push(rentDueEvent);
   }
-
-  // Add special event for rent due
-  const rentDueEvent = {
-    id: 999,
-    date: new Date(),
-    time: '14:00',
-    title: 'Rent Payment Due',
-    description: '$1,550 due in 3 days',
-    category: 'Payment',
-    priority: 'high',
-    dueDate: addDays(new Date(), 3) // Due in 3 days
-  };
 
   // Pull to refresh handler
   const handleRefresh = async () => {
@@ -220,7 +174,6 @@ const TodayTab = () => {
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Final submission
       setShowWorkOrderFlow(false);
       setCurrentStep(1);
       toast({
@@ -274,8 +227,7 @@ const TodayTab = () => {
   };
 
   const getRentUrgencyClass = () => {
-    const daysUntilRentDue = 3; // Rent due in 3 days
-    if (daysUntilRentDue <= 3) {
+    if (liveResident?.payment_status === 'late' || liveResident?.payment_status === 'delinquent') {
       return 'wiggle-urgent';
     }
     return '';
@@ -452,7 +404,7 @@ const TodayTab = () => {
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-      <div className="px-4 py-6 pb-40"> {/* Increased bottom padding from pb-32 to pb-40 for better clearance */}
+      <div className="px-4 py-6 pb-40">
         <TodayHeader 
           selectedDate={selectedDate}
           weather={weather}
@@ -463,10 +415,9 @@ const TodayTab = () => {
           onAction={() => {}}
           onServiceClick={() => setShowServiceModule(true)}
           onMaintenanceClick={() => setShowWorkOrdersReview(true)}
-          getRentUrgencyClass={() => ''}
+          getRentUrgencyClass={getRentUrgencyClass}
         />
 
-        {/* Personalized offers based on lifestyle tags */}
         {renderPersonalizedOffers()}
 
         <div className="mb-6">
@@ -480,7 +431,6 @@ const TodayTab = () => {
             getEventsForDate={getEventsForDate}
           />
 
-          {/* Regular Events */}
           <EventsList 
             events={selectedDateEvents}
             onAction={() => {}}
@@ -488,7 +438,6 @@ const TodayTab = () => {
             getSwipeActionsForEvent={() => ({})}
           />
 
-          {/* Move-In/Move-Out Calendar Events */}
           <MoveCalendarEvents 
             selectedDate={selectedDate}
             onEventClick={(event) => {
