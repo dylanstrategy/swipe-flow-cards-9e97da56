@@ -102,7 +102,8 @@ const LiveMoveInStepModal = ({ stepId, onComplete, onClose }: LiveMoveInStepModa
     try {
       setUpdating(true);
       
-      if (config.field && config.value) {
+      // Check if this step has a specific value to set
+      if (stepId === 'payment' && 'value' in config) {
         await updateResidentField(config.field, config.value);
       } else if (config.field) {
         await updateResidentField(config.field, true);
