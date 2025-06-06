@@ -12,5 +12,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     flowType: 'pkce',
     debug: true,
+  },
+  db: {
+    schema: 'public'
+  },
+  global: {
+    headers: { 'x-my-custom-header': 'my-app-name' },
   }
 });
