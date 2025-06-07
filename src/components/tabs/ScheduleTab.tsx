@@ -1,9 +1,11 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { Plus } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon } from 'lucide-react';
 import { format, addDays, isSameDay } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import ScheduleMenu from '../schedule/ScheduleMenu';
 import WorkOrderFlow from '../schedule/WorkOrderFlow';
 import DraggableSuggestionsSection from '../schedule/DraggableSuggestionsSection';
@@ -506,6 +508,38 @@ const ScheduleTab = () => {
     <div className="px-4 py-6 pb-24 relative bg-gray-50 min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Schedule</h1>
+        
+        {/* Compact Date Picker */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-[240px] justify-start text-left font-normal shadow-sm"
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {format(selectedDate, "EEEE, MMMM d, yyyy")}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="end">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && setSelectedDate(date)}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+              classNames={{
+                day_today: "bg-blue-600 text-white hover:bg-blue-700",
+                day_selected: "bg-blue-600 text-white hover:bg-blue-700"
+              }}
+              modifiers={{
+                hasEvents: (date) => hasEventsOnDate(date)
+              }}
+              modifiersClassNames={{
+                hasEvents: "after:absolute after:bottom-1 after:left-1/2 after:transform after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-orange-500 after:rounded-full after:shadow-sm relative"
+              }}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
       
       {/* Floating Plus Button */}
