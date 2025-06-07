@@ -4,7 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Send, MessageSquare, Bell, MailOpen, Mail } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, Send, MessageSquare, Bell, MailOpen, Mail, Filter, ArrowUpDown } from 'lucide-react';
 import { isToday } from 'date-fns';
 
 interface Message {
@@ -31,6 +32,8 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
 }) => {
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [replyText, setReplyText] = useState('');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -213,13 +216,39 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
     }
   };
 
-  // Filter out non-today messages that are read
-  const visibleMessages = messages.filter(message => {
-    if (message.date && !isToday(message.date) && !message.unread) {
-      return false; // Hide old read messages
+  // Filter and sort messages
+  const getFilteredAndSortedMessages = () => {
+    let filteredMessages = messages;
+
+    // Filter by category
+    if (filterCategory !== 'all') {
+      filteredMessages = filteredMessages.filter(msg => msg.category === filterCategory);
     }
-    return true;
-  });
+
+    // Filter out non-today messages that are read
+    filteredMessages = filteredMessages.filter(message => {
+      if (message.date && !isToday(message.date) && !message.unread) {
+        return false; // Hide old read messages
+      }
+      return true;
+    });
+
+    // Sort messages
+    return filteredMessages.sort((a, b) => {
+      if (!a.date || !b.date) return 0;
+      
+      if (sortBy === 'newest') {
+        return b.date.getTime() - a.date.getTime();
+      } else {
+        return a.date.getTime() - b.date.getTime();
+      }
+    });
+  };
+
+  const visibleMessages = getFilteredAndSortedMessages();
+
+  // Get unique categories for filter dropdown
+  const categories = ['all', ...new Set(messages.map(msg => msg.category))];
 
   if (selectedMessage) {
     return (
@@ -326,6 +355,38 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
         <p className="text-gray-600">Resident communications and system alerts</p>
       </div>
 
+      {/* Sorting and Filtering Controls */}
+      <div className="mb-6 flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
+          <ArrowUpDown className="w-4 h-4 text-gray-500" />
+          <Select value={sortBy} onValueChange={(value: 'newest' | 'oldest') => setSortBy(value)}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest</SelectItem>
+              <SelectItem value="oldest">Oldest</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <Filter className="w-4 h-4 text-gray-500" />
+          <Select value={filterCategory} onValueChange={setFilterCategory}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map(category => (
+                <SelectItem key={category} value={category}>
+                  {category === 'all' ? 'All Categories' : category.charAt(0).toUpperCase() + category.slice(1)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       <div className="space-y-4">
         {visibleMessages.map((message) => (
           <Card 
@@ -393,6 +454,12 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
             </CardContent>
           </Card>
         ))}
+        
+        {visibleMessages.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No messages found for the selected filters.
+          </div>
+        )}
       </div>
     </div>
   );
