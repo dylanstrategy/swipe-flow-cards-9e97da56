@@ -213,8 +213,9 @@ const MaintenanceScheduleTab = ({
       scheduledTime: finalScheduledTime.includes('Tomorrow') ? '09:00' : finalScheduledTime.replace('Tomorrow ', '')
     };
 
-    // If it's a unit turn step, add to scheduled step IDs instead of removing from work orders
+    // If it's a unit turn step, add to scheduled step IDs
     if (workOrder.unitTurnStep) {
+      console.log('Scheduling unit turn step:', workOrder.id);
       setScheduledStepIds(prev => [...prev, workOrder.id]);
     } else {
       // Remove from work orders queue for regular work orders
@@ -224,7 +225,7 @@ const MaintenanceScheduleTab = ({
     // Add to scheduled work orders
     setScheduledWorkOrders(prev => [...prev, updatedWorkOrder]);
     
-    // If scheduled for today, add to today's work orders for the Today tab
+    // Always add to today's work orders if scheduled for today
     if (isToday && !finalScheduledTime.includes('Tomorrow')) {
       console.log('Adding to today work orders:', updatedWorkOrder);
       const newTodayWorkOrders = [...todayWorkOrders, updatedWorkOrder];
