@@ -156,11 +156,9 @@ const MaintenanceScheduleTab = () => {
     // Don't set showWorkOrderFlow to true, just show the detail tracker
   };
 
-  // Calculate overview statistics
+  // Calculate overview statistics - fixed to match actual status values
   const totalOrders = workOrders.length + scheduledWorkOrders.length;
-  const inProgressCount = workOrders.filter(wo => wo.status === 'in-progress').length;
   const scheduledCount = workOrders.filter(wo => wo.status === 'scheduled').length + scheduledWorkOrders.length;
-  const assignedCount = workOrders.filter(wo => wo.status === 'assigned').length;
   const unscheduledCount = workOrders.filter(wo => wo.status === 'unscheduled').length;
   const overdueCount = workOrders.filter(wo => wo.status === 'overdue').length;
 
@@ -256,20 +254,20 @@ const MaintenanceScheduleTab = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <Card>
                         <CardContent className="p-4 text-center">
-                          <div className="text-2xl font-bold text-orange-600">{inProgressCount}</div>
-                          <div className="text-sm text-gray-600">In Progress</div>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardContent className="p-4 text-center">
                           <div className="text-2xl font-bold text-blue-600">{scheduledCount}</div>
                           <div className="text-sm text-gray-600">Scheduled</div>
                         </CardContent>
                       </Card>
                       <Card>
                         <CardContent className="p-4 text-center">
-                          <div className="text-2xl font-bold text-purple-600">{assignedCount}</div>
-                          <div className="text-sm text-gray-600">Assigned</div>
+                          <div className="text-2xl font-bold text-gray-600">{unscheduledCount}</div>
+                          <div className="text-sm text-gray-600">Unscheduled</div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="p-4 text-center">
+                          <div className="text-2xl font-bold text-red-600">{overdueCount}</div>
+                          <div className="text-sm text-gray-600">Overdue</div>
                         </CardContent>
                       </Card>
                       <Card>
