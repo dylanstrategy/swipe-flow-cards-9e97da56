@@ -233,7 +233,7 @@ const ScheduledItemsTimeline = ({
                   onSwipeLeft={item.actions.left}
                   onTap={() => handleItemTap(item)}
                   onHold={() => handleItemHold(item)}
-                  holdDuration={400}
+                  holdDuration={300}
                   className="flex-1"
                 >
                   <div className="flex items-center p-4 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-all duration-150 touch-manipulation active:scale-[0.99]">

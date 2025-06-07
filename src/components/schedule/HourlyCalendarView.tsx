@@ -233,7 +233,7 @@ const HourlyCalendarView = ({
                             onTouchStart={(e) => {
                               const touchTimeout = setTimeout(() => {
                                 handleEventHold(event);
-                              }, 400); // Reduced from 800ms to 400ms
+                              }, 300); // Reduced from 400ms to 300ms
                               
                               const clearTouch = () => {
                                 clearTimeout(touchTimeout);
