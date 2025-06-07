@@ -240,9 +240,28 @@ const ScheduleTab = () => {
     setShowEventDetail(true);
   };
 
-  const handleEventDetailReschedule = () => {
-    setShowEventDetail(false);
-    setShowRescheduleFlow(true);
+  const handleEventHold = (event: any) => {
+    const enhancedEvent: EnhancedEvent = {
+      id: event.id,
+      date: event.date,
+      time: event.time,
+      title: event.title,
+      description: event.description,
+      category: event.category,
+      priority: event.priority,
+      canReschedule: true,
+      canCancel: true,
+      estimatedDuration: 60,
+      rescheduledCount: 0,
+      assignedTeamMember: teamAvailabilityService.assignTeamMember({ category: event.category }),
+      residentName: 'John Doe',
+      phone: '(555) 123-4567',
+      unit: event.unit,
+      building: event.building
+    };
+    
+    setSelectedEvent(enhancedEvent);
+    setShowRescheduleFlow(true); // Go directly to reschedule flow
   };
 
   const handleRescheduleConfirm = () => {
@@ -440,6 +459,7 @@ const ScheduleTab = () => {
         selectedDate={selectedDate}
         onAction={handleAction}
         onEventClick={handleEventClick}
+        onEventHold={handleEventHold}
         events={getEventsForDate(selectedDate)}
         onDropSuggestion={handleDropSuggestionInTimeline}
       />

@@ -7,6 +7,7 @@ interface ScheduledItemsTimelineProps {
   selectedDate: Date;
   onAction: (action: string, item: string) => void;
   onEventClick?: (event: any) => void;
+  onEventHold?: (event: any) => void;
   events?: any[];
   onDropSuggestion?: (suggestion: any, targetTime?: string) => void;
 }
@@ -35,7 +36,14 @@ interface EventItem extends BaseItem {
 
 type CombinedItem = MockItem | EventItem;
 
-const ScheduledItemsTimeline = ({ selectedDate, onAction, onEventClick, events = [], onDropSuggestion }: ScheduledItemsTimelineProps) => {
+const ScheduledItemsTimeline = ({ 
+  selectedDate, 
+  onAction, 
+  onEventClick, 
+  onEventHold,
+  events = [], 
+  onDropSuggestion 
+}: ScheduledItemsTimelineProps) => {
   const { toast } = useToast();
   const [dragOverTime, setDragOverTime] = useState<string | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<'before' | 'after' | null>(null);
@@ -130,6 +138,26 @@ const ScheduledItemsTimeline = ({ selectedDate, onAction, onEventClick, events =
     }
   };
 
+  const handleItemTap = (item: CombinedItem) => {
+    if (item.isEvent && item.originalEvent) {
+      onEventClick?.(item.originalEvent);
+    } else {
+      onAction("Viewed", item.title);
+    }
+  };
+
+  const handleItemHold = (item: CombinedItem) => {
+    if (item.isEvent && item.originalEvent) {
+      onEventHold?.(item.originalEvent);
+    } else {
+      // For non-event items, show reschedule toast
+      toast({
+        title: "Reschedule Item",
+        description: `Hold to reschedule ${item.title}`,
+      });
+    }
+  };
+
   function getEventIcon(category: string): string {
     switch (category?.toLowerCase()) {
       case 'work order': return '🔧';
@@ -204,13 +232,9 @@ const ScheduledItemsTimeline = ({ selectedDate, onAction, onEventClick, events =
                 <SwipeCard
                   onSwipeRight={item.actions.right}
                   onSwipeLeft={item.actions.left}
-                  onTap={() => {
-                    if (item.isEvent && item.originalEvent) {
-                      onEventClick?.(item.originalEvent);
-                    } else {
-                      onAction("Viewed", item.title);
-                    }
-                  }}
+                  onTap={() => handleItemTap(item)}
+                  onHold={() => handleItemHold(item)}
+                  holdDuration={800}
                   className="flex-1"
                 >
                   <div className="flex items-center p-4 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
@@ -221,7 +245,7 @@ const ScheduledItemsTimeline = ({ selectedDate, onAction, onEventClick, events =
                       <h3 className="font-semibold text-gray-900">{item.title}</h3>
                       <p className="text-gray-600 text-sm">{item.description}</p>
                       {item.isEvent && (
-                        <p className="text-xs text-blue-600 mt-1">Tap to view details</p>
+                        <p className="text-xs text-blue-600 mt-1">Tap for details • Hold to reschedule</p>
                       )}
                     </div>
                   </div>
