@@ -1,27 +1,18 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Clock, Home, Users, Calendar, Wrench, MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import SwipeCard from '@/components/SwipeCard';
-import RescheduleFlow from '@/components/events/RescheduleFlow';
-import EventDetailModal from '@/components/events/EventDetailModal';
-import { useToast } from '@/hooks/use-toast';
-import { EnhancedEvent } from '@/types/events';
-import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 
 interface EventsListProps {
   events: any[];
   onAction: (action: string, item: string) => void;
   onQuickReply: (subject: string, recipientType?: 'management' | 'maintenance' | 'leasing') => void;
   getSwipeActionsForEvent: (event: any) => any;
+  onEventClick?: (event: any) => void;
 }
 
-const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent }: EventsListProps) => {
-  const { toast } = useToast();
-  const [showEventDetail, setShowEventDetail] = useState(false);
-  const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<EnhancedEvent | null>(null);
-
+const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent, onEventClick }: EventsListProps) => {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'inspection': return <Home size={16} className="text-blue-600" />;
@@ -42,104 +33,13 @@ const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent }:
     }
   };
 
-  const canReschedule = (type: string) => {
-    return ['inspection', 'lease', 'maintenance', 'meeting', 'Work Order', 'Management', 'Lease'].includes(type);
-  };
-
-  const enhanceEventForReschedule = (event: any): EnhancedEvent => {
-    const assignedTeamMember = teamAvailabilityService.assignTeamMember({ category: event.category || event.type });
-    
-    return {
-      id: event.id,
-      date: event.date || new Date(),
-      time: (event.time || '').replace(/\s(AM|PM)/, ''),
-      title: event.title,
-      description: event.description,
-      category: event.category || event.type,
-      priority: event.priority,
-      assignedTeamMember,
-      residentName: 'John Doe',
-      phone: '(555) 123-4567',
-      unit: event.unit,
-      building: event.building,
-      canReschedule: canReschedule(event.category || event.type),
-      canCancel: true,
-      estimatedDuration: (event.category || event.type) === 'inspection' ? 120 : 60,
-      rescheduledCount: 0,
-      image: event.image
-    };
-  };
-
   const handleEventClick = (event: any) => {
-    const enhancedEvent = enhanceEventForReschedule(event);
-    setSelectedEvent(enhancedEvent);
-    setShowEventDetail(true);
-  };
-
-  const handleHoldEvent = (event: any) => {
-    if (canReschedule(event.category || event.type)) {
-      const enhancedEvent = enhanceEventForReschedule(event);
-      setSelectedEvent(enhancedEvent);
-      setShowEventDetail(true);
+    if (onEventClick) {
+      onEventClick(event);
     } else {
-      toast({
-        title: "Event Details",
-        description: `${event.title} - This event cannot be rescheduled`,
-      });
+      onAction("Viewed", event.title);
     }
   };
-
-  const handleEventDetailReschedule = (rescheduleData: any) => {
-    setShowEventDetail(false);
-    setShowRescheduleFlow(true);
-  };
-
-  const handleRescheduleConfirm = (rescheduleData: any) => {
-    toast({
-      title: "Event Rescheduled",
-      description: `${selectedEvent?.title} has been rescheduled successfully.`,
-    });
-    setShowRescheduleFlow(false);
-    setSelectedEvent(null);
-  };
-
-  const handleEventDetailCancel = () => {
-    toast({
-      title: "Event Cancelled",
-      description: `${selectedEvent?.title} has been cancelled.`,
-    });
-    setShowEventDetail(false);
-    setSelectedEvent(null);
-  };
-
-  if (showRescheduleFlow && selectedEvent) {
-    return (
-      <RescheduleFlow
-        event={selectedEvent}
-        onClose={() => {
-          setShowRescheduleFlow(false);
-          setSelectedEvent(null);
-        }}
-        onConfirm={handleRescheduleConfirm}
-        userRole="resident"
-      />
-    );
-  }
-
-  if (showEventDetail && selectedEvent) {
-    return (
-      <EventDetailModal
-        event={selectedEvent}
-        onClose={() => {
-          setShowEventDetail(false);
-          setSelectedEvent(null);
-        }}
-        onReschedule={handleEventDetailReschedule}
-        onCancel={handleEventDetailCancel}
-        userRole="resident"
-      />
-    );
-  }
 
   return (
     <div className="space-y-3">
@@ -147,7 +47,6 @@ const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent }:
         <SwipeCard
           key={event.id}
           onTap={() => handleEventClick(event)}
-          onHold={() => handleHoldEvent(event)}
         >
           <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-100 shadow-sm cursor-pointer hover:bg-gray-50 transition-colors">
             <div className="flex items-center space-x-3">

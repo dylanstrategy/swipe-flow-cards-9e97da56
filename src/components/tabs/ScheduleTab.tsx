@@ -12,9 +12,8 @@ import DraggableSuggestionsSection from '../schedule/DraggableSuggestionsSection
 import DroppableCalendar from '../schedule/DroppableCalendar';
 import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
-import EventDetailModal from '../events/EventDetailModal';
-import RescheduleFlow from '../events/RescheduleFlow';
 import UniversalEventDetailModal from '../events/UniversalEventDetailModal';
+import RescheduleFlow from '../events/RescheduleFlow';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 import HourlyCalendarView from '../schedule/HourlyCalendarView';
@@ -28,8 +27,9 @@ const ScheduleTab = () => {
   const [selectedScheduleType, setSelectedScheduleType] = useState<string>('');
   const [showMessageModule, setShowMessageModule] = useState(false);
   const [showServiceModule, setShowServiceModule] = useState(false);
-  const [showEventDetail, setShowEventDetail] = useState(false);
+  const [showUniversalEventDetail, setShowUniversalEventDetail] = useState(false);
   const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
+  const [selectedUniversalEvent, setSelectedUniversalEvent] = useState<any>(null);
   const [selectedEvent, setSelectedEvent] = useState<EnhancedEvent | null>(null);
   const [messageConfig, setMessageConfig] = useState({
     subject: '',
@@ -51,7 +51,8 @@ const ScheduleTab = () => {
       unit: '4B',
       building: 'Building A',
       dueDate: addDays(new Date(), -1),
-      isDroppedSuggestion: false
+      isDroppedSuggestion: false,
+      type: 'maintenance'
     },
     {
       id: 2,
@@ -61,7 +62,8 @@ const ScheduleTab = () => {
       description: 'Please submit your lease renewal documents by Friday',
       category: 'Management',
       priority: 'medium',
-      isDroppedSuggestion: false
+      isDroppedSuggestion: false,
+      type: 'message'
     },
     {
       id: 3,
@@ -75,7 +77,8 @@ const ScheduleTab = () => {
       unit: '204',
       building: 'Building A',
       dueDate: addDays(new Date(), 2),
-      isDroppedSuggestion: false
+      isDroppedSuggestion: false,
+      type: 'lease'
     },
     {
       id: 4,
@@ -85,7 +88,8 @@ const ScheduleTab = () => {
       description: 'Community event - RSVP required',
       category: 'Community Event',
       priority: 'low',
-      isDroppedSuggestion: false
+      isDroppedSuggestion: false,
+      type: 'tour'
     },
     {
       id: 5,
@@ -98,7 +102,8 @@ const ScheduleTab = () => {
       priority: 'medium',
       unit: '204',
       building: 'Building A',
-      isDroppedSuggestion: false
+      isDroppedSuggestion: false,
+      type: 'maintenance'
     }
   ]);
 
@@ -128,7 +133,6 @@ const ScheduleTab = () => {
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
 
-  // Safely compare dates
   const isSameDateSafe = (date1: any, date2: Date): boolean => {
     try {
       const d1 = date1 instanceof Date ? date1 : new Date(date1);
@@ -149,19 +153,15 @@ const ScheduleTab = () => {
       }))
       .sort((a, b) => a.start - b.start);
 
-    // Start looking from 9 AM (540 minutes)
     let proposedStart = 540;
     
     for (const event of eventsForDate) {
       if (proposedStart + duration <= event.start) {
-        // Found a gap before this event
         break;
       }
-      // Move past this event
       proposedStart = Math.max(proposedStart, event.end);
     }
     
-    // Don't schedule past 6 PM (1080 minutes)
     if (proposedStart + duration > 1080) {
       proposedStart = 1080 - duration;
     }
@@ -173,14 +173,11 @@ const ScheduleTab = () => {
     let assignedTime: string;
     
     if (targetTime) {
-      // Use the provided time directly (it's already normalized)
       assignedTime = targetTime;
     } else {
-      // Find an available time slot
       assignedTime = findAvailableTimeSlot(selectedDate);
     }
 
-    // Check for duplicates before adding
     const isDuplicate = scheduledEvents.some(event => 
       isSameDateSafe(event.date, selectedDate) && 
       event.time === assignedTime && 
@@ -204,7 +201,8 @@ const ScheduleTab = () => {
       description: suggestion.description,
       category: suggestion.type,
       priority: suggestion.priority,
-      isDroppedSuggestion: true
+      isDroppedSuggestion: true,
+      type: suggestion.type.toLowerCase()
     };
 
     console.log('Adding new event:', newEvent);
@@ -224,10 +222,8 @@ const ScheduleTab = () => {
   };
 
   const handleDropSuggestion = (suggestion: any, date: Date) => {
-    // This handles drops from calendar dates
     const assignedTime = findAvailableTimeSlot(date);
     
-    // Check for duplicates before adding
     const isDuplicate = scheduledEvents.some(event => 
       isSameDateSafe(event.date, date) && 
       event.time === assignedTime && 
@@ -251,7 +247,8 @@ const ScheduleTab = () => {
       description: suggestion.description,
       category: suggestion.type,
       priority: suggestion.priority,
-      isDroppedSuggestion: true
+      isDroppedSuggestion: true,
+      type: suggestion.type.toLowerCase()
     };
 
     console.log('Adding calendar drop event:', newEvent);
@@ -287,27 +284,8 @@ const ScheduleTab = () => {
   };
 
   const handleEventClick = (event: any) => {
-    const enhancedEvent: EnhancedEvent = {
-      id: event.id,
-      date: event.date,
-      time: event.time,
-      title: event.title,
-      description: event.description,
-      category: event.category,
-      priority: event.priority,
-      canReschedule: true,
-      canCancel: true,
-      estimatedDuration: 60,
-      rescheduledCount: 0,
-      assignedTeamMember: teamAvailabilityService.assignTeamMember({ category: event.category }),
-      residentName: 'John Doe',
-      phone: '(555) 123-4567',
-      unit: event.unit,
-      building: event.building
-    };
-    
-    setSelectedEvent(enhancedEvent);
-    setShowEventDetail(true);
+    setSelectedUniversalEvent(event);
+    setShowUniversalEventDetail(true);
   };
 
   const handleEventHold = (event: any) => {
@@ -334,26 +312,12 @@ const ScheduleTab = () => {
     setShowRescheduleFlow(true); // Go directly to reschedule flow
   };
 
-  const handleEventDetailReschedule = () => {
-    setShowEventDetail(false);
-    setShowRescheduleFlow(true);
-  };
-
   const handleRescheduleConfirm = () => {
     toast({
       title: "Event Rescheduled",
       description: `${selectedEvent?.title} has been rescheduled successfully.`,
     });
     setShowRescheduleFlow(false);
-    setSelectedEvent(null);
-  };
-
-  const handleEventDetailCancel = () => {
-    toast({
-      title: "Event Cancelled",
-      description: `${selectedEvent?.title} has been cancelled.`,
-    });
-    setShowEventDetail(false);
     setSelectedEvent(null);
   };
 
@@ -434,7 +398,6 @@ const ScheduleTab = () => {
     return eventsForDate;
   };
 
-  // Check if a date has events for calendar styling
   const hasEventsOnDate = (date: Date) => {
     return scheduledEvents.some(event => isSameDateSafe(event.date, date));
   };
@@ -453,16 +416,14 @@ const ScheduleTab = () => {
     );
   }
 
-  if (showEventDetail && selectedEvent) {
+  if (showUniversalEventDetail && selectedUniversalEvent) {
     return (
-      <EventDetailModal
-        event={selectedEvent}
+      <UniversalEventDetailModal
+        event={selectedUniversalEvent}
         onClose={() => {
-          setShowEventDetail(false);
-          setSelectedEvent(null);
+          setShowUniversalEventDetail(false);
+          setSelectedUniversalEvent(null);
         }}
-        onReschedule={handleEventDetailReschedule}
-        onCancel={handleEventDetailCancel}
         userRole="resident"
       />
     );
@@ -509,7 +470,6 @@ const ScheduleTab = () => {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Schedule</h1>
         
-        {/* Compact Date Picker - Mobile: icon only, Desktop: full date */}
         <Popover>
           <PopoverTrigger asChild>
             <Button
@@ -544,7 +504,6 @@ const ScheduleTab = () => {
         </Popover>
       </div>
       
-      {/* Floating Plus Button */}
       <button 
         onClick={() => setShowScheduleMenu(true)}
         className="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-700 transition-all duration-200 hover:scale-110 z-50"
@@ -552,7 +511,6 @@ const ScheduleTab = () => {
         <Plus className="text-white" size={28} />
       </button>
 
-      {/* Hourly Calendar View */}
       <div className="mb-6">
         <HourlyCalendarView
           selectedDate={selectedDate}
@@ -563,7 +521,6 @@ const ScheduleTab = () => {
         />
       </div>
 
-      {/* Draggable Suggestions for Selected Date */}
       <DraggableSuggestionsSection 
         selectedDate={selectedDate}
         onSchedule={startScheduling}

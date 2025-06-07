@@ -4,6 +4,7 @@ import ServiceModule from '../service/ServiceModule';
 import WorkOrderFlow from '../schedule/WorkOrderFlow';
 import WorkOrdersReview from './today/WorkOrdersReview';
 import WorkOrderTimeline from '../maintenance/WorkOrderTimeline';
+import UniversalEventDetailModal from '../events/UniversalEventDetailModal';
 import { useToast } from '@/hooks/use-toast';
 import { format, addDays, isSameDay, differenceInDays, isPast, isToday } from 'date-fns';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -26,6 +27,8 @@ const TodayTab = () => {
   const [showWorkOrderTimeline, setShowWorkOrderTimeline] = useState(false);
   const [selectedWorkOrder, setSelectedWorkOrder] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
+  const [showUniversalEventDetail, setShowUniversalEventDetail] = useState(false);
+  const [selectedUniversalEvent, setSelectedUniversalEvent] = useState<any>(null);
   const [messageConfig, setMessageConfig] = useState({
     subject: '',
     recipientType: 'management' as 'management' | 'maintenance' | 'leasing',
@@ -66,7 +69,8 @@ const TodayTab = () => {
       priority: 'high',
       unit: '4B',
       building: 'Building A',
-      dueDate: addDays(new Date(), -1)
+      dueDate: addDays(new Date(), -1),
+      type: 'maintenance'
     },
     {
       id: 2,
@@ -75,7 +79,8 @@ const TodayTab = () => {
       title: 'Message from Management',
       description: 'Please submit your lease renewal documents by Friday',
       category: 'Management',
-      priority: 'medium'
+      priority: 'medium',
+      type: 'message'
     },
     {
       id: 3,
@@ -88,7 +93,8 @@ const TodayTab = () => {
       priority: 'high',
       unit: '204',
       building: 'Building A',
-      dueDate: addDays(new Date(), 2)
+      dueDate: addDays(new Date(), 2),
+      type: 'lease'
     },
     {
       id: 4,
@@ -98,7 +104,8 @@ const TodayTab = () => {
       description: '20% OFF at Joe\'s Burger Joint - Show this message',
       image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400',
       category: 'Point of Sale',
-      priority: 'low'
+      priority: 'low',
+      type: 'message'
     },
     {
       id: 5,
@@ -107,7 +114,8 @@ const TodayTab = () => {
       title: 'Rooftop BBQ Social',
       description: 'Community event - RSVP required',
       category: 'Community Event',
-      priority: 'low'
+      priority: 'low',
+      type: 'tour'
     },
     {
       id: 6,
@@ -119,29 +127,32 @@ const TodayTab = () => {
       category: 'Work Order',
       priority: 'medium',
       unit: '204',
-      building: 'Building A'
+      building: 'Building A',
+      type: 'maintenance'
     }
   ];
 
   // Add pet-specific events if user has pets
-  const petEvents = hasPets ? [
+  const petEvents = profile.pets.length > 0 ? [
     {
       id: 101,
       date: new Date(),
       time: '16:00',
-      title: `${userPets[0].name}'s Special Offer`,
-      description: `Exclusive pet grooming discount for ${userPets[0].name}!`,
+      title: `${profile.pets[0].name}'s Special Offer`,
+      description: `Exclusive pet grooming discount for ${profile.pets[0].name}!`,
       category: 'Pet Service',
-      priority: 'low'
+      priority: 'low',
+      type: 'message'
     },
     {
       id: 102,
       date: addDays(new Date(), 1),
       time: '18:00',
       title: 'Pet-Friendly Community Event',
-      description: `Bring ${userPets.map(pet => pet.name).join(' and ')} to the pet meetup!`,
+      description: `Bring ${profile.pets.map(pet => pet.name).join(' and ')} to the pet meetup!`,
       category: 'Community Event',
-      priority: 'low'
+      priority: 'low',
+      type: 'tour'
     }
   ] : [];
 
@@ -156,7 +167,8 @@ const TodayTab = () => {
     description: '$1,550 due in 3 days',
     category: 'Payment',
     priority: 'high',
-    dueDate: addDays(new Date(), 3) // Due in 3 days
+    dueDate: addDays(new Date(), 3), // Due in 3 days
+    type: 'payment'
   };
 
   const handleAction = (action: string, item: string) => {
@@ -185,6 +197,11 @@ const TodayTab = () => {
   const handleWorkOrderClick = (workOrder: any) => {
     setSelectedWorkOrder(workOrder);
     setShowWorkOrderTimeline(true);
+  };
+
+  const handleEventClick = (event: any) => {
+    setSelectedUniversalEvent(event);
+    setShowUniversalEventDetail(true);
   };
 
   const nextStep = () => {
@@ -343,16 +360,16 @@ const TodayTab = () => {
   };
 
   const renderPersonalizedOffers = () => {
-    if (hasPets) {
+    if (profile.pets.length > 0) {
       return (
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            🐾 Special Offers for {userPets.map(pet => pet.name).join(' & ')}
+            🐾 Special Offers for {profile.pets.map(pet => pet.name).join(' & ')}
           </h2>
           <PointOfSale 
             context="pet-service" 
             onOfferClick={handleOfferClick}
-            petName={userPets[0].name}
+            petName={profile.pets[0].name}
           />
         </div>
       );
@@ -375,6 +392,19 @@ const TodayTab = () => {
 
     return null;
   };
+
+  if (showUniversalEventDetail && selectedUniversalEvent) {
+    return (
+      <UniversalEventDetailModal
+        event={selectedUniversalEvent}
+        onClose={() => {
+          setShowUniversalEventDetail(false);
+          setSelectedUniversalEvent(null);
+        }}
+        userRole="resident"
+      />
+    );
+  }
 
   if (showWorkOrderTimeline && selectedWorkOrder) {
     return (
@@ -493,6 +523,7 @@ const TodayTab = () => {
           onAction={handleAction}
           onQuickReply={handleQuickReply}
           getSwipeActionsForEvent={getSwipeActionsForEvent}
+          onEventClick={handleEventClick}
         />
       </div>
     </div>
