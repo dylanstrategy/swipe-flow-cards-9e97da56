@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UnitTurnTracker from '../UnitTurnTracker';
@@ -8,6 +9,7 @@ import WorkOrderFlow from '../WorkOrderFlow';
 import WorkOrderQueue from '../WorkOrderQueue';
 import ScheduleDropZone from '../ScheduleDropZone';
 import DragDropProvider from '../DragDropProvider';
+import UniversalEventDetailModal from '../../events/UniversalEventDetailModal';
 import { Calendar, Home, Wrench, BarChart3, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -114,6 +116,10 @@ const MaintenanceScheduleTab = ({
   const [workOrders, setWorkOrders] = useState(initialWorkOrders);
   const [scheduledWorkOrders, setScheduledWorkOrders] = useState<any[]>([]);
   const [internalTodayWorkOrders, setInternalTodayWorkOrders] = useState<any[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUnitCardSelected, setIsUnitCardSelected] = useState(false);
+  const [showUniversalEventDetail, setShowUniversalEventDetail] = useState(false);
+  const [selectedUniversalEvent, setSelectedUniversalEvent] = useState<any>(null);
 
   // Use external state if provided, otherwise use internal state
   const todayWorkOrders = externalTodayWorkOrders || internalTodayWorkOrders;
@@ -201,8 +207,11 @@ const MaintenanceScheduleTab = ({
       scheduledTime: finalScheduledTime.includes('Tomorrow') ? '09:00' : finalScheduledTime.replace('Tomorrow ', '')
     };
 
-    // Remove from work orders queue
-    setWorkOrders(prev => prev.filter(wo => wo.id !== workOrder.id));
+    // If it's a unit turn step, don't remove from work orders queue
+    if (!workOrder.unitTurnStep) {
+      // Remove from work orders queue
+      setWorkOrders(prev => prev.filter(wo => wo.id !== workOrder.id));
+    }
     
     // Add to scheduled work orders
     setScheduledWorkOrders(prev => [...prev, updatedWorkOrder]);
@@ -230,6 +239,27 @@ const MaintenanceScheduleTab = ({
     todayWorkOrders,
     addTodayWorkOrder
   };
+
+  const handleStepSelected = (step: any) => {
+    setSelectedUniversalEvent(step);
+    setShowUniversalEventDetail(true);
+  };
+
+  // Show drop zone when dragging OR when unit card is selected in unit turns tab
+  const shouldShowDropZone = isDragging || (activeTab === 'unitturns' && isUnitCardSelected);
+
+  if (showUniversalEventDetail && selectedUniversalEvent) {
+    return (
+      <UniversalEventDetailModal
+        event={selectedUniversalEvent}
+        onClose={() => {
+          setShowUniversalEventDetail(false);
+          setSelectedUniversalEvent(null);
+        }}
+        userRole="maintenance"
+      />
+    );
+  }
 
   if (showWorkOrderFlow) {
     return (
@@ -304,19 +334,28 @@ const MaintenanceScheduleTab = ({
               <div className="w-full">
                 <WorkOrderQueue 
                   workOrders={workOrders}
-                  onSelectWorkOrder={handleWorkOrderDetailsView} 
+                  onSelectWorkOrder={handleWorkOrderDetailsView}
+                  onDragStart={() => setIsDragging(true)}
+                  onDragEnd={() => setIsDragging(false)}
                 />
-                <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
               </div>
             )}
 
             {activeTab === 'unitturns' && (
               <div className="w-full">
-                <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
-                <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
+                <UnitTurnTracker 
+                  onSelectUnitTurn={setSelectedUnitTurn}
+                  onUnitCardSelected={setIsUnitCardSelected}
+                  onStepSelected={handleStepSelected}
+                />
               </div>
             )}
           </div>
+
+          {/* Show drop zone when dragging OR when unit card is selected */}
+          {shouldShowDropZone && (
+            <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
+          )}
         </div>
       </DragDropProvider>
     </MaintenanceContext.Provider>

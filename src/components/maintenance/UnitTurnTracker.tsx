@@ -1,14 +1,20 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Calendar, Clock, Home, CheckCircle2, AlertCircle } from 'lucide-react';
+import UnitTurnStepsView from './UnitTurnStepsView';
 
 interface UnitTurnTrackerProps {
   onSelectUnitTurn?: (unitTurn: any) => void;
+  onUnitCardSelected?: (selected: boolean) => void;
+  onStepSelected?: (step: any) => void;
 }
 
-const UnitTurnTracker = ({ onSelectUnitTurn }: UnitTurnTrackerProps) => {
+const UnitTurnTracker = ({ onSelectUnitTurn, onUnitCardSelected, onStepSelected }: UnitTurnTrackerProps) => {
+  const [selectedUnitTurn, setSelectedUnitTurn] = useState<any>(null);
+
   const unitTurns = [
     {
       id: 'UT-323-4',
@@ -72,6 +78,37 @@ const UnitTurnTracker = ({ onSelectUnitTurn }: UnitTurnTrackerProps) => {
     return (completed.length / (completed.length + total.length)) * 100;
   };
 
+  const handleUnitTurnClick = (unitTurn: any) => {
+    setSelectedUnitTurn(unitTurn);
+    if (onUnitCardSelected) {
+      onUnitCardSelected(true);
+    }
+  };
+
+  const handleBackToList = () => {
+    setSelectedUnitTurn(null);
+    if (onUnitCardSelected) {
+      onUnitCardSelected(false);
+    }
+  };
+
+  const handleStepClick = (step: any) => {
+    if (onStepSelected) {
+      onStepSelected(step);
+    }
+  };
+
+  // Show steps view if a unit turn is selected
+  if (selectedUnitTurn) {
+    return (
+      <UnitTurnStepsView
+        unitTurn={selectedUnitTurn}
+        onBack={handleBackToList}
+        onStepClick={handleStepClick}
+      />
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -118,7 +155,7 @@ const UnitTurnTracker = ({ onSelectUnitTurn }: UnitTurnTrackerProps) => {
           <Card 
             key={turn.id} 
             className="hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => onSelectUnitTurn?.(turn)}
+            onClick={() => handleUnitTurnClick(turn)}
           >
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">

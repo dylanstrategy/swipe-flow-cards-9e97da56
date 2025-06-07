@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -29,9 +29,11 @@ interface WorkOrder {
 interface WorkOrderQueueProps {
   workOrders?: WorkOrder[];
   onSelectWorkOrder?: (workOrder: WorkOrder) => void;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }
 
-const WorkOrderCard: React.FC<{ workOrder: WorkOrder; onClick: () => void }> = ({ workOrder, onClick }) => {
+const WorkOrderCard: React.FC<{ workOrder: WorkOrder; onClick: () => void; onDragStart?: () => void; onDragEnd?: () => void }> = ({ workOrder, onClick, onDragStart, onDragEnd }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'workOrder',
     item: { workOrder },
@@ -39,6 +41,14 @@ const WorkOrderCard: React.FC<{ workOrder: WorkOrder; onClick: () => void }> = (
       isDragging: monitor.isDragging(),
     }),
   }));
+
+  useEffect(() => {
+    if (isDragging && onDragStart) {
+      onDragStart();
+    } else if (!isDragging && onDragEnd) {
+      onDragEnd();
+    }
+  }, [isDragging, onDragStart, onDragEnd]);
 
   // Add timeline data to work order when clicked
   const handleClick = () => {
@@ -175,7 +185,7 @@ const WorkOrderCard: React.FC<{ workOrder: WorkOrder; onClick: () => void }> = (
   );
 };
 
-const WorkOrderQueue: React.FC<WorkOrderQueueProps> = ({ workOrders = [], onSelectWorkOrder }) => {
+const WorkOrderQueue: React.FC<WorkOrderQueueProps> = ({ workOrders = [], onSelectWorkOrder, onDragStart, onDragEnd }) => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
   const filteredWorkOrders = useMemo(() => {
@@ -256,6 +266,8 @@ const WorkOrderQueue: React.FC<WorkOrderQueueProps> = ({ workOrders = [], onSele
                 key={workOrder.id}
                 workOrder={workOrder}
                 onClick={() => onSelectWorkOrder?.(workOrder)}
+                onDragStart={onDragStart}
+                onDragEnd={onDragEnd}
               />
             ))
           )}
