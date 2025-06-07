@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench, ChevronDown, BarChart3, PieChart, CalendarDays, Activity } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
@@ -10,6 +11,7 @@ import PricingModule from '../PricingModule';
 import SwipeCard from '@/components/SwipeCard';
 import RescheduleFlow from '@/components/events/RescheduleFlow';
 import EventDetailModal from '@/components/events/EventDetailModal';
+import WorkOrderTracker from '@/components/maintenance/WorkOrderTracker';
 import { useToast } from '@/hooks/use-toast';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
@@ -30,6 +32,7 @@ const OperatorTodayTab = () => {
   const [showMoveInTracker, setShowMoveInTracker] = useState(false);
   const [showMoveOutTracker, setShowMoveOutTracker] = useState(false);
   const [showPricingModule, setShowPricingModule] = useState(false);
+  const [showWorkOrderTracker, setShowWorkOrderTracker] = useState(false);
   const [pricingFilter, setPricingFilter] = useState<'all' | 'available' | 'vacant' | 'occupied'>('all');
   const [crmFilter, setCrmFilter] = useState<'leases' | 'shows' | 'outreach'>('leases');
   const [showGraphs, setShowGraphs] = useState(false);
@@ -268,6 +271,11 @@ const OperatorTodayTab = () => {
     setShowPricingModule(true);
   };
 
+  const handleMaintenanceClick = () => {
+    console.log('Maintenance Click - Opening Work Order Tracker');
+    setShowWorkOrderTracker(true);
+  };
+
   if (showRescheduleFlow && selectedEventForReschedule) {
     return (
       <RescheduleFlow
@@ -311,6 +319,10 @@ const OperatorTodayTab = () => {
 
   if (showPricingModule) {
     return <PricingModule onClose={() => setShowPricingModule(false)} initialFilter={pricingFilter} />;
+  }
+
+  if (showWorkOrderTracker) {
+    return <WorkOrderTracker onClose={() => setShowWorkOrderTracker(false)} />;
   }
 
   // Use real data for overview
@@ -410,6 +422,8 @@ const OperatorTodayTab = () => {
     } else if (module === 'pricing') {
       console.log('Calling handlePricingClick for pricing module with filter:', filter);
       handlePricingClick(filter);
+    } else if (module === 'maintenance') {
+      handleMaintenanceClick();
     }
   };
 
@@ -496,7 +510,7 @@ const OperatorTodayTab = () => {
               className={`bg-gray-50 rounded-lg p-4 text-center ${
                 item.module ? 'cursor-pointer hover:bg-gray-100 transition-colors' : ''
               }`}
-              onClick={() => item.module && handleModuleClick(item.module)}
+              onClick={() => item.module && handleModuleClick(item.module, item.filter)}
             >
               <div className="text-2xl font-bold text-gray-900">{item.count}</div>
               <div className="text-sm text-gray-600">{item.title}</div>
@@ -577,7 +591,7 @@ const OperatorTodayTab = () => {
               onClick={() => {
                 console.log('Leasing item clicked:', item.title, item.module, item.filter);
                 if (item.title === 'Vacant Units' || item.title === 'Available Units') {
-                  handleModuleClick('pricing');
+                  handleModuleClick('pricing', item.filter);
                 } else if (item.module && item.filter) {
                   handleModuleClick(item.module, item.filter);
                 } else if (item.module) {

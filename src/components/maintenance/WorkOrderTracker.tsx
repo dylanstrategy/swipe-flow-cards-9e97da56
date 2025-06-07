@@ -2,14 +2,16 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Wrench, AlertTriangle, CheckCircle2, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Clock, Wrench, AlertTriangle, CheckCircle2, User, ArrowLeft } from 'lucide-react';
 
 interface WorkOrderTrackerProps {
   onSelectWorkOrder?: (workOrder: any) => void;
   onViewDetails?: (workOrder: any) => void;
+  onClose?: () => void;
 }
 
-const WorkOrderTracker = ({ onSelectWorkOrder, onViewDetails }: WorkOrderTrackerProps) => {
+const WorkOrderTracker = ({ onSelectWorkOrder, onViewDetails, onClose }: WorkOrderTrackerProps) => {
   const workOrderStats = {
     total: 24,
     urgent: 3,
@@ -88,131 +90,159 @@ const WorkOrderTracker = ({ onSelectWorkOrder, onViewDetails }: WorkOrderTracker
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-          <Wrench className="w-5 h-5 text-orange-600" />
-          Work Orders Dashboard
-        </h2>
-        <Badge variant="outline" className="bg-orange-50" onClick={() => onViewDetails?.(recentWorkOrders[0])}>
-          {workOrderStats.total} Total Orders
-        </Badge>
-      </div>
-
-      {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onViewDetails?.(recentWorkOrders[0])}>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-red-600 flex items-center justify-center gap-1">
-              <AlertTriangle className="w-5 h-5" />
-              {workOrderStats.urgent}
-            </div>
-            <div className="text-sm text-gray-600">Urgent</div>
-          </CardContent>
-        </Card>
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onViewDetails?.(recentWorkOrders[0])}>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-orange-600 flex items-center justify-center gap-1">
-              <Clock className="w-5 h-5" />
-              {workOrderStats.overdue}
-            </div>
-            <div className="text-sm text-gray-600">Overdue</div>
-          </CardContent>
-        </Card>
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onViewDetails?.(recentWorkOrders[0])}>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600 flex items-center justify-center gap-1">
-              <CheckCircle2 className="w-5 h-5" />
-              {workOrderStats.completed}
-            </div>
-            <div className="text-sm text-gray-600">Completed Today</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Status Breakdown */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-base">Status Breakdown</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="text-lg font-semibold text-blue-600">{workOrderStats.inProgress}</div>
-              <div className="text-xs text-gray-600">In Progress</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-semibold text-purple-600">{workOrderStats.assigned}</div>
-              <div className="text-xs text-gray-600">Assigned</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-semibold text-gray-600">
-                {workOrderStats.total - workOrderStats.inProgress - workOrderStats.assigned - workOrderStats.completed}
+    <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
+      <div className="px-4 py-6 pb-24">
+        {/* Header */}
+        {onClose && (
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                  <Wrench className="text-orange-600" size={24} />
+                  Work Orders Dashboard
+                </h1>
+                <p className="text-gray-600">Property-wide maintenance tracking</p>
               </div>
-              <div className="text-xs text-gray-600">Pending</div>
             </div>
+            <Badge variant="outline" className="bg-orange-50">
+              {workOrderStats.total} Total Orders
+            </Badge>
           </div>
-        </CardContent>
-      </Card>
+        )}
 
-      {/* Recent Work Orders */}
-      <div className="space-y-3">
-        <h3 className="text-lg font-medium text-gray-900">Recent Work Orders</h3>
-        {recentWorkOrders.map((order) => (
-          <Card 
-            key={order.id} 
-            className="hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => onSelectWorkOrder?.(order)}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="font-semibold text-gray-900">Unit {order.unit}</div>
-                  <Badge className={getPriorityColor(order.priority)}>
-                    {order.priority}
-                  </Badge>
-                  <Badge className={getStatusColor(order.status)}>
-                    {order.status}
-                  </Badge>
-                </div>
-                <div className="text-sm text-gray-500">{order.daysOpen} days open</div>
+        {!onClose && (
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <Wrench className="w-5 h-5 text-orange-600" />
+              Work Orders Dashboard
+            </h2>
+            <Badge variant="outline" className="bg-orange-50" onClick={() => onViewDetails?.(recentWorkOrders[0])}>
+              {workOrderStats.total} Total Orders
+            </Badge>
+          </div>
+        )}
+
+        {/* Summary Stats */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onViewDetails?.(recentWorkOrders[0])}>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-red-600 flex items-center justify-center gap-1">
+                <AlertTriangle className="w-5 h-5" />
+                {workOrderStats.urgent}
               </div>
-
-              <h4 className="font-medium text-gray-900 mb-2">{order.title}</h4>
-
-              <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-                <div className="flex items-center gap-1">
-                  <User className="w-4 h-4" />
-                  {order.assignedTo}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  Est. {order.estimatedTime}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded text-xs">
-                  {order.category}
-                </span>
-                <div className="flex gap-2">
-                  <button 
-                    className="text-sm text-gray-600 hover:text-gray-800 font-medium"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onViewDetails?.(order);
-                    }}
-                  >
-                    View Details
-                  </button>
-                  <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                    Start Work
-                  </button>
-                </div>
-              </div>
+              <div className="text-sm text-gray-600">Urgent</div>
             </CardContent>
           </Card>
-        ))}
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onViewDetails?.(recentWorkOrders[0])}>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-orange-600 flex items-center justify-center gap-1">
+                <Clock className="w-5 h-5" />
+                {workOrderStats.overdue}
+              </div>
+              <div className="text-sm text-gray-600">Overdue</div>
+            </CardContent>
+          </Card>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onViewDetails?.(recentWorkOrders[0])}>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-green-600 flex items-center justify-center gap-1">
+                <CheckCircle2 className="w-5 h-5" />
+                {workOrderStats.completed}
+              </div>
+              <div className="text-sm text-gray-600">Completed Today</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Status Breakdown */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-base">Status Breakdown</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center">
+                <div className="text-lg font-semibold text-blue-600">{workOrderStats.inProgress}</div>
+                <div className="text-xs text-gray-600">In Progress</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-semibold text-purple-600">{workOrderStats.assigned}</div>
+                <div className="text-xs text-gray-600">Assigned</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-semibold text-gray-600">
+                  {workOrderStats.total - workOrderStats.inProgress - workOrderStats.assigned - workOrderStats.completed}
+                </div>
+                <div className="text-xs text-gray-600">Pending</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Work Orders */}
+        <div className="space-y-3">
+          <h3 className="text-lg font-medium text-gray-900">Recent Work Orders</h3>
+          {recentWorkOrders.map((order) => (
+            <Card 
+              key={order.id} 
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => onSelectWorkOrder?.(order)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="font-semibold text-gray-900">Unit {order.unit}</div>
+                    <Badge className={getPriorityColor(order.priority)}>
+                      {order.priority}
+                    </Badge>
+                    <Badge className={getStatusColor(order.status)}>
+                      {order.status}
+                    </Badge>
+                  </div>
+                  <div className="text-sm text-gray-500">{order.daysOpen} days open</div>
+                </div>
+
+                <h4 className="font-medium text-gray-900 mb-2">{order.title}</h4>
+
+                <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                  <div className="flex items-center gap-1">
+                    <User className="w-4 h-4" />
+                    {order.assignedTo}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    Est. {order.estimatedTime}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                  <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded text-xs">
+                    {order.category}
+                  </span>
+                  <div className="flex gap-2">
+                    <button 
+                      className="text-sm text-gray-600 hover:text-gray-800 font-medium"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onViewDetails?.(order);
+                      }}
+                    >
+                      View Details
+                    </button>
+                    <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                      Start Work
+                    </button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );
