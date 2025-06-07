@@ -166,14 +166,14 @@ const DraggableSuggestionsSection = ({
 
   const getPriorityColor = (priority: string, isOverdue: boolean = false) => {
     if (isOverdue) {
-      return 'bg-red-100 text-red-800 border-red-300';
+      return 'bg-red-500 text-white';
     }
     
     switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800 border-red-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'high': return 'bg-red-500 text-white';
+      case 'medium': return 'bg-yellow-500 text-white';
+      case 'low': return 'bg-green-500 text-white';
+      default: return 'bg-gray-500 text-white';
     }
   };
 
@@ -275,7 +275,7 @@ const DraggableSuggestionsSection = ({
 
       {isExpanded && (
         <div className="p-4">
-          <div className="grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             {availableSuggestions.map((suggestion) => {
               const isOverdue = suggestion.dueDate && isPast(suggestion.dueDate);
               const isScheduled = scheduledSuggestionIds.includes(suggestion.id);
@@ -285,55 +285,48 @@ const DraggableSuggestionsSection = ({
                   key={suggestion.id}
                   draggable
                   onDragStart={(e) => handleDragStart(e, suggestion)}
-                  className={`p-4 rounded-lg border transition-all duration-200 cursor-move group ${
+                  className={`p-3 rounded-lg border cursor-move transition-all duration-200 hover:shadow-md ${
                     isOverdue 
-                      ? 'border-red-300 bg-gradient-to-br from-red-50 to-red-100 hover:shadow-lg' 
+                      ? 'border-red-200 bg-red-50' 
                       : isScheduled
-                      ? 'border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-md'
-                      : 'border-gray-200 bg-gradient-to-br from-white to-gray-50 hover:shadow-md'
+                      ? 'border-blue-200 bg-blue-50'
+                      : 'border-gray-200 bg-white'
                   }`}
                 >
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className={`flex-shrink-0 p-2 rounded-md transition-colors ${
+                  <div className="flex items-start justify-between mb-2">
+                    <div className={`p-1.5 rounded ${
                       isOverdue 
                         ? 'bg-red-200 text-red-700' 
-                        : 'bg-blue-100 text-blue-600 group-hover:bg-blue-200'
+                        : 'bg-blue-100 text-blue-600'
                     }`}>
                       {getIcon(suggestion.type)}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 leading-tight">
-                        {suggestion.title}
-                      </h4>
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                        {suggestion.description}
-                      </p>
-                      
-                      <div className="mt-2">
-                        {getUrgencyIndicator(suggestion)}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(suggestion.priority, isOverdue)}`}>
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${getPriorityColor(suggestion.priority, isOverdue)}`}>
                       {suggestion.priority}
                     </span>
-                    {suggestion.estimatedTime && (
-                      <span className="text-xs text-gray-500">
-                        {suggestion.estimatedTime}
-                      </span>
-                    )}
                   </div>
+                  
+                  <h4 className="font-medium text-gray-900 text-sm leading-tight mb-1">
+                    {suggestion.title}
+                  </h4>
+                  <p className="text-xs text-gray-600 line-clamp-2 mb-2">
+                    {suggestion.description}
+                  </p>
+                  
+                  {getUrgencyIndicator(suggestion)}
+                  
+                  {suggestion.estimatedTime && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      {suggestion.estimatedTime}
+                    </div>
+                  )}
 
-                  <div className="mt-3 pt-3 border-t border-gray-100">
-                    <button
-                      onClick={() => onSchedule(suggestion.type)}
-                      className="w-full text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
-                    >
-                      {isScheduled ? 'Reschedule' : 'Schedule Now'}
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => onSchedule(suggestion.type)}
+                    className="w-full mt-2 text-xs text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    {isScheduled ? 'Reschedule' : 'Schedule'}
+                  </button>
                 </div>
               );
             })}
