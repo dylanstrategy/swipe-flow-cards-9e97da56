@@ -212,7 +212,12 @@ const ScheduleTab = () => {
       priority: suggestion.priority,
       isDroppedSuggestion: true,
       type: suggestion.type.toLowerCase(),
-      rescheduledCount: 0
+      rescheduledCount: 0,
+      // Add missing properties that might be expected
+      unit: undefined,
+      building: undefined,
+      dueDate: undefined,
+      image: undefined
     };
 
     console.log('ScheduleTab: Adding new event from timeline drop:', newEvent);
