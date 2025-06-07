@@ -84,18 +84,19 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
 
   return (
     <div 
-      className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen overflow-hidden"
+      className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen overflow-hidden select-none"
       data-swipeable-screen
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       style={{
         transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${getRotation()}deg)`,
-        transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+        transition: isDragging ? 'none' : 'transform 0.2s ease-out',
         transformOrigin: 'center center',
-        touchAction: 'none',
+        touchAction: 'pan-y',
         userSelect: 'none',
-        WebkitUserSelect: 'none'
+        WebkitUserSelect: 'none',
+        WebkitTouchCallout: 'none'
       }}
     >
       <SwipeActionOverlays
@@ -112,8 +113,10 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
         rightButton={rightButton}
       />
 
-      <div className="flex-1 p-4 overflow-hidden relative z-10">
-        {children}
+      <div className="flex-1 p-4 overflow-hidden relative z-10 pointer-events-none">
+        <div className="pointer-events-auto">
+          {children}
+        </div>
       </div>
     </div>
   );
