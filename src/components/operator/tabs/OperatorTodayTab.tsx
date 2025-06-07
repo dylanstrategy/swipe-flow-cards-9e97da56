@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useResident } from '@/contexts/ResidentContext';
 import WorkOrdersReview from '@/components/tabs/today/WorkOrdersReview';
+import WorkOrderTimeline from '@/components/maintenance/WorkOrderTimeline';
 
 interface OperatorTodayTabProps {
   onTabChange?: (tab: string) => void;
@@ -26,6 +27,8 @@ interface OperatorTodayTabProps {
 const OperatorTodayTab = ({ onTabChange }: OperatorTodayTabProps) => {
   const { getCurrentResidents, getNoticeResidents, getOccupancyRate } = useResident();
   const [showWorkOrders, setShowWorkOrders] = useState(false);
+  const [showWorkOrderTimeline, setShowWorkOrderTimeline] = useState(false);
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState(null);
 
   const currentResidents = getCurrentResidents();
   const noticeResidents = getNoticeResidents();
@@ -55,12 +58,30 @@ const OperatorTodayTab = ({ onTabChange }: OperatorTodayTabProps) => {
     setShowWorkOrders(true);
   };
 
+  const handleWorkOrderClick = (workOrder: any) => {
+    console.log('Opening work order timeline:', workOrder);
+    setSelectedWorkOrder(workOrder);
+    setShowWorkOrderTimeline(true);
+  };
+
+  if (showWorkOrderTimeline && selectedWorkOrder) {
+    return (
+      <WorkOrderTimeline
+        workOrder={selectedWorkOrder}
+        onClose={() => {
+          setShowWorkOrderTimeline(false);
+          setSelectedWorkOrder(null);
+        }}
+      />
+    );
+  }
+
   if (showWorkOrders) {
     return (
       <WorkOrdersReview
         onCreateWorkOrder={() => {}}
         onClose={() => setShowWorkOrders(false)}
-        onWorkOrderClick={() => {}}
+        onWorkOrderClick={handleWorkOrderClick}
       />
     );
   }

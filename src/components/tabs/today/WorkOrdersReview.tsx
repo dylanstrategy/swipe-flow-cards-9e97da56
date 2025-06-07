@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Wrench, Clock, User, Plus, Calendar, MapPin } from 'lucide-react';
+import { Wrench, Clock, User, Plus, Calendar, ArrowLeft } from 'lucide-react';
 
 interface WorkOrdersReviewProps {
   onCreateWorkOrder: () => void;
@@ -12,10 +12,11 @@ interface WorkOrdersReviewProps {
 }
 
 const WorkOrdersReview = ({ onCreateWorkOrder, onClose, onWorkOrderClick }: WorkOrdersReviewProps) => {
-  // Sample pending work orders data - all for the same unit (resident's unit)
+  // Sample pending work orders data - property-wide view
   const pendingWorkOrders = [
     {
       id: 'WO-544857',
+      unit: '417',
       title: 'Dripping water faucet',
       description: 'Bathroom faucet dripping intermittently',
       priority: 'Medium',
@@ -27,13 +28,14 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose, onWorkOrderClick }: Work
       photo: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=400',
       submittedDate: '2025-05-20',
       dueDate: '2025-06-05',
+      resident: 'Rumi Desai',
       timeline: [
         {
           date: '2025-05-20',
           time: '2:30 PM',
           type: 'submitted',
           message: 'Work order submitted by resident',
-          user: 'You'
+          user: 'Rumi Desai'
         },
         {
           date: '2025-05-22',
@@ -60,6 +62,7 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose, onWorkOrderClick }: Work
     },
     {
       id: 'WO-548686',
+      unit: '516',
       title: 'Window won\'t close properly',
       description: 'The balancer got stuck and window won\'t close',
       priority: 'High',
@@ -71,13 +74,14 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose, onWorkOrderClick }: Work
       photo: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400',
       submittedDate: '2025-05-18',
       dueDate: '2025-06-02',
+      resident: 'Kalyani Dronamraju',
       timeline: [
         {
           date: '2025-05-18',
           time: '4:20 PM',
           type: 'submitted',
           message: 'Work order submitted by resident',
-          user: 'You'
+          user: 'Kalyani Dronamraju'
         },
         {
           date: '2025-05-19',
@@ -91,7 +95,7 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose, onWorkOrderClick }: Work
           time: '11:30 AM',
           type: 'message',
           message: 'When will this be fixed? It\'s been over a week.',
-          user: 'You'
+          user: 'Kalyani Dronamraju'
         },
         {
           date: '2025-05-28',
@@ -111,6 +115,7 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose, onWorkOrderClick }: Work
     },
     {
       id: 'WO-547116',
+      unit: '319-2',
       title: 'Towel rack came off wall',
       description: 'The towel rack came off the wall in the bathroom',
       priority: 'Low',
@@ -122,13 +127,14 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose, onWorkOrderClick }: Work
       photo: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?w=400',
       submittedDate: '2025-05-25',
       dueDate: '2025-06-10',
+      resident: 'Francisco Giler',
       timeline: [
         {
           date: '2025-05-25',
           time: '7:45 PM',
           type: 'submitted',
           message: 'Work order submitted by resident',
-          user: 'You'
+          user: 'Francisco Giler'
         },
         {
           date: '2025-05-26',
@@ -183,30 +189,31 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose, onWorkOrderClick }: Work
   };
 
   const handleWorkOrderClick = (workOrder: any) => {
+    console.log('Work order clicked:', workOrder);
     onWorkOrderClick?.(workOrder);
   };
 
-  // Calculate completed work orders (for demo purposes, let's say we have 3 completed)
-  const completedCount = 3;
+  // Calculate status counts
+  const inProgressCount = pendingWorkOrders.filter(wo => wo.status === 'In Progress').length;
+  const scheduledCount = pendingWorkOrders.filter(wo => wo.status === 'Scheduled').length;
+  const assignedCount = pendingWorkOrders.filter(wo => wo.status === 'Assigned').length;
+  const completedCount = 3; // Mock completed count
 
   return (
-    <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
+    <div className="min-h-screen bg-gray-50">
       <div className="px-4 py-6 pb-24">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              ←
-            </button>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                 <Wrench className="text-purple-600" size={24} />
-                My Work Orders
+                Property Work Orders
               </h1>
-              <p className="text-gray-600">Apt 204 • {pendingWorkOrders.length} pending orders</p>
+              <p className="text-gray-600">The Meridian • {pendingWorkOrders.length} pending orders</p>
             </div>
           </div>
           
@@ -220,96 +227,93 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose, onWorkOrderClick }: Work
         </div>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-4 gap-3 mb-6">
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-orange-600">1</div>
-              <div className="text-sm text-gray-600">In Progress</div>
+            <CardContent className="p-3 text-center">
+              <div className="text-xl font-bold text-orange-600">{inProgressCount}</div>
+              <div className="text-xs text-gray-600">In Progress</div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600">1</div>
-              <div className="text-sm text-gray-600">Scheduled</div>
+            <CardContent className="p-3 text-center">
+              <div className="text-xl font-bold text-blue-600">{scheduledCount}</div>
+              <div className="text-xs text-gray-600">Scheduled</div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-purple-600">1</div>
-              <div className="text-sm text-gray-600">Assigned</div>
+            <CardContent className="p-3 text-center">
+              <div className="text-xl font-bold text-purple-600">{assignedCount}</div>
+              <div className="text-xs text-gray-600">Assigned</div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-600">{completedCount}</div>
-              <div className="text-sm text-gray-600">Completed</div>
+            <CardContent className="p-3 text-center">
+              <div className="text-xl font-bold text-green-600">{completedCount}</div>
+              <div className="text-xs text-gray-600">Completed</div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Work Orders List - Stacked Layout */}
+        {/* Work Orders List */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-gray-900">Pending Work Orders</h2>
           
           {pendingWorkOrders.map((workOrder) => (
             <Card 
               key={workOrder.id} 
-              className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-blue-500 cursor-pointer"
+              className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-blue-500"
               onClick={() => handleWorkOrderClick(workOrder)}
             >
-              <CardContent className="p-0">
-                {/* Main Work Order Header */}
-                <div className="p-4 border-b border-gray-100">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                        <img 
-                          src={workOrder.photo} 
-                          alt="Work order issue"
-                          className="w-full h-full object-cover"
-                        />
+              <CardContent className="p-4">
+                {/* Header */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      <img 
+                        src={workOrder.photo} 
+                        alt="Work order issue"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-bold text-lg text-gray-900">#{workOrder.id}</span>
+                        <Badge className={getPriorityColor(workOrder.priority)}>
+                          {workOrder.priority}
+                        </Badge>
+                        <Badge className={getStatusColor(workOrder.status)}>
+                          {workOrder.status}
+                        </Badge>
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-bold text-lg text-gray-900">#{workOrder.id}</span>
-                          <Badge className={getPriorityColor(workOrder.priority)}>
-                            {workOrder.priority}
-                          </Badge>
-                          <Badge className={getStatusColor(workOrder.status)}>
-                            {workOrder.status}
-                          </Badge>
-                        </div>
-                        <h3 className="font-semibold text-gray-900 mb-1">{workOrder.title}</h3>
-                        <p className="text-sm text-gray-600">{workOrder.description}</p>
-                      </div>
+                      <h3 className="font-semibold text-gray-900 mb-1">Unit {workOrder.unit} - {workOrder.title}</h3>
+                      <p className="text-sm text-gray-600 mb-1">{workOrder.description}</p>
+                      <p className="text-sm text-gray-500">Resident: {workOrder.resident}</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Schedule Information */}
-                <div className="p-4 bg-blue-50 border-b border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2 text-blue-700">
-                        <Calendar size={16} />
-                        <span className="font-medium">{formatDate(workOrder.scheduledDate)}</span>
-                        <span className="text-blue-600">at {workOrder.scheduledTime}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-700">
-                        <User size={16} />
-                        <span className="font-medium">{workOrder.assignedTo}</span>
-                      </div>
+                {/* Schedule Info */}
+                <div className="bg-blue-50 rounded-lg p-3 mb-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2 text-blue-700">
+                      <Calendar size={16} />
+                      <span className="font-medium">{formatDate(workOrder.scheduledDate)}</span>
+                      <span>at {workOrder.scheduledTime}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <User size={16} />
+                      <span className="font-medium">{workOrder.assignedTo}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Tech Notes */}
-                <div className="p-4 bg-gray-50">
+                <div className="bg-gray-50 rounded-lg p-3">
                   <div className="flex items-start gap-2">
                     <Wrench size={16} className="text-gray-600 mt-0.5 flex-shrink-0" />
                     <div>
                       <div className="text-sm font-medium text-gray-700 mb-1">Tech Notes</div>
-                      <p className="text-sm text-gray-600 leading-relaxed">{workOrder.techNotes}</p>
+                      <p className="text-sm text-gray-600">{workOrder.techNotes}</p>
                     </div>
                   </div>
                 </div>
