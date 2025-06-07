@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
@@ -41,6 +40,38 @@ const ResidentTimelineModal: React.FC<ResidentTimelineModalProps> = ({
   const [selectedStep, setSelectedStep] = useState<string | null>(null);
   const [messageText, setMessageText] = useState('');
   const [expandedStep, setExpandedStep] = useState<any>(null);
+
+  // Mock message history for the expanded step
+  const getMessageHistory = () => [
+    {
+      id: 1,
+      user: 'You',
+      message: 'Please expedite this process',
+      timestamp: 'Jun 6, 2025 at 12:13 AM',
+      isCurrentUser: true
+    },
+    {
+      id: 2,
+      user: 'Mike Rodriguez',
+      message: 'Scheduled for completion',
+      timestamp: 'May 22, 2025 at 10:00 AM',
+      isCurrentUser: false
+    },
+    {
+      id: 3,
+      user: 'System',
+      message: 'Assigned to Mike Rodriguez',
+      timestamp: 'May 21, 2025 at 09:15 AM',
+      isCurrentUser: false
+    },
+    {
+      id: 4,
+      user: 'Rumi Desai',
+      message: 'Work order submitted by resident',
+      timestamp: 'May 21, 2025 at 08:30 AM',
+      isCurrentUser: false
+    }
+  ];
 
   // Timeline steps from application to move-out
   const getTimelineSteps = (status: string) => {
@@ -284,6 +315,8 @@ const ResidentTimelineModal: React.FC<ResidentTimelineModalProps> = ({
 
   // Full screen expanded view
   if (expandedStep) {
+    const messageHistory = getMessageHistory();
+    
     return (
       <Dialog open={true} onOpenChange={() => setExpandedStep(null)}>
         <DialogContent className="max-w-full max-h-full w-screen h-screen p-0 m-0">
@@ -341,7 +374,7 @@ const ResidentTimelineModal: React.FC<ResidentTimelineModalProps> = ({
                 {/* Send Message */}
                 <Card>
                   <CardContent className="p-6">
-                    <h3 className="text-lg font-semibold mb-4">Send Message to Maintenance</h3>
+                    <h3 className="text-lg font-semibold mb-4">Send Message</h3>
                     <div className="space-y-4">
                       <Textarea
                         placeholder="Type your message here..."
@@ -361,18 +394,24 @@ const ResidentTimelineModal: React.FC<ResidentTimelineModalProps> = ({
                   </CardContent>
                 </Card>
 
-                {/* Timeline */}
+                {/* Message History */}
                 <Card>
                   <CardContent className="p-6">
                     <h3 className="text-lg font-semibold mb-4">Timeline</h3>
                     <div className="space-y-4">
-                      {expandedStep.timeline.map((entry: any, index: number) => (
-                        <div key={index} className="flex items-start space-x-3">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                          <div>
-                            <p className="font-medium">{entry.user}</p>
-                            <p className="text-gray-600">{entry.action}</p>
-                            <p className="text-sm text-gray-500">{entry.time}</p>
+                      {messageHistory.map((message) => (
+                        <div key={message.id} className={`flex items-start space-x-3 p-3 rounded-lg ${
+                          message.isCurrentUser ? 'bg-blue-50 ml-8' : 'bg-gray-50'
+                        }`}>
+                          <div className={`w-2 h-2 rounded-full mt-2 ${
+                            message.isCurrentUser ? 'bg-blue-500' : 'bg-gray-400'
+                          }`}></div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <p className="font-medium text-sm">{message.user}</p>
+                              <p className="text-xs text-gray-500">{message.timestamp}</p>
+                            </div>
+                            <p className="text-gray-700 mt-1">{message.message}</p>
                           </div>
                         </div>
                       ))}
