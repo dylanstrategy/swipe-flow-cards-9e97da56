@@ -1,9 +1,9 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, Wrench, AlertTriangle, CheckCircle2, User, ArrowLeft } from 'lucide-react';
+import WorkOrderTimeline from './WorkOrderTimeline';
 
 interface WorkOrderTrackerProps {
   onSelectWorkOrder?: (workOrder: any) => void;
@@ -12,6 +12,8 @@ interface WorkOrderTrackerProps {
 }
 
 const WorkOrderTracker = ({ onSelectWorkOrder, onViewDetails, onClose }: WorkOrderTrackerProps) => {
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
+
   const workOrderStats = {
     total: 24,
     urgent: 3,
@@ -39,6 +41,7 @@ const WorkOrderTracker = ({ onSelectWorkOrder, onViewDetails, onClose }: WorkOrd
       submitted: '2025-05-22T08:30:00Z',
       photo: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=400',
       submittedDate: '2025-05-22',
+      dueDate: '2025-06-04',
       timeline: [
         {
           date: '2025-05-22',
@@ -200,6 +203,20 @@ const WorkOrderTracker = ({ onSelectWorkOrder, onViewDetails, onClose }: WorkOrd
     }
   };
 
+  const handleWorkOrderClick = (workOrder: any) => {
+    setSelectedWorkOrder(workOrder);
+  };
+
+  // If a work order is selected, show the timeline
+  if (selectedWorkOrder) {
+    return (
+      <WorkOrderTimeline
+        workOrder={selectedWorkOrder}
+        onClose={() => setSelectedWorkOrder(null)}
+      />
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
       <div className="px-4 py-6 pb-24">
@@ -283,7 +300,7 @@ const WorkOrderTracker = ({ onSelectWorkOrder, onViewDetails, onClose }: WorkOrd
             <Card 
               key={order.id} 
               className="hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-blue-500"
-              onClick={() => onViewDetails?.(order)}
+              onClick={() => handleWorkOrderClick(order)}
             >
               <CardContent className="p-0">
                 <div className="flex items-start p-4">
