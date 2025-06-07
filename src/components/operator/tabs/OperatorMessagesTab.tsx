@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -81,7 +80,7 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
       time: '2 days ago',
       priority: 'normal',
       category: 'collections',
-      unread: true,
+      unread: false,
       unit: '302',
       residentPhone: '(555) 345-6789',
       date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // 2 days ago
@@ -179,6 +178,14 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
       }, 2000);
     }
   };
+
+  // Filter out non-today messages that are read
+  const visibleMessages = messages.filter(message => {
+    if (message.date && !isToday(message.date) && !message.unread) {
+      return false; // Hide old read messages
+    }
+    return true;
+  });
 
   if (selectedMessage) {
     return (
@@ -286,7 +293,7 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
       </div>
 
       <div className="space-y-4">
-        {messages.map((message) => (
+        {visibleMessages.map((message) => (
           <Card 
             key={message.id} 
             className={`hover:shadow-md transition-shadow cursor-pointer ${
