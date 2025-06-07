@@ -19,6 +19,7 @@ interface Event {
   rescheduledCount?: number;
   status?: string;
   date: Date;
+  isOverdue?: boolean;
 }
 
 interface HourlyCalendarViewProps {
@@ -49,6 +50,11 @@ const HourlyCalendarView = ({
 
   // Overdue detection logic
   const isEventOverdue = (event: Event): boolean => {
+    // If the event already has isOverdue property, use it
+    if (event.hasOwnProperty('isOverdue')) {
+      return event.isOverdue || false;
+    }
+
     // Only check if event is not completed
     if (event.status === 'completed' || event.status === 'cancelled') return false;
     
@@ -195,7 +201,7 @@ const HourlyCalendarView = ({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
         <div className="flex items-center gap-2 mb-2">
           <Clock className="w-5 h-5 text-blue-600" />
@@ -208,7 +214,7 @@ const HourlyCalendarView = ({
         </p>
       </div>
 
-      <div className="divide-y divide-gray-100">
+      <div className="divide-y divide-gray-100 max-h-[600px] overflow-y-auto">
         {timeSlots.map((timeSlot) => {
           const slotEvents = getEventsForTimeSlot(timeSlot);
           const isDragOver = dragOverSlot === timeSlot;
@@ -225,15 +231,15 @@ const HourlyCalendarView = ({
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, timeSlot)}
             >
-              {/* Time column */}
-              <div className="w-20 flex-shrink-0 p-4 bg-gray-50 flex flex-col items-center justify-start">
+              {/* Time column - Fixed width */}
+              <div className="w-20 flex-shrink-0 p-4 bg-gray-50 flex flex-col items-center justify-start border-r border-gray-100">
                 <span className="text-sm font-medium text-gray-900">
                   {formatTime12Hour(timeSlot)}
                 </span>
               </div>
 
-              {/* Events column */}
-              <div className="flex-1 p-4 min-h-[80px] relative">
+              {/* Events column - Flexible with proper overflow handling */}
+              <div className="flex-1 p-4 min-h-[80px] relative overflow-hidden">
                 {slotEvents.length === 0 ? (
                   <div className={cn(
                     "w-full h-full flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg transition-all duration-200",
@@ -263,33 +269,33 @@ const HourlyCalendarView = ({
                             handleEventHold(event);
                           }}
                           className={cn(
-                            "p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md active:scale-95",
+                            "p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md active:scale-95 w-full",
                             getPriorityColor(event.priority, event.isDroppedSuggestion, isOverdue),
                             event.isDroppedSuggestion && !isOverdue && "text-white shadow-lg",
                             !event.isDroppedSuggestion && !isOverdue && "hover:scale-105",
                             overdueClasses
                           )}
                         >
-                          <div className="flex items-start justify-between">
+                          <div className="flex items-start justify-between w-full">
                             <div className="flex-1 min-w-0">
                               <h4 className={cn(
-                                "font-semibold text-sm truncate",
+                                "font-semibold text-sm break-words",
                                 (event.isDroppedSuggestion && !isOverdue) ? "text-white" : ""
                               )}>
                                 {isOverdue && <span className="text-red-700 font-bold mr-1">OVERDUE</span>}
                                 {event.title}
                               </h4>
                               <p className={cn(
-                                "text-xs mt-1 line-clamp-2",
+                                "text-xs mt-1 break-words",
                                 (event.isDroppedSuggestion && !isOverdue) ? "text-white/90" : isOverdue ? "text-red-700" : "text-gray-600"
                               )}>
                                 {event.description}
                               </p>
                               {(event.unit || event.building) && (
-                                <div className="flex items-center gap-2 mt-2">
+                                <div className="flex flex-wrap items-center gap-2 mt-2">
                                   {event.building && (
                                     <span className={cn(
-                                      "text-xs px-2 py-1 rounded-full",
+                                      "text-xs px-2 py-1 rounded-full break-words",
                                       (event.isDroppedSuggestion && !isOverdue)
                                         ? "bg-white/20 text-white" 
                                         : isOverdue
@@ -301,7 +307,7 @@ const HourlyCalendarView = ({
                                   )}
                                   {event.unit && (
                                     <span className={cn(
-                                      "text-xs px-2 py-1 rounded-full",
+                                      "text-xs px-2 py-1 rounded-full break-words",
                                       (event.isDroppedSuggestion && !isOverdue)
                                         ? "bg-white/20 text-white" 
                                         : isOverdue
