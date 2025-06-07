@@ -6,13 +6,29 @@ import WorkOrderTracker from '../WorkOrderTracker';
 import UnitTurnDetailTracker from '../UnitTurnDetailTracker';
 import WorkOrderDetailTracker from '../WorkOrderDetailTracker';
 import WorkOrderFlow from '../WorkOrderFlow';
+import WorkOrderQueue from '../WorkOrderQueue';
+import ScheduleDropZone from '../ScheduleDropZone';
+import DragDropProvider from '../DragDropProvider';
 import { Calendar, Home, Wrench, BarChart3 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const MaintenanceScheduleTab = () => {
-  const [activeTab, setActiveTab] = useState('overview');
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('queue');
   const [selectedUnitTurn, setSelectedUnitTurn] = useState<any>(null);
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
   const [showWorkOrderFlow, setShowWorkOrderFlow] = useState(false);
+
+  const handleScheduleWorkOrder = (workOrder: any, scheduledTime: string) => {
+    console.log('Scheduling work order:', workOrder, 'for time:', scheduledTime);
+    
+    // In a real app, this would update the backend
+    // For now, we'll just show a success message
+    toast({
+      title: "Work Order Scheduled",
+      description: `${workOrder.title} has been scheduled for ${scheduledTime.includes('Tomorrow') ? 'tomorrow at 9:00 AM' : `today at ${scheduledTime}`}`,
+    });
+  };
 
   if (showWorkOrderFlow) {
     return (
@@ -55,53 +71,53 @@ const MaintenanceScheduleTab = () => {
   };
 
   return (
-    <div className="px-4 py-6 pb-24">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-          <BarChart3 className="w-6 h-6 text-orange-600" />
-          Maintenance Dashboard
-        </h1>
-        <p className="text-gray-600">Track work orders, unit turns, and maintenance operations</p>
-      </div>
+    <DragDropProvider>
+      <div className="px-4 py-6 pb-24 relative">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+            <BarChart3 className="w-6 h-6 text-orange-600" />
+            Maintenance Dashboard
+          </h1>
+          <p className="text-gray-600">Track work orders, unit turns, and maintenance operations</p>
+        </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="workorders" className="flex items-center gap-2">
-            <Wrench className="w-4 h-4" />
-            Work Orders
-          </TabsTrigger>
-          <TabsTrigger value="unitturns" className="flex items-center gap-2">
-            <Home className="w-4 h-4" />
-            Unit Turns
-          </TabsTrigger>
-        </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="queue" className="flex items-center gap-2">
+              <Wrench className="w-4 h-4" />
+              Queue
+            </TabsTrigger>
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="unitturns" className="flex items-center gap-2">
+              <Home className="w-4 h-4" />
+              Unit Turns
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid gap-6">
-            <WorkOrderTracker 
-              onSelectWorkOrder={handleWorkOrderSelect}
-              onViewDetails={handleWorkOrderDetailsView}
-            />
+          <TabsContent value="queue" className="space-y-6">
+            <WorkOrderQueue onSelectWorkOrder={handleWorkOrderDetailsView} />
+            <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
+          </TabsContent>
+
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid gap-6">
+              <WorkOrderTracker 
+                onSelectWorkOrder={handleWorkOrderSelect}
+                onViewDetails={handleWorkOrderDetailsView}
+              />
+              <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="unitturns">
             <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="workorders">
-          <WorkOrderTracker 
-            onSelectWorkOrder={handleWorkOrderSelect}
-            onViewDetails={handleWorkOrderDetailsView}
-          />
-        </TabsContent>
-
-        <TabsContent value="unitturns">
-          <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
-        </TabsContent>
-      </Tabs>
-    </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </DragDropProvider>
   );
 };
 
