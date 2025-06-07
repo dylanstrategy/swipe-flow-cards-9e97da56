@@ -19,9 +19,16 @@ interface DraggableSuggestionsSectionProps {
   onSchedule: (type: string) => void;
   onAction: (action: string, item: string) => void;
   onDragStart?: (suggestion: Suggestion) => void;
+  scheduledSuggestionIds?: number[]; // New prop to track scheduled suggestions
 }
 
-const DraggableSuggestionsSection = ({ selectedDate, onSchedule, onAction, onDragStart }: DraggableSuggestionsSectionProps) => {
+const DraggableSuggestionsSection = ({ 
+  selectedDate, 
+  onSchedule, 
+  onAction, 
+  onDragStart,
+  scheduledSuggestionIds = []
+}: DraggableSuggestionsSectionProps) => {
   const [draggedItem, setDraggedItem] = useState<Suggestion | null>(null);
 
   // Generate suggestions based on the selected date
@@ -157,7 +164,12 @@ const DraggableSuggestionsSection = ({ selectedDate, onSchedule, onAction, onDra
     ];
   };
 
-  const suggestions = generateSuggestionsForDate(selectedDate);
+  const allSuggestions = generateSuggestionsForDate(selectedDate);
+  
+  // Filter out suggestions that have been scheduled
+  const suggestions = allSuggestions.filter(suggestion => 
+    !scheduledSuggestionIds.includes(suggestion.id)
+  );
 
   const handleDragStart = (e: React.DragEvent, suggestion: Suggestion) => {
     setDraggedItem(suggestion);
@@ -190,6 +202,7 @@ const DraggableSuggestionsSection = ({ selectedDate, onSchedule, onAction, onDra
         {suggestions.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <p>No suggestions available for this date.</p>
+            <p className="text-sm mt-2">All suggestions may have been scheduled!</p>
           </div>
         ) : (
           suggestions.map((suggestion) => (

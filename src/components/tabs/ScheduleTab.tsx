@@ -14,7 +14,6 @@ import EventDetailModal from '../events/EventDetailModal';
 import RescheduleFlow from '../events/RescheduleFlow';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
-import { Calendar } from '@/components/ui/calendar';
 
 const ScheduleTab = () => {
   const { toast } = useToast();
@@ -34,8 +33,8 @@ const ScheduleTab = () => {
     mode: 'compose' as 'compose' | 'reply'
   });
 
-  // Enhanced calendar events with realistic examples and times
-  const calendarEvents = [
+  // State for managing scheduled events including dropped suggestions
+  const [scheduledEvents, setScheduledEvents] = useState([
     {
       id: 1,
       date: new Date(),
@@ -47,7 +46,8 @@ const ScheduleTab = () => {
       priority: 'high',
       unit: '4B',
       building: 'Building A',
-      dueDate: addDays(new Date(), -1)
+      dueDate: addDays(new Date(), -1),
+      isDroppedSuggestion: false
     },
     {
       id: 2,
@@ -56,7 +56,8 @@ const ScheduleTab = () => {
       title: 'Message from Management',
       description: 'Please submit your lease renewal documents by Friday',
       category: 'Management',
-      priority: 'medium'
+      priority: 'medium',
+      isDroppedSuggestion: false
     },
     {
       id: 3,
@@ -69,7 +70,8 @@ const ScheduleTab = () => {
       priority: 'high',
       unit: '204',
       building: 'Building A',
-      dueDate: addDays(new Date(), 2)
+      dueDate: addDays(new Date(), 2),
+      isDroppedSuggestion: false
     },
     {
       id: 4,
@@ -78,7 +80,8 @@ const ScheduleTab = () => {
       title: 'Rooftop BBQ Social',
       description: 'Community event - RSVP required',
       category: 'Community Event',
-      priority: 'low'
+      priority: 'low',
+      isDroppedSuggestion: false
     },
     {
       id: 5,
@@ -90,16 +93,28 @@ const ScheduleTab = () => {
       category: 'Work Order',
       priority: 'medium',
       unit: '204',
-      building: 'Building A'
+      building: 'Building A',
+      isDroppedSuggestion: false
     }
-  ];
+  ]);
 
   const handleDropSuggestion = (suggestion: any, date: Date) => {
-    // Handle the dropped suggestion
-    console.log(`Scheduling ${suggestion.title} on ${format(date, 'MMM d, yyyy')}`);
-    
-    // Here you would typically update your events/schedule data
-    // For now, we'll just show a success message via the existing toast
+    // Generate a new event from the dropped suggestion
+    const newEvent = {
+      id: Date.now(), // Use timestamp as unique ID
+      date: date,
+      time: suggestion.timeSlot ? suggestion.timeSlot.split(' - ')[0] : '10:00',
+      title: suggestion.title,
+      description: suggestion.description,
+      category: suggestion.type,
+      priority: suggestion.priority,
+      isDroppedSuggestion: true
+    };
+
+    // Add the new event to scheduled events
+    setScheduledEvents(prev => [...prev, newEvent]);
+
+    console.log(`Scheduled ${suggestion.title} on ${format(date, 'MMM d, yyyy')}`);
   };
 
   const handleAction = (action: string, item: string) => {
@@ -231,13 +246,13 @@ const ScheduleTab = () => {
   };
 
   const getEventsForDate = (date: Date) => {
-    return calendarEvents.filter(event => isSameDay(event.date, date))
+    return scheduledEvents.filter(event => isSameDay(event.date, date))
       .sort((a, b) => a.time.localeCompare(b.time));
   };
 
   // Check if a date has events for calendar styling
   const hasEventsOnDate = (date: Date) => {
-    return calendarEvents.some(event => isSameDay(event.date, date));
+    return scheduledEvents.some(event => isSameDay(event.date, date));
   };
 
   if (showRescheduleFlow && selectedEvent) {
