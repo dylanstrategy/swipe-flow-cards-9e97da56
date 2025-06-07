@@ -111,8 +111,14 @@ const DraggableSuggestionsSection = ({
   const handleDragStart = (e: React.DragEvent, suggestion: Suggestion) => {
     console.log('Suggestion drag start:', suggestion);
     const dragData = {
-      type: 'suggestion',
-      ...suggestion
+      type: 'suggestion', // This identifies it as a dragged suggestion
+      id: suggestion.id,
+      title: suggestion.title,
+      description: suggestion.description,
+      suggestionType: suggestion.type, // This is the actual suggestion type like "Maintenance"
+      priority: suggestion.priority,
+      estimatedTime: suggestion.estimatedTime,
+      category: suggestion.category
     };
     console.log('Setting drag data:', dragData);
     e.dataTransfer.setData('application/json', JSON.stringify(dragData));
