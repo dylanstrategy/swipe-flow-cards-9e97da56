@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,11 +20,16 @@ interface Message {
   residentPhone?: string;
 }
 
-const OperatorMessagesTab = () => {
+interface OperatorMessagesTabProps {
+  onUnreadCountChange?: (count: number) => void;
+}
+
+const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({ 
+  onUnreadCountChange 
+}) => {
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [replyText, setReplyText] = useState('');
-
-  const messages: Message[] = [
+  const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
       from: 'Unit 204 - John Doe',
@@ -86,7 +91,15 @@ const OperatorMessagesTab = () => {
       category: 'community',
       unread: false
     }
-  ];
+  ]);
+
+  // Calculate unread count and notify parent when it changes
+  useEffect(() => {
+    const unreadCount = messages.filter(msg => msg.unread).length;
+    if (onUnreadCountChange) {
+      onUnreadCountChange(unreadCount);
+    }
+  }, [messages, onUnreadCountChange]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -118,8 +131,19 @@ const OperatorMessagesTab = () => {
   };
 
   const markAsRead = (messageId: number) => {
-    // In a real app, this would update the message status in the backend
+    setMessages(prevMessages =>
+      prevMessages.map(msg =>
+        msg.id === messageId ? { ...msg, unread: false } : msg
+      )
+    );
     console.log(`Marking message ${messageId} as read`);
+  };
+
+  const handleMessageClick = (message: Message) => {
+    setSelectedMessage(message);
+    if (message.unread) {
+      markAsRead(message.id);
+    }
   };
 
   if (selectedMessage) {
@@ -222,12 +246,7 @@ const OperatorMessagesTab = () => {
             className={`hover:shadow-md transition-shadow cursor-pointer ${
               message.unread ? 'border-l-4 border-l-blue-500 bg-blue-50/30' : ''
             }`}
-            onClick={() => {
-              setSelectedMessage(message);
-              if (message.unread) {
-                markAsRead(message.id);
-              }
-            }}
+            onClick={() => handleMessageClick(message)}
           >
             <CardContent className="p-4">
               <div className="flex items-start justify-between mb-3">

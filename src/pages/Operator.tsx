@@ -28,6 +28,7 @@ const Operator = () => {
   const [showUserManagement, setShowUserManagement] = useState(false);
   const [showContactProfile, setShowContactProfile] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(4);
 
   // Mock current user profile - updated to senior_operator
   const [currentUserProfile] = useState<UserProfile>({
@@ -50,9 +51,6 @@ const Operator = () => {
     createdAt: new Date('2025-01-01'),
     lastLogin: new Date('2025-06-05')
   });
-
-  // Mock unread message count
-  const unreadMessagesCount = 4;
 
   const tabs = [
     { id: 'today', label: 'Today', icon: '📊' },
@@ -84,6 +82,10 @@ const Operator = () => {
     console.log('Saving profile:', updatedProfile);
     // In real app, this would update the backend
     setIsEditingProfile(false);
+  };
+
+  const handleUnreadCountChange = (count: number) => {
+    setUnreadMessagesCount(count);
   };
 
   if (showSettings) {
@@ -149,7 +151,7 @@ const Operator = () => {
       case 'schedule':
         return <OperatorScheduleTab />;
       case 'messages':
-        return <OperatorMessagesTab />;
+        return <OperatorMessagesTab onUnreadCountChange={handleUnreadCountChange} />;
       case 'residents':
         return <OperatorResidentsTab />;
       default:
