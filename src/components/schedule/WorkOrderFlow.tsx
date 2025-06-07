@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import SwipeableScreen from './SwipeableScreen';
 import PhotoCaptureStep from './steps/PhotoCaptureStep';
 import DetailsStep from './steps/DetailsStep';
@@ -102,7 +102,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
     }
   };
 
-  // Auto-show prompt when content is ready and not already showing
+  // Auto-show prompt when content is ready
   useEffect(() => {
     const timer = setTimeout(() => {
       const canProceed = canProceedFromCurrentStep();
@@ -113,7 +113,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
       } else if (!canProceed && showPrompt) {
         setShowPrompt(false);
       }
-    }, 500); // Small delay to ensure state is stable
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [currentStep, photoCaptured, workOrderDetails, selectedDate, selectedTime, showPrompt]);
@@ -154,6 +154,10 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
     }
   };
 
+  const canSwipe = currentStep < 4 && canProceedFromCurrentStep();
+
+  console.log('WorkOrderFlow render:', { currentStep, canSwipe, canProceedFromCurrentStep: canProceedFromCurrentStep() });
+
   return (
     <>
       <SwipeableScreen
@@ -161,9 +165,9 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
         currentStep={currentStep}
         totalSteps={4}
         onClose={onClose}
-        onSwipeUp={currentStep < 4 && canProceedFromCurrentStep() ? nextStep : undefined}
+        onSwipeUp={canSwipe ? nextStep : undefined}
         onSwipeLeft={currentStep > 1 ? prevStep : undefined}
-        canSwipeUp={currentStep < 4 && canProceedFromCurrentStep()}
+        canSwipeUp={canSwipe}
         hideSwipeHandling={currentStep === 4}
       >
         <div className="h-full overflow-hidden relative">
@@ -173,7 +177,6 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
         </div>
       </SwipeableScreen>
       
-      {/* Conditional SwipeUpPrompt - Only show on steps 1-3 when ready and prompt is shown */}
       {currentStep < 4 && showPrompt && canProceedFromCurrentStep() && (
         <SwipeUpPrompt 
           onContinue={nextStep}
