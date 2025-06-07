@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import ClientIntakeForm from '@/components/forms/ClientIntakeForm';
 import LeadIntakeForm from '@/components/forms/LeadIntakeForm';
 import ContractManager from '@/components/contracts/ContractManager';
+import UserManagement from '@/components/user/UserManagement';
 import {
   Building, 
   Users, 
@@ -31,7 +32,9 @@ import {
   CreditCard,
   MessageSquare,
   Activity,
-  ChevronDown
+  ChevronDown,
+  MapPin,
+  Home
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -56,6 +59,7 @@ const SuperAdmin = () => {
   const [properties, setProperties] = useState<any[]>([]);
   const [operators, setOperators] = useState<any[]>([]);
   const [leads, setLeads] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState('overview');
@@ -75,14 +79,25 @@ const SuperAdmin = () => {
       const storedProperties = localStorage.getItem('applaud_properties');
       const storedOperators = localStorage.getItem('applaud_operators');
       const storedLeads = localStorage.getItem('applaud_leads');
+      const storedUsers = localStorage.getItem('applaud_users');
 
       setCompanies(storedCompanies ? JSON.parse(storedCompanies) : []);
-      setProperties(storedProperties ? JSON.parse(storedProperties) : []);
+      setProperties(storedProperties ? JSON.parse(storedProperties) : [
+        { id: '1', name: 'The Meridian', address: '123 Main St, New York, NY 10001', units: 150, occupancy_rate: 92, status: 'active', client_name: 'Meridian Properties' },
+        { id: '2', name: 'Sunset Towers', address: '456 Oak Ave, Los Angeles, CA 90210', units: 75, occupancy_rate: 88, status: 'active', client_name: 'Sunset Management' },
+        { id: '3', name: 'Urban Living Complex', address: '789 Pine St, Chicago, IL 60601', units: 200, occupancy_rate: 95, status: 'active', client_name: 'Urban Living Co' },
+      ]);
       setOperators(storedOperators ? JSON.parse(storedOperators) : []);
       setLeads(storedLeads ? JSON.parse(storedLeads) : [
         { id: '1', name: 'Meridian Properties', email: 'contact@meridianprops.com', status: 'contract_sent', units: 150, created_at: new Date() },
         { id: '2', name: 'Sunset Management', email: 'info@sunsetmgmt.com', status: 'call_scheduled', units: 75, created_at: new Date() },
         { id: '3', name: 'Urban Living Co', email: 'hello@urbanliving.com', status: 'interest', units: 200, created_at: new Date() },
+      ]);
+      setUsers(storedUsers ? JSON.parse(storedUsers) : [
+        { id: '1', name: 'John Smith', email: 'john.smith@meridian.com', role: 'operator', status: 'active', property: 'The Meridian', created_at: new Date() },
+        { id: '2', name: 'Sarah Johnson', email: 'sarah.j@meridian.com', role: 'resident', status: 'active', property: 'The Meridian', created_at: new Date() },
+        { id: '3', name: 'Mike Rodriguez', email: 'mike.r@sunset.com', role: 'maintenance', status: 'active', property: 'Sunset Towers', created_at: new Date() },
+        { id: '4', name: 'Emily Chen', email: 'emily.chen@prospects.com', role: 'prospect', status: 'active', property: null, created_at: new Date() },
       ]);
     } catch (error: any) {
       console.error('Error loading data:', error);
@@ -112,6 +127,12 @@ const SuperAdmin = () => {
   const filteredLeads = leads.filter(lead =>
     lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     lead.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredUsers = users.filter(user =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.role.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getStatusColor = (status: string) => {
@@ -277,12 +298,14 @@ const SuperAdmin = () => {
   const navigationItems = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'clients', label: 'Clients', icon: Building },
+    { id: 'properties', label: 'Properties', icon: Home },
+    { id: 'users', label: 'Users', icon: Users },
     { id: 'leads', label: 'CRM & Sales', icon: UserPlus },
     { id: 'contracts', label: 'Contracts', icon: FileText },
     { id: 'billing', label: 'Billing', icon: CreditCard },
     { id: 'marketing', label: 'Marketing', icon: Mail },
     { id: 'calendar', label: 'Calendar', icon: Calendar },
-    { id: 'operators', label: 'Operators', icon: Users }
+    { id: 'operators', label: 'Operators', icon: Settings }
   ];
 
   if (loading) {
@@ -404,7 +427,7 @@ const SuperAdmin = () => {
         {activeView === 'overview' && (
           <div className="space-y-6">
             {/* KPI Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center">
@@ -420,7 +443,7 @@ const SuperAdmin = () => {
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center">
-                    <Building className="h-8 w-8 text-green-600" />
+                    <Home className="h-8 w-8 text-green-600" />
                     <div className="ml-4">
                       <p className="text-xs font-medium text-gray-600">Properties</p>
                       <p className="text-xl font-bold text-gray-900">{properties.length}</p>
@@ -434,9 +457,21 @@ const SuperAdmin = () => {
                   <div className="flex items-center">
                     <Users className="h-8 w-8 text-purple-600" />
                     <div className="ml-4">
+                      <p className="text-xs font-medium text-gray-600">Total Users</p>
+                      <p className="text-xl font-bold text-gray-900">{users.length}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center">
+                    <Building className="h-8 w-8 text-orange-600" />
+                    <div className="ml-4">
                       <p className="text-xs font-medium text-gray-600">Total Units</p>
                       <p className="text-xl font-bold text-gray-900">
-                        {companies.reduce((sum, company) => sum + (company.unit_count || 0), 0)}
+                        {properties.reduce((sum, property) => sum + (property.units || 0), 0)}
                       </p>
                     </div>
                   </div>
@@ -446,7 +481,7 @@ const SuperAdmin = () => {
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center">
-                    <UserPlus className="h-8 w-8 text-orange-600" />
+                    <UserPlus className="h-8 w-8 text-indigo-600" />
                     <div className="ml-4">
                       <p className="text-xs font-medium text-gray-600">Active Leads</p>
                       <p className="text-xl font-bold text-gray-900">{leads.length}</p>
@@ -462,7 +497,7 @@ const SuperAdmin = () => {
                     <div className="ml-4">
                       <p className="text-xs font-medium text-gray-600">Monthly Revenue</p>
                       <p className="text-xl font-bold text-gray-900">
-                        ${companies.reduce((sum, company) => sum + ((company.unit_count || 0) * 45), 0).toLocaleString()}
+                        ${properties.reduce((sum, property) => sum + ((property.units || 0) * 45), 0).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -530,6 +565,275 @@ const SuperAdmin = () => {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+          </div>
+        )}
+
+        {activeView === 'properties' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <h2 className="text-2xl font-bold text-gray-900">Properties Management</h2>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Property
+              </Button>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search properties..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            {/* Properties Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-blue-600">{properties.length}</div>
+                  <div className="text-sm text-gray-600">Total Properties</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {properties.reduce((sum, p) => sum + (p.units || 0), 0)}
+                  </div>
+                  <div className="text-sm text-gray-600">Total Units</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {Math.round(properties.reduce((sum, p) => sum + (p.occupancy_rate || 0), 0) / properties.length)}%
+                  </div>
+                  <div className="text-sm text-gray-600">Avg Occupancy</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-orange-600">
+                    {properties.filter(p => p.status === 'active').length}
+                  </div>
+                  <div className="text-sm text-gray-600">Active Properties</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid gap-4">
+              {properties.filter(property =>
+                property.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                property.address?.toLowerCase().includes(searchTerm.toLowerCase())
+              ).map((property) => (
+                <Card key={property.id}>
+                  <CardContent className="p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center space-x-4 flex-1">
+                        <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                          <Home className="w-6 h-6 text-green-600" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg">{property.name}</h3>
+                          <p className="text-gray-600 flex items-center gap-1">
+                            <MapPin className="w-4 h-4" />
+                            {property.address}
+                          </p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge className="bg-blue-100 text-blue-800">
+                              {property.units} units
+                            </Badge>
+                            <Badge className="bg-green-100 text-green-800">
+                              {property.occupancy_rate}% occupied
+                            </Badge>
+                            <Badge className={property.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                              {property.status}
+                            </Badge>
+                            <span className="text-sm text-gray-500">
+                              Client: {property.client_name}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Details
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <Edit className="w-4 h-4 mr-2" />
+                              Edit Property
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Users className="w-4 h-4 mr-2" />
+                              View Residents
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Settings className="w-4 h-4 mr-2" />
+                              Property Settings
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeView === 'users' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <h2 className="text-2xl font-bold text-gray-900">Users Management</h2>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Add User
+              </Button>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search users..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <select
+                className="px-3 py-2 border rounded-md bg-white"
+              >
+                <option value="">All Roles</option>
+                <option value="resident">Residents</option>
+                <option value="operator">Operators</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="prospect">Prospects</option>
+              </select>
+            </div>
+
+            {/* Users Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-blue-600">{users.length}</div>
+                  <div className="text-sm text-gray-600">Total Users</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {users.filter(u => u.role === 'resident').length}
+                  </div>
+                  <div className="text-sm text-gray-600">Residents</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {users.filter(u => u.role === 'operator').length}
+                  </div>
+                  <div className="text-sm text-gray-600">Operators</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-orange-600">
+                    {users.filter(u => u.role === 'prospect').length}
+                  </div>
+                  <div className="text-sm text-gray-600">Prospects</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-indigo-600">
+                    {users.filter(u => u.status === 'active').length}
+                  </div>
+                  <div className="text-sm text-gray-600">Active Users</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid gap-4">
+              {filteredUsers.map((user) => (
+                <Card key={user.id}>
+                  <CardContent className="p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center space-x-4 flex-1">
+                        <Avatar className="w-12 h-12">
+                          <AvatarFallback className="font-semibold">
+                            {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg">{user.name}</h3>
+                          <p className="text-gray-600">{user.email}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge className={`${user.role === 'resident' ? 'bg-blue-100 text-blue-800' : 
+                              user.role === 'operator' ? 'bg-purple-100 text-purple-800' :
+                              user.role === 'maintenance' ? 'bg-orange-100 text-orange-800' :
+                              'bg-gray-100 text-gray-800'}`}>
+                              {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                            </Badge>
+                            <Badge className={user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                              {user.status}
+                            </Badge>
+                            {user.property && (
+                              <span className="text-sm text-gray-500">{user.property}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Profile
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <Edit className="w-4 h-4 mr-2" />
+                              Edit User
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <MessageSquare className="w-4 h-4 mr-2" />
+                              Send Message
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <UserCog className="w-4 h-4 mr-2" />
+                              Impersonate
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600">
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Deactivate
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         )}
