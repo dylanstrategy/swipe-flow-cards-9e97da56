@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { DragDropProvider } from '../DragDropProvider';
+import DragDropProvider from '../DragDropProvider';
 import WorkOrderQueue from '../WorkOrderQueue';
 import UnitTurnTracker from '../UnitTurnTracker';
 import ScheduleDropZone from '../ScheduleDropZone';

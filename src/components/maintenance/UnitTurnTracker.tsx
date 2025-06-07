@@ -12,7 +12,7 @@ interface UnitTurnTrackerProps {
 }
 
 const UnitTurnCard: React.FC<{ unitTurn: any; onClick: () => void; onScheduled: () => void }> = ({ unitTurn, onClick, onScheduled }) => {
-  const [{ isDragging }, drag] = useDrag(() => ({
+  const [{ isDragging }, drag, preview] = useDrag(() => ({
     type: 'unitTurn',
     item: { unitTurn },
     end: (item, monitor) => {
@@ -27,6 +27,11 @@ const UnitTurnCard: React.FC<{ unitTurn: any; onClick: () => void; onScheduled: 
       dropEffect: 'move',
     },
   }));
+
+  // Use an empty div for the drag preview to prevent offset issues
+  React.useEffect(() => {
+    preview(document.createElement('div'), { captureDraggingState: true });
+  }, [preview]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -57,7 +62,6 @@ const UnitTurnCard: React.FC<{ unitTurn: any; onClick: () => void; onScheduled: 
       ref={drag} 
       style={{ 
         opacity: isDragging ? 0.5 : 1,
-        transform: isDragging ? 'rotate(2deg)' : 'none',
         cursor: 'move'
       }}
     >
