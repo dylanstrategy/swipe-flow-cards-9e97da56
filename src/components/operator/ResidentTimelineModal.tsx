@@ -24,6 +24,14 @@ import {
   MessageSquare
 } from 'lucide-react';
 
+interface Message {
+  id: number;
+  user: string;
+  message: string;
+  timestamp: string;
+  isCurrentUser: boolean;
+}
+
 interface ResidentTimelineModalProps {
   open: boolean;
   onClose: () => void;
@@ -40,23 +48,16 @@ const ResidentTimelineModal: React.FC<ResidentTimelineModalProps> = ({
   const [selectedStep, setSelectedStep] = useState<string | null>(null);
   const [messageText, setMessageText] = useState('');
   const [expandedStep, setExpandedStep] = useState<any>(null);
+  const [stepMessages, setStepMessages] = useState<{[key: string]: Message[]}>({});
 
-  // Mock message history for the expanded step - showing newest first
-  const getMessageHistory = (stepId: string) => {
-    // Return different message history based on the step
+  // Initialize message history for each step
+  const getInitialMessageHistory = (stepId: string): Message[] => {
     const baseHistory = [
       {
-        id: 1,
-        user: 'You',
-        message: 'Please expedite this process',
-        timestamp: 'Jun 6, 2025 at 12:13 AM',
-        isCurrentUser: true
-      },
-      {
-        id: 2,
-        user: 'Mike Rodriguez',
-        message: 'Scheduled for completion',
-        timestamp: 'May 22, 2025 at 10:00 AM',
+        id: 4,
+        user: 'Rumi Desai',
+        message: 'Work order submitted by resident',
+        timestamp: 'May 21, 2025 at 08:30 AM',
         isCurrentUser: false
       },
       {
@@ -67,15 +68,30 @@ const ResidentTimelineModal: React.FC<ResidentTimelineModalProps> = ({
         isCurrentUser: false
       },
       {
-        id: 4,
-        user: 'Rumi Desai',
-        message: 'Work order submitted by resident',
-        timestamp: 'May 21, 2025 at 08:30 AM',
+        id: 2,
+        user: 'Mike Rodriguez',
+        message: 'Scheduled for completion',
+        timestamp: 'May 22, 2025 at 10:00 AM',
         isCurrentUser: false
+      },
+      {
+        id: 1,
+        user: 'You',
+        message: 'Please expedite this process',
+        timestamp: 'Jun 6, 2025 at 12:13 AM',
+        isCurrentUser: true
       }
     ];
 
     return baseHistory;
+  };
+
+  // Get message history for a step (newest first)
+  const getMessageHistory = (stepId: string): Message[] => {
+    if (!stepMessages[stepId]) {
+      return getInitialMessageHistory(stepId);
+    }
+    return stepMessages[stepId];
   };
 
   // Timeline steps from application to move-out
@@ -303,10 +319,30 @@ const ResidentTimelineModal: React.FC<ResidentTimelineModalProps> = ({
   };
 
   const handleSendMessage = () => {
-    if (messageText.trim()) {
-      console.log(`Sending message for ${expandedStep?.title}:`, messageText);
+    if (messageText.trim() && expandedStep) {
+      const newMessage: Message = {
+        id: Date.now(),
+        user: 'You',
+        message: messageText.trim(),
+        timestamp: new Date().toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        }),
+        isCurrentUser: true
+      };
+
+      // Update messages for this step (add to beginning to keep newest first)
+      setStepMessages(prev => ({
+        ...prev,
+        [expandedStep.id]: [newMessage, ...(prev[expandedStep.id] || getInitialMessageHistory(expandedStep.id))]
+      }));
+
       setMessageText('');
-      // In a real app, this would send the message
+      console.log(`Sent message for ${expandedStep.title}:`, newMessage.message);
     }
   };
 
@@ -403,20 +439,20 @@ const ResidentTimelineModal: React.FC<ResidentTimelineModalProps> = ({
                 <Card>
                   <CardContent className="p-6">
                     <h3 className="text-lg font-semibold mb-4">Timeline</h3>
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                       {messageHistory.map((message, index) => (
-                        <div key={message.id} className="flex space-x-4">
+                        <div key={message.id} className="flex space-x-3">
                           <div className="flex-shrink-0">
-                            <div className={`w-10 h-10 rounded-full ${
-                              message.isCurrentUser ? 'bg-blue-500' : 'bg-gray-400'
-                            } flex items-center justify-center text-white text-sm font-medium`}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium text-white ${
+                              message.isCurrentUser ? 'bg-blue-600' : 'bg-gray-500'
+                            }`}>
                               {message.user.charAt(0)}
                             </div>
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center space-x-2 mb-1">
-                              <p className="text-sm font-medium text-gray-900">{message.user}</p>
-                              <p className="text-xs text-gray-500">{message.timestamp}</p>
+                              <span className="text-sm font-medium text-gray-900">{message.user}</span>
+                              <span className="text-xs text-gray-500">{message.timestamp}</span>
                             </div>
                             <div className="bg-gray-50 rounded-lg p-3">
                               <p className="text-sm text-gray-900">{message.message}</p>
