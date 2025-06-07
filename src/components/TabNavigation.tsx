@@ -33,7 +33,7 @@ const TabNavigation = ({ tabs, activeTab, onTabChange }: TabNavigationProps) => 
             <div className="relative">
               <span className="text-2xl mb-1">{tab.icon}</span>
               {tab.badgeCount && tab.badgeCount > 0 && (
-                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-[20px] flex items-center justify-center px-1 z-10 shadow-sm border border-white">
                   {tab.badgeCount > 99 ? '99+' : tab.badgeCount}
                 </div>
               )}
