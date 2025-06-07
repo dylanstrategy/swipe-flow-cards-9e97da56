@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +27,8 @@ const WorkOrderTimeline = ({ workOrder, onClose }: WorkOrderTimelineProps) => {
       user: 'You'
     };
 
-    setTimeline([...timeline, newTimelineEntry]);
+    // Add new entry to the beginning of the timeline
+    setTimeline([newTimelineEntry, ...timeline]);
     setMessage('');
     
     toast({
@@ -46,7 +46,8 @@ const WorkOrderTimeline = ({ workOrder, onClose }: WorkOrderTimelineProps) => {
       user: 'You'
     };
 
-    setTimeline([...timeline, newTimelineEntry]);
+    // Add new entry to the beginning of the timeline
+    setTimeline([newTimelineEntry, ...timeline]);
     
     toast({
       title: "Nudge Sent",
@@ -63,7 +64,8 @@ const WorkOrderTimeline = ({ workOrder, onClose }: WorkOrderTimelineProps) => {
       user: 'You'
     };
 
-    setTimeline([...timeline, newTimelineEntry]);
+    // Add new entry to the beginning of the timeline
+    setTimeline([newTimelineEntry, ...timeline]);
     
     toast({
       title: "Urgent Alert Sent",
@@ -129,6 +131,16 @@ const WorkOrderTimeline = ({ workOrder, onClose }: WorkOrderTimelineProps) => {
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
+
+  // Sort timeline to show most recent first (reverse chronological order)
+  const sortedTimeline = [...timeline].sort((a, b) => {
+    // First sort by date (most recent first)
+    const dateComparison = new Date(b.date).getTime() - new Date(a.date).getTime();
+    if (dateComparison !== 0) return dateComparison;
+    
+    // If same date, sort by time (most recent first)
+    return b.time.localeCompare(a.time);
+  });
 
   return (
     <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
@@ -229,7 +241,7 @@ const WorkOrderTimeline = ({ workOrder, onClose }: WorkOrderTimelineProps) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {timeline.map((entry, index) => (
+              {sortedTimeline.map((entry, index) => (
                 <div key={index} className={`p-4 rounded-lg border-l-4 ${getTimelineColor(entry.type)}`}>
                   <div className="flex items-start gap-3">
                     <div className="mt-0.5">
