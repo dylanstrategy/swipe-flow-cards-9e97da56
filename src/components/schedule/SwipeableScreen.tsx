@@ -82,34 +82,18 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
     );
   }
 
-  // Wrapper function to ensure touch events are captured
-  const handleWrapperTouchStart = (e: React.TouchEvent) => {
-    console.log('WRAPPER TOUCH START');
-    handleTouchStart(e);
-  };
-
-  const handleWrapperTouchMove = (e: React.TouchEvent) => {
-    console.log('WRAPPER TOUCH MOVE');
-    handleTouchMove(e);
-  };
-
-  const handleWrapperTouchEnd = (e: React.TouchEvent) => {
-    console.log('WRAPPER TOUCH END');
-    handleTouchEnd(e);
-  };
-
   return (
     <div 
       className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen overflow-hidden select-none"
       data-swipeable-screen
-      onTouchStart={handleWrapperTouchStart}
-      onTouchMove={handleWrapperTouchMove}
-      onTouchEnd={handleWrapperTouchEnd}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       style={{
         transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${getRotation()}deg)`,
         transition: isDragging ? 'none' : 'transform 0.2s ease-out',
         transformOrigin: 'center center',
-        touchAction: 'none', // Changed from 'pan-y' to 'none' to capture all gestures
+        touchAction: 'none',
         userSelect: 'none',
         WebkitUserSelect: 'none',
         WebkitTouchCallout: 'none'
@@ -130,7 +114,10 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
       />
 
       <div className="flex-1 p-4 overflow-hidden relative z-10">
-        <div style={{ pointerEvents: 'auto' }}>
+        <div style={{ 
+          pointerEvents: isDragging ? 'none' : 'auto',
+          touchAction: 'none'
+        }}>
           {children}
         </div>
       </div>
