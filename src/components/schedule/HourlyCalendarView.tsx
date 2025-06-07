@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { format, addHours, startOfDay, isSameDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface HourlyCalendarViewProps {
   selectedDate: Date;
@@ -107,92 +108,94 @@ const HourlyCalendarView = ({
         <p className="text-sm text-gray-600">Drag suggestions to time slots to schedule them</p>
       </div>
       
-      <div className="max-h-96 overflow-y-auto">
-        {timeSlots.map((slot) => {
-          const timeString = format(slot, 'h:mm a');
-          const eventsInSlot = getEventsForTimeSlot(slot);
-          const isCurrentHour = new Date().getHours() === slot.getHours() && isSameDay(selectedDate, new Date());
-          const isDragOver = dragOverSlot === timeString;
-          
-          return (
-            <div
-              key={timeString}
-              className={cn(
-                "border-b border-gray-50 transition-all duration-200",
-                isCurrentHour && "bg-blue-50",
-                isDragOver && "bg-green-100 border-green-300"
-              )}
-              onDragOver={(e) => handleDragOver(e, timeString)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, timeString)}
-            >
-              <div className="flex items-start p-3">
-                <div className="w-20 flex-shrink-0">
-                  <span className={cn(
-                    "text-sm font-medium",
-                    isCurrentHour ? "text-blue-700" : "text-gray-600"
-                  )}>
-                    {timeString}
-                  </span>
-                </div>
-                
-                <div className="flex-1 min-h-[40px] relative">
-                  {eventsInSlot.length === 0 ? (
-                    <div className={cn(
-                      "h-10 rounded-lg border-2 border-dashed transition-all duration-200 flex items-center justify-center",
-                      isDragOver 
-                        ? "border-green-400 bg-green-50" 
-                        : "border-gray-200 hover:border-gray-300"
+      <ScrollArea className="h-96">
+        <div className="min-w-full">
+          {timeSlots.map((slot) => {
+            const timeString = format(slot, 'h:mm a');
+            const eventsInSlot = getEventsForTimeSlot(slot);
+            const isCurrentHour = new Date().getHours() === slot.getHours() && isSameDay(selectedDate, new Date());
+            const isDragOver = dragOverSlot === timeString;
+            
+            return (
+              <div
+                key={timeString}
+                className={cn(
+                  "border-b border-gray-50 transition-all duration-200 min-w-0",
+                  isCurrentHour && "bg-blue-50",
+                  isDragOver && "bg-green-100 border-green-300"
+                )}
+                onDragOver={(e) => handleDragOver(e, timeString)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, timeString)}
+              >
+                <div className="flex items-start p-3 gap-3">
+                  <div className="w-16 flex-shrink-0">
+                    <span className={cn(
+                      "text-sm font-medium",
+                      isCurrentHour ? "text-blue-700" : "text-gray-600"
                     )}>
-                      {isDragOver && (
-                        <span className="text-sm text-green-700">Drop here</span>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      {eventsInSlot.map((event) => (
-                        <div
-                          key={event.id}
-                          className="bg-blue-100 border border-blue-200 rounded-lg p-2 cursor-pointer hover:bg-blue-200 transition-colors"
-                          onClick={() => handleEventClick(event)}
-                          onContextMenu={(e) => {
-                            e.preventDefault();
-                            handleEventHold(event);
-                          }}
-                          onTouchStart={(e) => {
-                            const touchTimeout = setTimeout(() => {
+                      {timeString}
+                    </span>
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    {eventsInSlot.length === 0 ? (
+                      <div className={cn(
+                        "h-10 rounded-lg border-2 border-dashed transition-all duration-200 flex items-center justify-center min-w-0",
+                        isDragOver 
+                          ? "border-green-400 bg-green-50" 
+                          : "border-gray-200 hover:border-gray-300"
+                      )}>
+                        {isDragOver && (
+                          <span className="text-sm text-green-700">Drop here</span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        {eventsInSlot.map((event) => (
+                          <div
+                            key={event.id}
+                            className="bg-blue-100 border border-blue-200 rounded-lg p-2 cursor-pointer hover:bg-blue-200 transition-colors min-w-0"
+                            onClick={() => handleEventClick(event)}
+                            onContextMenu={(e) => {
+                              e.preventDefault();
                               handleEventHold(event);
-                            }, 800);
-                            
-                            const clearTouch = () => {
-                              clearTimeout(touchTimeout);
-                              document.removeEventListener('touchend', clearTouch);
-                              document.removeEventListener('touchmove', clearTouch);
-                            };
-                            
-                            document.addEventListener('touchend', clearTouch);
-                            document.addEventListener('touchmove', clearTouch);
-                          }}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <h4 className="text-sm font-medium text-gray-900">{event.title}</h4>
-                              <p className="text-xs text-gray-600 truncate">{event.description}</p>
-                            </div>
-                            <div className="text-xs text-blue-600 ml-2">
-                              {event.time}
+                            }}
+                            onTouchStart={(e) => {
+                              const touchTimeout = setTimeout(() => {
+                                handleEventHold(event);
+                              }, 800);
+                              
+                              const clearTouch = () => {
+                                clearTimeout(touchTimeout);
+                                document.removeEventListener('touchend', clearTouch);
+                                document.removeEventListener('touchmove', clearTouch);
+                              };
+                              
+                              document.addEventListener('touchend', clearTouch);
+                              document.addEventListener('touchmove', clearTouch);
+                            }}
+                          >
+                            <div className="flex items-center justify-between min-w-0">
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-sm font-medium text-gray-900 truncate">{event.title}</h4>
+                                <p className="text-xs text-gray-600 truncate">{event.description}</p>
+                              </div>
+                              <div className="text-xs text-blue-600 ml-2 flex-shrink-0">
+                                {event.time}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      </ScrollArea>
     </div>
   );
 };
