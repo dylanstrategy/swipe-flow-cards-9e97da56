@@ -61,6 +61,8 @@ const TodayTab = () => {
       image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400',
       category: 'Work Order',
       priority: 'high',
+      unit: '4B',
+      building: 'Building A',
       dueDate: addDays(new Date(), -1)
     },
     {
@@ -81,6 +83,8 @@ const TodayTab = () => {
       image: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=400',
       category: 'Lease',
       priority: 'high',
+      unit: '204',
+      building: 'Building A',
       dueDate: addDays(new Date(), 2)
     },
     {
@@ -110,7 +114,9 @@ const TodayTab = () => {
       description: 'Filter replacement scheduled',
       image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400',
       category: 'Work Order',
-      priority: 'medium'
+      priority: 'medium',
+      unit: '204',
+      building: 'Building A'
     }
   ];
 

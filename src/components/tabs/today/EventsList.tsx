@@ -70,6 +70,12 @@ const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent }:
     };
   };
 
+  const handleEventClick = (event: any) => {
+    const enhancedEvent = enhanceEventForReschedule(event);
+    setSelectedEvent(enhancedEvent);
+    setShowEventDetail(true);
+  };
+
   const handleHoldEvent = (event: any) => {
     if (canReschedule(event.category || event.type)) {
       const enhancedEvent = enhanceEventForReschedule(event);
@@ -140,10 +146,10 @@ const EventsList = ({ events, onAction, onQuickReply, getSwipeActionsForEvent }:
       {events.map((event) => (
         <SwipeCard
           key={event.id}
-          onTap={() => toast({ title: "Event Details", description: `Viewing ${event.title}` })}
+          onTap={() => handleEventClick(event)}
           onHold={() => handleHoldEvent(event)}
         >
-          <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-100 shadow-sm">
+          <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-100 shadow-sm cursor-pointer hover:bg-gray-50 transition-colors">
             <div className="flex items-center space-x-3">
               <div className="flex items-center justify-center w-10 h-10 bg-blue-50 rounded-lg">
                 {getTypeIcon(event.category || event.type)}
