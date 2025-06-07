@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Clock, User, MessageSquare, Calendar, CheckCircle, AlertTriangle, Bell, X } from 'lucide-react';
 import { format } from 'date-fns';
@@ -25,6 +25,8 @@ interface TimelineItem {
 }
 
 const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
+  const [selectedAttachment, setSelectedAttachment] = useState<{type: string; url: string; description: string} | null>(null);
+
   // Generate timeline items based on event type
   const getTimelineItems = (): TimelineItem[] => {
     const baseItems: TimelineItem[] = [
@@ -166,7 +168,10 @@ const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
         {attachments.map((attachment, index) => (
           <div key={index} className="border rounded-lg p-2 bg-white">
             {attachment.type === 'image' && (
-              <div className="flex items-center gap-3">
+              <div 
+                className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors rounded"
+                onClick={() => setSelectedAttachment(attachment)}
+              >
                 <img 
                   src={attachment.url} 
                   alt={attachment.description}
@@ -175,11 +180,15 @@ const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
                 <div>
                   <p className="text-sm font-medium text-gray-900">Photo Attachment</p>
                   <p className="text-xs text-gray-500">{attachment.description}</p>
+                  <p className="text-xs text-blue-600">Click to view full size</p>
                 </div>
               </div>
             )}
             {attachment.type === 'video' && (
-              <div className="flex items-center gap-3">
+              <div 
+                className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors rounded"
+                onClick={() => setSelectedAttachment(attachment)}
+              >
                 <video 
                   src={attachment.url} 
                   className="w-16 h-16 rounded object-cover"
@@ -188,6 +197,7 @@ const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
                 <div>
                   <p className="text-sm font-medium text-gray-900">Video Attachment</p>
                   <p className="text-xs text-gray-500">{attachment.description}</p>
+                  <p className="text-xs text-blue-600">Click to view full size</p>
                 </div>
               </div>
             )}
@@ -250,6 +260,45 @@ const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
           </div>
         </div>
       </div>
+
+      {/* Attachment Modal */}
+      {selectedAttachment && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
+            {/* Close button */}
+            <button
+              onClick={() => setSelectedAttachment(null)}
+              className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            {/* Content */}
+            <div className="w-full h-full flex items-center justify-center">
+              {selectedAttachment.type === 'image' && (
+                <img
+                  src={selectedAttachment.url}
+                  alt={selectedAttachment.description}
+                  className="max-w-full max-h-full object-contain rounded-lg"
+                />
+              )}
+              {selectedAttachment.type === 'video' && (
+                <video
+                  src={selectedAttachment.url}
+                  controls
+                  className="max-w-full max-h-full rounded-lg"
+                  autoPlay
+                />
+              )}
+            </div>
+
+            {/* Description */}
+            <div className="absolute bottom-4 left-4 right-4 bg-black bg-opacity-75 text-white p-3 rounded-lg">
+              <p className="text-sm">{selectedAttachment.description}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
