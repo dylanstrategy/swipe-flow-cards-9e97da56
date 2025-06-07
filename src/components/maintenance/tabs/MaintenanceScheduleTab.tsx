@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UnitTurnTracker from '../UnitTurnTracker';
@@ -9,8 +8,10 @@ import WorkOrderFlow from '../WorkOrderFlow';
 import WorkOrderQueue from '../WorkOrderQueue';
 import ScheduleDropZone from '../ScheduleDropZone';
 import DragDropProvider from '../DragDropProvider';
-import { Calendar, Home, Wrench, BarChart3 } from 'lucide-react';
+import { Calendar, Home, Wrench, BarChart3, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 // Mock work orders data - this would normally come from a state management solution or API
 const initialWorkOrders = [
@@ -90,6 +91,7 @@ const MaintenanceScheduleTab = () => {
   const [showWorkOrderFlow, setShowWorkOrderFlow] = useState(false);
   const [workOrders, setWorkOrders] = useState(initialWorkOrders);
   const [scheduledWorkOrders, setScheduledWorkOrders] = useState<any[]>([]);
+  const [overviewActiveTab, setOverviewActiveTab] = useState('overview');
 
   const handleScheduleWorkOrder = (workOrder: any, scheduledTime: string) => {
     console.log('Scheduling work order:', workOrder, 'for time:', scheduledTime);
@@ -154,6 +156,35 @@ const MaintenanceScheduleTab = () => {
     // Don't set showWorkOrderFlow to true, just show the detail tracker
   };
 
+  // Calculate overview statistics
+  const totalOrders = workOrders.length + scheduledWorkOrders.length;
+  const inProgressCount = workOrders.filter(wo => wo.status === 'in-progress').length;
+  const scheduledCount = workOrders.filter(wo => wo.status === 'scheduled').length + scheduledWorkOrders.length;
+  const assignedCount = workOrders.filter(wo => wo.status === 'assigned').length;
+  const unscheduledCount = workOrders.filter(wo => wo.status === 'unscheduled').length;
+  const overdueCount = workOrders.filter(wo => wo.status === 'overdue').length;
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority.toLowerCase()) {
+      case 'urgent': return 'bg-red-500 text-white';
+      case 'high': return 'bg-orange-500 text-white';
+      case 'medium': return 'bg-yellow-500 text-white';
+      case 'low': return 'bg-green-500 text-white';
+      default: return 'bg-gray-500 text-white';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'scheduled': return 'bg-blue-600 text-white';
+      case 'unscheduled': return 'bg-gray-600 text-white';
+      case 'overdue': return 'bg-red-600 text-white';
+      case 'in-progress': return 'bg-orange-600 text-white';
+      case 'assigned': return 'bg-purple-600 text-white';
+      default: return 'bg-gray-600 text-white';
+    }
+  };
+
   return (
     <DragDropProvider>
       <div className="h-full flex flex-col">
@@ -196,11 +227,134 @@ const MaintenanceScheduleTab = () => {
           )}
 
           {activeTab === 'overview' && (
-            <div className="h-full">
-              <WorkOrderQueue 
-                workOrders={workOrders}
-                onSelectWorkOrder={handleWorkOrderDetailsView} 
-              />
+            <div className="h-full flex flex-col">
+              <div className="flex-shrink-0 px-4 py-6">
+                <Tabs value={overviewActiveTab} onValueChange={setOverviewActiveTab}>
+                  <TabsList className="grid w-full grid-cols-3 mb-6">
+                    <TabsTrigger value="queue">Queue</TabsTrigger>
+                    <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="unitturns">Unit Turns</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-4">
+                {overviewActiveTab === 'overview' && (
+                  <div className="space-y-6">
+                    {/* Work Orders Statistics Header */}
+                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-6 text-white">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Wrench className="w-8 h-8" />
+                        <div>
+                          <h2 className="text-xl font-bold">Work Orders</h2>
+                          <p className="text-orange-100">{totalOrders} Total Orders</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Statistics Grid */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <Card>
+                        <CardContent className="p-4 text-center">
+                          <div className="text-2xl font-bold text-orange-600">{inProgressCount}</div>
+                          <div className="text-sm text-gray-600">In Progress</div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="p-4 text-center">
+                          <div className="text-2xl font-bold text-blue-600">{scheduledCount}</div>
+                          <div className="text-sm text-gray-600">Scheduled</div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="p-4 text-center">
+                          <div className="text-2xl font-bold text-purple-600">{assignedCount}</div>
+                          <div className="text-sm text-gray-600">Assigned</div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="p-4 text-center">
+                          <div className="text-2xl font-bold text-green-600">8</div>
+                          <div className="text-sm text-gray-600">Completed</div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Pending Work Orders Section */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Pending Work Orders</h3>
+                      <div className="space-y-3">
+                        {workOrders.map((workOrder) => (
+                          <Card 
+                            key={workOrder.id} 
+                            className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-orange-500"
+                            onClick={() => handleWorkOrderDetailsView(workOrder)}
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex items-start gap-4">
+                                {/* Work Order Photo */}
+                                <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                                  <img 
+                                    src={workOrder.photo} 
+                                    alt="Issue"
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                
+                                {/* Work Order Details */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-sm font-bold text-gray-900">#{workOrder.id}</span>
+                                    <Badge className={`${getPriorityColor(workOrder.priority)} text-xs px-2 py-0.5`}>
+                                      {workOrder.priority.toUpperCase()}
+                                    </Badge>
+                                    <Badge className={`${getStatusColor(workOrder.status)} text-xs px-2 py-0.5`}>
+                                      {workOrder.status.toUpperCase()}
+                                    </Badge>
+                                  </div>
+                                  
+                                  <h4 className="font-medium text-gray-900 text-sm mb-1">
+                                    Unit {workOrder.unit} - {workOrder.title}
+                                  </h4>
+                                  <p className="text-gray-600 text-xs mb-2 line-clamp-1">
+                                    {workOrder.description}
+                                  </p>
+                                  
+                                  <div className="flex items-center justify-between text-xs">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-gray-600">{workOrder.resident}</span>
+                                      <span className="text-gray-400">•</span>
+                                      <span className="text-gray-600">{workOrder.assignedTo}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Clock className="w-3 h-3 text-green-500" />
+                                      <span className="text-gray-600">{workOrder.estimatedTime}</span>
+                                      <span className={`font-bold ${workOrder.daysOpen > 7 ? 'text-red-600' : 'text-orange-600'}`}>
+                                        {workOrder.daysOpen}d
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {overviewActiveTab === 'queue' && (
+                  <WorkOrderQueue 
+                    workOrders={workOrders}
+                    onSelectWorkOrder={handleWorkOrderDetailsView} 
+                  />
+                )}
+
+                {overviewActiveTab === 'unitturns' && (
+                  <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
+                )}
+              </div>
             </div>
           )}
 
