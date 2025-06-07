@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -45,15 +44,18 @@ const WorkOrderCard: React.FC<{
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
-    begin: () => {
+  }));
+
+  // Handle drag start/end events using useEffect
+  React.useEffect(() => {
+    if (isDragging) {
       console.log('Starting to drag work order:', workOrder.id);
       onDragStart?.();
-    },
-    end: () => {
+    } else {
       console.log('Finished dragging work order:', workOrder.id);
       onDragEnd?.();
-    },
-  }));
+    }
+  }, [isDragging, workOrder.id, onDragStart, onDragEnd]);
 
   // Set empty drag preview to hide the default ghost image
   React.useEffect(() => {
@@ -293,4 +295,3 @@ const WorkOrderQueue: React.FC<WorkOrderQueueProps> = ({
 };
 
 export default WorkOrderQueue;
-

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -90,15 +91,18 @@ const UnitTurnTracker = ({
       collect: (monitor) => ({
         isDragging: monitor.isDragging(),
       }),
-      begin: () => {
+    }));
+
+    // Handle drag start/end events using useEffect
+    React.useEffect(() => {
+      if (isDragging) {
         console.log('Starting to drag unit turn:', turn.id);
         onDragStart?.();
-      },
-      end: () => {
+      } else {
         console.log('Finished dragging unit turn:', turn.id);
         onDragEnd?.();
-      },
-    }));
+      }
+    }, [isDragging, turn.id, onDragStart, onDragEnd]);
 
     // Set empty drag preview to hide the default ghost image
     React.useEffect(() => {
