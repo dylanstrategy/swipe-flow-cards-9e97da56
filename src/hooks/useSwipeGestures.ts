@@ -59,13 +59,17 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeLeft, canSwipeUp = false }:
     const velocityThreshold = 0.3;
     
     const shouldCompleteUp = (Math.abs(deltaY) > distanceThreshold || velocityY > velocityThreshold) && 
-                            deltaY < -distanceThreshold && canSwipeUp;
+                            deltaY < -30 && canSwipeUp;
     const shouldCompleteLeft = (Math.abs(deltaX) > distanceThreshold || velocityX > velocityThreshold) && 
-                              deltaX < -distanceThreshold;
+                              deltaX < -30;
+    
+    console.log('Swipe gesture detected:', { deltaY, shouldCompleteUp, canSwipeUp, onSwipeUp: !!onSwipeUp });
     
     if (shouldCompleteUp && onSwipeUp) {
+      console.log('Executing swipe up action');
       onSwipeUp();
     } else if (shouldCompleteLeft && onSwipeLeft) {
+      console.log('Executing swipe left action');
       onSwipeLeft();
     }
     

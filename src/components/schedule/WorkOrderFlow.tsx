@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import SwipeableScreen from './SwipeableScreen';
 import PhotoCaptureStep from './steps/PhotoCaptureStep';
@@ -64,10 +63,12 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   };
 
   const nextStep = () => {
-    console.log('nextStep called, currentStep:', currentStep, 'canProceed:', canProceedFromCurrentStep());
+    console.log('WorkOrder nextStep called, currentStep:', currentStep, 'canProceed:', canProceedFromCurrentStep());
     if (currentStep < 4 && canProceedFromCurrentStep()) {
       onNextStep();
       setShowPrompt(false);
+    } else {
+      console.log('Cannot proceed - step:', currentStep, 'canProceed:', canProceedFromCurrentStep());
     }
   };
 
@@ -159,7 +160,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
         onClose={onClose}
         onSwipeUp={currentStep < 4 && canProceedFromCurrentStep() ? nextStep : undefined}
         onSwipeLeft={currentStep > 1 ? prevStep : undefined}
-        canSwipeUp={canProceedFromCurrentStep()}
+        canSwipeUp={currentStep < 4 && canProceedFromCurrentStep()}
         hideSwipeHandling={currentStep === 4}
       >
         <div className="h-full overflow-hidden relative">
