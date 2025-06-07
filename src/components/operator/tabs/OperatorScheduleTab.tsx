@@ -19,6 +19,7 @@ import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 import HourlyCalendarView from '@/components/schedule/HourlyCalendarView';
 import { CalendarEvent } from '@/types/calendarEvents';
+import { useRealtimeOverdueDetection } from '@/hooks/useRealtimeOverdueDetection';
 
 const OperatorScheduleTab = () => {
   const { toast } = useToast();
@@ -53,7 +54,8 @@ const OperatorScheduleTab = () => {
       unit: '204',
       type: 'maintenance',
       isDroppedSuggestion: false,
-      rescheduledCount: 0
+      rescheduledCount: 0,
+      status: 'pending'
     },
     {
       id: 2,
@@ -67,7 +69,8 @@ const OperatorScheduleTab = () => {
       unit: '156',
       type: 'move-in',
       isDroppedSuggestion: false,
-      rescheduledCount: 0
+      rescheduledCount: 0,
+      status: 'pending'
     },
     {
       id: 3,
@@ -81,7 +84,8 @@ const OperatorScheduleTab = () => {
       unit: '302',
       type: 'lease',
       isDroppedSuggestion: false,
-      rescheduledCount: 0
+      rescheduledCount: 0,
+      status: 'pending'
     },
     {
       id: 4,
@@ -95,7 +99,8 @@ const OperatorScheduleTab = () => {
       unit: '108',
       type: 'payment',
       isDroppedSuggestion: false,
-      rescheduledCount: 0
+      rescheduledCount: 0,
+      status: 'pending'
     },
     {
       id: 5,
@@ -109,13 +114,17 @@ const OperatorScheduleTab = () => {
       unit: '225',
       type: 'message',
       isDroppedSuggestion: false,
-      rescheduledCount: 0
+      rescheduledCount: 0,
+      status: 'pending'
     }
   ]);
 
   // State to track which suggestions have been scheduled and completed
   const [scheduledSuggestionIds, setScheduledSuggestionIds] = useState<number[]>([]);
   const [completedSuggestionIds, setCompletedSuggestionIds] = useState<number[]>([]);
+
+  // Use real-time overdue detection
+  const { isEventOverdue } = useRealtimeOverdueDetection(scheduledEvents);
 
   const convertTimeToMinutes = (timeString: string): number => {
     if (!timeString) return 0;
@@ -219,7 +228,8 @@ const OperatorScheduleTab = () => {
       building: suggestion.building || undefined,
       dueDate: suggestion.dueDate || undefined,
       image: suggestion.image || undefined,
-      originalSuggestionId: suggestion.id
+      originalSuggestionId: suggestion.id,
+      status: 'pending'
     };
 
     console.log('OperatorScheduleTab: Adding new event from timeline drop:', newEvent);
@@ -275,7 +285,8 @@ const OperatorScheduleTab = () => {
       building: suggestion.building || undefined,
       dueDate: suggestion.dueDate || undefined,
       image: suggestion.image || undefined,
-      originalSuggestionId: suggestion.id
+      originalSuggestionId: suggestion.id,
+      status: 'pending'
     };
 
     console.log('OperatorScheduleTab: Adding calendar drop event:', newEvent);
@@ -451,6 +462,11 @@ const OperatorScheduleTab = () => {
     return scheduledEvents.some(event => isSameDateSafe(event.date, date));
   };
 
+  const hasOverdueEventsOnDate = (date: Date) => {
+    const eventsForDate = scheduledEvents.filter(event => isSameDateSafe(event.date, date));
+    return eventsForDate.some(event => isEventOverdue(event));
+  };
+
   if (showRescheduleFlow && selectedEvent) {
     return (
       <RescheduleFlow
@@ -542,6 +558,7 @@ const OperatorScheduleTab = () => {
                 selectedDate={selectedDate}
                 onSelect={setSelectedDate}
                 hasEventsOnDate={hasEventsOnDate}
+                hasOverdueEventsOnDate={hasOverdueEventsOnDate}
                 onDropSuggestion={handleDropSuggestion}
                 events={scheduledEvents}
               />
