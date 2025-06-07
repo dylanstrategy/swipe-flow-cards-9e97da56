@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -202,6 +201,7 @@ const ScheduleTab = () => {
       return;
     }
 
+    // Create event with proper structure to match existing events
     const newEvent = {
       id: Date.now() + Math.random(),
       date: new Date(selectedDate),
@@ -213,11 +213,10 @@ const ScheduleTab = () => {
       isDroppedSuggestion: true,
       type: suggestion.type.toLowerCase(),
       rescheduledCount: 0,
-      // Add missing properties that might be expected
-      unit: undefined,
-      building: undefined,
-      dueDate: undefined,
-      image: undefined
+      unit: suggestion.unit || undefined,
+      building: suggestion.building || undefined,
+      dueDate: suggestion.dueDate || undefined,
+      image: suggestion.image || undefined
     };
 
     console.log('ScheduleTab: Adding new event from timeline drop:', newEvent);
@@ -228,7 +227,12 @@ const ScheduleTab = () => {
       return updated;
     });
     
-    setScheduledSuggestionIds(prev => [...prev, suggestion.id]);
+    // Mark suggestion as scheduled to remove it from the suggestions list
+    setScheduledSuggestionIds(prev => {
+      const updated = [...prev, suggestion.id];
+      console.log('ScheduleTab: Updated scheduled suggestion IDs:', updated);
+      return updated;
+    });
 
     toast({
       title: "Event Scheduled!",
@@ -237,6 +241,8 @@ const ScheduleTab = () => {
   };
 
   const handleDropSuggestion = (suggestion: any, date: Date) => {
+    console.log('ScheduleTab: handleDropSuggestion called with:', suggestion, date);
+    
     const assignedTime = findAvailableTimeSlot(date);
     
     const isDuplicate = scheduledEvents.some(event => 
@@ -254,6 +260,7 @@ const ScheduleTab = () => {
       return;
     }
     
+    // Create event with proper structure to match existing events
     const newEvent = {
       id: Date.now() + Math.random(),
       date: new Date(date),
@@ -264,18 +271,27 @@ const ScheduleTab = () => {
       priority: suggestion.priority,
       isDroppedSuggestion: true,
       type: suggestion.type.toLowerCase(),
-      rescheduledCount: 0
+      rescheduledCount: 0,
+      unit: suggestion.unit || undefined,
+      building: suggestion.building || undefined,
+      dueDate: suggestion.dueDate || undefined,
+      image: suggestion.image || undefined
     };
 
-    console.log('Adding calendar drop event:', newEvent);
+    console.log('ScheduleTab: Adding calendar drop event:', newEvent);
 
     setScheduledEvents(prev => {
       const updated = [...prev, newEvent];
-      console.log('Updated scheduled events from calendar:', updated);
+      console.log('ScheduleTab: Updated scheduled events from calendar:', updated);
       return updated;
     });
     
-    setScheduledSuggestionIds(prev => [...prev, suggestion.id]);
+    // Mark suggestion as scheduled to remove it from the suggestions list
+    setScheduledSuggestionIds(prev => {
+      const updated = [...prev, suggestion.id];
+      console.log('ScheduleTab: Updated scheduled suggestion IDs from calendar:', updated);
+      return updated;
+    });
 
     toast({
       title: "Event Scheduled!",
