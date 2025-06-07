@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench, ChevronDown, BarChart3, PieChart, CalendarDays, Activity } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
@@ -11,6 +10,7 @@ import PricingModule from '../PricingModule';
 import SwipeCard from '@/components/SwipeCard';
 import RescheduleFlow from '@/components/events/RescheduleFlow';
 import EventDetailModal from '@/components/events/EventDetailModal';
+import UniversalEventDetailModal from '@/components/events/UniversalEventDetailModal';
 import WorkOrderTracker from '@/components/maintenance/WorkOrderTracker';
 import { useToast } from '@/hooks/use-toast';
 import { EnhancedEvent } from '@/types/events';
@@ -40,6 +40,8 @@ const OperatorTodayTab = () => {
   const [showEventDetail, setShowEventDetail] = useState(false);
   const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
   const [selectedEventForReschedule, setSelectedEventForReschedule] = useState<EnhancedEvent | null>(null);
+  const [showUniversalEventDetail, setShowUniversalEventDetail] = useState(false);
+  const [selectedUniversalEvent, setSelectedUniversalEvent] = useState<any>(null);
 
   // Calculate real data from resident context
   const currentResidents = getCurrentResidents();
@@ -199,9 +201,9 @@ const OperatorTodayTab = () => {
   };
 
   const handleHoldEvent = (event: any) => {
-    const enhancedEvent = enhanceEventForReschedule(event);
-    setSelectedEventForReschedule(enhancedEvent);
-    setShowEventDetail(true);
+    console.log('Event held for universal modal:', event);
+    setSelectedUniversalEvent(event);
+    setShowUniversalEventDetail(true);
   };
 
   const handleEventDetailReschedule = (rescheduleData: any) => {
@@ -300,6 +302,19 @@ const OperatorTodayTab = () => {
         }}
         onReschedule={handleEventDetailReschedule}
         onCancel={handleEventDetailCancel}
+        userRole="operator"
+      />
+    );
+  }
+
+  if (showUniversalEventDetail && selectedUniversalEvent) {
+    return (
+      <UniversalEventDetailModal
+        event={selectedUniversalEvent}
+        onClose={() => {
+          setShowUniversalEventDetail(false);
+          setSelectedUniversalEvent(null);
+        }}
         userRole="operator"
       />
     );
@@ -603,11 +618,11 @@ const OperatorTodayTab = () => {
               <div className="text-sm text-gray-600">{item.title}</div>
               <div className={`text-xs mt-1 ${
                 item.status === 'current' ? 'text-blue-600' :
-                item.status === 'available' ? 'text-gray-600' :
-                item.status === 'ready' ? 'text-green-600' :
-                item.status === 'needed' ? 'text-red-600' :
-                item.status === 'scheduled' ? 'text-blue-600' :
-                'text-yellow-600'
+                item.status === 'available' ? 'Need Prep' :
+                item.status === 'ready' ? 'Move-in Ready' :
+                item.status === 'needed' ? 'Target Goal' :
+                item.status === 'scheduled' ? 'This Period' :
+                'Needs Contact'
               }`}>
                 {item.status === 'current' ? 'Current Rate' :
                  item.status === 'available' ? 'Need Prep' :
