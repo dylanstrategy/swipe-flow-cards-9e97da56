@@ -19,6 +19,10 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeLeft, canSwipeUp = false }:
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (isProcessing.current) return;
     
+    console.log('SWIPE GESTURE START - preventing default');
+    e.preventDefault();
+    e.stopPropagation();
+    
     const touch = e.touches[0];
     startPos.current = { x: touch.clientX, y: touch.clientY };
     startTime.current = Date.now();
@@ -32,30 +36,33 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeLeft, canSwipeUp = false }:
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isDragging || isProcessing.current) return;
     
+    console.log('SWIPE GESTURE MOVE - preventing default');
+    e.preventDefault();
+    e.stopPropagation();
+    
     const touch = e.touches[0];
     const deltaX = touch.clientX - startPos.current.x;
     const deltaY = touch.clientY - startPos.current.y;
     
-    // Prevent default scrolling for significant movements
-    if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
-      e.preventDefault();
-    }
-    
     setDragOffset({ x: deltaX * 0.3, y: deltaY * 0.3 });
     
     // Show action indicators with lower thresholds
-    if (Math.abs(deltaY) > Math.abs(deltaX) && deltaY < -20 && canSwipeUp && onSwipeUp) {
+    if (Math.abs(deltaY) > Math.abs(deltaX) && deltaY < -15 && canSwipeUp && onSwipeUp) {
       setShowAction('up');
       console.log('SHOWING UP ACTION:', { deltaY, canSwipeUp });
-    } else if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX < -20 && onSwipeLeft) {
+    } else if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX < -15 && onSwipeLeft) {
       setShowAction('left');
     } else {
       setShowAction(null);
     }
   }, [isDragging, canSwipeUp, onSwipeUp, onSwipeLeft]);
 
-  const handleTouchEnd = useCallback(() => {
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     if (!isDragging || isProcessing.current) return;
+    
+    console.log('SWIPE GESTURE END - preventing default');
+    e.preventDefault();
+    e.stopPropagation();
     
     const deltaX = dragOffset.x / 0.3;
     const deltaY = dragOffset.y / 0.3;
@@ -68,15 +75,15 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeLeft, canSwipeUp = false }:
       canSwipeUp, 
       hasUpHandler: !!onSwipeUp,
       hasLeftHandler: !!onSwipeLeft,
-      threshold: 'deltaY < -30'
+      threshold: 'deltaY < -25'
     });
     
-    // Much more lenient thresholds for swipe detection
-    const shouldSwipeUp = deltaY < -30 && Math.abs(deltaY) > Math.abs(deltaX) * 0.5 && canSwipeUp && onSwipeUp;
-    const shouldSwipeLeft = deltaX < -30 && Math.abs(deltaX) > Math.abs(deltaY) * 0.5 && onSwipeLeft;
+    // Even more lenient thresholds for swipe detection
+    const shouldSwipeUp = deltaY < -25 && Math.abs(deltaY) > Math.abs(deltaX) * 0.3 && canSwipeUp && onSwipeUp;
+    const shouldSwipeLeft = deltaX < -25 && Math.abs(deltaX) > Math.abs(deltaY) * 0.3 && onSwipeLeft;
     
     if (shouldSwipeUp) {
-      console.log('EXECUTING SWIPE UP!', { deltaY, condition: 'deltaY < -30 && vertical dominance' });
+      console.log('EXECUTING SWIPE UP!', { deltaY, condition: 'deltaY < -25 && vertical dominance' });
       isProcessing.current = true;
       setTimeout(() => {
         onSwipeUp();
@@ -93,8 +100,8 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeLeft, canSwipeUp = false }:
       console.log('NO SWIPE DETECTED:', { 
         deltaY, 
         deltaX, 
-        upCondition: `${deltaY} < -30 = ${deltaY < -30}`,
-        verticalDominance: `${Math.abs(deltaY)} > ${Math.abs(deltaX) * 0.5} = ${Math.abs(deltaY) > Math.abs(deltaX) * 0.5}`,
+        upCondition: `${deltaY} < -25 = ${deltaY < -25}`,
+        verticalDominance: `${Math.abs(deltaY)} > ${Math.abs(deltaX) * 0.3} = ${Math.abs(deltaY) > Math.abs(deltaX) * 0.3}`,
         canSwipeUp,
         hasHandler: !!onSwipeUp
       });
@@ -109,7 +116,7 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeLeft, canSwipeUp = false }:
   const getActionOpacity = useCallback(() => {
     if (!showAction) return 0;
     const distance = showAction === 'up' ? Math.abs(dragOffset.y) : Math.abs(dragOffset.x);
-    return Math.min(0.8, Math.max(0.3, distance / 40));
+    return Math.min(0.8, Math.max(0.3, distance / 30));
   }, [showAction, dragOffset]);
 
   const getRotation = useCallback(() => {

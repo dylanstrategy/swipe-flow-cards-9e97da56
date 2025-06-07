@@ -40,18 +40,16 @@ const SwipeUpPrompt = ({
     <div 
       className={`fixed inset-x-0 bottom-0 bg-white border-t border-gray-200 shadow-2xl ${className}`}
       style={{ 
-        zIndex: 999999,
+        zIndex: 10000, // Reduced from 999999 to prevent blocking touch events
         paddingBottom: 'max(20px, env(safe-area-inset-bottom, 0px))',
-        transform: 'translateZ(0)',
-        willChange: 'transform',
-        isolation: 'isolate'
+        pointerEvents: 'auto' // Ensure this element captures touch events for buttons only
       }}
     >
       <div className="px-6 py-5 text-center relative">
         <button
           onClick={handleClose}
           className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100"
-          style={{ zIndex: 1000000 }}
+          style={{ zIndex: 10001 }}
         >
           <X size={18} />
         </button>
