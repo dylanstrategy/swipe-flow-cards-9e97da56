@@ -120,14 +120,54 @@ const SuperAdmin = () => {
 
   const handleUserAdded = (user: any) => {
     setUsers([...users, user]);
+    toast({
+      title: "Success",
+      description: "User added successfully",
+    });
   };
 
   const handleEventCreated = (event: any) => {
     setEvents([...events, event]);
+    toast({
+      title: "Success", 
+      description: "Event created successfully",
+    });
   };
 
   const handleInvoiceCreated = (invoice: any) => {
     setInvoices([...invoices, invoice]);
+    toast({
+      title: "Success",
+      description: "Invoice created successfully", 
+    });
+  };
+
+  const handleAddProperty = () => {
+    toast({
+      title: "Add Property",
+      description: "Property creation functionality coming soon",
+    });
+  };
+
+  const handleAddClient = () => {
+    toast({
+      title: "Add Client", 
+      description: "Client creation functionality coming soon",
+    });
+  };
+
+  const handleAddLead = () => {
+    toast({
+      title: "Add Lead",
+      description: "Lead creation functionality coming soon", 
+    });
+  };
+
+  const handleCreateCampaign = () => {
+    toast({
+      title: "Create Campaign",
+      description: "Marketing campaign functionality coming soon",
+    });
   };
 
   const filteredLeads = leads.filter(lead =>
@@ -201,7 +241,7 @@ const SuperAdmin = () => {
             <DollarSign className="w-4 h-4" />
             <span className="font-medium">Revenue</span>
           </div>
-          <div className="text-2xl font-bold text-gray-900">$0</div>
+          <div className="text-2xl font-bold text-gray-900">$125K</div>
         </div>
       </div>
     </div>
@@ -299,14 +339,14 @@ const SuperAdmin = () => {
       case 'properties':
         return (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-xl font-semibold">Properties Management</h2>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" onClick={() => setShowBulkImport(true)}>
                   <Upload className="w-4 h-4 mr-2" />
                   Bulk Import
                 </Button>
-                <Button>
+                <Button onClick={handleAddProperty}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add Property
                 </Button>
@@ -318,7 +358,7 @@ const SuperAdmin = () => {
                 <Card key={property.id} className="hover:shadow-md transition-shadow cursor-pointer" 
                       onClick={() => handlePropertyClick(property)}>
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                           <Building className="w-6 h-6 text-blue-600" />
@@ -350,9 +390,9 @@ const SuperAdmin = () => {
       case 'crm':
         return (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-xl font-semibold">Leads Management</h2>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 items-center">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
@@ -362,7 +402,7 @@ const SuperAdmin = () => {
                     className="pl-10 w-64"
                   />
                 </div>
-                <Button>
+                <Button onClick={handleAddLead}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add Lead
                 </Button>
@@ -374,14 +414,14 @@ const SuperAdmin = () => {
                 <Card key={lead.id} className="hover:shadow-md transition-shadow cursor-pointer"
                       onClick={() => handleLeadClick(lead)}>
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                           <Users className="w-6 h-6 text-purple-600" />
                         </div>
                         <div>
                           <h3 className="font-semibold">{lead.name}</h3>
-                          <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-sm text-gray-600">
                             <div className="flex items-center gap-1">
                               <Mail className="w-4 h-4" />
                               {lead.email}
@@ -415,7 +455,7 @@ const SuperAdmin = () => {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Client Management</h2>
-              <Button>
+              <Button onClick={handleAddClient}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Client
               </Button>
@@ -425,7 +465,7 @@ const SuperAdmin = () => {
                 <Briefcase className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium mb-2">No clients yet</h3>
                 <p className="text-gray-600 mb-4">Add your first client to get started</p>
-                <Button>Add Client</Button>
+                <Button onClick={handleAddClient}>Add Client</Button>
               </CardContent>
             </Card>
           </div>
@@ -436,7 +476,7 @@ const SuperAdmin = () => {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Marketing Campaigns</h2>
-              <Button>
+              <Button onClick={handleCreateCampaign}>
                 <Plus className="w-4 h-4 mr-2" />
                 Create Campaign
               </Button>
@@ -446,7 +486,7 @@ const SuperAdmin = () => {
                 <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium mb-2">No campaigns yet</h3>
                 <p className="text-gray-600 mb-4">Create your first marketing campaign to reach potential residents</p>
-                <Button>Create Campaign</Button>
+                <Button onClick={handleCreateCampaign}>Create Campaign</Button>
               </CardContent>
             </Card>
           </div>
@@ -572,20 +612,30 @@ const SuperAdmin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="border-b bg-white">
-        <div className="px-4 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <div className="hidden lg:block w-80 bg-white border-r">
+        <SidebarContent />
+      </div>
+
+      {/* Mobile Sidebar */}
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetContent side="left" className="p-0 w-80 lg:hidden">
+          <SidebarContent />
+        </SheetContent>
+      </Sheet>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <div className="border-b bg-white px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="lg:hidden">
                   <Menu className="w-5 h-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 w-80">
-                <SidebarContent />
-              </SheetContent>
             </Sheet>
             
             <div>
@@ -594,11 +644,11 @@ const SuperAdmin = () => {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="p-4">
-        {renderContent()}
+        {/* Content Area */}
+        <div className="flex-1 p-4 overflow-auto">
+          {renderContent()}
+        </div>
       </div>
 
       {/* Modals */}
