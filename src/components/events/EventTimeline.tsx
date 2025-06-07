@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Clock, User, MessageSquare, Calendar, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Clock, User, MessageSquare, Calendar, CheckCircle, AlertTriangle, Bell, X } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface EventTimelineProps {
@@ -21,12 +21,44 @@ const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
         description: `${event.type.replace('-', ' ')} scheduled`,
         icon: Calendar,
         user: 'System',
-        color: 'text-blue-600 bg-blue-100'
+        color: 'text-blue-600 bg-blue-100',
+        attachments: event.type === 'maintenance' && event.image ? [
+          {
+            type: 'image',
+            url: event.image,
+            description: 'Work order photo'
+          }
+        ] : undefined
       }
     ];
 
     // Add type-specific timeline items
     switch (event.type) {
+      case 'maintenance':
+        return [
+          ...baseItems,
+          {
+            id: 2,
+            timestamp: new Date('2025-05-21T09:15:00'),
+            type: 'assignment',
+            title: 'Assigned to Maintenance Team',
+            description: 'Work order assigned to maintenance staff',
+            icon: User,
+            user: 'System',
+            color: 'text-green-600 bg-green-100'
+          },
+          {
+            id: 3,
+            timestamp: new Date('2025-05-22T10:00:00'),
+            type: 'nudge',
+            title: 'Gentle reminder sent',
+            description: 'Nudge sent to maintenance team',
+            icon: Bell,
+            user: 'Resident',
+            color: 'text-yellow-600 bg-yellow-100'
+          }
+        ];
+
       case 'move-in':
         return [
           ...baseItems,
@@ -113,6 +145,45 @@ const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
     return format(date, 'MMM d, yyyy at h:mm a');
   };
 
+  const renderAttachments = (attachments: any[]) => {
+    if (!attachments || attachments.length === 0) return null;
+
+    return (
+      <div className="mt-3 space-y-2">
+        {attachments.map((attachment, index) => (
+          <div key={index} className="border rounded-lg p-2 bg-white">
+            {attachment.type === 'image' && (
+              <div className="flex items-center gap-3">
+                <img 
+                  src={attachment.url} 
+                  alt={attachment.description}
+                  className="w-16 h-16 rounded object-cover"
+                />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Photo Attachment</p>
+                  <p className="text-xs text-gray-500">{attachment.description}</p>
+                </div>
+              </div>
+            )}
+            {attachment.type === 'video' && (
+              <div className="flex items-center gap-3">
+                <video 
+                  src={attachment.url} 
+                  className="w-16 h-16 rounded object-cover"
+                  controls={false}
+                />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Video Attachment</p>
+                  <p className="text-xs text-gray-500">{attachment.description}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="p-6">
       <div className="space-y-6">
@@ -156,6 +227,9 @@ const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
                       <span>•</span>
                       <span>{item.user}</span>
                     </div>
+
+                    {/* Render attachments if available */}
+                    {item.attachments && renderAttachments(item.attachments)}
                   </div>
                 </div>
               );

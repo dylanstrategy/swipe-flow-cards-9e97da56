@@ -10,6 +10,7 @@ import ResidentMessageEventDetails from './event-types/ResidentMessageEventDetai
 import TourEventDetails from './event-types/TourEventDetails';
 import MoveOutEventDetails from './event-types/MoveOutEventDetails';
 import PaymentEventDetails from './event-types/PaymentEventDetails';
+import WorkOrderEventDetails from './event-types/WorkOrderEventDetails';
 import EventMessaging from './EventMessaging';
 import EventTimeline from './EventTimeline';
 
@@ -32,6 +33,7 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
       case 'message': return '💬';
       case 'tour': return '👀';
       case 'payment': return '💳';
+      case 'maintenance': return '🔧';
       default: return '📅';
     }
   };
@@ -44,6 +46,7 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
       case 'message': return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'tour': return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'payment': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'maintenance': return 'bg-orange-100 text-orange-800 border-orange-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
@@ -84,6 +87,8 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
         return <MoveOutEventDetails event={event} userRole={userRole} />;
       case 'payment':
         return <PaymentEventDetails event={event} userRole={userRole} />;
+      case 'maintenance':
+        return <WorkOrderEventDetails event={event} userRole={userRole} />;
       default:
         return <div className="p-4 text-gray-500">Event details not available</div>;
     }
@@ -109,7 +114,7 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
           
           <div className="flex items-center gap-2">
             <Badge className={getEventTypeColor(event.type)}>
-              {event.type.replace('-', ' ')}
+              {event.type === 'maintenance' ? 'Work Order' : event.type.replace('-', ' ')}
             </Badge>
             <Badge className={getPriorityColor(event.priority, event.status)}>
               {event.status === 'urgent' ? 'URGENT' : event.priority?.toUpperCase()}
