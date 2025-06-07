@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { format, addHours, startOfDay, isSameDay } from 'date-fns';
+import { format, addHours, startOfDay, isSameDay, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -96,6 +96,31 @@ const HourlyCalendarView = ({
     const todayEvents = events.filter(event => isSameDateSafe(event.date, selectedDate));
     
     return todayEvents.length >= maxAppointments;
+  };
+
+  // Check if an event is overdue
+  const isEventOverdue = (event: any): boolean => {
+    // Only check if event is not completed
+    if (event.status === 'completed') return false;
+    
+    const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+    const now = new Date();
+    
+    // If event date is in the past, it's overdue
+    if (isPast(eventDate) && !isToday(eventDate)) {
+      return true;
+    }
+    
+    // If event is today but the time has passed, it's overdue
+    if (isToday(eventDate) && event.time) {
+      const [hours, minutes] = event.time.split(':').map(Number);
+      const eventDateTime = new Date(eventDate);
+      eventDateTime.setHours(hours, minutes || 0);
+      
+      return isPast(eventDateTime);
+    }
+    
+    return false;
   };
 
   // Generate hourly time slots based on work hours or default 6 AM to 10 PM
@@ -384,43 +409,66 @@ const HourlyCalendarView = ({
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        {eventsInSlot.map((event, index) => (
-                          <div
-                            key={`${event.id}-${event.time}-${index}`}
-                            className="bg-blue-100 border border-blue-200 rounded-lg p-3 cursor-pointer hover:bg-blue-200 transition-all duration-150 touch-manipulation active:scale-[0.98]"
-                            onClick={() => handleEventClick(event)}
-                            onContextMenu={(e) => {
-                              e.preventDefault();
-                              handleEventHold(event);
-                            }}
-                            onTouchStart={(e) => {
-                              const touchTimeout = setTimeout(() => {
+                        {eventsInSlot.map((event, index) => {
+                          const isOverdue = isEventOverdue(event);
+                          
+                          return (
+                            <div
+                              key={`${event.id}-${event.time}-${index}`}
+                              className={cn(
+                                "border rounded-lg p-3 cursor-pointer transition-all duration-150 touch-manipulation active:scale-[0.98]",
+                                isOverdue 
+                                  ? "bg-red-100 border-red-300 text-red-900 wiggle-urgent pulse-urgent hover:bg-red-200" 
+                                  : "bg-blue-100 border-blue-200 hover:bg-blue-200"
+                              )}
+                              onClick={() => handleEventClick(event)}
+                              onContextMenu={(e) => {
+                                e.preventDefault();
                                 handleEventHold(event);
-                              }, 300);
-                              
-                              const clearTouch = () => {
-                                clearTimeout(touchTimeout);
-                                document.removeEventListener('touchend', clearTouch);
-                                document.removeEventListener('touchmove', clearTouch);
-                              };
-                              
-                              document.addEventListener('touchend', clearTouch);
-                              document.addEventListener('touchmove', clearTouch);
-                            }}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1 min-w-0">
-                                <h4 className="text-sm font-medium text-gray-900 truncate">{event.title}</h4>
-                                {event.description && (
-                                  <p className="text-xs text-gray-600 truncate mt-1">{event.description}</p>
-                                )}
-                              </div>
-                              <div className="text-xs text-blue-600 ml-2 flex-shrink-0">
-                                {event.time}
+                              }}
+                              onTouchStart={(e) => {
+                                const touchTimeout = setTimeout(() => {
+                                  handleEventHold(event);
+                                }, 300);
+                                
+                                const clearTouch = () => {
+                                  clearTimeout(touchTimeout);
+                                  document.removeEventListener('touchend', clearTouch);
+                                  document.removeEventListener('touchmove', clearTouch);
+                                };
+                                
+                                document.addEventListener('touchend', clearTouch);
+                                document.addEventListener('touchmove', clearTouch);
+                              }}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <h4 className={cn(
+                                    "text-sm font-medium truncate",
+                                    isOverdue ? "text-red-900" : "text-gray-900"
+                                  )}>
+                                    {event.title}
+                                    {isOverdue && <span className="ml-2 text-xs font-bold">OVERDUE</span>}
+                                  </h4>
+                                  {event.description && (
+                                    <p className={cn(
+                                      "text-xs truncate mt-1",
+                                      isOverdue ? "text-red-700" : "text-gray-600"
+                                    )}>
+                                      {event.description}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className={cn(
+                                  "text-xs ml-2 flex-shrink-0",
+                                  isOverdue ? "text-red-700 font-bold" : "text-blue-600"
+                                )}>
+                                  {event.time}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                     
