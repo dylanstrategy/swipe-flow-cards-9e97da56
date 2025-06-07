@@ -19,6 +19,7 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeLeft, canSwipeUp = false }:
     startPos.current = { x: touch.clientX, y: touch.clientY };
     startTime.current = Date.now();
     setIsDragging(true);
+    console.log('Touch start at:', startPos.current);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -63,14 +64,14 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeLeft, canSwipeUp = false }:
     const shouldCompleteLeft = (Math.abs(deltaX) > distanceThreshold || velocityX > velocityThreshold) && 
                               deltaX < -30;
     
-    console.log('Swipe gesture detected:', { deltaY, shouldCompleteUp, canSwipeUp, onSwipeUp: !!onSwipeUp });
+    console.log('Touch end - deltaY:', deltaY, 'shouldCompleteUp:', shouldCompleteUp, 'canSwipeUp:', canSwipeUp, 'onSwipeUp exists:', !!onSwipeUp);
     
     if (shouldCompleteUp && onSwipeUp) {
-      console.log('Executing swipe up action');
-      onSwipeUp();
+      console.log('EXECUTING SWIPE UP ACTION');
+      setTimeout(() => onSwipeUp(), 100); // Small delay to ensure UI feedback
     } else if (shouldCompleteLeft && onSwipeLeft) {
-      console.log('Executing swipe left action');
-      onSwipeLeft();
+      console.log('EXECUTING SWIPE LEFT ACTION');
+      setTimeout(() => onSwipeLeft(), 100);
     }
     
     setIsDragging(false);

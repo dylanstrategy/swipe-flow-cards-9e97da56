@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from 'react';
+import React from 'react';
 import { ArrowUp, ArrowLeft, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -26,9 +26,6 @@ const SwipeUpPrompt = ({
   className = "",
   showBack = false
 }: SwipeUpPromptProps) => {
-  const [isDragging, setIsDragging] = useState(false);
-  const startY = useRef(0);
-  const startTime = useRef(0);
 
   const handleClose = () => {
     if (onClear) {
@@ -38,73 +35,6 @@ const SwipeUpPrompt = ({
       onClose();
     }
   };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    startY.current = touch.clientY;
-    startTime.current = Date.now();
-    setIsDragging(true);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
-    
-    const touch = e.touches[0];
-    const deltaY = startY.current - touch.clientY; // Positive when swiping up
-    
-    // Prevent default scrolling when swiping up significantly
-    if (deltaY > 30) {
-      e.preventDefault();
-    }
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!isDragging) return;
-    
-    const touch = e.changedTouches[0];
-    const deltaY = startY.current - touch.clientY; // Positive when swiping up
-    const deltaTime = Date.now() - startTime.current;
-    const velocity = Math.abs(deltaY) / deltaTime;
-    
-    // Trigger continue if swiped up significantly or with good velocity
-    if ((deltaY > 50 || velocity > 0.3) && deltaY > 0) {
-      onContinue();
-    }
-    
-    setIsDragging(false);
-  };
-
-  // Add global touch event listeners for swipe detection anywhere on screen
-  React.useEffect(() => {
-    let startY = 0;
-    let startTime = 0;
-    
-    const handleGlobalTouchStart = (e: TouchEvent) => {
-      const touch = e.touches[0];
-      startY = touch.clientY;
-      startTime = Date.now();
-    };
-    
-    const handleGlobalTouchEnd = (e: TouchEvent) => {
-      const touch = e.changedTouches[0];
-      const deltaY = startY - touch.clientY; // Positive when swiping up
-      const deltaTime = Date.now() - startTime;
-      const velocity = Math.abs(deltaY) / deltaTime;
-      
-      // Only trigger if it's a clear upward swipe
-      if ((deltaY > 80 || velocity > 0.5) && deltaY > 0) {
-        onContinue();
-      }
-    };
-    
-    document.addEventListener('touchstart', handleGlobalTouchStart, { passive: true });
-    document.addEventListener('touchend', handleGlobalTouchEnd, { passive: true });
-    
-    return () => {
-      document.removeEventListener('touchstart', handleGlobalTouchStart);
-      document.removeEventListener('touchend', handleGlobalTouchEnd);
-    };
-  }, [onContinue]);
 
   return (
     <div 
@@ -116,9 +46,6 @@ const SwipeUpPrompt = ({
         willChange: 'transform',
         isolation: 'isolate'
       }}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
     >
       <div className="px-6 py-5 text-center relative">
         <button

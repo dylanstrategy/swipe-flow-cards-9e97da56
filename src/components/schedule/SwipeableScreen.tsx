@@ -57,8 +57,6 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
     handleTouchEnd
   }), [handleTouchStart, handleTouchMove, handleTouchEnd]);
 
-  console.log('SwipeableScreen render:', { canSwipeUp, onSwipeUp: !!onSwipeUp, hideSwipeHandling });
-
   if (hideSwipeHandling) {
     return (
       <div className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen" data-swipeable-screen>
@@ -80,26 +78,13 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
     );
   }
 
-  const handleTouch = {
-    onTouchStart: (e: React.TouchEvent) => {
-      e.preventDefault();
-      handleTouchStart(e);
-    },
-    onTouchMove: (e: React.TouchEvent) => {
-      e.preventDefault();
-      handleTouchMove(e);
-    },
-    onTouchEnd: (e: React.TouchEvent) => {
-      e.preventDefault();
-      handleTouchEnd();
-    }
-  };
-
   return (
     <div 
       className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen overflow-hidden select-none"
       data-swipeable-screen
-      {...handleTouch}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       style={{
         transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${getRotation()}deg)`,
         transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.2, 0, 0, 1)',

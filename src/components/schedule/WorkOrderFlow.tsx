@@ -63,12 +63,15 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   };
 
   const nextStep = () => {
-    console.log('WorkOrder nextStep called, currentStep:', currentStep, 'canProceed:', canProceedFromCurrentStep());
-    if (currentStep < 4 && canProceedFromCurrentStep()) {
+    const canProceed = canProceedFromCurrentStep();
+    console.log('WorkOrder nextStep called:', { currentStep, canProceed, photoCaptured, workOrderDetails, selectedDate, selectedTime });
+    
+    if (currentStep < 4 && canProceed) {
+      console.log('Proceeding to next step');
       onNextStep();
       setShowPrompt(false);
     } else {
-      console.log('Cannot proceed - step:', currentStep, 'canProceed:', canProceedFromCurrentStep());
+      console.log('Cannot proceed - missing requirements');
     }
   };
 
