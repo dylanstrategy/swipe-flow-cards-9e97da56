@@ -91,7 +91,7 @@ const MaintenanceScheduleTab = () => {
   const [showWorkOrderFlow, setShowWorkOrderFlow] = useState(false);
   const [workOrders, setWorkOrders] = useState(initialWorkOrders);
   const [scheduledWorkOrders, setScheduledWorkOrders] = useState<any[]>([]);
-  const [overviewActiveTab, setOverviewActiveTab] = useState('overview');
+  const [overviewActiveTab, setOverviewActiveTab] = useState('queue');
 
   const handleScheduleWorkOrder = (workOrder: any, scheduledTime: string) => {
     console.log('Scheduling work order:', workOrder, 'for time:', scheduledTime);
@@ -228,120 +228,14 @@ const MaintenanceScheduleTab = () => {
             <div className="h-full flex flex-col">
               <div className="flex-shrink-0 px-4 py-6">
                 <Tabs value={overviewActiveTab} onValueChange={setOverviewActiveTab}>
-                  <TabsList className="grid w-full grid-cols-3 mb-6">
+                  <TabsList className="grid w-full grid-cols-2 mb-6">
                     <TabsTrigger value="queue">Queue</TabsTrigger>
-                    <TabsTrigger value="overview">Overview</TabsTrigger>
                     <TabsTrigger value="unitturns">Unit Turns</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
 
               <div className="flex-1 overflow-y-auto px-4">
-                {overviewActiveTab === 'overview' && (
-                  <div className="space-y-6">
-                    {/* Work Orders Statistics Header */}
-                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-6 text-white">
-                      <div className="flex items-center gap-3 mb-4">
-                        <Wrench className="w-8 h-8" />
-                        <div>
-                          <h2 className="text-xl font-bold">Work Orders</h2>
-                          <p className="text-orange-100">{totalOrders} Total Orders</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Statistics Grid */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <Card>
-                        <CardContent className="p-4 text-center">
-                          <div className="text-2xl font-bold text-blue-600">{scheduledCount}</div>
-                          <div className="text-sm text-gray-600">Scheduled</div>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardContent className="p-4 text-center">
-                          <div className="text-2xl font-bold text-gray-600">{unscheduledCount}</div>
-                          <div className="text-sm text-gray-600">Unscheduled</div>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardContent className="p-4 text-center">
-                          <div className="text-2xl font-bold text-red-600">{overdueCount}</div>
-                          <div className="text-sm text-gray-600">Overdue</div>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardContent className="p-4 text-center">
-                          <div className="text-2xl font-bold text-green-600">8</div>
-                          <div className="text-sm text-gray-600">Completed</div>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    {/* Pending Work Orders Section */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Pending Work Orders</h3>
-                      <div className="space-y-3">
-                        {workOrders.map((workOrder) => (
-                          <Card 
-                            key={workOrder.id} 
-                            className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-orange-500"
-                            onClick={() => handleWorkOrderDetailsView(workOrder)}
-                          >
-                            <CardContent className="p-4">
-                              <div className="flex items-start gap-4">
-                                {/* Work Order Photo */}
-                                <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                                  <img 
-                                    src={workOrder.photo} 
-                                    alt="Issue"
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                                
-                                {/* Work Order Details */}
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-sm font-bold text-gray-900">#{workOrder.id}</span>
-                                    <Badge className={`${getPriorityColor(workOrder.priority)} text-xs px-2 py-0.5`}>
-                                      {workOrder.priority.toUpperCase()}
-                                    </Badge>
-                                    <Badge className={`${getStatusColor(workOrder.status)} text-xs px-2 py-0.5`}>
-                                      {workOrder.status.toUpperCase()}
-                                    </Badge>
-                                  </div>
-                                  
-                                  <h4 className="font-medium text-gray-900 text-sm mb-1">
-                                    Unit {workOrder.unit} - {workOrder.title}
-                                  </h4>
-                                  <p className="text-gray-600 text-xs mb-2 line-clamp-1">
-                                    {workOrder.description}
-                                  </p>
-                                  
-                                  <div className="flex items-center justify-between text-xs">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-gray-600">{workOrder.resident}</span>
-                                      <span className="text-gray-400">•</span>
-                                      <span className="text-gray-600">{workOrder.assignedTo}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <Clock className="w-3 h-3 text-green-500" />
-                                      <span className="text-gray-600">{workOrder.estimatedTime}</span>
-                                      <span className={`font-bold ${workOrder.daysOpen > 7 ? 'text-red-600' : 'text-orange-600'}`}>
-                                        {workOrder.daysOpen}d
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {overviewActiveTab === 'queue' && (
                   <WorkOrderQueue 
                     workOrders={workOrders}
