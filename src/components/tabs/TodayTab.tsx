@@ -9,7 +9,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import ResidentTimeline from '../ResidentTimeline';
 import TodayHeader from './today/TodayHeader';
 import QuickActionsGrid from './today/QuickActionsGrid';
-import MiniCalendar from './today/MiniCalendar';
+import TodayMiniCalendar from './today/TodayMiniCalendar';
 import EventsList from './today/EventsList';
 import PointOfSale from '../PointOfSale';
 
@@ -28,7 +28,7 @@ const TodayTab = () => {
     recipientType: 'management' as 'management' | 'maintenance' | 'leasing',
     mode: 'compose' as 'compose' | 'reply'
   });
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate] = useState<Date>(new Date()); // Always today for this tab
   const [weather, setWeather] = useState({ temp: 72, condition: 'Sunny' });
 
   // Use profile pets instead of hardcoded ones
@@ -373,9 +373,30 @@ const TodayTab = () => {
       <WorkOrderFlow
         selectedScheduleType="Work Order"
         currentStep={currentStep}
-        onNextStep={nextStep}
-        onPrevStep={prevStep}
-        onClose={handleCloseWorkOrder}
+        onNextStep={() => {
+          if (currentStep < 4) {
+            setCurrentStep(currentStep + 1);
+          } else {
+            setShowWorkOrderFlow(false);
+            setCurrentStep(1);
+            toast({
+              title: "Work Order Submitted",
+              description: "Your work order has been successfully submitted. You'll receive a confirmation email shortly.",
+            });
+          }
+        }}
+        onPrevStep={() => {
+          if (currentStep > 1) {
+            setCurrentStep(currentStep - 1);
+          } else {
+            setShowWorkOrderFlow(false);
+            setCurrentStep(1);
+          }
+        }}
+        onClose={() => {
+          setShowWorkOrderFlow(false);
+          setCurrentStep(1);
+        }}
       />
     );
   }
@@ -411,7 +432,8 @@ const TodayTab = () => {
     return <ResidentTimeline onClose={() => setShowTimeline(false)} />;
   }
 
-  const selectedDateEvents = getEventsForDate(selectedDate);
+  // Only show today's events
+  const todayEvents = getEventsForDate(new Date());
 
   return (
     <div className="px-4 py-6 pb-24">
@@ -425,25 +447,28 @@ const TodayTab = () => {
         onAction={handleAction}
         onServiceClick={() => setShowServiceModule(true)}
         onMaintenanceClick={() => setShowWorkOrdersReview(true)}
-        getRentUrgencyClass={getRentUrgencyClass}
+        getRentUrgencyClass={() => {
+          const daysUntilRentDue = 3; // Rent due in 3 days
+          if (daysUntilRentDue <= 3) {
+            return 'wiggle-urgent';
+          }
+          return '';
+        }}
       />
 
       {/* Personalized offers based on lifestyle tags */}
       {renderPersonalizedOffers()}
 
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
-          {isSameDay(selectedDate, new Date()) ? 'Resident Calendar' : 'Calendar'}
-        </h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Today</h2>
         
-        <MiniCalendar 
+        <TodayMiniCalendar 
           selectedDate={selectedDate}
-          onDateSelect={setSelectedDate}
           getEventsForDate={getEventsForDate}
         />
 
         <EventsList 
-          events={selectedDateEvents}
+          events={todayEvents}
           onAction={handleAction}
           onQuickReply={handleQuickReply}
           getSwipeActionsForEvent={getSwipeActionsForEvent}

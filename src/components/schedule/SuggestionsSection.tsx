@@ -44,7 +44,7 @@ const SuggestionsSection = ({ onSchedule, onAction }: SuggestionsSectionProps) =
             }}
             onTap={() => onAction("Viewed", suggestion.title)}
           >
-            <div className="flex items-center p-4 bg-white rounded-lg border-l-4 border-blue-500">
+            <div className="flex items-center p-4 bg-white rounded-lg border border-gray-100 shadow-sm">
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1">
                   <h3 className="font-semibold text-gray-900">{suggestion.title}</h3>
