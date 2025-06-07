@@ -29,16 +29,36 @@ interface WorkOrder {
 interface WorkOrderQueueProps {
   workOrders?: WorkOrder[];
   onSelectWorkOrder?: (workOrder: WorkOrder) => void;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }
 
-const WorkOrderCard: React.FC<{ workOrder: WorkOrder; onClick: () => void }> = ({ workOrder, onClick }) => {
-  const [{ isDragging }, drag] = useDrag(() => ({
+const WorkOrderCard: React.FC<{ 
+  workOrder: WorkOrder; 
+  onClick: () => void;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
+}> = ({ workOrder, onClick, onDragStart, onDragEnd }) => {
+  const [{ isDragging }, drag, preview] = useDrag(() => ({
     type: 'workOrder',
-    item: { workOrder },
+    item: { workOrder, type: 'workOrder' },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
+    begin: () => {
+      console.log('Starting to drag work order:', workOrder.id);
+      onDragStart?.();
+    },
+    end: () => {
+      console.log('Finished dragging work order:', workOrder.id);
+      onDragEnd?.();
+    },
   }));
+
+  // Set empty drag preview to hide the default ghost image
+  React.useEffect(() => {
+    preview(new Image(), { captureDraggingState: true });
+  }, [preview]);
 
   // Add timeline data to work order when clicked
   const handleClick = () => {
@@ -175,7 +195,12 @@ const WorkOrderCard: React.FC<{ workOrder: WorkOrder; onClick: () => void }> = (
   );
 };
 
-const WorkOrderQueue: React.FC<WorkOrderQueueProps> = ({ workOrders = [], onSelectWorkOrder }) => {
+const WorkOrderQueue: React.FC<WorkOrderQueueProps> = ({ 
+  workOrders = [], 
+  onSelectWorkOrder,
+  onDragStart,
+  onDragEnd 
+}) => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
   const filteredWorkOrders = useMemo(() => {
@@ -256,6 +281,8 @@ const WorkOrderQueue: React.FC<WorkOrderQueueProps> = ({ workOrders = [], onSele
                 key={workOrder.id}
                 workOrder={workOrder}
                 onClick={() => onSelectWorkOrder?.(workOrder)}
+                onDragStart={onDragStart}
+                onDragEnd={onDragEnd}
               />
             ))
           )}
@@ -266,3 +293,4 @@ const WorkOrderQueue: React.FC<WorkOrderQueueProps> = ({ workOrders = [], onSele
 };
 
 export default WorkOrderQueue;
+
