@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +13,7 @@ import RenewalForm from '../../forms/RenewalForm';
 import NoticeToVacateForm from '../../forms/NoticeToVacateForm';
 import { useResident } from '@/contexts/ResidentContext';
 import { useToast } from '@/hooks/use-toast';
+import ResidentTimelineModal from '../ResidentTimelineModal';
 
 const OperatorResidentsTab = () => {
   const { allResidents, updateResidentStatus } = useResident();
@@ -31,6 +31,8 @@ const OperatorResidentsTab = () => {
   const [moveOutResidentId, setMoveOutResidentId] = useState<string>('');
   const [showRenewalForm, setShowRenewalForm] = useState(false);
   const [showNoticeForm, setShowNoticeForm] = useState(false);
+  const [showTimelineModal, setShowTimelineModal] = useState(false);
+  const [timelineResidentId, setTimelineResidentId] = useState<string>('');
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -189,6 +191,11 @@ const OperatorResidentsTab = () => {
     });
   };
 
+  const handleResidentTimeline = (residentId: string) => {
+    setTimelineResidentId(residentId);
+    setShowTimelineModal(true);
+  };
+
   if (showMoveInTracker) {
     return (
       <MoveInTracker 
@@ -214,6 +221,14 @@ const OperatorResidentsTab = () => {
 
     return (
       <div className="px-4 py-6 pb-24">
+        {/* Timeline Modal */}
+        <ResidentTimelineModal
+          open={showTimelineModal}
+          onClose={() => setShowTimelineModal(false)}
+          residentName={selectedResident.fullName}
+          residentStatus={selectedResident.status}
+        />
+
         <div className="mb-6">
           <div className="flex items-center space-x-3 mb-4">
             <Button 
@@ -509,19 +524,19 @@ const OperatorResidentsTab = () => {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Truck className="w-5 h-5" />
-                  <span>Move-In Progress</span>
+                  <span>Resident Timeline</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 mb-4">
-                  This resident has a move-in in progress. Track their move-in tasks and completion status.
+                  Track this resident's complete journey from application to move-out.
                 </p>
                 <Button 
-                  onClick={() => handleMoveInTracker(selectedResident.id.toString())}
+                  onClick={() => handleResidentTimeline(selectedResident.id.toString())}
                   className="w-full"
                 >
                   <Truck className="w-4 h-4 mr-2" />
-                  View Move-In Tracker
+                  View Resident Timeline
                 </Button>
               </CardContent>
             </Card>
@@ -719,7 +734,7 @@ const OperatorResidentsTab = () => {
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <User className="w-5 h-5 text-blue-600" />
+                          <User className="w-4 h-4 text-blue-600" />
                         </div>
                         <div>
                           <h3 className="font-semibold text-gray-900">{resident.fullName}</h3>
