@@ -56,6 +56,9 @@ const MessagesTab = () => {
     }
   ];
 
+  // Sort messages to show latest first (by id in descending order)
+  const sortedMessages = [...messages].sort((a, b) => b.id - a.id);
+
   if (showMessageModule) {
     return (
       <MessageModule
@@ -75,7 +78,7 @@ const MessagesTab = () => {
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Messages</h1>
       <p className="text-gray-600 mb-6">Your conversations and updates</p>
       
-      {messages.map((message) => (
+      {sortedMessages.map((message) => (
         <SwipeCard
           key={message.id}
           onSwipeRight={{
