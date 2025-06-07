@@ -243,8 +243,8 @@ const WorkOrderQueue: React.FC<WorkOrderQueueProps> = ({ onSelectWorkOrder }) =>
   const overdueCount = workOrders.filter(wo => wo.status === 'overdue').length;
 
   return (
-    <div className="h-full overflow-y-auto pb-32">
-      <div className="px-4 py-6">
+    <div className="h-full flex flex-col">
+      <div className="flex-shrink-0 px-4 py-6">
         {/* Header */}
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-2">
@@ -285,8 +285,10 @@ const WorkOrderQueue: React.FC<WorkOrderQueueProps> = ({ onSelectWorkOrder }) =>
             </Select>
           </div>
         </div>
+      </div>
 
-        {/* Work Orders List */}
+      {/* Scrollable Work Orders List */}
+      <div className="flex-1 overflow-y-auto px-4 pb-40">
         <div className="space-y-4">
           {filteredWorkOrders.length === 0 ? (
             <div className="text-center py-8 text-gray-500">

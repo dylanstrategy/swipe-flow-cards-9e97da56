@@ -72,12 +72,12 @@ const ScheduleDropZone: React.FC<ScheduleDropZoneProps> = ({ onScheduleWorkOrder
   return (
     <div
       ref={drop}
-      className={`fixed bottom-20 left-4 right-4 mx-auto max-w-md h-24 rounded-xl border-2 border-dashed transition-all duration-200 z-[9999] pointer-events-auto ${
+      className={`fixed bottom-20 left-4 right-4 mx-auto max-w-md h-24 rounded-xl border-2 border-dashed transition-all duration-200 z-[1000] pointer-events-auto ${
         isActive 
           ? 'border-blue-500 bg-blue-50 scale-105' 
           : canDrop
           ? 'border-blue-300 bg-blue-25'
-          : 'border-gray-300 bg-white'
+          : 'border-gray-300 bg-white shadow-lg'
       }`}
     >
       <div className="flex items-center justify-center h-full px-4">
