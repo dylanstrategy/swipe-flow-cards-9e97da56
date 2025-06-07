@@ -3,11 +3,14 @@ import React, { useState } from 'react';
 import SwipeCard from '../SwipeCard';
 import MessageModule from '../message/MessageModule';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowUpDown } from 'lucide-react';
 
 const MessagesTab = () => {
   const { toast } = useToast();
   const [showMessageModule, setShowMessageModule] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
+  const [sortBy, setSortBy] = useState('newest');
 
   const handleAction = (action: string, item: string) => {
     toast({
@@ -56,8 +59,27 @@ const MessagesTab = () => {
     }
   ];
 
-  // Sort messages to show latest first (by id in descending order)
-  const sortedMessages = [...messages].sort((a, b) => b.id - a.id);
+  // Sort messages based on selected option
+  const getSortedMessages = () => {
+    let sorted = [...messages];
+    
+    switch (sortBy) {
+      case 'oldest':
+        return sorted.sort((a, b) => a.id - b.id);
+      case 'newest':
+        return sorted.sort((a, b) => b.id - a.id);
+      case 'management':
+        return sorted.filter(msg => msg.type === 'management').sort((a, b) => b.id - a.id);
+      case 'maintenance':
+        return sorted.filter(msg => msg.type === 'maintenance').sort((a, b) => b.id - a.id);
+      case 'leasing':
+        return sorted.filter(msg => msg.type === 'leasing').sort((a, b) => b.id - a.id);
+      default:
+        return sorted.sort((a, b) => b.id - a.id);
+    }
+  };
+
+  const sortedMessages = getSortedMessages();
 
   if (showMessageModule) {
     return (
@@ -76,7 +98,25 @@ const MessagesTab = () => {
   return (
     <div className="px-4 py-6 pb-24">
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Messages</h1>
-      <p className="text-gray-600 mb-6">Your conversations and updates</p>
+      <p className="text-gray-600 mb-4">Your conversations and updates</p>
+      
+      {/* Sort Controls */}
+      <div className="flex items-center gap-3 mb-6">
+        <ArrowUpDown className="w-4 h-4 text-gray-500" />
+        <span className="text-sm font-medium text-gray-700">Sort by:</span>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Newest First</SelectItem>
+            <SelectItem value="oldest">Oldest First</SelectItem>
+            <SelectItem value="management">Management Only</SelectItem>
+            <SelectItem value="maintenance">Maintenance Only</SelectItem>
+            <SelectItem value="leasing">Leasing Only</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       
       {sortedMessages.map((message) => (
         <SwipeCard
@@ -111,6 +151,12 @@ const MessagesTab = () => {
           </div>
         </SwipeCard>
       ))}
+      
+      {sortedMessages.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No messages found for the selected filter.</p>
+        </div>
+      )}
     </div>
   );
 };
