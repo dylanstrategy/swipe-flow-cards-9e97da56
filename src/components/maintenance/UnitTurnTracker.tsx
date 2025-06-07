@@ -7,12 +7,19 @@ import { useDrag } from 'react-dnd';
 
 interface UnitTurnTrackerProps {
   onSelectUnitTurn?: (unitTurn: any) => void;
+  unitTurns?: any[];
+  onUnitTurnScheduled?: (unitTurnId: string) => void;
 }
 
-const UnitTurnCard: React.FC<{ unitTurn: any; onClick: () => void }> = ({ unitTurn, onClick }) => {
+const UnitTurnCard: React.FC<{ unitTurn: any; onClick: () => void; onScheduled: () => void }> = ({ unitTurn, onClick, onScheduled }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'unitTurn',
     item: { unitTurn },
+    end: (item, monitor) => {
+      if (monitor.didDrop()) {
+        onScheduled();
+      }
+    },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -151,8 +158,8 @@ const UnitTurnCard: React.FC<{ unitTurn: any; onClick: () => void }> = ({ unitTu
   );
 };
 
-const UnitTurnTracker = ({ onSelectUnitTurn }: UnitTurnTrackerProps) => {
-  const unitTurns = [
+const UnitTurnTracker = ({ onSelectUnitTurn, unitTurns: propUnitTurns, onUnitTurnScheduled }: UnitTurnTrackerProps) => {
+  const [localUnitTurns, setLocalUnitTurns] = React.useState(propUnitTurns || [
     {
       id: 'UT-323-4',
       unit: '323-4',
@@ -189,7 +196,17 @@ const UnitTurnTracker = ({ onSelectUnitTurn }: UnitTurnTrackerProps) => {
       priority: 'urgent',
       assignedTo: 'Mike Rodriguez'
     }
-  ];
+  ]);
+
+  const handleUnitTurnScheduled = (unitTurnId: string) => {
+    // Remove the unit turn from the local state
+    setLocalUnitTurns(prev => prev.filter(turn => turn.id !== unitTurnId));
+    
+    // Notify parent component
+    if (onUnitTurnScheduled) {
+      onUnitTurnScheduled(unitTurnId);
+    }
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -223,32 +240,32 @@ const UnitTurnTracker = ({ onSelectUnitTurn }: UnitTurnTrackerProps) => {
           Unit Turns Dashboard
         </h2>
         <Badge variant="outline" className="bg-blue-50">
-          {unitTurns.length} Active Turns
+          {localUnitTurns.length} Active Turns
         </Badge>
       </div>
 
       {/* Summary Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onSelectUnitTurn?.(unitTurns[0])}>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onSelectUnitTurn?.(localUnitTurns[0])}>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-orange-600">
-              {unitTurns.filter(turn => turn.status === 'In Progress').length}
+              {localUnitTurns.filter(turn => turn.status === 'In Progress').length}
             </div>
             <div className="text-sm text-gray-600">In Progress</div>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onSelectUnitTurn?.(unitTurns[0])}>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onSelectUnitTurn?.(localUnitTurns[0])}>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-green-600">
-              {unitTurns.filter(turn => turn.status === 'Nearly Complete').length}
+              {localUnitTurns.filter(turn => turn.status === 'Nearly Complete').length}
             </div>
             <div className="text-sm text-gray-600">Near Complete</div>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onSelectUnitTurn?.(unitTurns[0])}>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onSelectUnitTurn?.(localUnitTurns[0])}>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-red-600">
-              {unitTurns.filter(turn => turn.daysUntilMoveIn <= 7).length}
+              {localUnitTurns.filter(turn => turn.daysUntilMoveIn <= 7).length}
             </div>
             <div className="text-sm text-gray-600">Urgent</div>
           </CardContent>
@@ -257,11 +274,12 @@ const UnitTurnTracker = ({ onSelectUnitTurn }: UnitTurnTrackerProps) => {
 
       {/* Unit Turn Cards */}
       <div className="space-y-4">
-        {unitTurns.map((turn) => (
+        {localUnitTurns.map((turn) => (
           <UnitTurnCard
             key={turn.id}
             unitTurn={turn}
             onClick={() => onSelectUnitTurn?.(turn)}
+            onScheduled={() => handleUnitTurnScheduled(turn.id)}
           />
         ))}
       </div>

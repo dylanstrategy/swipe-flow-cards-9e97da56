@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useDrop } from 'react-dnd';
 import { Calendar, Clock, CheckCircle } from 'lucide-react';
@@ -6,9 +5,10 @@ import { useToast } from '@/hooks/use-toast';
 
 interface ScheduleDropZoneProps {
   onScheduleWorkOrder: (workOrder: any, scheduledTime: string) => void;
+  onScheduleUnitTurn?: (unitTurn: any, scheduledTime: string) => void;
 }
 
-const ScheduleDropZone: React.FC<ScheduleDropZoneProps> = ({ onScheduleWorkOrder }) => {
+const ScheduleDropZone: React.FC<ScheduleDropZoneProps> = ({ onScheduleWorkOrder, onScheduleUnitTurn }) => {
   const { toast } = useToast();
   const [hoveredItem, setHoveredItem] = useState<any>(null);
   
@@ -57,29 +57,10 @@ const ScheduleDropZone: React.FC<ScheduleDropZoneProps> = ({ onScheduleWorkOrder
           description: `${item.workOrder.title} scheduled for ${scheduledTime === 'Tomorrow 09:00' ? 'tomorrow at 9:00 AM' : `today at ${scheduledTime}`}`,
         });
       } else if (item.unitTurn) {
-        // Convert unit turn to work order format for consistent scheduling
-        const unitTurnAsWorkOrder = {
-          id: item.unitTurn.id,
-          unit: item.unitTurn.unit,
-          title: `Unit Turn - ${item.unitTurn.unit}`,
-          description: `${item.unitTurn.pendingSteps.length} steps remaining`,
-          category: 'Unit Turn',
-          priority: item.unitTurn.priority,
-          status: 'scheduled',
-          assignedTo: item.unitTurn.assignedTo,
-          resident: 'Unit Turn',
-          phone: 'N/A',
-          daysOpen: item.unitTurn.daysUntilMoveIn,
-          estimatedTime: '4 hours',
-          submittedDate: new Date().toISOString().split('T')[0],
-          photo: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400',
-          // Mark this as a unit turn for proper handling
-          isUnitTurn: true,
-          originalUnitTurn: item.unitTurn
-        };
-        
-        // Schedule using the same logic as work orders
-        onScheduleWorkOrder(unitTurnAsWorkOrder, scheduledTime);
+        // Handle unit turn scheduling directly
+        if (onScheduleUnitTurn) {
+          onScheduleUnitTurn(item.unitTurn, scheduledTime);
+        }
         
         toast({
           title: "Unit Turn Scheduled!",

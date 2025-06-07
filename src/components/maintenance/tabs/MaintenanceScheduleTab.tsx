@@ -1,328 +1,431 @@
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import UnitTurnTracker from '../UnitTurnTracker';
-import WorkOrderTracker from '../WorkOrderTracker';
-import UnitTurnDetailTracker from '../UnitTurnDetailTracker';
-import WorkOrderTimeline from '../WorkOrderTimeline';
-import WorkOrderFlow from '../WorkOrderFlow';
+import { DragDropProvider } from '../DragDropProvider';
 import WorkOrderQueue from '../WorkOrderQueue';
+import UnitTurnTracker from '../UnitTurnTracker';
 import ScheduleDropZone from '../ScheduleDropZone';
-import DragDropProvider from '../DragDropProvider';
-import { Calendar, Home, Wrench, BarChart3, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-
-// Mock work orders data - this would normally come from a state management solution or API
-const initialWorkOrders = [
-  {
-    id: 'WO-544857',
-    unit: '417',
-    title: 'Dripping water faucet',
-    description: 'Bathroom faucet dripping intermittently',
-    category: 'Plumbing',
-    priority: 'medium' as const,
-    status: 'unscheduled' as const,
-    assignedTo: 'Mike Rodriguez',
-    resident: 'Rumi Desai',
-    phone: '(555) 123-4567',
-    daysOpen: 3,
-    estimatedTime: '2 hours',
-    submittedDate: '2025-05-22',
-    photo: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=400'
-  },
-  {
-    id: 'WO-548686',
-    unit: '516',
-    title: 'Window won\'t close properly',
-    description: 'The balancer got stuck and window won\'t close',
-    category: 'Windows',
-    priority: 'high' as const,
-    status: 'unscheduled' as const,
-    assignedTo: 'Sarah Johnson',
-    resident: 'Kalyani Dronamraju',
-    phone: '(555) 345-6789',
-    daysOpen: 5,
-    estimatedTime: '3 hours',
-    submittedDate: '2025-05-14',
-    photo: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400'
-  },
-  {
-    id: 'WO-549321',
-    unit: '204',
-    title: 'HVAC not cooling properly',
-    description: 'Air conditioning unit not providing adequate cooling',
-    category: 'HVAC',
-    priority: 'urgent' as const,
-    status: 'overdue' as const,
-    assignedTo: 'James Wilson',
-    resident: 'Alex Thompson',
-    phone: '(555) 456-7890',
-    daysOpen: 12,
-    estimatedTime: '4 hours',
-    submittedDate: '2025-05-01',
-    photo: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400'
-  },
-  {
-    id: 'WO-545123',
-    unit: '302',
-    title: 'Scheduled Inspection',
-    description: 'Annual HVAC maintenance check',
-    category: 'Maintenance',
-    priority: 'low' as const,
-    status: 'scheduled' as const,
-    assignedTo: 'Mike Rodriguez',
-    resident: 'Jane Smith',
-    phone: '(555) 789-0123',
-    daysOpen: 1,
-    estimatedTime: '1 hour',
-    submittedDate: '2025-06-06',
-    scheduledDate: '2025-06-10',
-    scheduledTime: '10:00 AM',
-    photo: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400'
-  }
-];
-
-// Context for sharing work orders between tabs
-interface MaintenanceContextType {
-  todayWorkOrders: any[];
-  addTodayWorkOrder: (workOrder: any) => void;
-}
-
-// Simple context provider for this component
-const MaintenanceContext = React.createContext<MaintenanceContextType>({
-  todayWorkOrders: [],
-  addTodayWorkOrder: () => {}
-});
 
 interface MaintenanceScheduleTabProps {
   onTodayWorkOrdersChange?: (workOrders: any[]) => void;
+  onTodayUnitTurnsChange?: (unitTurns: any[]) => void;
   todayWorkOrders?: any[];
   onWorkOrderCompleted?: (workOrderId: string) => void;
 }
 
 const MaintenanceScheduleTab = ({ 
   onTodayWorkOrdersChange, 
-  todayWorkOrders: externalTodayWorkOrders,
+  onTodayUnitTurnsChange,
+  todayWorkOrders = [], 
   onWorkOrderCompleted 
 }: MaintenanceScheduleTabProps) => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('queue');
-  const [selectedUnitTurn, setSelectedUnitTurn] = useState<any>(null);
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
-  const [showWorkOrderFlow, setShowWorkOrderFlow] = useState(false);
-  const [workOrders, setWorkOrders] = useState(initialWorkOrders);
-  const [scheduledWorkOrders, setScheduledWorkOrders] = useState<any[]>([]);
-  const [internalTodayWorkOrders, setInternalTodayWorkOrders] = useState<any[]>([]);
+  const [selectedUnitTurn, setSelectedUnitTurn] = useState<any>(null);
+  const [scheduledUnitTurns, setScheduledUnitTurns] = useState<any[]>([]);
 
-  // Use external state if provided, otherwise use internal state
-  const todayWorkOrders = externalTodayWorkOrders || internalTodayWorkOrders;
-
-  // Helper function to update today's work orders
-  const updateTodayWorkOrders = (newWorkOrders: any[]) => {
-    console.log('Updating today work orders with:', newWorkOrders);
-    if (onTodayWorkOrdersChange) {
-      onTodayWorkOrdersChange(newWorkOrders);
-    } else {
-      setInternalTodayWorkOrders(newWorkOrders);
+  const workOrders = [
+    {
+      id: 'WO-2024-1',
+      unit: '204',
+      title: 'Leaky Faucet',
+      description: 'Faucet leaking in the kitchen. Requires new washers.',
+      category: 'Plumbing',
+      priority: 'medium',
+      status: 'unscheduled',
+      assignedTo: 'Mike Rodriguez',
+      resident: 'John Smith',
+      phone: '555-123-4567',
+      daysOpen: 3,
+      estimatedTime: '2 hours',
+      submittedDate: '2024-07-15',
+      photo: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400',
+      timeline: [
+        {
+          date: '2024-07-15',
+          time: '08:30',
+          type: 'submitted',
+          message: 'Work order submitted by resident',
+          user: 'John Smith'
+        },
+        {
+          date: '2024-07-15',
+          time: '09:15',
+          type: 'assigned',
+          message: 'Assigned to Mike Rodriguez',
+          user: 'System'
+        }
+      ]
+    },
+    {
+      id: 'WO-2024-2',
+      unit: '301',
+      title: 'Broken AC',
+      description: 'AC not cooling. Possible refrigerant leak.',
+      category: 'HVAC',
+      priority: 'high',
+      status: 'unscheduled',
+      assignedTo: 'Sarah Johnson',
+      resident: 'Emily White',
+      phone: '555-987-6543',
+      daysOpen: 7,
+      estimatedTime: '4 hours',
+      submittedDate: '2024-07-09',
+      photo: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400',
+      timeline: [
+        {
+          date: '2024-07-09',
+          time: '10:00',
+          type: 'submitted',
+          message: 'Work order submitted by resident',
+          user: 'Emily White'
+        },
+        {
+          date: '2024-07-09',
+          time: '11:00',
+          type: 'assigned',
+          message: 'Assigned to Sarah Johnson',
+          user: 'System'
+        }
+      ]
+    },
+    {
+      id: 'WO-2024-3',
+      unit: '102',
+      title: 'Electrical Issue',
+      description: 'Outlet not working in the living room.',
+      category: 'Electrical',
+      priority: 'urgent',
+      status: 'overdue',
+      assignedTo: 'Mike Rodriguez',
+      resident: 'David Lee',
+      phone: '555-456-7890',
+      daysOpen: 10,
+      estimatedTime: '1 hour',
+      submittedDate: '2024-07-06',
+      photo: 'https://images.unsplash.com/photo-1629241447774-97423ca9e381?w=400',
+      timeline: [
+        {
+          date: '2024-07-06',
+          time: '14:00',
+          type: 'submitted',
+          message: 'Work order submitted by resident',
+          user: 'David Lee'
+        },
+        {
+          date: '2024-07-06',
+          time: '15:00',
+          type: 'assigned',
+          message: 'Assigned to Mike Rodriguez',
+          user: 'System'
+        }
+      ]
+    },
+    {
+      id: 'WO-2024-4',
+      unit: '404',
+      title: 'Clogged Drain',
+      description: 'Bathroom sink drain clogged.',
+      category: 'Plumbing',
+      priority: 'medium',
+      status: 'unscheduled',
+      assignedTo: 'Sarah Johnson',
+      resident: 'Linda Brown',
+      phone: '555-789-1234',
+      daysOpen: 2,
+      estimatedTime: '1.5 hours',
+      submittedDate: '2024-07-14',
+      photo: 'https://images.unsplash.com/photo-1616624364804-94c87959b447?w=400',
+      timeline: [
+        {
+          date: '2024-07-14',
+          time: '09:00',
+          type: 'submitted',
+          message: 'Work order submitted by resident',
+          user: 'Linda Brown'
+        },
+        {
+          date: '2024-07-14',
+          time: '10:00',
+          type: 'assigned',
+          message: 'Assigned to Sarah Johnson',
+          user: 'System'
+        }
+      ]
+    },
+    {
+      id: 'WO-2024-5',
+      unit: '201',
+      title: 'Clogged Toilet',
+      description: 'Toilet is clogged and overflowing.',
+      category: 'Plumbing',
+      priority: 'high',
+      status: 'unscheduled',
+      assignedTo: 'Mike Rodriguez',
+      resident: 'Alice Johnson',
+      phone: '555-234-5678',
+      daysOpen: 5,
+      estimatedTime: '2 hours',
+      submittedDate: '2024-07-11',
+      photo: 'https://plus.unsplash.com/premium_photo-1663050487995-45380599867c?w=400',
+      timeline: [
+        {
+          date: '2024-07-11',
+          time: '11:00',
+          type: 'submitted',
+          message: 'Work order submitted by resident',
+          user: 'Alice Johnson'
+        },
+        {
+          date: '2024-07-11',
+          time: '12:00',
+          type: 'assigned',
+          message: 'Assigned to Mike Rodriguez',
+          user: 'System'
+        }
+      ]
+    },
+    {
+      id: 'WO-2024-6',
+      unit: '303',
+      title: 'Broken Window',
+      description: 'Window cracked in the bedroom.',
+      category: 'Maintenance',
+      priority: 'medium',
+      status: 'unscheduled',
+      assignedTo: 'Sarah Johnson',
+      resident: 'Tom Wilson',
+      phone: '555-567-8901',
+      daysOpen: 1,
+      estimatedTime: '3 hours',
+      submittedDate: '2024-07-15',
+      photo: 'https://images.unsplash.com/photo-1614333029639-58cb941c82a0?w=400',
+      timeline: [
+        {
+          date: '2024-07-15',
+          time: '13:00',
+          type: 'submitted',
+          message: 'Work order submitted by resident',
+          user: 'Tom Wilson'
+        },
+        {
+          date: '2024-07-15',
+          time: '14:00',
+          type: 'assigned',
+          message: 'Assigned to Sarah Johnson',
+          user: 'System'
+        }
+      ]
+    },
+    {
+      id: 'WO-2024-7',
+      unit: '101',
+      title: 'Pest Control',
+      description: 'Ants in the kitchen.',
+      category: 'Pest Control',
+      priority: 'low',
+      status: 'unscheduled',
+      assignedTo: 'Mike Rodriguez',
+      resident: 'Karen Davis',
+      phone: '555-345-6789',
+      daysOpen: 4,
+      estimatedTime: '1 hour',
+      submittedDate: '2024-07-12',
+      photo: 'https://images.unsplash.com/photo-1605281488533-5bb0b95708c7?w=400',
+      timeline: [
+        {
+          date: '2024-07-12',
+          time: '15:00',
+          type: 'submitted',
+          message: 'Work order submitted by resident',
+          user: 'Karen Davis'
+        },
+        {
+          date: '2024-07-12',
+          time: '16:00',
+          type: 'assigned',
+          message: 'Assigned to Mike Rodriguez',
+          user: 'System'
+        }
+      ]
+    },
+    {
+      id: 'WO-2024-8',
+      unit: '401',
+      title: 'Leaky Roof',
+      description: 'Roof leaking during heavy rain.',
+      category: 'Roofing',
+      priority: 'high',
+      status: 'unscheduled',
+      assignedTo: 'Sarah Johnson',
+      resident: 'George Martin',
+      phone: '555-678-9012',
+      daysOpen: 9,
+      estimatedTime: '6 hours',
+      submittedDate: '2024-07-07',
+      photo: 'https://images.unsplash.com/photo-1543178284-79e56d81c208?w=400',
+      timeline: [
+        {
+          date: '2024-07-07',
+          time: '16:00',
+          type: 'submitted',
+          message: 'Work order submitted by resident',
+          user: 'George Martin'
+        },
+        {
+          date: '2024-07-07',
+          time: '17:00',
+          type: 'assigned',
+          message: 'Assigned to Sarah Johnson',
+          user: 'System'
+        }
+      ]
+    },
+    {
+      id: 'WO-2024-9',
+      unit: '203',
+      title: 'Faulty Wiring',
+      description: 'Lights flickering in the bathroom.',
+      category: 'Electrical',
+      priority: 'medium',
+      status: 'unscheduled',
+      assignedTo: 'Mike Rodriguez',
+      resident: 'Susan Taylor',
+      phone: '555-890-1234',
+      daysOpen: 6,
+      estimatedTime: '2 hours',
+      submittedDate: '2024-07-10',
+      photo: 'https://images.unsplash.com/photo-1555709952-3403778f409a?w=400',
+      timeline: [
+        {
+          date: '2024-07-10',
+          time: '17:00',
+          type: 'submitted',
+          message: 'Work order submitted by resident',
+          user: 'Susan Taylor'
+        },
+        {
+          date: '2024-07-10',
+          time: '18:00',
+          type: 'assigned',
+          message: 'Assigned to Mike Rodriguez',
+          user: 'System'
+        }
+      ]
+    },
+    {
+      id: 'WO-2024-10',
+      unit: '302',
+      title: 'Water Damage',
+      description: 'Water stain on the ceiling.',
+      category: 'Plumbing',
+      priority: 'high',
+      status: 'unscheduled',
+      assignedTo: 'Sarah Johnson',
+      resident: 'Robert Green',
+      phone: '555-012-3456',
+      daysOpen: 8,
+      estimatedTime: '5 hours',
+      submittedDate: '2024-07-08',
+      photo: 'https://images.unsplash.com/photo-1614333029639-58cb941c82a0?w=400',
+      timeline: [
+        {
+          date: '2024-07-08',
+          time: '18:00',
+          type: 'submitted',
+          message: 'Work order submitted by resident',
+          user: 'Robert Green'
+        },
+        {
+          date: '2024-07-08',
+          time: '19:00',
+          type: 'assigned',
+          message: 'Assigned to Sarah Johnson',
+          user: 'System'
+        }
+      ]
     }
-  };
-
-  const handleWorkOrderCompleted = (workOrderId: string) => {
-    console.log('Schedule tab - Work order completed:', workOrderId);
-    
-    // Remove from scheduled work orders
-    setScheduledWorkOrders(prev => prev.filter(wo => wo.id !== workOrderId));
-    
-    // Remove from today's work orders
-    const updatedTodayWorkOrders = todayWorkOrders.filter(wo => wo.id !== workOrderId);
-    updateTodayWorkOrders(updatedTodayWorkOrders);
-    
-    // Notify parent component
-    if (onWorkOrderCompleted) {
-      onWorkOrderCompleted(workOrderId);
-    }
-    
-    toast({
-      title: "Work Order Completed",
-      description: "The work order has been completed and removed from the schedule.",
-    });
-  };
-
-  // Helper function to find first available time slot
-  const findFirstAvailableTimeSlot = () => {
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    
-    // If it's before 9 AM, start at 9 AM
-    if (currentHour < 9) {
-      return '09:00';
-    }
-    
-    // If it's after 5 PM, schedule for tomorrow 9 AM
-    if (currentHour >= 17) {
-      return 'Tomorrow 09:00';
-    }
-    
-    // Find next available hour slot (round up to next hour)
-    let nextHour = currentMinute > 0 ? currentHour + 1 : currentHour;
-    
-    // Check for conflicts with existing scheduled work orders
-    const timeSlot = `${nextHour.toString().padStart(2, '0')}:00`;
-    const hasConflict = todayWorkOrders.some(wo => wo.scheduledTime === timeSlot);
-    
-    if (hasConflict) {
-      // Try next hour
-      nextHour += 1;
-      if (nextHour >= 17) {
-        return 'Tomorrow 09:00';
-      }
-      return `${nextHour.toString().padStart(2, '0')}:00`;
-    }
-    
-    return timeSlot;
-  };
+  ];
 
   const handleScheduleWorkOrder = (workOrder: any, scheduledTime: string) => {
-    console.log('Scheduling work order:', workOrder, 'for time:', scheduledTime);
+    console.log('Scheduling work order:', workOrder, 'at', scheduledTime);
     
-    const isToday = scheduledTime.includes('Today') || !scheduledTime.includes('Tomorrow');
-    const today = new Date().toISOString().split('T')[0];
-    
-    // If scheduling for today, find first available time slot
-    const finalScheduledTime = isToday ? findFirstAvailableTimeSlot() : scheduledTime;
-    
-    // Update the work order with scheduled information
-    const updatedWorkOrder = {
+    const scheduledWorkOrder = {
       ...workOrder,
       status: 'scheduled',
-      scheduledDate: isToday ? today : new Date(Date.now() + 86400000).toISOString().split('T')[0],
-      scheduledTime: finalScheduledTime.includes('Tomorrow') ? '09:00' : finalScheduledTime.replace('Tomorrow ', '')
+      scheduledDate: new Date().toISOString().split('T')[0],
+      scheduledTime: scheduledTime
     };
 
-    // Remove from work orders queue
-    setWorkOrders(prev => prev.filter(wo => wo.id !== workOrder.id));
+    const updatedTodayWorkOrders = [...todayWorkOrders, scheduledWorkOrder];
+    console.log('Updated today work orders:', updatedTodayWorkOrders);
     
-    // Add to scheduled work orders
-    setScheduledWorkOrders(prev => [...prev, updatedWorkOrder]);
-    
-    // If scheduled for today, add to today's work orders for the Today tab
-    if (isToday && !finalScheduledTime.includes('Tomorrow')) {
-      console.log('Adding to today work orders:', updatedWorkOrder);
-      const newTodayWorkOrders = [...todayWorkOrders, updatedWorkOrder];
-      updateTodayWorkOrders(newTodayWorkOrders);
+    if (onTodayWorkOrdersChange) {
+      onTodayWorkOrdersChange(updatedTodayWorkOrders);
     }
+  };
+
+  const handleScheduleUnitTurn = (unitTurn: any, scheduledTime: string) => {
+    console.log('Scheduling unit turn:', unitTurn, 'at', scheduledTime);
     
+    const scheduledUnitTurn = {
+      ...unitTurn,
+      status: 'scheduled',
+      scheduledDate: new Date().toISOString().split('T')[0],
+      scheduledTime: scheduledTime
+    };
+
+    const updatedScheduledUnitTurns = [...scheduledUnitTurns, scheduledUnitTurn];
+    setScheduledUnitTurns(updatedScheduledUnitTurns);
+    
+    if (onTodayUnitTurnsChange) {
+      onTodayUnitTurnsChange(updatedScheduledUnitTurns);
+    }
+  };
+
+  const handleUnitTurnScheduled = (unitTurnId: string) => {
+    console.log('Unit turn scheduled and removed from queue:', unitTurnId);
+  };
+
+  if (selectedWorkOrder) {
     toast({
-      title: "Work Order Scheduled",
-      description: `${workOrder.title} has been scheduled for ${finalScheduledTime.includes('Tomorrow') ? 'tomorrow at 9:00 AM' : `today at ${finalScheduledTime}`}`,
+      title: "Work Order Selected",
+      description: `You have selected work order ${selectedWorkOrder.id}`,
     });
-  };
-
-  const addTodayWorkOrder = (workOrder: any) => {
-    console.log('Adding work order to today context:', workOrder);
-    const newTodayWorkOrders = [...todayWorkOrders, workOrder];
-    updateTodayWorkOrders(newTodayWorkOrders);
-  };
-
-  const contextValue = {
-    todayWorkOrders,
-    addTodayWorkOrder
-  };
-
-  if (showWorkOrderFlow) {
-    return (
-      <WorkOrderFlow
-        workOrder={selectedWorkOrder}
-        onClose={() => {
-          setShowWorkOrderFlow(false);
-          setSelectedWorkOrder(null);
-        }}
-        onWorkOrderCompleted={handleWorkOrderCompleted}
-      />
-    );
   }
 
   if (selectedUnitTurn) {
-    return (
-      <UnitTurnDetailTracker 
-        unitTurn={selectedUnitTurn}
-        onClose={() => setSelectedUnitTurn(null)}
-      />
-    );
+    toast({
+      title: "Unit Turn Selected",
+      description: `You have selected unit turn ${selectedUnitTurn.id}`,
+    });
   }
-
-  if (selectedWorkOrder && !showWorkOrderFlow) {
-    return (
-      <WorkOrderTimeline 
-        workOrder={selectedWorkOrder}
-        onClose={() => setSelectedWorkOrder(null)}
-      />
-    );
-  }
-
-  const handleWorkOrderSelect = (workOrder: any) => {
-    setSelectedWorkOrder(workOrder);
-    setShowWorkOrderFlow(true);
-  };
-
-  const handleWorkOrderDetailsView = (workOrder: any) => {
-    setSelectedWorkOrder(workOrder);
-    // Don't set showWorkOrderFlow to true, just show the timeline
-  };
 
   return (
-    <MaintenanceContext.Provider value={contextValue}>
-      <DragDropProvider>
-        <div className="w-full">
-          <div className="px-4 py-6">
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                <BarChart3 className="w-6 h-6 text-orange-600" />
-                Maintenance Dashboard
-              </h1>
-              <p className="text-gray-600">Track work orders, unit turns, and maintenance operations</p>
-            </div>
-
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="queue" className="flex items-center gap-2">
-                  <Wrench className="w-4 h-4" />
-                  Queue
-                </TabsTrigger>
-                <TabsTrigger value="unitturns" className="flex items-center gap-2">
-                  <Home className="w-4 h-4" />
-                  Unit Turns
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+    <DragDropProvider>
+      <div className="min-h-screen relative">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-4">
+          <div>
+            <WorkOrderQueue 
+              workOrders={workOrders}
+              onSelectWorkOrder={setSelectedWorkOrder}
+            />
           </div>
-
-          <div className="w-full">
-            {activeTab === 'queue' && (
-              <div className="w-full">
-                <WorkOrderQueue 
-                  workOrders={workOrders}
-                  onSelectWorkOrder={handleWorkOrderDetailsView} 
-                />
-                <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
-              </div>
-            )}
-
-            {activeTab === 'unitturns' && (
-              <div className="w-full">
-                <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
-                <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
-              </div>
-            )}
+          
+          <div>
+            <UnitTurnTracker 
+              onSelectUnitTurn={setSelectedUnitTurn}
+              onUnitTurnScheduled={handleUnitTurnScheduled}
+            />
           </div>
         </div>
-      </DragDropProvider>
-    </MaintenanceContext.Provider>
+        
+        <ScheduleDropZone 
+          onScheduleWorkOrder={handleScheduleWorkOrder}
+          onScheduleUnitTurn={handleScheduleUnitTurn}
+        />
+      </div>
+    </DragDropProvider>
   );
 };
 
-// Export the context for use in other components
-export { MaintenanceContext };
 export default MaintenanceScheduleTab;
