@@ -183,25 +183,27 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
         </div>
 
         {/* Content with ScrollArea */}
-        <ScrollArea className="flex-1 min-h-0">
-          <div className="h-full">
-            {activeTab === 'details' && renderEventDetails()}
-            
-            {activeTab === 'message' && (
-              <EventMessaging
-                event={currentEvent}
-                messageText={messageText}
-                setMessageText={setMessageText}
-                onSendMessage={handleSendMessage}
-                userRole={userRole}
-              />
-            )}
-            
-            {activeTab === 'timeline' && (
-              <EventTimeline event={currentEvent} userRole={userRole} />
-            )}
-          </div>
-        </ScrollArea>
+        <div className="flex-1 min-h-0">
+          <ScrollArea className="h-full">
+            <div className="h-full">
+              {activeTab === 'details' && renderEventDetails()}
+              
+              {activeTab === 'message' && (
+                <EventMessaging
+                  event={currentEvent}
+                  messageText={messageText}
+                  setMessageText={setMessageText}
+                  onSendMessage={handleSendMessage}
+                  userRole={userRole}
+                />
+              )}
+              
+              {activeTab === 'timeline' && (
+                <EventTimeline event={currentEvent} userRole={userRole} />
+              )}
+            </div>
+          </ScrollArea>
+        </div>
       </div>
     </div>
   );
