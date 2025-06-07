@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -11,6 +12,7 @@ import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
 import EventDetailModal from '../events/EventDetailModal';
 import RescheduleFlow from '../events/RescheduleFlow';
+import UniversalEventDetailModal from '../events/UniversalEventDetailModal';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 import HourlyCalendarView from '../schedule/HourlyCalendarView';

@@ -12,6 +12,7 @@ import OperatorScheduleMenu from '@/components/schedule/OperatorScheduleMenu';
 import PollModule from '@/components/schedule/PollModule';
 import RescheduleFlow from '@/components/events/RescheduleFlow';
 import EventDetailModal from '@/components/events/EventDetailModal';
+import UniversalEventDetailModal from '@/components/events/UniversalEventDetailModal';
 import { useToast } from '@/hooks/use-toast';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
@@ -30,6 +31,8 @@ const OperatorScheduleTab = () => {
   const [showEventDetail, setShowEventDetail] = useState(false);
   const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
   const [selectedEventForReschedule, setSelectedEventForReschedule] = useState<EnhancedEvent | null>(null);
+  const [showUniversalEventDetail, setShowUniversalEventDetail] = useState(false);
+  const [selectedUniversalEvent, setSelectedUniversalEvent] = useState<any>(null);
   const [messageConfig, setMessageConfig] = useState({
     subject: '',
     recipientType: 'management' as 'management' | 'maintenance' | 'leasing',
@@ -129,6 +132,12 @@ const OperatorScheduleTab = () => {
       estimatedDuration: item.type === 'maintenance' ? 120 : 60,
       rescheduledCount: 0
     };
+  };
+
+  const handleItemClick = (item: any) => {
+    console.log('Schedule item clicked:', item);
+    setSelectedUniversalEvent(item);
+    setShowUniversalEventDetail(true);
   };
 
   const handleHoldItem = (item: any) => {
@@ -290,6 +299,19 @@ const OperatorScheduleTab = () => {
     );
   }
 
+  if (showUniversalEventDetail && selectedUniversalEvent) {
+    return (
+      <UniversalEventDetailModal
+        event={selectedUniversalEvent}
+        onClose={() => {
+          setShowUniversalEventDetail(false);
+          setSelectedUniversalEvent(null);
+        }}
+        userRole="operator"
+      />
+    );
+  }
+
   if (showPollModule) {
     return (
       <PollModule
@@ -398,7 +420,7 @@ const OperatorScheduleTab = () => {
           filteredItems.map((item) => (
             <SwipeCard
               key={item.id}
-              onTap={() => toast({ title: "Item Details", description: `Viewing ${item.title}` })}
+              onTap={() => handleItemClick(item)}
               onHold={() => handleHoldItem(item)}
             >
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
