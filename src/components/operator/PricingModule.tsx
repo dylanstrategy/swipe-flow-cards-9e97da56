@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -316,7 +315,10 @@ const PricingModule = ({ onClose, initialFilter = 'all' }: PricingModuleProps) =
           <div className="text-2xl font-bold text-blue-600">{statusCounts.total}</div>
           <div className="text-sm text-blue-800">Total Units</div>
         </div>
-        <div className="bg-green-50 p-4 rounded-lg text-center">
+        <div 
+          className="bg-green-50 p-4 rounded-lg text-center cursor-pointer hover:bg-green-100 transition-colors"
+          onClick={() => setFilterStatus('occupied')}
+        >
           <div className="text-2xl font-bold text-green-600">{statusCounts.occupied}</div>
           <div className="text-sm text-green-800">Occupied</div>
         </div>
@@ -382,22 +384,20 @@ const PricingModule = ({ onClose, initialFilter = 'all' }: PricingModuleProps) =
                 <Building className="w-5 h-5" />
                 <span>Complete Unit Directory ({filteredUnits.length} units)</span>
               </span>
-              {shouldShowCards && (
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setViewMode('table')}
-                    className={`p-2 rounded-md ${viewMode === 'table' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-                  >
-                    <List size={18} />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('cards')}
-                    className={`p-2 rounded-md ${viewMode === 'cards' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-                  >
-                    <Grid size={18} />
-                  </button>
-                </div>
-              )}
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setViewMode('table')}
+                  className={`p-2 rounded-md ${viewMode === 'table' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  <List size={18} />
+                </button>
+                <button
+                  onClick={() => setViewMode('cards')}
+                  className={`p-2 rounded-md ${viewMode === 'cards' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  <Grid size={18} />
+                </button>
+              </div>
             </CardTitle>
             
             {/* Search and Filter */}
@@ -430,8 +430,8 @@ const PricingModule = ({ onClose, initialFilter = 'all' }: PricingModuleProps) =
             </div>
           </CardHeader>
           <CardContent>
-            {shouldShowCards && viewMode === 'cards' ? (
-              // Enhanced Card View for Available/Vacant Units
+            {viewMode === 'cards' ? (
+              // Enhanced Card View for All Unit Types
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredUnits.map((unit) => (
                   <div key={unit.unit} className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
@@ -453,9 +453,11 @@ const PricingModule = ({ onClose, initialFilter = 'all' }: PricingModuleProps) =
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-lg font-semibold text-gray-900">{unit.type}</span>
-                        <span className="text-2xl font-bold text-blue-600">${unit.marketRent.toLocaleString()}</span>
+                        <span className="text-2xl font-bold text-blue-600">
+                          ${unit.status === 'occupied' ? unit.currentRent.toLocaleString() : unit.marketRent.toLocaleString()}
+                        </span>
                       </div>
-                      {unit.discounts && (
+                      {unit.discounts && unit.status !== 'occupied' && (
                         <div className="bg-green-50 p-3 rounded-lg mb-3">
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-green-800">{unit.discounts.type}</span>
@@ -466,29 +468,54 @@ const PricingModule = ({ onClose, initialFilter = 'all' }: PricingModuleProps) =
                       )}
                     </div>
 
-                    {/* Enhanced Pricing Terms */}
-                    <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-3">Available Lease Terms</h4>
-                      <div className="space-y-2">
-                        {Object.entries(unit.pricing).slice(0, 4).map(([term, price]) => (
-                          <div key={term} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
-                            <div className="text-sm">
-                              <span className="font-medium">{term} months</span>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-sm font-bold text-gray-900">${(price as number).toLocaleString()}/mo</div>
-                              <div className="text-xs text-gray-500">${((price as number) * Number(term)).toLocaleString()} total</div>
-                            </div>
+                    {/* Pricing Terms or Resident Info */}
+                    {unit.status === 'occupied' ? (
+                      <div className="mb-4">
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">Current Lease</h4>
+                        <div className="bg-gray-50 p-3 rounded border">
+                          <div className="text-sm">
+                            <span className="font-medium">Resident:</span> {unit.resident}
                           </div>
-                        ))}
+                          <div className="text-sm mt-1">
+                            <span className="font-medium">Lease End:</span> {unit.leaseEnd}
+                          </div>
+                          <div className="text-sm mt-1">
+                            <span className="font-medium">Current Rent:</span> ${unit.currentRent.toLocaleString()}/mo
+                          </div>
+                          <div className="text-sm mt-1">
+                            <span className="font-medium">Market Rent:</span> ${unit.marketRent.toLocaleString()}/mo
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="mb-4">
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">Available Lease Terms</h4>
+                        <div className="space-y-2">
+                          {Object.entries(unit.pricing).slice(0, 4).map(([term, price]) => (
+                            <div key={term} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                              <div className="text-sm">
+                                <span className="font-medium">{term} months</span>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-sm font-bold text-gray-900">${(price as number).toLocaleString()}/mo</div>
+                                <div className="text-xs text-gray-500">${((price as number) * Number(term)).toLocaleString()} total</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Availability & Actions */}
                     <div className="border-t pt-3">
                       <div className="flex items-center justify-between">
                         <div>
-                          {unit.availableDate ? (
+                          {unit.status === 'occupied' ? (
+                            <p className="text-sm text-blue-600">
+                              <Users size={14} className="inline mr-1" />
+                              Currently Occupied
+                            </p>
+                          ) : unit.availableDate ? (
                             <p className="text-sm text-gray-600">
                               <Calendar size={14} className="inline mr-1" />
                               Available: {unit.availableDate}
@@ -500,13 +527,15 @@ const PricingModule = ({ onClose, initialFilter = 'all' }: PricingModuleProps) =
                             </p>
                           )}
                         </div>
-                        <button
-                          onClick={() => setSelectedProspectUnit(unit)}
-                          className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors flex items-center space-x-1"
-                        >
-                          <Send size={14} />
-                          <span>Send App</span>
-                        </button>
+                        {unit.status !== 'occupied' && (
+                          <button
+                            onClick={() => setSelectedProspectUnit(unit)}
+                            className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors flex items-center space-x-1"
+                          >
+                            <Send size={14} />
+                            <span>Send App</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
