@@ -72,7 +72,7 @@ const DroppableCalendar = ({ selectedDate, onSelect, hasEventsOnDate, onDropSugg
             dragOver: "bg-green-100 border-2 border-green-400 border-dashed scale-105"
           }}
           components={{
-            Day: ({ date, ...props }) => {
+            Day: ({ date, ...dayProps }) => {
               return (
                 <div
                   onDragOver={(e) => handleDragOver(e, date)}
@@ -80,7 +80,7 @@ const DroppableCalendar = ({ selectedDate, onSelect, hasEventsOnDate, onDropSugg
                   onDrop={(e) => handleDrop(e, date)}
                   className="w-full h-full flex items-center justify-center"
                 >
-                  <button {...props} className={props.className}>
+                  <button {...dayProps} className={dayProps.className}>
                     {format(date, 'd')}
                   </button>
                 </div>
