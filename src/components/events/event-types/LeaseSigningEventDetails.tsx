@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileText, User, Clock, DollarSign, Calendar, CheckCircle } from 'lucide-react';
+import { FileText, User, Clock, DollarSign, Calendar, CheckCircle, Download, ExternalLink, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface LeaseSigningEventDetailsProps {
@@ -25,11 +25,121 @@ const LeaseSigningEventDetails = ({ event, userRole }: LeaseSigningEventDetailsP
   };
 
   const documents = [
-    { name: 'Lease Renewal Agreement', status: 'ready', required: true },
-    { name: 'Rent Increase Notice', status: 'ready', required: true },
-    { name: 'Property Rules & Regulations', status: 'ready', required: false },
-    { name: 'Parking Agreement', status: 'pending', required: false }
+    { 
+      id: 1,
+      name: 'Lease Renewal Agreement', 
+      status: 'ready', 
+      required: true,
+      action: 'sign',
+      description: 'Main lease renewal document requiring signature'
+    },
+    { 
+      id: 2,
+      name: 'Rent Increase Notice', 
+      status: 'ready', 
+      required: true,
+      action: 'review',
+      description: 'Official notice of rent increase for new term'
+    },
+    { 
+      id: 3,
+      name: 'Property Rules & Regulations', 
+      status: 'ready', 
+      required: false,
+      action: 'review',
+      description: 'Updated property rules and community guidelines'
+    },
+    { 
+      id: 4,
+      name: 'Parking Agreement', 
+      status: 'pending', 
+      required: false,
+      action: 'complete',
+      description: 'Parking space assignment and terms'
+    }
   ];
+
+  const handleDocumentAction = (doc: any) => {
+    switch (doc.action) {
+      case 'sign':
+        toast({
+          title: "Opening Document for Signature",
+          description: `Opening ${doc.name} in digital signing platform`,
+        });
+        break;
+      case 'review':
+        toast({
+          title: "Opening Document",
+          description: `Opening ${doc.name} for review`,
+        });
+        break;
+      case 'complete':
+        toast({
+          title: "Document Processing",
+          description: `Processing ${doc.name} - this may take a moment`,
+        });
+        break;
+      default:
+        toast({
+          title: "Document Action",
+          description: `Processing ${doc.name}`,
+        });
+    }
+  };
+
+  const getActionButton = (doc: any) => {
+    if (doc.status === 'ready') {
+      switch (doc.action) {
+        case 'sign':
+          return (
+            <Button 
+              size="sm" 
+              onClick={() => handleDocumentAction(doc)}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Edit className="w-3 h-3 mr-1" />
+              Sign Now
+            </Button>
+          );
+        case 'review':
+          return (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => handleDocumentAction(doc)}
+              className="border-blue-200 text-blue-700 hover:bg-blue-50"
+            >
+              <ExternalLink className="w-3 h-3 mr-1" />
+              Review
+            </Button>
+          );
+        default:
+          return (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => handleDocumentAction(doc)}
+            >
+              <Download className="w-3 h-3 mr-1" />
+              Download
+            </Button>
+          );
+      }
+    } else if (doc.status === 'pending') {
+      return (
+        <Button 
+          size="sm" 
+          variant="outline" 
+          onClick={() => handleDocumentAction(doc)}
+          className="border-yellow-200 text-yellow-700 hover:bg-yellow-50"
+        >
+          <Clock className="w-3 h-3 mr-1" />
+          Complete Setup
+        </Button>
+      );
+    }
+    return null;
+  };
 
   const handleStartSigning = () => {
     toast({
@@ -95,7 +205,7 @@ const LeaseSigningEventDetails = ({ event, userRole }: LeaseSigningEventDetailsP
         </div>
       </div>
 
-      {/* Document Checklist */}
+      {/* Document Checklist - Now Actionable */}
       <div className="space-y-4">
         <h4 className="font-medium text-gray-900 flex items-center gap-2">
           <FileText className="w-4 h-4" />
@@ -103,33 +213,44 @@ const LeaseSigningEventDetails = ({ event, userRole }: LeaseSigningEventDetailsP
         </h4>
         
         <div className="space-y-3">
-          {documents.map((doc, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-3">
+          {documents.map((doc) => (
+            <div key={doc.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors">
+              <div className="flex items-center gap-3 flex-1">
                 <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
                   doc.status === 'ready' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
                 }`}>
                   {doc.status === 'ready' && <CheckCircle className="w-3 h-3" />}
                   {doc.status === 'pending' && <Clock className="w-3 h-3" />}
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{doc.name}</p>
-                  <p className="text-xs text-gray-500">
-                    {doc.required ? 'Required' : 'Optional'} • Status: {doc.status}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-sm font-medium text-gray-900">{doc.name}</p>
+                    {doc.required && (
+                      <Badge variant="outline" className="text-xs bg-red-50 text-red-600 border-red-200">
+                        Required
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mb-1">{doc.description}</p>
+                  <p className="text-xs text-gray-400">
+                    Status: {doc.status === 'ready' ? 'Ready for action' : 'Pending completion'}
                   </p>
                 </div>
               </div>
               
-              {doc.status === 'ready' && (
-                <Badge variant="outline" className="text-green-600 border-green-200">
-                  Ready
-                </Badge>
-              )}
-              {doc.status === 'pending' && (
-                <Badge variant="outline" className="text-yellow-600 border-yellow-200">
-                  Pending
-                </Badge>
-              )}
+              <div className="flex items-center gap-2">
+                {doc.status === 'ready' && (
+                  <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
+                    Ready
+                  </Badge>
+                )}
+                {doc.status === 'pending' && (
+                  <Badge variant="outline" className="text-yellow-600 border-yellow-200 bg-yellow-50">
+                    Pending
+                  </Badge>
+                )}
+                {getActionButton(doc)}
+              </div>
             </div>
           ))}
         </div>
