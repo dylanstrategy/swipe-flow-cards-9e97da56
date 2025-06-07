@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   CheckCircle, 
   Clock, 
@@ -18,7 +19,9 @@ import {
   UserPlus,
   FileCheck,
   Calendar,
-  X
+  Download,
+  MessageSquare,
+  Send
 } from 'lucide-react';
 
 interface ResidentTimelineModalProps {
@@ -35,6 +38,7 @@ const ResidentTimelineModal: React.FC<ResidentTimelineModalProps> = ({
   residentStatus
 }) => {
   const [selectedStep, setSelectedStep] = useState<string | null>(null);
+  const [messageText, setMessageText] = useState('');
 
   // Timeline steps from application to move-out
   const getTimelineSteps = (status: string) => {
@@ -215,6 +219,19 @@ const ResidentTimelineModal: React.FC<ResidentTimelineModalProps> = ({
     }
   };
 
+  const handleSendMessage = (stepId: string) => {
+    if (messageText.trim()) {
+      console.log(`Sending nudge for ${stepId}:`, messageText);
+      setMessageText('');
+      // In a real app, this would send the message
+    }
+  };
+
+  const handleDownloadDocument = (docName: string) => {
+    console.log(`Downloading document: ${docName}`);
+    // In a real app, this would trigger the download
+  };
+
   const pendingSteps = timelineSteps.filter(step => step.status === 'pending' || step.status === 'in-progress');
   const mostPendingStep = pendingSteps[0];
 
@@ -224,9 +241,6 @@ const ResidentTimelineModal: React.FC<ResidentTimelineModalProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Resident Timeline - {residentName}</span>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="w-4 h-4" />
-            </Button>
           </DialogTitle>
         </DialogHeader>
 
@@ -284,25 +298,66 @@ const ResidentTimelineModal: React.FC<ResidentTimelineModalProps> = ({
                       {/* Expanded details */}
                       {selectedStep === step.id && (
                         <div className="mt-4 pt-4 border-t border-gray-100">
-                          <div className="space-y-3">
+                          <div className="space-y-4">
+                            {/* Documents Section */}
                             <div>
-                              <h4 className="font-medium text-sm text-gray-900 mb-1">Documents</h4>
-                              <div className="space-y-1">
+                              <h4 className="font-medium text-sm text-gray-900 mb-2">Documents</h4>
+                              <div className="space-y-2">
                                 {step.documents.map((doc, docIndex) => (
-                                  <div key={docIndex} className="flex items-center space-x-2 text-sm">
-                                    <FileText className="w-4 h-4 text-gray-400" />
-                                    <span className="text-blue-600 hover:underline cursor-pointer">{doc}</span>
+                                  <div key={docIndex} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                                    <div className="flex items-center space-x-2">
+                                      <FileText className="w-4 h-4 text-gray-400" />
+                                      <span className="text-sm text-gray-700">{doc}</span>
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDownloadDocument(doc);
+                                      }}
+                                    >
+                                      <Download className="w-4 h-4" />
+                                    </Button>
                                   </div>
                                 ))}
                               </div>
                             </div>
                             
+                            {/* Notes Section */}
                             {step.notes && (
                               <div>
-                                <h4 className="font-medium text-sm text-gray-900 mb-1">Notes</h4>
-                                <p className="text-sm text-gray-600">{step.notes}</p>
+                                <h4 className="font-medium text-sm text-gray-900 mb-2">Notes</h4>
+                                <p className="text-sm text-gray-600 p-2 bg-gray-50 rounded-lg">{step.notes}</p>
                               </div>
                             )}
+
+                            {/* Message/Nudge Section */}
+                            <div>
+                              <h4 className="font-medium text-sm text-gray-900 mb-2">Send Nudge</h4>
+                              <div className="space-y-2">
+                                <Textarea
+                                  placeholder="Send a message or nudge about this step..."
+                                  value={messageText}
+                                  onChange={(e) => setMessageText(e.target.value)}
+                                  className="min-h-[80px]"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                                <div className="flex justify-end">
+                                  <Button
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleSendMessage(step.id);
+                                    }}
+                                    disabled={!messageText.trim()}
+                                  >
+                                    <Send className="w-4 h-4 mr-2" />
+                                    Send Message
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       )}
