@@ -18,6 +18,7 @@ const MaintenanceTodayTab = ({ todayWorkOrders = [], onWorkOrderCompleted }: Mai
   const { toast } = useToast();
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
   const [selectedUnitTurn, setSelectedUnitTurn] = useState<any>(null);
+  const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
 
   const today = new Date();
 
@@ -51,44 +52,47 @@ const MaintenanceTodayTab = ({ todayWorkOrders = [], onWorkOrderCompleted }: Mai
     }
   ];
 
-  // Convert work orders to calendar events format
-  const calendarEvents = [
-    // Add today's scheduled work orders from props
-    ...todayWorkOrders.map(workOrder => {
-      console.log('Converting work order to calendar event:', workOrder);
-      return {
-        id: workOrder.id,
+  // Convert work orders to calendar events format and update state when needed
+  React.useEffect(() => {
+    const events = [
+      // Add today's scheduled work orders from props
+      ...todayWorkOrders.map(workOrder => {
+        console.log('Converting work order to calendar event:', workOrder);
+        return {
+          id: workOrder.id,
+          date: today,
+          time: workOrder.scheduledTime || '09:00',
+          title: `Work Order - Unit ${workOrder.unit}`,
+          description: workOrder.title,
+          category: 'work-order',
+          priority: workOrder.priority,
+          workOrderData: workOrder,
+          canReschedule: true,
+          canCancel: false,
+          estimatedDuration: 120,
+          rescheduledCount: 0
+        };
+      }),
+      // Add unit turns scheduled for today
+      ...unitTurns.filter(turn => turn.status === 'Scheduled').map(unitTurn => ({
+        id: unitTurn.id,
         date: today,
-        time: workOrder.scheduledTime || '09:00',
-        title: `Work Order - Unit ${workOrder.unit}`,
-        description: workOrder.title,
-        category: 'work-order',
-        priority: workOrder.priority,
-        workOrderData: workOrder,
+        time: '10:00',
+        title: `Unit Turn - ${unitTurn.unit}`,
+        description: `${unitTurn.pendingSteps.length} steps remaining`,
+        category: 'unit-turn',
+        priority: unitTurn.priority,
+        unitTurnData: unitTurn,
         canReschedule: true,
         canCancel: false,
-        estimatedDuration: 120,
+        estimatedDuration: 240,
         rescheduledCount: 0
-      };
-    }),
-    // Add unit turns scheduled for today
-    ...unitTurns.filter(turn => turn.status === 'Scheduled').map(unitTurn => ({
-      id: unitTurn.id,
-      date: today,
-      time: '10:00',
-      title: `Unit Turn - ${unitTurn.unit}`,
-      description: `${unitTurn.pendingSteps.length} steps remaining`,
-      category: 'unit-turn',
-      priority: unitTurn.priority,
-      unitTurnData: unitTurn,
-      canReschedule: true,
-      canCancel: false,
-      estimatedDuration: 240,
-      rescheduledCount: 0
-    }))
-  ];
-
-  console.log('Calendar events generated:', calendarEvents);
+      }))
+    ];
+    
+    setCalendarEvents(events);
+    console.log('Calendar events generated:', events);
+  }, [todayWorkOrders]);
 
   const handleEventClick = (event: any) => {
     console.log('Event clicked:', event);
@@ -104,8 +108,27 @@ const MaintenanceTodayTab = ({ todayWorkOrders = [], onWorkOrderCompleted }: Mai
     console.log('Event held:', event);
   };
 
+  const handleEventReschedule = (event: any, newTime: string) => {
+    console.log('Event rescheduled:', event, 'to', newTime);
+    
+    // Update the calendar events state
+    setCalendarEvents(prev => prev.map(e => 
+      e.id === event.id 
+        ? { ...e, time: newTime, rescheduledCount: (e.rescheduledCount || 0) + 1 }
+        : e
+    ));
+    
+    toast({
+      title: "Event Rescheduled",
+      description: `${event.title} moved to ${newTime}`,
+    });
+  };
+
   const handleWorkOrderCompleted = (workOrderId: string) => {
     console.log('Work order completed in Today tab:', workOrderId);
+    
+    // Remove from calendar events
+    setCalendarEvents(prev => prev.filter(e => e.workOrderData?.id !== workOrderId));
     
     // Notify parent component if callback provided
     if (onWorkOrderCompleted) {
@@ -165,6 +188,7 @@ const MaintenanceTodayTab = ({ todayWorkOrders = [], onWorkOrderCompleted }: Mai
           events={calendarEvents}
           onEventClick={handleEventClick}
           onEventHold={handleEventHold}
+          onEventReschedule={handleEventReschedule}
         />
       </div>
     </div>
