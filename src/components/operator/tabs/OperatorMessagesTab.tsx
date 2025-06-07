@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -68,7 +69,7 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
       time: 'Yesterday',
       priority: 'low',
       category: 'maintenance',
-      unread: true, // Changed back to unread for presentation
+      unread: true,
       date: new Date(Date.now() - 24 * 60 * 60 * 1000) // Yesterday
     },
     {
@@ -80,7 +81,7 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
       time: '2 days ago',
       priority: 'normal',
       category: 'collections',
-      unread: true, // Changed back to unread for presentation
+      unread: true,
       unit: '302',
       residentPhone: '(555) 345-6789',
       date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // 2 days ago
@@ -94,8 +95,22 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
       time: '3 days ago',
       priority: 'low',
       category: 'community',
-      unread: true, // Changed back to unread for presentation
+      unread: true,
       date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) // 3 days ago
+    },
+    {
+      id: 6,
+      from: 'Unit 108 - Emily Davis',
+      subject: 'Parking Space Issue',
+      preview: 'Someone keeps parking in my assigned spot...',
+      fullMessage: 'Someone keeps parking in my assigned parking spot #15. This has happened three times this week and I have to park on the street. Can you please look into this and make sure residents are using their correct assigned spaces?',
+      time: '5 hours ago',
+      priority: 'normal',
+      category: 'community',
+      unread: true,
+      unit: '108',
+      residentPhone: '(555) 456-7890',
+      date: new Date()
     }
   ]);
 
