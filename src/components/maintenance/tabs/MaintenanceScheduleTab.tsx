@@ -112,7 +112,16 @@ const MaintenanceScheduleTab = ({ onTodayWorkOrdersChange, todayWorkOrders: exte
 
   // Use external state if provided, otherwise use internal state
   const todayWorkOrders = externalTodayWorkOrders || internalTodayWorkOrders;
-  const setTodayWorkOrders = onTodayWorkOrdersChange || setInternalTodayWorkOrders;
+
+  // Helper function to update today's work orders
+  const updateTodayWorkOrders = (newWorkOrders: any[]) => {
+    console.log('Updating today work orders with:', newWorkOrders);
+    if (onTodayWorkOrdersChange) {
+      onTodayWorkOrdersChange(newWorkOrders);
+    } else {
+      setInternalTodayWorkOrders(newWorkOrders);
+    }
+  };
 
   // Helper function to find first available time slot
   const findFirstAvailableTimeSlot = () => {
@@ -175,11 +184,8 @@ const MaintenanceScheduleTab = ({ onTodayWorkOrdersChange, todayWorkOrders: exte
     // If scheduled for today, add to today's work orders for the Today tab
     if (isToday && !finalScheduledTime.includes('Tomorrow')) {
       console.log('Adding to today work orders:', updatedWorkOrder);
-      setTodayWorkOrders(prev => {
-        const updated = Array.isArray(prev) ? [...prev, updatedWorkOrder] : [updatedWorkOrder];
-        console.log('Updated today work orders:', updated);
-        return updated;
-      });
+      const newTodayWorkOrders = [...todayWorkOrders, updatedWorkOrder];
+      updateTodayWorkOrders(newTodayWorkOrders);
     }
     
     toast({
@@ -190,11 +196,8 @@ const MaintenanceScheduleTab = ({ onTodayWorkOrdersChange, todayWorkOrders: exte
 
   const addTodayWorkOrder = (workOrder: any) => {
     console.log('Adding work order to today context:', workOrder);
-    setTodayWorkOrders(prev => {
-      const updated = Array.isArray(prev) ? [...prev, workOrder] : [workOrder];
-      console.log('Today work orders after add:', updated);
-      return updated;
-    });
+    const newTodayWorkOrders = [...todayWorkOrders, workOrder];
+    updateTodayWorkOrders(newTodayWorkOrders);
   };
 
   const contextValue = {
