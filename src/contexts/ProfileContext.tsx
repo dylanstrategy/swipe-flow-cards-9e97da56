@@ -1,119 +1,148 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+interface Pet {
+  id: number;
+  name: string;
+  type: 'dog' | 'cat' | 'bird' | 'fish' | 'other';
+  breed?: string;
+  age?: number;
+  image?: string;
+}
 
 interface LifestyleTag {
   id: string;
   label: string;
   emoji: string;
+  category: 'fitness' | 'food' | 'entertainment' | 'lifestyle';
 }
 
-interface ProfileData {
-  lifestyleTags: string[];
+interface Profile {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  unit: string;
+  building: string;
+  pets: Pet[];
   selectedLifestyleTags: LifestyleTag[];
-  pets: Array<{ name: string; type: string; breed: string }>;
+  emergencyContact: {
+    name: string;
+    phone: string;
+    relationship: string;
+  };
+  preferences: {
+    notifications: boolean;
+    marketing: boolean;
+    maintenance: boolean;
+  };
 }
 
 interface ProfileContextType {
-  profile: ProfileData;
-  updateLifestyleTags: (tags: string[]) => void;
-  updatePets: (pets: Array<{ name: string; type: string; breed: string }>) => void;
-  getPersonalizedContext: () => 'pet-service' | 'message' | 'appointment' | 'event' | 'work-order' | 'service' | 'document' | 'moving-service' | 'home-setup';
+  profile: Profile;
+  updateProfile: (updates: Partial<Profile>) => void;
+  addPet: (pet: Omit<Pet, 'id'>) => void;
+  removePet: (petId: number) => void;
+  toggleLifestyleTag: (tag: LifestyleTag) => void;
+  getPersonalizedContext: () => string;
 }
+
+const defaultProfile: Profile = {
+  firstName: 'Sarah',
+  lastName: 'Johnson',
+  email: 'sarah.johnson@email.com',
+  phone: '(555) 123-4567',
+  unit: '204A',
+  building: 'Building A',
+  pets: [
+    {
+      id: 1,
+      name: 'Max',
+      type: 'dog',
+      breed: 'Golden Retriever',
+      age: 3,
+      image: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=400'
+    }
+  ],
+  selectedLifestyleTags: [
+    { id: 'fitness', label: 'Fitness Enthusiast', emoji: '💪', category: 'fitness' },
+    { id: 'foodie', label: 'Foodie', emoji: '🍕', category: 'food' }
+  ],
+  emergencyContact: {
+    name: 'Mike Johnson',
+    phone: '(555) 987-6543',
+    relationship: 'Spouse'
+  },
+  preferences: {
+    notifications: true,
+    marketing: false,
+    maintenance: true
+  }
+};
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
-export const useProfile = () => {
-  const context = useContext(ProfileContext);
-  if (!context) {
-    throw new Error('useProfile must be used within a ProfileProvider');
-  }
-  return context;
-};
+export const ProfileProvider = ({ children }: { children: ReactNode }) => {
+  const [profile, setProfile] = useState<Profile>(defaultProfile);
 
-export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [profile, setProfile] = useState<ProfileData>({
-    lifestyleTags: [],
-    selectedLifestyleTags: [],
-    pets: [
-      { name: 'Luna', type: 'dog', breed: 'Golden Retriever' },
-      { name: 'Whiskers', type: 'cat', breed: 'Maine Coon' }
-    ]
-  });
-
-  const lifestyleTagsMap = {
-    'pets': { id: 'pets', label: 'Has space for pets', emoji: '🐾' },
-    'foodAndDrinks': { id: 'foodAndDrinks', label: 'Walkable to great food & drinks', emoji: '🍽️' },
-    'nature': { id: 'nature', label: 'Close to nature or green space', emoji: '🌿' },
-    'calm': { id: 'calm', label: 'Feels calm and quiet', emoji: '🛋️' },
-    'wifi': { id: 'wifi', label: 'Fast Wi-Fi for work or play', emoji: '📶' },
-    'hosting': { id: 'hosting', label: 'Easy to host friends', emoji: '🎉' },
-    'creativity': { id: 'creativity', label: 'Inspires creativity', emoji: '🎨' },
-    'wellness': { id: 'wellness', label: 'Has wellness or fitness options', emoji: '🧘' },
-    'maintenance': { id: 'maintenance', label: 'Worry-free maintenance', emoji: '🛠️' },
-    'central': { id: 'central', label: 'In the middle of it all', emoji: '🏙️' },
-    'private': { id: 'private', label: 'Cozy and private', emoji: '🛏️' },
-    'community': { id: 'community', label: 'Has a sense of community', emoji: '🧑‍🤝‍🧑' },
-    'soundproofing': { id: 'soundproofing', label: 'Good soundproofing for music or calls', emoji: '🎧' },
-    'budget': { id: 'budget', label: 'Fits my budget comfortably', emoji: '💸' },
-    'design': { id: 'design', label: 'Beautifully designed spaces', emoji: '✨' },
-    'accessible': { id: 'accessible', label: 'Easy to get around / accessible', emoji: '♿' }
+  const updateProfile = (updates: Partial<Profile>) => {
+    setProfile(prev => ({ ...prev, ...updates }));
   };
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const savedProfile = localStorage.getItem('userProfile');
-    const discoveryData = localStorage.getItem('userPreferences');
-    
-    if (savedProfile) {
-      const parsed = JSON.parse(savedProfile);
-      setProfile(prev => ({ ...prev, ...parsed }));
-    } else if (discoveryData) {
-      // Migrate from discovery data
-      const parsed = JSON.parse(discoveryData);
-      if (parsed.lifestyleTags) {
-        updateLifestyleTags(parsed.lifestyleTags);
+  const addPet = (pet: Omit<Pet, 'id'>) => {
+    const newPet = { ...pet, id: Date.now() };
+    setProfile(prev => ({ ...prev, pets: [...prev.pets, newPet] }));
+  };
+
+  const removePet = (petId: number) => {
+    setProfile(prev => ({ ...prev, pets: prev.pets.filter(pet => pet.id !== petId) }));
+  };
+
+  const toggleLifestyleTag = (tag: LifestyleTag) => {
+    setProfile(prev => {
+      const exists = prev.selectedLifestyleTags.find(t => t.id === tag.id);
+      if (exists) {
+        return {
+          ...prev,
+          selectedLifestyleTags: prev.selectedLifestyleTags.filter(t => t.id !== tag.id)
+        };
+      } else {
+        return {
+          ...prev,
+          selectedLifestyleTags: [...prev.selectedLifestyleTags, tag]
+        };
       }
+    });
+  };
+
+  const getPersonalizedContext = () => {
+    if (profile.pets.length > 0) {
+      return 'pet-service';
     }
-  }, []);
-
-  const updateLifestyleTags = (tags: string[]) => {
-    const selectedTags = tags.map(tagId => lifestyleTagsMap[tagId]).filter(Boolean);
-    const updatedProfile = {
-      ...profile,
-      lifestyleTags: tags,
-      selectedLifestyleTags: selectedTags
-    };
-    setProfile(updatedProfile);
-    localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
-  };
-
-  const updatePets = (pets: Array<{ name: string; type: string; breed: string }>) => {
-    const updatedProfile = { ...profile, pets };
-    setProfile(updatedProfile);
-    localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
-  };
-
-  const getPersonalizedContext = (): 'pet-service' | 'message' | 'appointment' | 'event' | 'work-order' | 'service' | 'document' | 'moving-service' | 'home-setup' => {
-    const { lifestyleTags, pets } = profile;
-    
-    if (pets.length > 0) return 'pet-service';
-    if (lifestyleTags.includes('foodAndDrinks')) return 'message';
-    if (lifestyleTags.includes('wellness')) return 'appointment';
-    if (lifestyleTags.includes('hosting')) return 'event';
-    if (lifestyleTags.includes('maintenance')) return 'work-order';
-    if (lifestyleTags.includes('community')) return 'event';
-    
-    return 'message';
+    if (profile.selectedLifestyleTags.length > 0) {
+      return profile.selectedLifestyleTags[0].category;
+    }
+    return 'general';
   };
 
   return (
     <ProfileContext.Provider value={{
       profile,
-      updateLifestyleTags,
-      updatePets,
+      updateProfile,
+      addPet,
+      removePet,
+      toggleLifestyleTag,
       getPersonalizedContext
     }}>
       {children}
     </ProfileContext.Provider>
   );
+};
+
+export const useProfile = () => {
+  const context = useContext(ProfileContext);
+  if (context === undefined) {
+    throw new Error('useProfile must be used within a ProfileProvider');
+  }
+  return context;
 };

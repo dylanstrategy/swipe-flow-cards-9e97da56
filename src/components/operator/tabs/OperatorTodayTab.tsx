@@ -50,69 +50,81 @@ const OperatorTodayTab = () => {
   const [todayEvents, setTodayEvents] = useState([
     {
       id: 1,
+      date: new Date(),
       time: '09:00',
       title: 'Move-In Inspection',
       description: 'Unit 4B - Sarah Johnson',
       type: 'move-in',
-      priority: 'high',
+      priority: 'high' as const,
       status: 'scheduled',
       building: 'Building A',
-      unit: '4B'
+      unit: '4B',
+      category: 'Community Management'
     },
     {
       id: 2,
+      date: new Date(),
       time: '10:30',
       title: 'Lease Signing',
       description: 'Unit 2C - Mike Chen renewal',
       type: 'lease',
-      priority: 'medium',
+      priority: 'medium' as const,
       status: 'confirmed',
       building: 'Building B',
-      unit: '2C'
+      unit: '2C',
+      category: 'Leasing'
     },
     {
       id: 3,
+      date: new Date(),
       time: '11:15',
       title: 'Resident Message',
       description: 'Unit 5A - HVAC repair follow-up',
       type: 'message',
-      priority: 'normal',
+      priority: 'low' as const,
       status: 'pending',
       building: 'Building C',
-      unit: '5A'
+      unit: '5A',
+      category: 'Property Services'
     },
     {
       id: 4,
+      date: new Date(),
       time: '14:00',
       title: 'Tour Scheduled',
       description: 'Studio unit - Alex Rodriguez',
       type: 'tour',
-      priority: 'normal',
+      priority: 'low' as const,
       status: 'confirmed',
       building: 'Building A',
-      unit: 'Studio-12'
+      unit: 'Studio-12',
+      category: 'Leasing'
     },
     {
       id: 5,
+      date: new Date(),
       time: '15:30',
       title: 'Move-Out Notice',
       description: 'Unit 1A - Notice processing',
       type: 'move-out',
-      priority: 'medium',
+      priority: 'medium' as const,
       status: 'processing',
       building: 'Building A',
-      unit: '1A'
+      unit: '1A',
+      category: 'Community Management'
     },
     {
       id: 6,
+      date: new Date(),
       time: '16:15',
       title: 'Payment Follow-up',
       description: 'Unit 3D - Late rent discussion',
       type: 'payment',
-      priority: 'high',
+      priority: 'urgent' as const,
       status: 'urgent',
       building: 'Building B',
-      unit: '3D'
+      unit: '3D',
+      category: 'Collections'
     }
   ]);
 
