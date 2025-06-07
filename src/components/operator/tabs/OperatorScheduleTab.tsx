@@ -45,7 +45,7 @@ const OperatorScheduleTab = () => {
       date: new Date(),
       time: '09:00 AM',
       title: 'Unit 204 - HVAC Repair',
-      description: 'Scheduled maintenance for reported AC issue',
+      description: 'Unit 204 - Scheduled maintenance for reported AC issue',
       type: 'maintenance',
       category: 'Property Services',
       priority: 'urgent',
@@ -57,10 +57,10 @@ const OperatorScheduleTab = () => {
       date: new Date(),
       time: '10:30 AM',
       title: 'Move-In Inspection',
-      description: 'Unit 156 - New resident move-in inspection',
-      type: 'inspection',
+      description: 'Sarah Johnson - New resident move-in inspection',
+      type: 'move-in',
       category: 'Community Management',
-      priority: 'normal',
+      priority: 'high',
       building: 'Building A',
       unit: '156'
     },
@@ -69,8 +69,8 @@ const OperatorScheduleTab = () => {
       date: new Date(),
       time: '02:00 PM',
       title: 'Lease Signing',
-      description: 'Unit 302 - Lease renewal signing appointment',
-      type: 'leasing',
+      description: 'Mike Chen - Lease renewal signing appointment',
+      type: 'lease',
       category: 'Leasing',
       priority: 'normal',
       building: 'Building B',
@@ -81,8 +81,8 @@ const OperatorScheduleTab = () => {
       date: new Date(),
       time: '03:30 PM',
       title: 'Delinquency Follow-up',
-      description: 'Unit 108 - Payment plan discussion',
-      type: 'collections',
+      description: 'John Smith - Payment plan discussion',
+      type: 'payment',
       category: 'Delinquency',
       priority: 'high',
       building: 'Building A',
@@ -93,8 +93,8 @@ const OperatorScheduleTab = () => {
       date: new Date(),
       time: '04:00 PM',
       title: 'Renewal Notice',
-      description: 'Unit 225 - Lease renewal discussion',
-      type: 'renewal',
+      description: 'Jennifer Adams - Lease renewal discussion',
+      type: 'message',
       category: 'Renewals',
       priority: 'normal',
       building: 'Building C',
@@ -105,10 +105,10 @@ const OperatorScheduleTab = () => {
   const categories = [
     { value: 'all', label: 'All Categories' },
     { value: 'maintenance', label: 'Maintenance' },
-    { value: 'inspection', label: 'Inspections' },
-    { value: 'leasing', label: 'Leasing' },
-    { value: 'collections', label: 'Collections' },
-    { value: 'renewal', label: 'Renewals' }
+    { value: 'move-in', label: 'Move-In' },
+    { value: 'lease', label: 'Leasing' },
+    { value: 'payment', label: 'Collections' },
+    { value: 'message', label: 'Messages' }
   ];
 
   const enhanceItemForReschedule = (item: any): EnhancedEvent => {
@@ -172,10 +172,10 @@ const OperatorScheduleTab = () => {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'maintenance': return <Wrench size={16} className="text-orange-600" />;
-      case 'inspection': return <Home size={16} className="text-blue-600" />;
-      case 'leasing': return <FileText size={16} className="text-green-600" />;
-      case 'collections': return <DollarSign size={16} className="text-red-600" />;
-      case 'renewal': return <Users size={16} className="text-purple-600" />;
+      case 'move-in': return <Home size={16} className="text-green-600" />;
+      case 'lease': return <FileText size={16} className="text-blue-600" />;
+      case 'payment': return <DollarSign size={16} className="text-red-600" />;
+      case 'message': return <MessageSquare size={16} className="text-purple-600" />;
       default: return <CalendarIcon size={16} className="text-gray-600" />;
     }
   };
