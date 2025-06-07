@@ -578,7 +578,7 @@ const OperatorScheduleTab = () => {
         />
       </div>
 
-      <div className="flex-1 px-4 pb-24 overflow-hidden">
+      <div className="flex-1 px-4 min-h-0 overflow-hidden" style={{ paddingBottom: '120px' }}>
         <HourlyCalendarView
           selectedDate={selectedDate}
           events={getEventsForDate(selectedDate)}
