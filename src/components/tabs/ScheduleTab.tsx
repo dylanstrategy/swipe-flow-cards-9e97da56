@@ -509,15 +509,17 @@ const ScheduleTab = () => {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Schedule</h1>
         
-        {/* Compact Date Picker */}
+        {/* Compact Date Picker - Mobile: icon only, Desktop: full date */}
         <Popover>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              className="w-[240px] justify-start text-left font-normal shadow-sm"
+              className="justify-center sm:justify-start text-left font-normal shadow-sm w-12 sm:w-[240px]"
             >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {format(selectedDate, "EEEE, MMMM d, yyyy")}
+              <CalendarIcon className="h-4 w-4" />
+              <span className="hidden sm:inline sm:ml-2">
+                {format(selectedDate, "EEEE, MMMM d, yyyy")}
+              </span>
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="end">
