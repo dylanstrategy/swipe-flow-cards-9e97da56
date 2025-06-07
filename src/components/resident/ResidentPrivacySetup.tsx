@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Save, Eye, Shield, Lock } from 'lucide-react';
+import { ChevronLeft, Save, Eye, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -26,18 +26,10 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
     locationTracking: false,
     profileVisibility: 'private',
     shareContactInfo: false,
-    allowDirectMessages: true,
-    // Advertisement preferences
-    personalizedAds: false,
-    localBusinessAds: false,
-    propertyServicesAds: true,
-    // Security preferences
-    twoFactorAuth: false,
-    loginNotifications: true
+    allowDirectMessages: true
   };
 
   const [currentSettings, setCurrentSettings] = useState(defaultSettings);
-  const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
 
   // Update local state when settings load
   useEffect(() => {
@@ -113,14 +105,6 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
     }
   };
 
-  const handleSetupTwoFactor = () => {
-    toast({
-      title: "Two-Factor Authentication",
-      description: "Two-factor authentication setup will be available soon.",
-      duration: 3000,
-    });
-  };
-
   if (loading) {
     return (
       <div className="p-6 flex items-center justify-center">
@@ -141,136 +125,6 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
             <p className="text-sm text-gray-600">Manage your privacy settings and data preferences</p>
           </div>
         </div>
-
-        {/* Privacy Notice */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Eye className="w-5 h-5" />
-              Privacy Notice
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-medium text-blue-900 mb-2">Your Privacy Matters</h4>
-              <p className="text-sm text-blue-800 mb-3">
-                We are committed to protecting your privacy and being transparent about how we use your data. 
-                Your personal information is used to provide property management services and improve your living experience.
-              </p>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setShowPrivacyNotice(!showPrivacyNotice)}
-                className="text-blue-700 border-blue-300 hover:bg-blue-100"
-              >
-                {showPrivacyNotice ? 'Hide' : 'View'} Full Privacy Policy
-              </Button>
-              
-              {showPrivacyNotice && (
-                <div className="mt-4 pt-4 border-t border-blue-200">
-                  <div className="text-sm text-blue-800 space-y-2">
-                    <p><strong>Data Collection:</strong> We collect information necessary for property management, maintenance, and communication.</p>
-                    <p><strong>Data Usage:</strong> Your data is used to provide services, process payments, and maintain property security.</p>
-                    <p><strong>Data Sharing:</strong> We do not sell your personal information. Data is only shared with service providers as necessary.</p>
-                    <p><strong>Your Rights:</strong> You can request access, correction, or deletion of your personal data at any time.</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Advertisement Preferences */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Eye className="w-5 h-5" />
-              Advertisement Preferences
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Personalized Ads</div>
-                  <div className="text-sm text-gray-600">Show ads tailored to your interests and preferences</div>
-                </div>
-                <Switch 
-                  checked={currentSettings.personalizedAds}
-                  onCheckedChange={(checked) => handleToggleChange('personalizedAds', checked)}
-                />
-              </div>
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Local Business Ads</div>
-                  <div className="text-sm text-gray-600">Receive advertisements from local businesses and services</div>
-                </div>
-                <Switch 
-                  checked={currentSettings.localBusinessAds}
-                  onCheckedChange={(checked) => handleToggleChange('localBusinessAds', checked)}
-                />
-              </div>
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Property Services Ads</div>
-                  <div className="text-sm text-gray-600">Show ads for property amenities and preferred service providers</div>
-                </div>
-                <Switch 
-                  checked={currentSettings.propertyServicesAds}
-                  onCheckedChange={(checked) => handleToggleChange('propertyServicesAds', checked)}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Security Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5" />
-              Security Settings
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Two-Factor Authentication</div>
-                  <div className="text-sm text-gray-600">Add an extra layer of security to your account</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch 
-                    checked={currentSettings.twoFactorAuth}
-                    onCheckedChange={(checked) => handleToggleChange('twoFactorAuth', checked)}
-                  />
-                  {!currentSettings.twoFactorAuth && (
-                    <Button variant="outline" size="sm" onClick={handleSetupTwoFactor}>
-                      <Lock className="w-4 h-4 mr-1" />
-                      Setup
-                    </Button>
-                  )}
-                </div>
-              </div>
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Login Notifications</div>
-                  <div className="text-sm text-gray-600">Get notified when someone signs into your account</div>
-                </div>
-                <Switch 
-                  checked={currentSettings.loginNotifications}
-                  onCheckedChange={(checked) => handleToggleChange('loginNotifications', checked)}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Data Sharing */}
         <Card>
@@ -318,8 +172,8 @@ const ResidentPrivacySetup: React.FC<ResidentPrivacySetupProps> = ({ onBack }) =
 
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium">Analytics Tracking</div>
-                  <div className="text-sm text-gray-600">Allow analytics to improve user experience</div>
+                  <div className="font-medium">Personalized Ads / Analytics Tracking</div>
+                  <div className="text-sm text-gray-600">Allow analytics and personalized advertising</div>
                 </div>
                 <Switch 
                   checked={currentSettings.analyticsTracking}

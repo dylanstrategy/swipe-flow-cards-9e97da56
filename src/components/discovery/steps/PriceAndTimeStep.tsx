@@ -1,8 +1,8 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { MapPin } from 'lucide-react';
+import { ChevronRight, MapPin } from 'lucide-react';
+import SwipeUpPrompt from '@/components/ui/swipe-up-prompt';
 
 interface PriceAndTimeStepProps {
   priceRange: [number, number];
@@ -29,6 +29,10 @@ const PriceAndTimeStep = ({
   canContinue
 }: PriceAndTimeStepProps) => {
   const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragProgress, setDragProgress] = useState(0);
+  const slideRef = useRef<HTMLDivElement>(null);
+  const startX = useRef(0);
 
   const timeframeOptions = [
     { id: 'asap', label: 'ASAP (Within 2 weeks)' },
@@ -60,6 +64,48 @@ const PriceAndTimeStep = ({
     } else {
       setAddressSuggestions([]);
     }
+  };
+
+  const handleSlideStart = (e: React.TouchEvent | React.MouseEvent) => {
+    if (!canContinue) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setIsDragging(true);
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    startX.current = clientX;
+    setDragProgress(0);
+  };
+
+  const handleSlideMove = (e: React.TouchEvent | React.MouseEvent) => {
+    if (!isDragging || !canContinue || !slideRef.current) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const rect = slideRef.current.getBoundingClientRect();
+    const deltaX = clientX - startX.current;
+    const maxDistance = rect.width - 60; // Account for button width
+    const progress = Math.max(0, Math.min(deltaX / maxDistance, 1));
+    
+    setDragProgress(progress);
+    
+    // Complete action when dragged 90% of the way
+    if (progress >= 0.9) {
+      setIsDragging(false);
+      setDragProgress(0);
+      onContinue();
+    }
+  };
+
+  const handleSlideEnd = (e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setIsDragging(false);
+    setDragProgress(0);
   };
 
   const handleClearData = () => {
@@ -200,18 +246,87 @@ const PriceAndTimeStep = ({
             </div>
           </div>
         )}
+
+        {/* Slide to Continue Button */}
+        <div className="pt-8 space-y-4">
+          <div className="max-w-sm mx-auto">
+            <div 
+              ref={slideRef}
+              className={`relative h-16 rounded-full border-2 transition-colors duration-200 overflow-hidden touch-none ${
+                canContinue 
+                  ? 'border-blue-500 bg-blue-50' 
+                  : 'border-gray-300 bg-gray-100'
+              }`}
+              style={{ touchAction: 'none' }}
+            >
+              {/* Background Progress */}
+              <div 
+                className="absolute inset-0 bg-blue-200 transition-all duration-100"
+                style={{ 
+                  width: `${dragProgress * 100}%`,
+                  opacity: isDragging ? 0.5 : 0
+                }}
+              />
+              
+              {/* Background Text */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <span className={`text-base font-medium transition-opacity duration-200 ${
+                  canContinue ? 'text-blue-600' : 'text-gray-400'
+                } ${isDragging && dragProgress > 0.3 ? 'opacity-30' : 'opacity-100'}`}>
+                  {canContinue ? 'Swipe to continue' : 'Complete all fields'}
+                </span>
+              </div>
+              
+              {/* Sliding Button */}
+              {canContinue && (
+                <div
+                  className={`absolute top-1 left-1 w-14 h-14 rounded-full bg-blue-500 flex items-center justify-center transition-all duration-100 ${
+                    isDragging ? 'shadow-2xl scale-110' : 'shadow-lg'
+                  }`}
+                  style={{ 
+                    transform: slideRef.current 
+                      ? `translateX(${dragProgress * (slideRef.current.offsetWidth - 60)}px)` 
+                      : 'translateX(0px)',
+                    touchAction: 'none'
+                  }}
+                  onTouchStart={handleSlideStart}
+                  onTouchMove={handleSlideMove}
+                  onTouchEnd={handleSlideEnd}
+                  onMouseDown={handleSlideStart}
+                  onMouseMove={handleSlideMove}
+                  onMouseUp={handleSlideEnd}
+                  onMouseLeave={handleSlideEnd}
+                >
+                  <ChevronRight className="text-white" size={24} />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Fallback Button */}
+          <div className="max-w-sm mx-auto">
+            <Button 
+              onClick={onContinue}
+              disabled={!canContinue}
+              variant="outline"
+              className="w-full text-base"
+              size="default"
+            >
+              Or tap here to continue
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {/* Continue Button - Fixed at bottom */}
+      {/* Show SwipeUpPrompt when ready */}
       {canContinue && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
-          <Button
-            onClick={onContinue}
-            className="w-full py-4 text-lg font-semibold"
-            size="lg"
-          >
-            Continue
-          </Button>
+        <div className="fixed bottom-0 left-0 right-0 z-50">
+          <SwipeUpPrompt 
+            onContinue={onContinue}
+            onClear={handleClearData}
+            message="Ready to find your perfect home!"
+            buttonText="Continue"
+          />
         </div>
       )}
     </div>

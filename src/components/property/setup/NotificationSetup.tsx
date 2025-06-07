@@ -1,10 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Save, Bell, Mail, MessageSquare, Hand } from 'lucide-react';
+import { ChevronLeft, Save, Bell, Mail, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -47,91 +46,24 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ onBack }) => {
     }
   });
 
-  const [swipeGestures, setSwipeGestures] = useState({
-    payment: {
-      left: 'remind',
-      right: 'pay'
-    },
-    service: {
-      left: 'skip',
-      right: 'schedule'
-    },
-    event: {
-      left: 'decline',
-      right: 'accept'
-    },
-    workorder: {
-      left: 'reschedule',
-      right: 'approve'
-    },
-    message: {
-      left: 'archive',
-      right: 'reply'
-    }
-  });
-
-  const gestureOptions = {
-    payment: {
-      options: [
-        { value: 'remind', label: '⏰ Remind Me Later', icon: '⏰' },
-        { value: 'pay', label: '💳 Pay Now', icon: '💳' },
-        { value: 'skip', label: '⏭️ Skip', icon: '⏭️' },
-        { value: 'view', label: '👁️ View Details', icon: '👁️' }
-      ]
-    },
-    service: {
-      options: [
-        { value: 'schedule', label: '📅 Schedule', icon: '📅' },
-        { value: 'skip', label: '⏭️ Skip', icon: '⏭️' },
-        { value: 'info', label: 'ℹ️ More Info', icon: 'ℹ️' },
-        { value: 'save', label: '💾 Save for Later', icon: '💾' }
-      ]
-    },
-    event: {
-      options: [
-        { value: 'accept', label: '✅ Accept/RSVP', icon: '✅' },
-        { value: 'decline', label: '❌ Decline', icon: '❌' },
-        { value: 'maybe', label: '🤔 Maybe', icon: '🤔' },
-        { value: 'remind', label: '⏰ Remind Me', icon: '⏰' }
-      ]
-    },
-    workorder: {
-      options: [
-        { value: 'approve', label: '✅ Approve', icon: '✅' },
-        { value: 'reschedule', label: '📅 Reschedule', icon: '📅' },
-        { value: 'cancel', label: '❌ Cancel', icon: '❌' },
-        { value: 'comment', label: '💬 Add Comment', icon: '💬' }
-      ]
-    },
-    message: {
-      options: [
-        { value: 'reply', label: '💬 Quick Reply', icon: '💬' },
-        { value: 'archive', label: '📦 Archive', icon: '📦' },
-        { value: 'star', label: '⭐ Star/Important', icon: '⭐' },
-        { value: 'delete', label: '🗑️ Delete', icon: '🗑️' }
-      ]
-    }
-  };
-
   const handleSave = () => {
     try {
       // Save to localStorage
       localStorage.setItem('notificationSettings', JSON.stringify(notifications));
-      localStorage.setItem('swipeGesturePreferences', JSON.stringify(swipeGestures));
       
       // Show success toast
       toast({
-        title: "✅ Settings Updated",
-        description: "Your notification and gesture preferences have been saved successfully.",
+        title: "✅ Notifications Updated",
+        description: "Your notification preferences have been saved successfully.",
         duration: 4000,
       });
       
-      console.log('Settings saved successfully:', { notifications, swipeGestures });
+      console.log('Notification settings saved successfully:', notifications);
     } catch (error) {
-      console.error('Error saving settings:', error);
+      console.error('Error saving notification settings:', error);
       toast({
         title: "❌ Save Failed",
-        description: "Failed to save preferences. Please try again.",
+        description: "Failed to save notification preferences. Please try again.",
         duration: 4000,
       });
     }
@@ -197,53 +129,25 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ onBack }) => {
     }
   };
 
-  const handleGestureChange = (eventType: string, direction: 'left' | 'right', action: string) => {
-    const newGestures = {
-      ...swipeGestures,
-      [eventType]: {
-        ...swipeGestures[eventType as keyof typeof swipeGestures],
-        [direction]: action
-      }
-    };
-    setSwipeGestures(newGestures);
-    
-    // Save immediately
-    try {
-      localStorage.setItem('swipeGesturePreferences', JSON.stringify(newGestures));
-    } catch (error) {
-      console.error('Error saving gesture change:', error);
-    }
-  };
-
   // Load saved data on mount and listen for storage changes
   useEffect(() => {
-    const loadData = () => {
-      const savedNotifications = localStorage.getItem('notificationSettings');
-      const savedGestures = localStorage.getItem('swipeGesturePreferences');
-      
-      if (savedNotifications) {
+    const loadNotificationData = () => {
+      const saved = localStorage.getItem('notificationSettings');
+      if (saved) {
         try {
-          setNotifications(JSON.parse(savedNotifications));
+          setNotifications(JSON.parse(saved));
         } catch (error) {
           console.error('Error loading saved notification settings:', error);
         }
       }
-      
-      if (savedGestures) {
-        try {
-          setSwipeGestures(JSON.parse(savedGestures));
-        } catch (error) {
-          console.error('Error loading saved gesture settings:', error);
-        }
-      }
     };
 
-    loadData();
+    loadNotificationData();
 
     // Listen for localStorage changes from other components
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'notificationSettings' || e.key === 'swipeGesturePreferences') {
-        loadData();
+      if (e.key === 'notificationSettings') {
+        loadNotificationData();
       }
     };
 
@@ -259,72 +163,10 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ onBack }) => {
             <ChevronLeft className="w-4 h-4" />
           </Button>
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Notifications & Gestures</h2>
-            <p className="text-sm text-gray-600">Manage your notification preferences and swipe gestures</p>
+            <h2 className="text-xl font-bold text-gray-900">Notification Settings</h2>
+            <p className="text-sm text-gray-600">Manage your notification preferences</p>
           </div>
         </div>
-
-        {/* Swipe Gestures Configuration */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Hand className="w-5 h-5" />
-              Swipe Gesture Settings
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {Object.entries(gestureOptions).map(([eventType, config]) => (
-              <div key={eventType} className="space-y-3">
-                <h3 className="font-medium capitalize text-gray-900">{eventType} Events</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Swipe Left Action
-                    </label>
-                    <Select
-                      value={swipeGestures[eventType as keyof typeof swipeGestures]?.left}
-                      onValueChange={(value) => handleGestureChange(eventType, 'left', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {config.options.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Swipe Right Action
-                    </label>
-                    <Select
-                      value={swipeGestures[eventType as keyof typeof swipeGestures]?.right}
-                      onValueChange={(value) => handleGestureChange(eventType, 'right', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {config.options.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <Separator />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
 
         {/* Email Notifications */}
         <Card>

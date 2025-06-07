@@ -3,14 +3,9 @@ import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
 import WorkOrderFlow from '../schedule/WorkOrderFlow';
 import WorkOrdersReview from './today/WorkOrdersReview';
-import MoveCalendarEvents from '../calendar/MoveCalendarEvents';
-import PullToRefresh from '../PullToRefresh';
 import { useToast } from '@/hooks/use-toast';
 import { format, addDays, isSameDay, differenceInDays, isPast, isToday } from 'date-fns';
 import { useProfile } from '@/contexts/ProfileContext';
-import { useResident } from '@/contexts/ResidentContext';
-import { useLiveCalendarEvents } from '@/hooks/useLiveCalendarEvents';
-import { useLiveResident } from '@/contexts/LiveResidentContext';
 import ResidentTimeline from '../ResidentTimeline';
 import TodayHeader from './today/TodayHeader';
 import QuickActionsGrid from './today/QuickActionsGrid';
@@ -21,9 +16,6 @@ import PointOfSale from '../PointOfSale';
 const TodayTab = () => {
   const { toast } = useToast();
   const { profile, getPersonalizedContext } = useProfile();
-  const { canMoveIn, canMoveOut, profile: residentProfile } = useResident();
-  const { events: liveEvents, refetch: refetchEvents } = useLiveCalendarEvents();
-  const { resident: liveResident } = useLiveResident();
   
   const [showTimeline, setShowTimeline] = useState(false);
   const [showMessageModule, setShowMessageModule] = useState(false);
@@ -58,75 +50,69 @@ const TodayTab = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Add mock events for testing hold interaction
-  const mockTodayEvents = [
+  // Enhanced calendar events with realistic examples and times
+  const calendarEvents = [
     {
-      id: 'mock-1',
+      id: 1,
       date: new Date(),
       time: '09:00',
-      title: 'Apartment Inspection',
-      description: 'Annual inspection of unit 204B',
-      category: 'inspection',
-      type: 'inspection',
+      title: 'Work Order',
+      description: 'Broken outlet - Unit 4B',
+      image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400',
+      category: 'Work Order',
       priority: 'high',
-      unit: 'Unit 204B',
-      building: 'Building A'
+      dueDate: addDays(new Date(), -1)
     },
     {
-      id: 'mock-2', 
+      id: 2,
       date: new Date(),
-      time: '14:30',
-      title: 'Maintenance Request',
-      description: 'Kitchen faucet repair scheduled',
-      category: 'maintenance',
-      type: 'maintenance',
-      priority: 'medium',
-      unit: 'Unit 204B'
+      time: '10:30',
+      title: 'Message from Management',
+      description: 'Please submit your lease renewal documents by Friday',
+      category: 'Management',
+      priority: 'medium'
     },
     {
-      id: 'mock-3',
-      date: new Date(), 
-      time: '16:00',
-      title: 'Lease Renewal Meeting',
-      description: 'Discussion about lease terms for next year',
-      category: 'lease',
-      type: 'lease',
+      id: 3,
+      date: new Date(),
+      time: '11:00',
+      title: 'Lease Renewal',
+      description: 'New rent: $1,550/month starting March 1st',
+      image: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=400',
+      category: 'Lease',
       priority: 'high',
-      unit: 'Unit 204B'
+      dueDate: addDays(new Date(), 2)
     },
     {
-      id: 'mock-4',
+      id: 4,
       date: new Date(),
-      time: '11:15',
-      title: 'Property Management Message',
-      description: 'Important notice about building maintenance',
-      category: 'message',
-      type: 'message', 
-      priority: 'normal'
-    },
-    {
-      id: 'mock-5',
-      date: new Date(),
-      time: '18:00',
-      title: 'Community Event',
-      description: 'Resident happy hour in the clubhouse',
-      category: 'Community Event',
-      type: 'meeting',
+      time: '14:00',
+      title: 'Local Business Offer',
+      description: '20% OFF at Joe\'s Burger Joint - Show this message',
+      image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400',
+      category: 'Point of Sale',
       priority: 'low'
+    },
+    {
+      id: 5,
+      date: addDays(new Date(), 1),
+      time: '14:00',
+      title: 'Rooftop BBQ Social',
+      description: 'Community event - RSVP required',
+      category: 'Community Event',
+      priority: 'low'
+    },
+    {
+      id: 6,
+      date: addDays(new Date(), 2),
+      time: '09:00',
+      title: 'HVAC Maintenance',
+      description: 'Filter replacement scheduled',
+      image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400',
+      category: 'Work Order',
+      priority: 'medium'
     }
   ];
-
-  // Convert live calendar events to the format expected by the UI
-  const processedEvents = liveEvents.map(event => ({
-    id: event.id,
-    date: new Date(event.event_date),
-    time: event.event_time || '09:00',
-    title: event.title,
-    description: event.description || '',
-    category: event.event_type,
-    priority: event.event_type === 'maintenance' ? 'high' : 'medium',
-    dueDate: event.event_date ? new Date(event.event_date) : undefined
-  }));
 
   // Add pet-specific events if user has pets
   const petEvents = hasPets ? [
@@ -150,58 +136,18 @@ const TodayTab = () => {
     }
   ] : [];
 
-  const allEvents = [...processedEvents, ...petEvents, ...mockTodayEvents];
+  const allEvents = [...calendarEvents, ...petEvents];
 
-  // Add move-in/move-out blockers as urgent events based on live resident data
-  if (liveResident) {
-    const moveInCheck = canMoveIn(liveResident.id);
-    const moveOutCheck = canMoveOut(liveResident.id);
-
-    if (!moveInCheck.canMove && liveResident.status === 'active') {
-      allEvents.push({
-        id: 998,
-        date: new Date(),
-        time: '09:00',
-        title: 'Move-In Blocked',
-        description: moveInCheck.blockers.join(', '),
-        category: 'Alert',
-        priority: 'high'
-      });
-    }
-
-    if (!moveOutCheck.canMove && liveResident.status === 'notice') {
-      allEvents.push({
-        id: 997,
-        date: new Date(),
-        time: '09:00',
-        title: 'Move-Out Blocked',
-        description: moveOutCheck.blockers.join(', '),
-        category: 'Alert',
-        priority: 'high'
-      });
-    }
-  }
-
-  // Add rent due event based on live resident data
-  if (liveResident?.monthly_rent && liveResident?.payment_status !== 'current') {
-    const rentDueEvent = {
-      id: 999,
-      date: new Date(),
-      time: '14:00',
-      title: 'Rent Payment Due',
-      description: `$${liveResident.monthly_rent} due soon`,
-      category: 'Payment',
-      priority: 'high',
-      dueDate: addDays(new Date(), 3)
-    };
-    allEvents.push(rentDueEvent);
-  }
-
-  // Pull to refresh handler
-  const handleRefresh = async () => {
-    await Promise.all([
-      refetchEvents(),
-    ]);
+  // Add special event for rent due
+  const rentDueEvent = {
+    id: 999,
+    date: new Date(),
+    time: '14:00',
+    title: 'Rent Payment Due',
+    description: '$1,550 due in 3 days',
+    category: 'Payment',
+    priority: 'high',
+    dueDate: addDays(new Date(), 3) // Due in 3 days
   };
 
   const handleAction = (action: string, item: string) => {
@@ -231,6 +177,7 @@ const TodayTab = () => {
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     } else {
+      // Final submission
       setShowWorkOrderFlow(false);
       setCurrentStep(1);
       toast({
@@ -284,7 +231,8 @@ const TodayTab = () => {
   };
 
   const getRentUrgencyClass = () => {
-    if (liveResident?.payment_status === 'late' || liveResident?.payment_status === 'delinquent') {
+    const daysUntilRentDue = 3; // Rent due in 3 days
+    if (daysUntilRentDue <= 3) {
       return 'wiggle-urgent';
     }
     return '';
@@ -380,7 +328,6 @@ const TodayTab = () => {
     }
   };
 
-  // Render personalized offers based on user's pets or lifestyle tags
   const renderPersonalizedOffers = () => {
     if (hasPets) {
       return (
@@ -420,9 +367,9 @@ const TodayTab = () => {
       <WorkOrderFlow
         selectedScheduleType="Work Order"
         currentStep={currentStep}
-        onNextStep={() => {}}
-        onPrevStep={() => {}}
-        onClose={() => setShowWorkOrderFlow(false)}
+        onNextStep={nextStep}
+        onPrevStep={prevStep}
+        onClose={handleCloseWorkOrder}
       />
     );
   }
@@ -461,53 +408,42 @@ const TodayTab = () => {
   const selectedDateEvents = getEventsForDate(selectedDate);
 
   return (
-    <PullToRefresh onRefresh={handleRefresh}>
-      <div className="px-4 py-6 pb-40">
-        <TodayHeader 
+    <div className="px-4 py-6 pb-24">
+      <TodayHeader 
+        selectedDate={selectedDate}
+        weather={weather}
+        onTimelineClick={() => setShowTimeline(true)}
+      />
+
+      <QuickActionsGrid 
+        onAction={handleAction}
+        onServiceClick={() => setShowServiceModule(true)}
+        onMaintenanceClick={() => setShowWorkOrdersReview(true)}
+        getRentUrgencyClass={getRentUrgencyClass}
+      />
+
+      {/* Personalized offers based on lifestyle tags */}
+      {renderPersonalizedOffers()}
+
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          {isSameDay(selectedDate, new Date()) ? 'Resident Calendar' : 'Calendar'}
+        </h2>
+        
+        <MiniCalendar 
           selectedDate={selectedDate}
-          weather={weather}
-          onTimelineClick={() => setShowTimeline(true)}
+          onDateSelect={setSelectedDate}
+          getEventsForDate={getEventsForDate}
         />
 
-        <QuickActionsGrid 
-          onAction={() => {}}
-          onServiceClick={() => setShowServiceModule(true)}
-          onMaintenanceClick={() => setShowWorkOrdersReview(true)}
-          getRentUrgencyClass={getRentUrgencyClass}
+        <EventsList 
+          events={selectedDateEvents}
+          onAction={handleAction}
+          onQuickReply={handleQuickReply}
+          getSwipeActionsForEvent={getSwipeActionsForEvent}
         />
-
-        {renderPersonalizedOffers()}
-
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            {isSameDay(selectedDate, new Date()) ? 'Resident Calendar' : 'Calendar'}
-          </h2>
-          
-          <MiniCalendar 
-            selectedDate={selectedDate}
-            onDateSelect={setSelectedDate}
-            getEventsForDate={getEventsForDate}
-          />
-
-          <EventsList 
-            events={selectedDateEvents}
-            onAction={() => {}}
-            onQuickReply={() => {}}
-            getSwipeActionsForEvent={() => ({})}
-          />
-
-          <MoveCalendarEvents 
-            selectedDate={selectedDate}
-            onEventClick={(event) => {
-              toast({
-                title: "Move Task",
-                description: `${event.title} - ${event.description}`,
-              });
-            }}
-          />
-        </div>
       </div>
-    </PullToRefresh>
+    </div>
   );
 };
 

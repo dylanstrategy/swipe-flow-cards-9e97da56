@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Save, User, Phone, Mail, MapPin, Calendar, Heart, Clock, Globe } from 'lucide-react';
+import { ChevronLeft, Save, User, Phone, Mail, MapPin, Calendar, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,15 +11,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { useResident } from '@/contexts/ResidentContext';
-import { getFullName } from '@/utils/nameUtils';
 
 interface ResidentIdentitySetupProps {
   onBack: () => void;
 }
 
 interface ExtendedResidentProfile {
-  firstName: string;
-  lastName: string;
+  fullName: string;
   preferredName: string;
   email: string;
   phone: string;
@@ -39,45 +37,12 @@ interface ExtendedResidentProfile {
   };
 }
 
-interface DaySchedule {
-  enabled: boolean;
-  startTime: string;
-  endTime: string;
-}
-
-interface SchedulingPreferences {
-  timeZone: string;
-  lunchBreakStart: string;
-  lunchBreakEnd: string;
-  enableLunchBreak: boolean;
-  weeklySchedule: {
-    monday: DaySchedule;
-    tuesday: DaySchedule;
-    wednesday: DaySchedule;
-    thursday: DaySchedule;
-    friday: DaySchedule;
-    saturday: DaySchedule;
-    sunday: DaySchedule;
-  };
-  autoScheduling: boolean;
-  bufferTime: string;
-  maxDailyAppointments: string;
-  defaultMeetingDuration: string;
-  allowExternalCalendars: boolean;
-  externalCalendarConnections: {
-    google: boolean;
-    outlook: boolean;
-    apple: boolean;
-  };
-}
-
 const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack }) => {
   const { profile, updateProfile } = useResident();
   const { toast } = useToast();
   
   const [formData, setFormData] = useState<ExtendedResidentProfile>({
-    firstName: profile.firstName || '',
-    lastName: profile.lastName || '',
+    fullName: profile.fullName,
     preferredName: profile.preferredName,
     email: profile.email,
     phone: profile.phone,
@@ -94,32 +59,6 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
       notifications: true,
       newsletters: false,
       events: true
-    }
-  });
-
-  const [scheduleData, setScheduleData] = useState<SchedulingPreferences>({
-    timeZone: 'America/New_York',
-    lunchBreakStart: '12:00',
-    lunchBreakEnd: '13:00',
-    enableLunchBreak: true,
-    weeklySchedule: {
-      monday: { enabled: true, startTime: '09:00', endTime: '17:00' },
-      tuesday: { enabled: true, startTime: '09:00', endTime: '17:00' },
-      wednesday: { enabled: true, startTime: '09:00', endTime: '17:00' },
-      thursday: { enabled: true, startTime: '09:00', endTime: '17:00' },
-      friday: { enabled: true, startTime: '09:00', endTime: '17:00' },
-      saturday: { enabled: false, startTime: '10:00', endTime: '14:00' },
-      sunday: { enabled: false, startTime: '10:00', endTime: '14:00' }
-    },
-    autoScheduling: true,
-    bufferTime: '10',
-    maxDailyAppointments: '8',
-    defaultMeetingDuration: '30',
-    allowExternalCalendars: true,
-    externalCalendarConnections: {
-      google: false,
-      outlook: false,
-      apple: false
     }
   });
 
@@ -171,34 +110,11 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Load saved data on mount
-  useEffect(() => {
-    const savedProfile = localStorage.getItem('residentProfile');
-    if (savedProfile) {
-      try {
-        const savedData = JSON.parse(savedProfile);
-        setFormData(savedData);
-      } catch (error) {
-        console.error('Error loading saved profile:', error);
-      }
-    }
-
-    const savedSchedule = localStorage.getItem('residentSchedulingPreferences');
-    if (savedSchedule) {
-      try {
-        setScheduleData(JSON.parse(savedSchedule));
-      } catch (error) {
-        console.error('Error loading saved scheduling preferences:', error);
-      }
-    }
-  }, []);
-
   const handleSave = () => {
     try {
       // Update resident profile
       updateProfile({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
+        fullName: formData.fullName,
         preferredName: formData.preferredName,
         email: formData.email,
         phone: formData.phone,
@@ -209,17 +125,14 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
       // Save extended profile data
       localStorage.setItem('residentProfile', JSON.stringify(formData));
       
-      // Save scheduling preferences
-      localStorage.setItem('residentSchedulingPreferences', JSON.stringify(scheduleData));
-      
       // Show success toast
       toast({
         title: "✅ Profile Updated",
-        description: "Your personal information and preferences have been saved successfully.",
+        description: "Your personal information has been saved successfully.",
         duration: 4000,
       });
       
-      console.log('Resident profile and scheduling preferences saved successfully:', { formData, scheduleData });
+      console.log('Resident profile saved successfully:', formData);
     } catch (error) {
       console.error('Error saving resident profile:', error);
       toast({
@@ -272,28 +185,18 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
     }));
   };
 
-  const handleDayScheduleChange = (day: keyof typeof scheduleData.weeklySchedule, field: keyof DaySchedule, value: string | boolean) => {
-    setScheduleData({
-      ...scheduleData,
-      weeklySchedule: {
-        ...scheduleData.weeklySchedule,
-        [day]: {
-          ...scheduleData.weeklySchedule[day],
-          [field]: value
-        }
+  // Load saved data on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('residentProfile');
+    if (saved) {
+      try {
+        const savedData = JSON.parse(saved);
+        setFormData(savedData);
+      } catch (error) {
+        console.error('Error loading saved profile:', error);
       }
-    });
-  };
-
-  const handleExternalCalendarToggle = (calendar: keyof typeof scheduleData.externalCalendarConnections, checked: boolean) => {
-    setScheduleData({
-      ...scheduleData,
-      externalCalendarConnections: {
-        ...scheduleData.externalCalendarConnections,
-        [calendar]: checked
-      }
-    });
-  };
+    }
+  }, []);
 
   return (
     <>
@@ -319,30 +222,21 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="fullName">Full Name</Label>
                 <Input
-                  id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  id="fullName"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                 />
               </div>
               <div>
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="preferredName">Preferred Name</Label>
                 <Input
-                  id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  id="preferredName"
+                  value={formData.preferredName}
+                  onChange={(e) => setFormData({ ...formData, preferredName: e.target.value })}
                 />
               </div>
-            </div>
-
-            <div>
-              <Label htmlFor="preferredName">Preferred Name</Label>
-              <Input
-                id="preferredName"
-                value={formData.preferredName}
-                onChange={(e) => setFormData({ ...formData, preferredName: e.target.value })}
-              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -451,237 +345,6 @@ const ResidentIdentitySetup: React.FC<ResidentIdentitySetupProps> = ({ onBack })
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Scheduling Preferences */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              Scheduling Preferences
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Time Zone */}
-            <div>
-              <Label htmlFor="timeZone" className="text-sm font-medium text-gray-700 mb-2 block">
-                Time Zone
-              </Label>
-              <select 
-                id="timeZone"
-                value={scheduleData.timeZone}
-                onChange={(e) => setScheduleData({ ...scheduleData, timeZone: e.target.value })}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-              >
-                <option value="America/New_York">Eastern Time (ET)</option>
-                <option value="America/Chicago">Central Time (CT)</option>
-                <option value="America/Denver">Mountain Time (MT)</option>
-                <option value="America/Los_Angeles">Pacific Time (PT)</option>
-              </select>
-            </div>
-
-            <Separator />
-
-            {/* Daily Available Hours */}
-            <div>
-              <h4 className="font-medium mb-3">Available Hours by Day</h4>
-              <div className="space-y-4">
-                {Object.entries(scheduleData.weeklySchedule).map(([day, schedule]) => (
-                  <div key={day} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="font-medium capitalize">{day}</div>
-                      <Switch 
-                        checked={schedule.enabled}
-                        onCheckedChange={(checked) => handleDayScheduleChange(day as keyof typeof scheduleData.weeklySchedule, 'enabled', checked)}
-                      />
-                    </div>
-                    
-                    {schedule.enabled && (
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-xs text-gray-600">Start Time</Label>
-                          <Input
-                            type="time"
-                            value={schedule.startTime}
-                            onChange={(e) => handleDayScheduleChange(day as keyof typeof scheduleData.weeklySchedule, 'startTime', e.target.value)}
-                            className="text-sm"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs text-gray-600">End Time</Label>
-                          <Input
-                            type="time"
-                            value={schedule.endTime}
-                            onChange={(e) => handleDayScheduleChange(day as keyof typeof scheduleData.weeklySchedule, 'endTime', e.target.value)}
-                            className="text-sm"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Lunch Break */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <div className="font-medium">Lunch Break</div>
-                  <div className="text-sm text-gray-600">Block time for lunch during available hours</div>
-                </div>
-                <Switch 
-                  checked={scheduleData.enableLunchBreak}
-                  onCheckedChange={(checked) => setScheduleData({ ...scheduleData, enableLunchBreak: checked })}
-                />
-              </div>
-
-              {scheduleData.enableLunchBreak && (
-                <div className="grid grid-cols-2 gap-4 pl-4 border-l-2 border-gray-200">
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Lunch Start
-                    </Label>
-                    <Input
-                      type="time"
-                      value={scheduleData.lunchBreakStart}
-                      onChange={(e) => setScheduleData({ ...scheduleData, lunchBreakStart: e.target.value })}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Lunch End
-                    </Label>
-                    <Input
-                      type="time"
-                      value={scheduleData.lunchBreakEnd}
-                      onChange={(e) => setScheduleData({ ...scheduleData, lunchBreakEnd: e.target.value })}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <Separator />
-
-            {/* Meeting Settings */}
-            <div>
-              <h4 className="font-medium mb-3">Meeting Settings</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="defaultMeetingDuration" className="text-sm font-medium text-gray-700 mb-2 block">
-                    Default Meeting Duration (minutes)
-                  </Label>
-                  <Input
-                    id="defaultMeetingDuration"
-                    type="number"
-                    value={scheduleData.defaultMeetingDuration}
-                    onChange={(e) => setScheduleData({ ...scheduleData, defaultMeetingDuration: e.target.value })}
-                    placeholder="30"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="bufferTime" className="text-sm font-medium text-gray-700 mb-2 block">
-                    Buffer Time Between Meetings (minutes)
-                  </Label>
-                  <Input
-                    id="bufferTime"
-                    type="number"
-                    value={scheduleData.bufferTime}
-                    onChange={(e) => setScheduleData({ ...scheduleData, bufferTime: e.target.value })}
-                    placeholder="10"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <Label htmlFor="maxAppointments" className="text-sm font-medium text-gray-700 mb-2 block">
-                  Max Daily Appointments
-                </Label>
-                <Input
-                  id="maxAppointments"
-                  type="number"
-                  value={scheduleData.maxDailyAppointments}
-                  onChange={(e) => setScheduleData({ ...scheduleData, maxDailyAppointments: e.target.value })}
-                  placeholder="8"
-                />
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* External Calendar Integration */}
-            <div>
-              <h4 className="font-medium mb-3">External Calendar Integration</h4>
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <div className="font-medium">Allow External Calendar Connections</div>
-                  <div className="text-sm text-gray-600">Enable integration with external calendar services</div>
-                </div>
-                <Switch 
-                  checked={scheduleData.allowExternalCalendars}
-                  onCheckedChange={(checked) => setScheduleData({ ...scheduleData, allowExternalCalendars: checked })}
-                />
-              </div>
-
-              {scheduleData.allowExternalCalendars && (
-                <div className="space-y-3 pl-4 border-l-2 border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Globe className="w-4 h-4" />
-                      <span>Google Calendar</span>
-                    </div>
-                    <Switch 
-                      checked={scheduleData.externalCalendarConnections.google}
-                      onCheckedChange={(checked) => handleExternalCalendarToggle('google', checked)}
-                    />
-                  </div>
-                  <Separator />
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      <span>Outlook Calendar</span>
-                    </div>
-                    <Switch 
-                      checked={scheduleData.externalCalendarConnections.outlook}
-                      onCheckedChange={(checked) => handleExternalCalendarToggle('outlook', checked)}
-                    />
-                  </div>
-                  <Separator />
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      <span>Apple Calendar</span>
-                    </div>
-                    <Switch 
-                      checked={scheduleData.externalCalendarConnections.apple}
-                      onCheckedChange={(checked) => handleExternalCalendarToggle('apple', checked)}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <Separator />
-
-            {/* Auto-Scheduling */}
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium">Auto-Scheduling</div>
-                <div className="text-sm text-gray-600">Automatically suggest optimal time slots for appointments</div>
-              </div>
-              <Switch 
-                checked={scheduleData.autoScheduling}
-                onCheckedChange={(checked) => setScheduleData({ ...scheduleData, autoScheduling: checked })}
-              />
             </div>
           </CardContent>
         </Card>

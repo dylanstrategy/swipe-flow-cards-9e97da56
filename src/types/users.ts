@@ -1,6 +1,4 @@
 
-import { getFullName } from '@/utils/nameUtils';
-
 export interface ContactInfo {
   email: string;
   phone: string;
@@ -13,8 +11,7 @@ export interface ContactInfo {
 
 export interface UserProfile {
   id: string;
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
   phone: string;
   role: UserRole;
@@ -38,8 +35,7 @@ export interface Permission {
 }
 
 export interface CreateUserRequest {
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
   phone: string;
   role: UserRole;

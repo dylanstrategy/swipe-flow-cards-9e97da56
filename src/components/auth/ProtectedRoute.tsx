@@ -6,8 +6,8 @@ interface ProtectedRouteProps {
   requiredRole?: string;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  // No authentication checks - just render children
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
+  // Bypass authentication for now - direct access to dashboard
   return <>{children}</>;
 };
 

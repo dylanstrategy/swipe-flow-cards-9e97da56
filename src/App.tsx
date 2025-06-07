@@ -3,12 +3,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ResidentProvider } from "@/contexts/ResidentContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { LiveResidentProvider } from "@/contexts/LiveResidentContext";
+import { ResidentProvider } from "@/contexts/ResidentContext";
 import Index from "./pages/Index";
-import Resident from "./pages/Resident";
 import Discovery from "./pages/Discovery";
 import Matches from "./pages/Matches";
 import MoveIn from "./pages/MoveIn";
@@ -16,38 +13,33 @@ import Maintenance from "./pages/Maintenance";
 import Operator from "./pages/Operator";
 import NotFound from "./pages/NotFound";
 import SuperAdmin from "./pages/SuperAdmin";
-import Register from "./pages/Register";
+import OwnerLogin from "./pages/OwnerLogin";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <BrowserRouter>
-        <AuthProvider>
-          <ProfileProvider>
-            <ResidentProvider>
-              <LiveResidentProvider>
-                <Routes>
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/" element={<Index />} />
-                  <Route path="/resident" element={<Resident />} />
-                  <Route path="/discovery" element={<Discovery />} />
-                  <Route path="/matches" element={<Matches />} />
-                  <Route path="/movein" element={<MoveIn />} />
-                  <Route path="/movein/:homeId" element={<MoveIn />} />
-                  <Route path="/maintenance" element={<Maintenance />} />
-                  <Route path="/operator" element={<Operator />} />
-                  <Route path="/super-admin" element={<SuperAdmin />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </LiveResidentProvider>
-            </ResidentProvider>
-          </ProfileProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ProfileProvider>
+      <ResidentProvider>
+        <TooltipProvider>
+          <Toaster />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/owner-login" element={<OwnerLogin />} />
+              <Route path="/super-admin" element={<SuperAdmin />} />
+              <Route path="/" element={<Index />} />
+              <Route path="/discovery" element={<Discovery />} />
+              <Route path="/matches" element={<Matches />} />
+              <Route path="/movein" element={<MoveIn />} />
+              <Route path="/movein/:homeId" element={<MoveIn />} />
+              <Route path="/maintenance" element={<Maintenance />} />
+              <Route path="/operator" element={<Operator />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ResidentProvider>
+    </ProfileProvider>
   </QueryClientProvider>
 );
 

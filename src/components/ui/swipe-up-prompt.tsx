@@ -26,7 +26,6 @@ const SwipeUpPrompt = ({
   className = "",
   showBack = false
 }: SwipeUpPromptProps) => {
-
   const handleClose = () => {
     if (onClear) {
       onClear();
@@ -38,53 +37,52 @@ const SwipeUpPrompt = ({
 
   return (
     <div 
-      className={`fixed inset-x-0 bottom-0 bg-white border-t border-gray-200 shadow-2xl ${className}`}
+      className={`fixed left-0 right-0 bg-white border-t border-gray-200 shadow-lg ${className}`}
       style={{ 
-        zIndex: 100, // Much lower z-index so it doesn't interfere
-        paddingBottom: 'max(20px, env(safe-area-inset-bottom, 0px))',
-        pointerEvents: 'auto' // Enable pointer events only for this component
+        position: 'fixed',
+        zIndex: 999999,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        minHeight: '120px',
+        paddingBottom: 'max(16px, env(safe-area-inset-bottom, 0px))',
+        transform: 'translateZ(0)',
+        willChange: 'transform',
+        // Force the element to always be visible above mobile browser UI
+        marginBottom: 'max(0px, calc(100vh - 100dvh))'
       }}
     >
-      <div className="px-6 py-5 text-center relative">
+      <div className="p-4 text-center relative">
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100"
+          className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+          style={{ zIndex: 1000000 }}
         >
-          <X size={18} />
+          <X size={20} />
         </button>
         
-        <div className="flex flex-col items-center space-y-4">
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <p className="text-green-600 font-semibold text-base">{message}</p>
-          </div>
-          
-          <div className="flex flex-col items-center space-y-2">
-            <ArrowUp className="text-green-600 animate-bounce" size={28} />
-            <p className="text-sm text-gray-500 font-medium">
-              Swipe up anywhere to continue{showBack ? ' • Swipe left to go back' : ''}
-            </p>
-          </div>
-          
-          <div className="flex gap-3 justify-center pt-2">
-            {showBack && onBack && (
-              <Button
-                onClick={onBack}
-                variant="outline"
-                className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold border-2 hover:bg-gray-50"
-              >
-                <ArrowLeft size={18} />
-                {backButtonText}
-              </Button>
-            )}
+        <p className="text-green-600 font-medium text-sm mb-2">{message}</p>
+        <ArrowUp className="text-green-600 animate-bounce mx-auto mb-3" size={24} />
+        <p className="text-xs text-gray-500 mb-4">Swipe up anywhere to continue{showBack ? ' • Swipe left to go back' : ''}</p>
+        
+        <div className="flex gap-3 justify-center">
+          {showBack && onBack && (
             <Button
-              onClick={onContinue}
-              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg"
+              onClick={onBack}
+              variant="outline"
+              className="flex items-center gap-2 px-6 py-2 rounded-lg font-semibold"
             >
-              <ArrowUp size={18} />
-              {buttonText}
+              <ArrowLeft size={16} />
+              {backButtonText}
             </Button>
-          </div>
+          )}
+          <Button
+            onClick={onContinue}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
+          >
+            <ArrowUp size={16} />
+            {buttonText}
+          </Button>
         </div>
       </div>
     </div>

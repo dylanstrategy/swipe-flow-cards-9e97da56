@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench, ChevronDown, BarChart3, PieChart, CalendarDays, Activity, AlertTriangle, Clock, User } from 'lucide-react';
+import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench, ChevronDown, BarChart3, PieChart, CalendarDays, Activity } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,8 +7,6 @@ import CRMTracker from '../CRMTracker';
 import MoveInTracker from '../MoveInTracker';
 import MoveOutTracker from '../MoveOutTracker';
 import PricingModule from '../PricingModule';
-import CancelNoticeButton from '../CancelNoticeButton';
-import CancelMoveOutButton from '../CancelMoveOutButton';
 import SwipeCard from '@/components/SwipeCard';
 import RescheduleFlow from '@/components/events/RescheduleFlow';
 import EventDetailModal from '@/components/events/EventDetailModal';
@@ -16,7 +14,6 @@ import { useToast } from '@/hooks/use-toast';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 import { useResident } from '@/contexts/ResidentContext';
-import { getFullName } from '@/utils/nameUtils';
 
 const OperatorTodayTab = () => {
   const { toast } = useToast();
@@ -25,8 +22,7 @@ const OperatorTodayTab = () => {
     getCurrentResidents, 
     getFutureResidents, 
     getVacantUnits, 
-    getOccupancyRate,
-    getNoticeResidents
+    getOccupancyRate 
   } = useResident();
   
   const [selectedTimeframe, setSelectedTimeframe] = useState('30');
@@ -45,7 +41,6 @@ const OperatorTodayTab = () => {
   // Calculate real data from resident context
   const currentResidents = getCurrentResidents();
   const futureResidents = getFutureResidents();
-  const noticeResidents = getNoticeResidents();
   const vacantUnits = getVacantUnits();
   const occupancyRate = getOccupancyRate();
   
@@ -426,89 +421,6 @@ const OperatorTodayTab = () => {
         <p className="text-gray-600">The Meridian • Live Data</p>
       </div>
 
-      {/* Active Notices - Fixed Layout */}
-      {noticeResidents.length > 0 && (
-        <div className="bg-white rounded-xl shadow-lg border border-red-200 overflow-hidden">
-          {/* Header Section */}
-          <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-white">Active Move-Out Notices</h2>
-                <p className="text-red-100 text-sm">
-                  {noticeResidents.length} resident{noticeResidents.length > 1 ? 's' : ''} requiring attention
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          {/* Content Section */}
-          <div className="p-6">
-            <div className="space-y-4">
-              {noticeResidents.map((resident, index) => (
-                <div key={resident.id} className="bg-gray-50 rounded-lg border border-gray-200 p-5">
-                  {/* Top Row - Resident Info */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <User className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {getFullName(resident.firstName, resident.lastName)}
-                      </h3>
-                      <div className="flex items-center gap-1 text-sm text-gray-600">
-                        <span className="font-medium">Unit {resident.unitNumber}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Move-out Date */}
-                  <div className="flex items-center gap-2 mb-4">
-                    <Clock className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">
-                      Move-out Date: 
-                      <span className="font-medium text-gray-900 ml-1">
-                        {resident.moveOutDate ? new Date(resident.moveOutDate).toLocaleDateString() : '6/4/2025'}
-                      </span>
-                    </span>
-                  </div>
-                  
-                  {/* Action Buttons - Properly Contained */}
-                  <div className="flex flex-col sm:flex-row gap-2 mb-4">
-                    <CancelNoticeButton 
-                      residentId={resident.id} 
-                      residentName={getFullName(resident.firstName, resident.lastName)}
-                      variant="outline"
-                      size="sm"
-                    />
-                    <CancelMoveOutButton 
-                      residentId={resident.id} 
-                      residentName={getFullName(resident.firstName, resident.lastName)}
-                      variant="destructive"
-                      size="sm"
-                    />
-                  </div>
-                  
-                  {/* Bottom Status Bar */}
-                  <div className="pt-3 border-t border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                        Active Notice
-                      </Badge>
-                      <span className="text-xs text-gray-500">
-                        Notice #{index + 1}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Graph Toggle */}
       <div className="text-center">
         <button
@@ -677,11 +589,11 @@ const OperatorTodayTab = () => {
               <div className="text-sm text-gray-600">{item.title}</div>
               <div className={`text-xs mt-1 ${
                 item.status === 'current' ? 'text-blue-600' :
-                item.status === 'available' ? 'Need Prep' :
-                item.status === 'ready' ? 'Move-in Ready' :
-                item.status === 'needed' ? 'Target Goal' :
-                item.status === 'scheduled' ? 'This Period' :
-                'Needs Contact'
+                item.status === 'available' ? 'text-gray-600' :
+                item.status === 'ready' ? 'text-green-600' :
+                item.status === 'needed' ? 'text-red-600' :
+                item.status === 'scheduled' ? 'text-blue-600' :
+                'text-yellow-600'
               }`}>
                 {item.status === 'current' ? 'Current Rate' :
                  item.status === 'available' ? 'Need Prep' :

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { X, Calendar, Clock, User, Phone, MapPin, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -37,9 +36,8 @@ const EventDetailModal = ({ event, onClose, onReschedule, onCancel, userRole }: 
     }
   };
 
-  // Prevent background scrolling and interaction
+  // Prevent background scrolling
   const handleTouchMove = (e: React.TouchEvent) => {
-    e.preventDefault();
     e.stopPropagation();
   };
 
@@ -49,34 +47,20 @@ const EventDetailModal = ({ event, onClose, onReschedule, onCancel, userRole }: 
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-end"
-      style={{ 
-        zIndex: 999999,
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: '100vw',
-        height: '100vh',
-        touchAction: 'none',
-        transform: 'translateZ(0)',
-        willChange: 'transform'
-      }}
+      className="fixed inset-0 bg-black bg-opacity-50 z-[10000] flex items-end"
       onTouchMove={handleTouchMove}
       onTouchStart={handleTouchStart}
+      style={{ 
+        width: '100vw', 
+        height: '100vh',
+        touchAction: 'none'
+      }}
     >
       <div 
-        className="bg-white w-full rounded-t-2xl flex flex-col overflow-hidden"
+        className="bg-white w-full max-h-[90vh] rounded-t-2xl flex flex-col overflow-hidden"
         style={{ 
-          maxHeight: '90vh',
-          minHeight: '50vh',
           touchAction: 'pan-y',
-          transform: 'translateZ(0)',
-          willChange: 'transform',
-          // Ensure modal stays above mobile browser UI
-          paddingBottom: 'max(24px, env(safe-area-inset-bottom, 0px))',
-          marginBottom: 'max(0px, calc(100vh - 100dvh))'
+          maxWidth: '100vw'
         }}
       >
         {/* Header */}
@@ -189,15 +173,8 @@ const EventDetailModal = ({ event, onClose, onReschedule, onCancel, userRole }: 
           </div>
         </div>
 
-        {/* Actions - Fixed at bottom */}
-        <div 
-          className="flex-shrink-0 p-4 border-t border-gray-200 space-y-3 bg-white"
-          style={{
-            position: 'sticky',
-            bottom: 0,
-            zIndex: 1000
-          }}
-        >
+        {/* Actions */}
+        <div className="flex-shrink-0 p-4 border-t border-gray-200 space-y-3">
           {event.canReschedule && (
             <Button
               onClick={() => onReschedule({})}

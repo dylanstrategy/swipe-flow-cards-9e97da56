@@ -36,6 +36,7 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
   hideSwipeHandling = false,
   rightButton
 }, ref) => {
+  // Use custom hooks
   useViewportZoomPrevention();
   
   const {
@@ -49,19 +50,12 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
     getRotation
   } = useSwipeGestures({ onSwipeUp, onSwipeLeft, canSwipeUp });
 
+  // Expose touch handlers via ref
   useImperativeHandle(ref, () => ({
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd
   }), [handleTouchStart, handleTouchMove, handleTouchEnd]);
-
-  console.log('SwipeableScreen render:', { 
-    canSwipeUp, 
-    onSwipeUp: !!onSwipeUp, 
-    hideSwipeHandling,
-    title,
-    currentStep 
-  });
 
   if (hideSwipeHandling) {
     return (
@@ -73,6 +67,8 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
           onClose={onClose}
           rightButton={rightButton}
         />
+
+        {/* Content Area - Fixed for scrolling */}
         <div className="flex-1 overflow-y-auto relative z-10">
           <div className="p-4">
             {children}
@@ -91,13 +87,9 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
       onTouchEnd={handleTouchEnd}
       style={{
         transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${getRotation()}deg)`,
-        transition: isDragging ? 'none' : 'transform 0.2s ease-out',
+        transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.2, 0, 0, 1)',
         transformOrigin: 'center center',
-        touchAction: 'none',
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-        WebkitTouchCallout: 'none',
-        pointerEvents: 'auto' // Ensure this container can receive touch events
+        touchAction: 'pan-x pan-y'
       }}
     >
       <SwipeActionOverlays
@@ -114,13 +106,9 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
         rightButton={rightButton}
       />
 
+      {/* Content Area */}
       <div className="flex-1 p-4 overflow-hidden relative z-10">
-        <div style={{ 
-          pointerEvents: isDragging ? 'none' : 'auto',
-          touchAction: 'pan-y' // Allow vertical scrolling within content but still capture swipes
-        }}>
-          {children}
-        </div>
+        {children}
       </div>
     </div>
   );

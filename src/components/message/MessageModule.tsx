@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
 import MessageComposer from './MessageComposer';
@@ -102,7 +101,6 @@ const MessageModule = ({
   };
 
   const handleNextStep = () => {
-    console.log('handleNextStep called, currentStep:', currentStep, 'canProceed:', canProceedFromCurrentStep());
     if (currentStep < 2) {
       setCurrentStep(currentStep + 1);
       setShowPrompt(false);
@@ -141,18 +139,11 @@ const MessageModule = ({
 
   // Auto-show prompt when content is ready and not already showing
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const canProceed = canProceedFromCurrentStep();
-      console.log('MessageModule auto-show check:', { currentStep, canProceed, showPrompt, messageData });
-      
-      if (currentStep < 2 && canProceed && !showPrompt) {
-        setShowPrompt(true);
-      } else if (!canProceed && showPrompt) {
-        setShowPrompt(false);
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
+    if (currentStep < 2 && canProceedFromCurrentStep() && !showPrompt) {
+      setShowPrompt(true);
+    } else if (!canProceedFromCurrentStep() && showPrompt) {
+      setShowPrompt(false);
+    }
   }, [currentStep, messageData, showPrompt]);
 
   const renderCurrentStep = () => {
@@ -194,7 +185,7 @@ const MessageModule = ({
         hideSwipeHandling={currentStep === 2}
       >
         <div className="h-full overflow-hidden relative">
-          <div className={currentStep < 2 ? "pb-40" : ""}>
+          <div className={currentStep < 2 ? "pb-32" : ""}>
             {renderCurrentStep()}
           </div>
         </div>

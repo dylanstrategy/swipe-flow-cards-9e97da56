@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from './AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 
 const AuthPage = () => {
@@ -21,7 +21,7 @@ const AuthPage = () => {
   const [emailSent, setEmailSent] = useState(false);
   const [signupError, setSignupError] = useState('');
   
-  const { signInWithEmail, signUpWithEmail } = useAuth();
+  const { signIn, signUp } = useAuth();
   const { toast } = useToast();
 
   // Quick test accounts
@@ -42,7 +42,7 @@ const AuthPage = () => {
       if (isSignUp) {
         console.log('Attempting sign up with data:', { firstName, lastName, email, phone, role, property });
         
-        const result = await signUpWithEmail(email, password, { firstName, lastName, phone, role, property });
+        const result = await signUp(email, password, { firstName, lastName, phone, role, property });
         
         console.log('Signup result:', result);
         
@@ -62,7 +62,7 @@ const AuthPage = () => {
         }
       } else {
         console.log('Attempting sign in');
-        await signInWithEmail(email, password);
+        await signIn(email, password);
         toast({
           title: "Welcome back!",
           description: "You have successfully signed in.",
@@ -100,7 +100,7 @@ const AuthPage = () => {
     
     try {
       console.log('Attempting test login:', testAccount.email);
-      await signInWithEmail(testAccount.email, testAccount.password);
+      await signIn(testAccount.email, testAccount.password);
       toast({
         title: "Test login successful!",
         description: `Logged in as ${testAccount.role}`,
@@ -110,7 +110,7 @@ const AuthPage = () => {
       // If login fails, try to create the test account
       try {
         console.log('Creating test account:', testAccount);
-        const result = await signUpWithEmail(testAccount.email, testAccount.password, {
+        const result = await signUp(testAccount.email, testAccount.password, {
           firstName: testAccount.firstName,
           lastName: testAccount.lastName,
           phone: '(555) 123-4567',

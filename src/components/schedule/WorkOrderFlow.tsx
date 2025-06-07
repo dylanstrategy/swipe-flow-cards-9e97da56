@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import SwipeableScreen from './SwipeableScreen';
 import PhotoCaptureStep from './steps/PhotoCaptureStep';
 import DetailsStep from './steps/DetailsStep';
@@ -26,6 +27,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   });
   const [photoCaptured, setPhotoCaptured] = useState(false);
 
+  // Prevent viewport zooming and ensure prompt stays visible
   useEffect(() => {
     const viewport = document.querySelector('meta[name=viewport]');
     const originalContent = viewport?.getAttribute('content');
@@ -34,6 +36,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
       viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
     }
 
+    // Add safe area styles
     document.documentElement.style.setProperty('--safe-area-inset-bottom', 'env(safe-area-inset-bottom, 0px)');
 
     return () => {
@@ -54,22 +57,16 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
       case 3:
         return selectedDate !== undefined && selectedTime !== '';
       case 4:
-        return false;
+        return false; // Review step should not be swipeable
       default:
         return false;
     }
   };
 
   const nextStep = () => {
-    const canProceed = canProceedFromCurrentStep();
-    console.log('WorkOrder nextStep called:', { currentStep, canProceed });
-    
-    if (currentStep < 4 && canProceed) {
-      console.log('Proceeding to next step');
+    if (currentStep < 4) {
       onNextStep();
       setShowPrompt(false);
-    } else {
-      console.log('Cannot proceed - missing requirements');
     }
   };
 
@@ -85,6 +82,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   };
 
   const handleClearData = () => {
+    // Clear all data based on current step
     if (currentStep === 1) {
       setPhotoCaptured(false);
     } else if (currentStep === 2) {
@@ -99,30 +97,23 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
     }
   };
 
-  // Auto-show prompt when content is ready
+  // Auto-show prompt when content is ready and not already showing
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const canProceed = canProceedFromCurrentStep();
-      console.log('Auto-show check:', { currentStep, canProceed, showPrompt });
-      
-      if (currentStep < 4 && canProceed && !showPrompt) {
-        setShowPrompt(true);
-      } else if (!canProceed && showPrompt) {
-        setShowPrompt(false);
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
+    if (currentStep < 4 && canProceedFromCurrentStep() && !showPrompt) {
+      setShowPrompt(true);
+    } else if (!canProceedFromCurrentStep() && showPrompt) {
+      setShowPrompt(false);
+    }
   }, [currentStep, photoCaptured, workOrderDetails, selectedDate, selectedTime, showPrompt]);
 
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <PhotoCaptureStep onNext={nextStep} onPhotoCaptured={setPhotoCaptured} />;
+        return <PhotoCaptureStep onNext={onNextStep} onPhotoCaptured={setPhotoCaptured} />;
       case 2:
         return (
           <DetailsStep 
-            onNext={nextStep}
+            onNext={onNextStep}
             workOrderDetails={workOrderDetails}
             setWorkOrderDetails={setWorkOrderDetails}
           />
@@ -130,7 +121,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
       case 3:
         return (
           <ScheduleStep 
-            onNext={nextStep}
+            onNext={onNextStep}
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
             selectedTime={selectedTime}
@@ -151,45 +142,36 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
     }
   };
 
-  const canSwipe = currentStep < 4 && canProceedFromCurrentStep();
-
-  console.log('WorkOrderFlow render:', { 
-    currentStep, 
-    canSwipe, 
-    canProceedFromCurrentStep: canProceedFromCurrentStep()
-  });
-
   return (
-    <>
-      <SwipeableScreen
-        title="Create Work Order"
-        currentStep={currentStep}
-        totalSteps={4}
-        onClose={onClose}
-        onSwipeUp={canSwipe ? nextStep : undefined}
-        onSwipeLeft={currentStep > 1 ? prevStep : undefined}
-        canSwipeUp={canSwipe}
-        hideSwipeHandling={currentStep === 4}
-      >
-        <div className="h-full overflow-hidden relative">
-          <div className={currentStep < 4 ? "pb-40" : ""}>
-            {renderCurrentStep()}
-          </div>
+    <SwipeableScreen
+      title="Create Work Order"
+      currentStep={currentStep}
+      totalSteps={4}
+      onClose={onClose}
+      onSwipeUp={currentStep < 4 && canProceedFromCurrentStep() ? nextStep : undefined}
+      onSwipeLeft={currentStep > 1 ? prevStep : undefined}
+      canSwipeUp={canProceedFromCurrentStep()}
+      hideSwipeHandling={currentStep === 4}
+    >
+      <div className="h-full overflow-hidden relative">
+        <div className={currentStep < 4 ? "pb-32" : ""}>
+          {renderCurrentStep()}
         </div>
-      </SwipeableScreen>
-      
-      {currentStep < 4 && showPrompt && canProceedFromCurrentStep() && (
-        <SwipeUpPrompt 
-          onContinue={nextStep}
-          onBack={currentStep > 1 ? prevStep : undefined}
-          onClose={handleClosePrompt}
-          onClear={handleClearData}
-          message="Ready to continue!"
-          buttonText="Continue"
-          showBack={currentStep > 1}
-        />
-      )}
-    </>
+        
+        {/* Conditional SwipeUpPrompt - Only show on steps 1-3 when ready and prompt is shown */}
+        {currentStep < 4 && showPrompt && canProceedFromCurrentStep() && (
+          <SwipeUpPrompt 
+            onContinue={nextStep}
+            onBack={currentStep > 1 ? prevStep : undefined}
+            onClose={handleClosePrompt}
+            onClear={handleClearData}
+            message="Ready to continue!"
+            buttonText="Continue"
+            showBack={currentStep > 1}
+          />
+        )}
+      </div>
+    </SwipeableScreen>
   );
 };
 

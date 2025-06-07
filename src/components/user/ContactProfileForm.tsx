@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { UserProfile, ContactInfo } from '@/types/users';
 import { User, Phone, Mail, AlertCircle, Save, X } from 'lucide-react';
-import { getFullName } from '@/utils/nameUtils';
 
 interface ContactProfileFormProps {
   userProfile: UserProfile;
@@ -24,8 +23,7 @@ const ContactProfileForm: React.FC<ContactProfileFormProps> = ({
   isEditing = false
 }) => {
   const [formData, setFormData] = useState({
-    firstName: userProfile.firstName,
-    lastName: userProfile.lastName,
+    name: userProfile.name,
     email: userProfile.email,
     phone: userProfile.phone,
     emergencyContactName: userProfile.contactInfo.emergencyContact?.name || '',
@@ -38,8 +36,7 @@ const ContactProfileForm: React.FC<ContactProfileFormProps> = ({
     
     const updatedProfile: UserProfile = {
       ...userProfile,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
+      name: formData.name,
       email: formData.email,
       phone: formData.phone,
       contactInfo: {
@@ -76,7 +73,7 @@ const ContactProfileForm: React.FC<ContactProfileFormProps> = ({
           <div className="flex items-center gap-4">
             <Avatar className="w-16 h-16">
               <AvatarFallback className="text-lg font-semibold">
-                {formData.firstName.charAt(0).toUpperCase()}{formData.lastName.charAt(0).toUpperCase()}
+                {formData.name.split(' ').map(n => n[0]).join('').toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
@@ -106,38 +103,27 @@ const ContactProfileForm: React.FC<ContactProfileFormProps> = ({
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="name">Full Name</Label>
                 <Input
-                  id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   disabled={!isEditing}
                   required
                 />
               </div>
               
               <div>
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="phone">Phone Number</Label>
                 <Input
-                  id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  id="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   disabled={!isEditing}
                   required
                 />
               </div>
-            </div>
-
-            <div>
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                disabled={!isEditing}
-                required
-              />
             </div>
 
             <div>
@@ -203,24 +189,32 @@ const ContactProfileForm: React.FC<ContactProfileFormProps> = ({
             <div className="bg-blue-50 p-4 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <Mail className="w-4 h-4 text-blue-600" />
-                <span className="font-medium text-blue-900">Primary Contact</span>
+                <span className="font-medium">Push Notifications Enabled</span>
               </div>
-              <p className="text-blue-800 text-sm">
-                Email: {formData.email}<br />
-                Phone: {formData.phone}
+              <p className="text-sm text-gray-600">
+                You'll receive notifications for work orders, messages, and important updates at {formData.email}
+              </p>
+            </div>
+            
+            <div className="bg-green-50 p-4 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Phone className="w-4 h-4 text-green-600" />
+                <span className="font-medium">SMS Notifications Enabled</span>
+              </div>
+              <p className="text-sm text-gray-600">
+                You'll receive urgent notifications via SMS at {formData.phone}
               </p>
             </div>
           </div>
 
-          {/* Save Button */}
           {isEditing && (
-            <div className="flex justify-end gap-4">
+            <div className="flex justify-end gap-3 pt-4 border-t">
               <Button type="button" variant="outline" onClick={onCancel}>
                 Cancel
               </Button>
               <Button type="submit">
                 <Save className="w-4 h-4 mr-2" />
-                Save Changes
+                Save Profile
               </Button>
             </div>
           )}
