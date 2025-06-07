@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, MessageSquare, Calendar, AlertTriangle, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { isPast, isToday } from 'date-fns';
 import MoveInEventDetails from './event-types/MoveInEventDetails';
 import LeaseSigningEventDetails from './event-types/LeaseSigningEventDetails';
 import ResidentMessageEventDetails from './event-types/ResidentMessageEventDetails';
@@ -30,6 +32,38 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator', onEv
   const [currentEvent, setCurrentEvent] = useState(event);
   const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
 
+  // Overdue detection logic
+  const isEventOverdue = (event: any): boolean => {
+    // Only check if event is not completed
+    if (event.status === 'completed' || event.status === 'cancelled') return false;
+    
+    const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+    const now = new Date();
+    
+    // If event date is in the past, it's overdue
+    if (isPast(eventDate) && !isToday(eventDate)) {
+      return true;
+    }
+    
+    // If event is today but the time has passed, it's overdue
+    if (isToday(eventDate) && event.time) {
+      try {
+        const [hours, minutes] = event.time.split(':').map(Number);
+        const eventDateTime = new Date(eventDate);
+        eventDateTime.setHours(hours, minutes || 0, 0, 0);
+        
+        return isPast(eventDateTime);
+      } catch (error) {
+        console.warn('Error parsing event time:', event.time, error);
+        return false;
+      }
+    }
+    
+    return false;
+  };
+
+  const eventIsOverdue = isEventOverdue(currentEvent);
+
   const getEventTypeIcon = (type: string) => {
     switch (type) {
       case 'move-in': return '🏠';
@@ -56,7 +90,8 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator', onEv
     }
   };
 
-  const getPriorityColor = (priority: string, status?: string) => {
+  const getPriorityColor = (priority: string, status?: string, isOverdue?: boolean) => {
+    if (isOverdue) return 'bg-red-100 text-red-800 border-red-200';
     if (status === 'urgent') return 'bg-red-100 text-red-800 border-red-200';
     switch (priority) {
       case 'urgent': return 'bg-red-100 text-red-800 border-red-200';
@@ -219,7 +254,10 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator', onEv
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <span className="text-xl sm:text-2xl flex-shrink-0">{getEventTypeIcon(currentEvent.type)}</span>
               <div className="min-w-0 flex-1">
-                <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{currentEvent.title}</h2>
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+                  {eventIsOverdue && <span className="text-red-700 font-bold mr-1">OVERDUE</span>}
+                  {currentEvent.title}
+                </h2>
                 <p className="text-xs sm:text-sm text-gray-600 truncate">{currentEvent.time} • {currentEvent.building} {currentEvent.unit}</p>
               </div>
             </div>
@@ -229,11 +267,21 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator', onEv
             <Badge className={`${getEventTypeColor(currentEvent.type)} text-xs whitespace-nowrap`}>
               {currentEvent.type === 'maintenance' ? 'Work Order' : currentEvent.type.replace('-', ' ')}
             </Badge>
-            <Badge className={`${getPriorityColor(currentEvent.priority, currentEvent.status)} text-xs whitespace-nowrap`}>
-              {currentEvent.status === 'urgent' ? 'URGENT' : currentEvent.priority?.toUpperCase()}
+            <Badge className={`${getPriorityColor(currentEvent.priority, currentEvent.status, eventIsOverdue)} text-xs whitespace-nowrap`}>
+              {eventIsOverdue ? 'OVERDUE' : currentEvent.status === 'urgent' ? 'URGENT' : currentEvent.priority?.toUpperCase()}
             </Badge>
           </div>
         </div>
+
+        {/* Overdue Warning */}
+        {eventIsOverdue && (
+          <div className="px-3 sm:px-4 py-2 bg-red-50 border-b border-red-200">
+            <div className="flex items-center gap-2 text-red-800">
+              <AlertTriangle className="w-4 h-4" />
+              <span className="text-sm font-medium">This event is overdue and requires immediate attention</span>
+            </div>
+          </div>
+        )}
 
         {/* Action Buttons */}
         {canReschedule() && (

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { format } from 'date-fns';
+import { format, isPast, isToday } from 'date-fns';
 import HourlyCalendarView from '@/components/schedule/HourlyCalendarView';
 
 interface TodayMiniCalendarProps {
@@ -19,6 +19,43 @@ const TodayMiniCalendar = ({
   onEventReschedule 
 }: TodayMiniCalendarProps) => {
   const todayEvents = getEventsForDate(selectedDate);
+
+  // Enhanced events with overdue detection logic
+  const enhancedEvents = todayEvents.map(event => {
+    const isEventOverdue = () => {
+      // Only check if event is not completed
+      if (event.status === 'completed' || event.status === 'cancelled') return false;
+      
+      const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+      const now = new Date();
+      
+      // If event date is in the past, it's overdue
+      if (isPast(eventDate) && !isToday(eventDate)) {
+        return true;
+      }
+      
+      // If event is today but the time has passed, it's overdue
+      if (isToday(eventDate) && event.time) {
+        try {
+          const [hours, minutes] = event.time.split(':').map(Number);
+          const eventDateTime = new Date(eventDate);
+          eventDateTime.setHours(hours, minutes || 0, 0, 0);
+          
+          return isPast(eventDateTime);
+        } catch (error) {
+          console.warn('Error parsing event time:', event.time, error);
+          return false;
+        }
+      }
+      
+      return false;
+    };
+
+    return {
+      ...event,
+      isOverdue: isEventOverdue()
+    };
+  });
 
   const handleDropSuggestionWithTime = (suggestion: any, targetTime?: string) => {
     // When dropping a suggestion with a specific time, we still call the original handler
@@ -61,10 +98,10 @@ const TodayMiniCalendar = ({
         </p>
       </div>
 
-      {/* Hourly Calendar View for Today */}
+      {/* Hourly Calendar View for Today with overdue detection */}
       <HourlyCalendarView
         selectedDate={selectedDate}
-        events={todayEvents}
+        events={enhancedEvents}
         onDropSuggestion={handleDropSuggestionWithTime}
         onEventClick={handleEventClick}
         onEventHold={handleEventHold}

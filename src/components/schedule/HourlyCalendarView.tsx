@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { format, addMinutes, startOfDay } from 'date-fns';
+import { format, addMinutes, startOfDay, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Clock, Calendar, Plus } from 'lucide-react';
 
@@ -17,6 +17,8 @@ interface Event {
   image?: string;
   isDroppedSuggestion?: boolean;
   rescheduledCount?: number;
+  status?: string;
+  date: Date;
 }
 
 interface HourlyCalendarViewProps {
@@ -44,6 +46,36 @@ const HourlyCalendarView = ({
     const hour = i.toString().padStart(2, '0');
     return `${hour}:00`;
   });
+
+  // Overdue detection logic
+  const isEventOverdue = (event: Event): boolean => {
+    // Only check if event is not completed
+    if (event.status === 'completed' || event.status === 'cancelled') return false;
+    
+    const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+    const now = new Date();
+    
+    // If event date is in the past, it's overdue
+    if (isPast(eventDate) && !isToday(eventDate)) {
+      return true;
+    }
+    
+    // If event is today but the time has passed, it's overdue
+    if (isToday(eventDate) && event.time) {
+      try {
+        const [hours, minutes] = event.time.split(':').map(Number);
+        const eventDateTime = new Date(eventDate);
+        eventDateTime.setHours(hours, minutes || 0, 0, 0);
+        
+        return isPast(eventDateTime);
+      } catch (error) {
+        console.warn('Error parsing event time:', event.time, error);
+        return false;
+      }
+    }
+    
+    return false;
+  };
 
   const convertTimeToMinutes = (timeString: string): number => {
     if (!timeString) return 0;
@@ -76,7 +108,12 @@ const HourlyCalendarView = ({
     });
   };
 
-  const getPriorityColor = (priority: string, isDropped?: boolean) => {
+  const getPriorityColor = (priority: string, isDropped?: boolean, isOverdue?: boolean) => {
+    // Override with red styling if overdue
+    if (isOverdue) {
+      return 'bg-red-100 border-red-300 text-red-800';
+    }
+    
     const baseColors = {
       'urgent': isDropped ? 'bg-red-500 border-red-600' : 'bg-red-100 border-red-300 text-red-800',
       'high': isDropped ? 'bg-orange-500 border-orange-600' : 'bg-orange-100 border-orange-300 text-orange-800',
@@ -84,6 +121,13 @@ const HourlyCalendarView = ({
       'low': isDropped ? 'bg-blue-500 border-blue-600' : 'bg-blue-100 border-blue-300 text-blue-800'
     };
     return baseColors[priority as keyof typeof baseColors] || baseColors.low;
+  };
+
+  const getOverdueClasses = (isOverdue: boolean) => {
+    if (isOverdue) {
+      return 'wiggle-overdue pulse-overdue';
+    }
+    return '';
   };
 
   const handleDragStart = (e: React.DragEvent, event: Event) => {
@@ -203,72 +247,83 @@ const HourlyCalendarView = ({
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {slotEvents.map((event) => (
-                      <div
-                        key={event.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, event)}
-                        onDragEnd={handleDragEnd}
-                        onClick={() => handleEventClick(event)}
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          handleEventHold(event);
-                        }}
-                        className={cn(
-                          "p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md active:scale-95",
-                          getPriorityColor(event.priority, event.isDroppedSuggestion),
-                          event.isDroppedSuggestion && "text-white shadow-lg",
-                          !event.isDroppedSuggestion && "hover:scale-105"
-                        )}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1 min-w-0">
-                            <h4 className={cn(
-                              "font-semibold text-sm truncate",
-                              event.isDroppedSuggestion ? "text-white" : ""
-                            )}>
-                              {event.title}
-                            </h4>
-                            <p className={cn(
-                              "text-xs mt-1 line-clamp-2",
-                              event.isDroppedSuggestion ? "text-white/90" : "text-gray-600"
-                            )}>
-                              {event.description}
-                            </p>
-                            {(event.unit || event.building) && (
-                              <div className="flex items-center gap-2 mt-2">
-                                {event.building && (
-                                  <span className={cn(
-                                    "text-xs px-2 py-1 rounded-full",
-                                    event.isDroppedSuggestion 
-                                      ? "bg-white/20 text-white" 
-                                      : "bg-gray-100 text-gray-600"
-                                  )}>
-                                    {event.building}
-                                  </span>
-                                )}
-                                {event.unit && (
-                                  <span className={cn(
-                                    "text-xs px-2 py-1 rounded-full",
-                                    event.isDroppedSuggestion 
-                                      ? "bg-white/20 text-white" 
-                                      : "bg-blue-100 text-blue-700"
-                                  )}>
-                                    Unit {event.unit}
-                                  </span>
-                                )}
-                              </div>
-                            )}
+                    {slotEvents.map((event) => {
+                      const isOverdue = isEventOverdue(event);
+                      const overdueClasses = getOverdueClasses(isOverdue);
+                      
+                      return (
+                        <div
+                          key={event.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, event)}
+                          onDragEnd={handleDragEnd}
+                          onClick={() => handleEventClick(event)}
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            handleEventHold(event);
+                          }}
+                          className={cn(
+                            "p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md active:scale-95",
+                            getPriorityColor(event.priority, event.isDroppedSuggestion, isOverdue),
+                            event.isDroppedSuggestion && !isOverdue && "text-white shadow-lg",
+                            !event.isDroppedSuggestion && !isOverdue && "hover:scale-105",
+                            overdueClasses
+                          )}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h4 className={cn(
+                                "font-semibold text-sm truncate",
+                                (event.isDroppedSuggestion && !isOverdue) ? "text-white" : ""
+                              )}>
+                                {isOverdue && <span className="text-red-700 font-bold mr-1">OVERDUE</span>}
+                                {event.title}
+                              </h4>
+                              <p className={cn(
+                                "text-xs mt-1 line-clamp-2",
+                                (event.isDroppedSuggestion && !isOverdue) ? "text-white/90" : isOverdue ? "text-red-700" : "text-gray-600"
+                              )}>
+                                {event.description}
+                              </p>
+                              {(event.unit || event.building) && (
+                                <div className="flex items-center gap-2 mt-2">
+                                  {event.building && (
+                                    <span className={cn(
+                                      "text-xs px-2 py-1 rounded-full",
+                                      (event.isDroppedSuggestion && !isOverdue)
+                                        ? "bg-white/20 text-white" 
+                                        : isOverdue
+                                        ? "bg-red-200 text-red-800"
+                                        : "bg-gray-100 text-gray-600"
+                                    )}>
+                                      {event.building}
+                                    </span>
+                                  )}
+                                  {event.unit && (
+                                    <span className={cn(
+                                      "text-xs px-2 py-1 rounded-full",
+                                      (event.isDroppedSuggestion && !isOverdue)
+                                        ? "bg-white/20 text-white" 
+                                        : isOverdue
+                                        ? "bg-red-200 text-red-800"
+                                        : "bg-blue-100 text-blue-700"
+                                    )}>
+                                      Unit {event.unit}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
+                          
+                          {event.rescheduledCount && event.rescheduledCount > 0 && (
+                            <div className="mt-2 text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded-full inline-block">
+                              Rescheduled {event.rescheduledCount}x
+                            </div>
+                          )}
                         </div>
-                        
-                        {event.rescheduledCount && event.rescheduledCount > 0 && (
-                          <div className="mt-2 text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded-full inline-block">
-                            Rescheduled {event.rescheduledCount}x
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
