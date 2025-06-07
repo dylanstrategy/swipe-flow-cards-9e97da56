@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { Plus, Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { format, addDays, isSameDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -18,6 +18,7 @@ import RescheduleFlow from '@/components/events/RescheduleFlow';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 import HourlyCalendarView from '@/components/schedule/HourlyCalendarView';
+import { CalendarEvent } from '@/types/calendarEvents';
 
 const OperatorScheduleTab = () => {
   const { toast } = useToast();
@@ -39,7 +40,7 @@ const OperatorScheduleTab = () => {
   });
 
   // State for managing scheduled events including dropped suggestions
-  const [scheduledEvents, setScheduledEvents] = useState([
+  const [scheduledEvents, setScheduledEvents] = useState<CalendarEvent[]>([
     {
       id: 1,
       date: new Date(),
@@ -47,7 +48,7 @@ const OperatorScheduleTab = () => {
       title: 'Unit 204 - HVAC Repair',
       description: 'Unit 204 - Scheduled maintenance for reported AC issue',
       category: 'Property Services',
-      priority: 'urgent' as const,
+      priority: 'urgent',
       building: 'Building A',
       unit: '204',
       type: 'maintenance',
@@ -61,7 +62,7 @@ const OperatorScheduleTab = () => {
       title: 'Move-In Inspection',
       description: 'Sarah Johnson - New resident move-in inspection',
       category: 'Community Management',
-      priority: 'high' as const,
+      priority: 'high',
       building: 'Building A',
       unit: '156',
       type: 'move-in',
@@ -75,7 +76,7 @@ const OperatorScheduleTab = () => {
       title: 'Lease Signing',
       description: 'Mike Chen - Lease renewal signing appointment',
       category: 'Leasing',
-      priority: 'medium' as const,
+      priority: 'medium',
       building: 'Building B',
       unit: '302',
       type: 'lease',
@@ -89,7 +90,7 @@ const OperatorScheduleTab = () => {
       title: 'Delinquency Follow-up',
       description: 'John Smith - Payment plan discussion',
       category: 'Delinquency',
-      priority: 'high' as const,
+      priority: 'high',
       building: 'Building A',
       unit: '108',
       type: 'payment',
@@ -103,7 +104,7 @@ const OperatorScheduleTab = () => {
       title: 'Renewal Notice',
       description: 'Jennifer Adams - Lease renewal discussion',
       category: 'Renewals',
-      priority: 'medium' as const,
+      priority: 'medium',
       building: 'Building C',
       unit: '225',
       type: 'message',
@@ -203,13 +204,13 @@ const OperatorScheduleTab = () => {
     }
 
     // Create event with proper structure to match existing events
-    const newEvent = {
+    const newEvent: CalendarEvent = {
       id: Date.now() + Math.random(),
       date: new Date(selectedDate),
       time: assignedTime,
       title: suggestion.title,
       description: suggestion.description,
-      category: suggestion.suggestionType || suggestion.type, // Use suggestionType from drag data
+      category: suggestion.suggestionType || suggestion.type,
       priority: (suggestion.priority || 'medium') as 'low' | 'medium' | 'high' | 'urgent',
       isDroppedSuggestion: true,
       type: (suggestion.suggestionType || suggestion.type).toLowerCase(),
@@ -218,16 +219,12 @@ const OperatorScheduleTab = () => {
       building: suggestion.building || undefined,
       dueDate: suggestion.dueDate || undefined,
       image: suggestion.image || undefined,
-      originalSuggestionId: suggestion.id // Track which suggestion this came from
+      originalSuggestionId: suggestion.id
     };
 
     console.log('OperatorScheduleTab: Adding new event from timeline drop:', newEvent);
     
-    setScheduledEvents(prev => {
-      const updated = [...prev, newEvent];
-      console.log('OperatorScheduleTab: Updated scheduled events:', updated);
-      return updated;
-    });
+    setScheduledEvents(prev => [...prev, newEvent]);
     
     // Mark suggestion as scheduled (but not completed yet)
     setScheduledSuggestionIds(prev => {
@@ -263,13 +260,13 @@ const OperatorScheduleTab = () => {
     }
     
     // Create event with proper structure to match existing events
-    const newEvent = {
+    const newEvent: CalendarEvent = {
       id: Date.now() + Math.random(),
       date: new Date(date),
       time: assignedTime,
       title: suggestion.title,
       description: suggestion.description,
-      category: suggestion.suggestionType || suggestion.type, // Use suggestionType from drag data
+      category: suggestion.suggestionType || suggestion.type,
       priority: (suggestion.priority || 'medium') as 'low' | 'medium' | 'high' | 'urgent',
       isDroppedSuggestion: true,
       type: (suggestion.suggestionType || suggestion.type).toLowerCase(),
@@ -278,16 +275,12 @@ const OperatorScheduleTab = () => {
       building: suggestion.building || undefined,
       dueDate: suggestion.dueDate || undefined,
       image: suggestion.image || undefined,
-      originalSuggestionId: suggestion.id // Track which suggestion this came from
+      originalSuggestionId: suggestion.id
     };
 
     console.log('OperatorScheduleTab: Adding calendar drop event:', newEvent);
 
-    setScheduledEvents(prev => {
-      const updated = [...prev, newEvent];
-      console.log('OperatorScheduleTab: Updated scheduled events from calendar:', updated);
-      return updated;
-    });
+    setScheduledEvents(prev => [...prev, newEvent]);
     
     // Mark suggestion as scheduled (but not completed yet)
     setScheduledSuggestionIds(prev => {
@@ -560,7 +553,7 @@ const OperatorScheduleTab = () => {
           onClick={() => setShowScheduleMenu(true)}
           className="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-700 transition-all duration-200 hover:scale-110 z-50"
         >
-          <Plus className="text-white" size={28} />
+          <span className="text-white text-sm font-medium">available</span>
         </button>
 
         <div className="mb-3">
