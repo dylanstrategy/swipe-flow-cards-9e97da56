@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, Wrench, AlertTriangle, CheckCircle2, User, ArrowLeft, Phone, Calendar } from 'lucide-react';
+import { Clock, Wrench, AlertTriangle, CheckCircle2, User, ArrowLeft, Phone, Calendar, MapPin, Camera } from 'lucide-react';
 import WorkOrderTimeline from './WorkOrderTimeline';
 
 interface WorkOrderTrackerProps {
@@ -185,11 +184,11 @@ const WorkOrderTracker = ({ onSelectWorkOrder, onViewDetails, onClose }: WorkOrd
 
   const getPriorityColor = (priority: string) => {
     switch (priority.toLowerCase()) {
-      case 'urgent': return 'bg-red-500 text-white border-red-500';
-      case 'high': return 'bg-orange-500 text-white border-orange-500';
-      case 'medium': return 'bg-yellow-500 text-white border-yellow-500';
-      case 'low': return 'bg-green-500 text-white border-green-500';
-      default: return 'bg-gray-500 text-white border-gray-500';
+      case 'urgent': return 'bg-red-500 text-white';
+      case 'high': return 'bg-orange-500 text-white';
+      case 'medium': return 'bg-yellow-500 text-white';
+      case 'low': return 'bg-green-500 text-white';
+      default: return 'bg-gray-500 text-white';
     }
   };
 
@@ -220,36 +219,31 @@ const WorkOrderTracker = ({ onSelectWorkOrder, onViewDetails, onClose }: WorkOrd
 
   return (
     <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
-      <div className="px-4 py-6 pb-24">
+      <div className="max-w-md mx-auto px-4 py-6 pb-24">
         {/* Header */}
         {onClose && (
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ArrowLeft size={20} />
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                  <Wrench className="text-orange-600" size={24} />
-                  Property Work Orders
-                </h1>
-                <p className="text-gray-600">The Meridian • {workOrderStats.total} pending orders</p>
-              </div>
+          <div className="flex items-center mb-6">
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors mr-3"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <div className="flex-1">
+              <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <Wrench className="text-orange-600" size={20} />
+                Work Orders
+              </h1>
+              <p className="text-sm text-gray-600">{workOrderStats.total} pending orders</p>
             </div>
-            <Button className="bg-purple-600 hover:bg-purple-700 text-white">
-              + Create New
-            </Button>
           </div>
         )}
 
         {!onClose && (
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-2">
               <Wrench className="w-5 h-5 text-orange-600" />
-              Property Work Orders
+              Work Orders
             </h2>
             <Badge variant="outline" className="bg-orange-50">
               {workOrderStats.total} Total Orders
@@ -258,35 +252,29 @@ const WorkOrderTracker = ({ onSelectWorkOrder, onViewDetails, onClose }: WorkOrd
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-3 mb-6">
           <Card className="text-center">
-            <CardContent className="p-4">
-              <div className="text-xl font-bold text-orange-600 flex items-center justify-center gap-1">
-                {workOrderStats.inProgress}
-              </div>
+            <CardContent className="p-3">
+              <div className="text-lg font-bold text-orange-600">{workOrderStats.inProgress}</div>
               <div className="text-xs text-gray-600">In Progress</div>
             </CardContent>
           </Card>
           <Card className="text-center">
-            <CardContent className="p-4">
-              <div className="text-xl font-bold text-blue-600 flex items-center justify-center gap-1">
-                {workOrderStats.scheduled}
-              </div>
+            <CardContent className="p-3">
+              <div className="text-lg font-bold text-blue-600">{workOrderStats.scheduled}</div>
               <div className="text-xs text-gray-600">Scheduled</div>
             </CardContent>
           </Card>
           <Card className="text-center">
-            <CardContent className="p-4">
-              <div className="text-xl font-bold text-purple-600 flex items-center justify-center gap-1">
-                {workOrderStats.assigned}
-              </div>
+            <CardContent className="p-3">
+              <div className="text-lg font-bold text-purple-600">{workOrderStats.assigned}</div>
               <div className="text-xs text-gray-600">Assigned</div>
             </CardContent>
           </Card>
           <Card className="text-center">
-            <CardContent className="p-4">
-              <div className="text-xl font-bold text-green-600 flex items-center justify-center gap-1">
-                <CheckCircle2 className="w-4 h-4" />
+            <CardContent className="p-3">
+              <div className="text-lg font-bold text-green-600 flex items-center justify-center gap-1">
+                <CheckCircle2 className="w-3 h-3" />
                 {workOrderStats.completed}
               </div>
               <div className="text-xs text-gray-600">Completed</div>
@@ -294,88 +282,81 @@ const WorkOrderTracker = ({ onSelectWorkOrder, onViewDetails, onClose }: WorkOrd
           </Card>
         </div>
 
-        {/* Pending Work Orders */}
+        {/* Work Orders List */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900">Pending Work Orders</h3>
+          <h3 className="text-base font-medium text-gray-900">Pending Work Orders</h3>
           {recentWorkOrders.map((order) => (
             <Card 
               key={order.id} 
-              className="hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-[1.02] border-0 shadow-lg bg-gradient-to-r from-white to-gray-50"
+              className="cursor-pointer hover:shadow-md transition-shadow"
               onClick={() => handleWorkOrderClick(order)}
             >
               <CardContent className="p-0">
-                <div className="relative overflow-hidden rounded-lg">
-                  {/* Priority Color Strip */}
-                  <div className={`absolute top-0 left-0 w-full h-1 ${
-                    order.priority.toLowerCase() === 'urgent' ? 'bg-red-500' :
-                    order.priority.toLowerCase() === 'high' ? 'bg-orange-500' :
-                    order.priority.toLowerCase() === 'medium' ? 'bg-yellow-500' :
-                    'bg-green-500'
-                  }`}></div>
+                {/* Priority Strip */}
+                <div className={`h-1 w-full ${
+                  order.priority.toLowerCase() === 'urgent' ? 'bg-red-500' :
+                  order.priority.toLowerCase() === 'high' ? 'bg-orange-500' :
+                  order.priority.toLowerCase() === 'medium' ? 'bg-yellow-500' :
+                  'bg-green-500'
+                }`}></div>
+                
+                <div className="p-4">
+                  {/* Header Row */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-bold text-gray-900">#{order.id}</span>
+                        <Badge className={`${getPriorityColor(order.priority)} text-xs px-2 py-0.5`}>
+                          {order.priority.toUpperCase()}
+                        </Badge>
+                      </div>
+                      <Badge className={`${getStatusColor(order.status)} text-xs px-2 py-0.5`}>
+                        {order.status.toUpperCase()}
+                      </Badge>
+                    </div>
+                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 ml-3">
+                      <img 
+                        src={order.photo} 
+                        alt="Issue"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
                   
-                  <div className="p-6">
-                    <div className="flex items-start gap-4">
-                      {/* Work Order Photo */}
-                      <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 shadow-md">
-                        <img 
-                          src={order.photo} 
-                          alt="Work order issue"
-                          className="w-full h-full object-cover"
-                        />
+                  {/* Title and Description */}
+                  <div className="mb-3">
+                    <h3 className="font-semibold text-gray-900 text-sm mb-1">
+                      Unit {order.unit} - {order.title}
+                    </h3>
+                    <p className="text-gray-600 text-xs leading-relaxed line-clamp-2">
+                      {order.description}
+                    </p>
+                  </div>
+                  
+                  {/* Resident Info */}
+                  <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <User className="w-3 h-3 text-gray-500" />
+                      <span className="text-xs font-medium text-gray-700">{order.resident}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-3 h-3 text-gray-500" />
+                      <span className="text-xs text-gray-600">{order.phone}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Footer Info */}
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <User className="w-3 h-3 text-blue-500" />
+                      <span className="text-gray-700 font-medium">{order.assignedTo}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-green-500" />
+                        <span className="text-gray-600">{order.estimatedTime}</span>
                       </div>
-                      
-                      {/* Work Order Details */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <span className="font-bold text-xl text-gray-900">#{order.id}</span>
-                            <Badge className={`${getPriorityColor(order.priority)} font-semibold px-3 py-1`}>
-                              {order.priority.toUpperCase()}
-                            </Badge>
-                          </div>
-                          <Badge className={`${getStatusColor(order.status)} font-semibold px-3 py-1`}>
-                            {order.status.toUpperCase()}
-                          </Badge>
-                        </div>
-                        
-                        <div className="mb-3">
-                          <h3 className="font-bold text-lg text-gray-900 mb-1">
-                            Unit {order.unit} - {order.title}
-                          </h3>
-                          <p className="text-gray-600 text-sm leading-relaxed">
-                            {order.description}
-                          </p>
-                        </div>
-                        
-                        {/* Resident Info Row */}
-                        <div className="flex items-center gap-4 mb-3 p-3 bg-gray-50 rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <User className="w-4 h-4 text-gray-500" />
-                            <span className="text-sm font-medium text-gray-700">{order.resident}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Phone className="w-4 h-4 text-gray-500" />
-                            <span className="text-sm text-gray-600">{order.phone}</span>
-                          </div>
-                        </div>
-                        
-                        {/* Bottom Info Row */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                              <User className="w-4 h-4 text-blue-500" />
-                              <span className="text-sm font-medium text-gray-700">{order.assignedTo}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Clock className="w-4 h-4 text-green-500" />
-                              <span className="text-sm text-gray-600">Est. {order.estimatedTime}</span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-sm font-bold text-red-600">{order.daysOpen} days open</span>
-                          </div>
-                        </div>
-                      </div>
+                      <span className="text-red-600 font-bold">{order.daysOpen}d</span>
                     </div>
                   </div>
                 </div>
