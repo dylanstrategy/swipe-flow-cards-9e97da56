@@ -52,7 +52,8 @@ const ScheduleTab = () => {
       building: 'Building A',
       dueDate: addDays(new Date(), -1),
       isDroppedSuggestion: false,
-      type: 'maintenance'
+      type: 'maintenance',
+      rescheduledCount: 0
     },
     {
       id: 2,
@@ -63,7 +64,8 @@ const ScheduleTab = () => {
       category: 'Management',
       priority: 'medium',
       isDroppedSuggestion: false,
-      type: 'message'
+      type: 'message',
+      rescheduledCount: 0
     },
     {
       id: 3,
@@ -78,7 +80,8 @@ const ScheduleTab = () => {
       building: 'Building A',
       dueDate: addDays(new Date(), 2),
       isDroppedSuggestion: false,
-      type: 'lease'
+      type: 'lease',
+      rescheduledCount: 0
     },
     {
       id: 4,
@@ -89,7 +92,8 @@ const ScheduleTab = () => {
       category: 'Community Event',
       priority: 'low',
       isDroppedSuggestion: false,
-      type: 'tour'
+      type: 'tour',
+      rescheduledCount: 0
     },
     {
       id: 5,
@@ -103,7 +107,8 @@ const ScheduleTab = () => {
       unit: '204',
       building: 'Building A',
       isDroppedSuggestion: false,
-      type: 'maintenance'
+      type: 'maintenance',
+      rescheduledCount: 0
     }
   ]);
 
@@ -153,7 +158,7 @@ const ScheduleTab = () => {
       }))
       .sort((a, b) => a.start - b.start);
 
-    let proposedStart = 540;
+    let proposedStart = 0; // Start from midnight (00:00)
     
     for (const event of eventsForDate) {
       if (proposedStart + duration <= event.start) {
@@ -162,8 +167,9 @@ const ScheduleTab = () => {
       proposedStart = Math.max(proposedStart, event.end);
     }
     
-    if (proposedStart + duration > 1080) {
-      proposedStart = 1080 - duration;
+    // If we go past 11:30 PM (1410 minutes), wrap around or place at end
+    if (proposedStart + duration > 1410) {
+      proposedStart = 1410 - duration;
     }
     
     return formatTimeFromMinutes(proposedStart);
@@ -194,15 +200,16 @@ const ScheduleTab = () => {
     }
 
     const newEvent = {
-      id: Date.now() + Math.random(), // More unique ID
-      date: new Date(selectedDate), // Create new Date object to avoid circular references
+      id: Date.now() + Math.random(),
+      date: new Date(selectedDate),
       time: assignedTime,
       title: suggestion.title,
       description: suggestion.description,
       category: suggestion.type,
       priority: suggestion.priority,
       isDroppedSuggestion: true,
-      type: suggestion.type.toLowerCase()
+      type: suggestion.type.toLowerCase(),
+      rescheduledCount: 0
     };
 
     console.log('Adding new event:', newEvent);
@@ -240,15 +247,16 @@ const ScheduleTab = () => {
     }
     
     const newEvent = {
-      id: Date.now() + Math.random(), // More unique ID
-      date: new Date(date), // Create new Date object to avoid circular references
+      id: Date.now() + Math.random(),
+      date: new Date(date),
       time: assignedTime,
       title: suggestion.title,
       description: suggestion.description,
       category: suggestion.type,
       priority: suggestion.priority,
       isDroppedSuggestion: true,
-      type: suggestion.type.toLowerCase()
+      type: suggestion.type.toLowerCase(),
+      rescheduledCount: 0
     };
 
     console.log('Adding calendar drop event:', newEvent);
@@ -300,7 +308,7 @@ const ScheduleTab = () => {
       canReschedule: true,
       canCancel: true,
       estimatedDuration: 60,
-      rescheduledCount: 0,
+      rescheduledCount: event.rescheduledCount || 0,
       assignedTeamMember: teamAvailabilityService.assignTeamMember({ category: event.category }),
       residentName: 'John Doe',
       phone: '(555) 123-4567',
@@ -309,7 +317,7 @@ const ScheduleTab = () => {
     };
     
     setSelectedEvent(enhancedEvent);
-    setShowRescheduleFlow(true); // Go directly to reschedule flow
+    setShowRescheduleFlow(true);
   };
 
   const handleRescheduleConfirm = () => {

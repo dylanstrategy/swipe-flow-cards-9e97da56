@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { format, isSameDay } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -27,8 +28,9 @@ const HourlyCalendarView = ({
   // Use real-time overdue detection
   const { isEventOverdue } = useRealtimeOverdueDetection(events);
 
-  const timeSlots = Array.from({ length: 18 }, (_, i) => {
-    const hour = Math.floor(i / 2) + 6;
+  // Generate all 48 time slots for 24 hours (30-minute intervals)
+  const timeSlots = Array.from({ length: 48 }, (_, i) => {
+    const hour = Math.floor(i / 2);
     const minute = i % 2 === 0 ? '00' : '30';
     return `${hour.toString().padStart(2, '0')}:${minute}`;
   });
