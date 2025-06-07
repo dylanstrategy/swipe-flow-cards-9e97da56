@@ -33,6 +33,8 @@ const MessagesTab: React.FC<MessagesTabProps> = ({
   const [replyText, setReplyText] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  
+  // Initialize messages with all unread
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -96,10 +98,12 @@ const MessagesTab: React.FC<MessagesTabProps> = ({
     }
   ]);
 
-  // Single useEffect to handle unread count changes
+  // Effect to handle unread count changes and ensure initial count is sent
   useEffect(() => {
     const unreadCount = messages.filter(msg => msg.unread).length;
+    console.log('MessagesTab: Calculated unread count:', unreadCount);
     if (onUnreadCountChange) {
+      console.log('MessagesTab: Calling onUnreadCountChange with:', unreadCount);
       onUnreadCountChange(unreadCount);
     }
   }, [messages, onUnreadCountChange]);
