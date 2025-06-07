@@ -81,7 +81,7 @@ const EventMessaging = ({ event, messageText, setMessageText, onSendMessage, use
         <Button 
           variant="outline" 
           size="sm"
-          onClick={() => setMessageText(`Hi ${recipient name}, we need to reschedule ${recipient.context}. `)}
+          onClick={() => setMessageText(`Hi ${recipient.name}, we need to reschedule ${recipient.context}. `)}
         >
           Request Reschedule
         </Button>
