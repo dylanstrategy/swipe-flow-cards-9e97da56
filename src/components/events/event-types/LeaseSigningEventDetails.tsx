@@ -95,10 +95,11 @@ const LeaseSigningEventDetails = ({ event, userRole }: LeaseSigningEventDetailsP
             <Button 
               size="sm" 
               onClick={() => handleDocumentAction(doc)}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 h-8 min-w-0 flex-shrink-0"
             >
               <Edit className="w-3 h-3 mr-1" />
-              Sign Now
+              <span className="hidden sm:inline">Sign Now</span>
+              <span className="sm:hidden">Sign</span>
             </Button>
           );
         case 'review':
@@ -107,10 +108,10 @@ const LeaseSigningEventDetails = ({ event, userRole }: LeaseSigningEventDetailsP
               size="sm" 
               variant="outline" 
               onClick={() => handleDocumentAction(doc)}
-              className="border-blue-200 text-blue-700 hover:bg-blue-50"
+              className="border-blue-200 text-blue-700 hover:bg-blue-50 text-xs px-2 py-1 h-8 min-w-0 flex-shrink-0"
             >
               <ExternalLink className="w-3 h-3 mr-1" />
-              Review
+              <span>Review</span>
             </Button>
           );
         default:
@@ -119,9 +120,11 @@ const LeaseSigningEventDetails = ({ event, userRole }: LeaseSigningEventDetailsP
               size="sm" 
               variant="outline" 
               onClick={() => handleDocumentAction(doc)}
+              className="text-xs px-2 py-1 h-8 min-w-0 flex-shrink-0"
             >
               <Download className="w-3 h-3 mr-1" />
-              Download
+              <span className="hidden sm:inline">Download</span>
+              <span className="sm:hidden">Get</span>
             </Button>
           );
       }
@@ -131,10 +134,11 @@ const LeaseSigningEventDetails = ({ event, userRole }: LeaseSigningEventDetailsP
           size="sm" 
           variant="outline" 
           onClick={() => handleDocumentAction(doc)}
-          className="border-yellow-200 text-yellow-700 hover:bg-yellow-50"
+          className="border-yellow-200 text-yellow-700 hover:bg-yellow-50 text-xs px-2 py-1 h-8 min-w-0 flex-shrink-0"
         >
           <Clock className="w-3 h-3 mr-1" />
-          Complete Setup
+          <span className="hidden sm:inline">Complete Setup</span>
+          <span className="sm:hidden">Setup</span>
         </Button>
       );
     }
@@ -158,18 +162,18 @@ const LeaseSigningEventDetails = ({ event, userRole }: LeaseSigningEventDetailsP
   const canManageLeases = userRole === 'operator';
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Event Summary */}
-      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-        <div className="flex items-center gap-3 mb-3">
-          <FileText className="w-5 h-5 text-blue-600" />
-          <h3 className="font-semibold text-blue-900">Lease Signing</h3>
-          <Badge className="bg-blue-100 text-blue-800">Medium Priority</Badge>
+      <div className="bg-blue-50 rounded-lg p-3 sm:p-4 border border-blue-200">
+        <div className="flex items-center gap-2 sm:gap-3 mb-3">
+          <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
+          <h3 className="font-semibold text-blue-900 text-sm sm:text-base">Lease Signing</h3>
+          <Badge className="bg-blue-100 text-blue-800 text-xs">Medium Priority</Badge>
         </div>
-        <p className="text-sm text-blue-800 mb-3">
+        <p className="text-xs sm:text-sm text-blue-800 mb-3">
           {leaseDetails.leaseType} signing appointment for {leaseDetails.resident}
         </p>
-        <div className="grid grid-cols-2 gap-4 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
           <div>
             <span className="font-medium text-blue-900">Unit:</span> {leaseDetails.unit}
           </div>
@@ -186,12 +190,12 @@ const LeaseSigningEventDetails = ({ event, userRole }: LeaseSigningEventDetailsP
       </div>
 
       {/* Lease Details */}
-      <div className="bg-gray-50 rounded-lg p-4">
-        <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+      <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+        <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2 text-sm sm:text-base">
           <DollarSign className="w-4 h-4" />
           Lease Terms
         </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
           <div><span className="font-medium">Current Rent:</span> {leaseDetails.currentRent}</div>
           <div><span className="font-medium">New Rent:</span> {leaseDetails.newRent}</div>
           <div><span className="font-medium">Lease Start:</span> {leaseDetails.leaseStart}</div>
@@ -206,27 +210,27 @@ const LeaseSigningEventDetails = ({ event, userRole }: LeaseSigningEventDetailsP
       </div>
 
       {/* Document Checklist - Now Actionable */}
-      <div className="space-y-4">
-        <h4 className="font-medium text-gray-900 flex items-center gap-2">
+      <div className="space-y-3 sm:space-y-4">
+        <h4 className="font-medium text-gray-900 flex items-center gap-2 text-sm sm:text-base">
           <FileText className="w-4 h-4" />
           Required Documents
         </h4>
         
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           {documents.map((doc) => (
-            <div key={doc.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors">
-              <div className="flex items-center gap-3 flex-1">
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+            <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors gap-3">
+              <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
+                <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
                   doc.status === 'ready' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
                 }`}>
-                  {doc.status === 'ready' && <CheckCircle className="w-3 h-3" />}
-                  {doc.status === 'pending' && <Clock className="w-3 h-3" />}
+                  {doc.status === 'ready' && <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
+                  {doc.status === 'pending' && <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="text-sm font-medium text-gray-900">{doc.name}</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                    <p className="text-sm font-medium text-gray-900 truncate">{doc.name}</p>
                     {doc.required && (
-                      <Badge variant="outline" className="text-xs bg-red-50 text-red-600 border-red-200">
+                      <Badge variant="outline" className="text-xs bg-red-50 text-red-600 border-red-200 self-start">
                         Required
                       </Badge>
                     )}
@@ -238,14 +242,14 @@ const LeaseSigningEventDetails = ({ event, userRole }: LeaseSigningEventDetailsP
                 </div>
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
                 {doc.status === 'ready' && (
-                  <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
+                  <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50 text-xs flex-shrink-0">
                     Ready
                   </Badge>
                 )}
                 {doc.status === 'pending' && (
-                  <Badge variant="outline" className="text-yellow-600 border-yellow-200 bg-yellow-50">
+                  <Badge variant="outline" className="text-yellow-600 border-yellow-200 bg-yellow-50 text-xs flex-shrink-0">
                     Pending
                   </Badge>
                 )}
@@ -257,12 +261,12 @@ const LeaseSigningEventDetails = ({ event, userRole }: LeaseSigningEventDetailsP
       </div>
 
       {/* Resident Information */}
-      <div className="bg-gray-50 rounded-lg p-4">
-        <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+      <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+        <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2 text-sm sm:text-base">
           <User className="w-4 h-4" />
           Resident Information
         </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
           <div><span className="font-medium">Name:</span> {leaseDetails.resident}</div>
           <div><span className="font-medium">Current Unit:</span> {leaseDetails.unit}</div>
           <div><span className="font-medium">Lease Type:</span> {leaseDetails.leaseType}</div>
@@ -272,12 +276,12 @@ const LeaseSigningEventDetails = ({ event, userRole }: LeaseSigningEventDetailsP
 
       {/* Actions */}
       {canManageLeases && (
-        <div className="flex gap-3 pt-4 border-t border-gray-200">
-          <Button className="flex-1 bg-blue-600 hover:bg-blue-700" onClick={handleStartSigning}>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t border-gray-200">
+          <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-sm h-10" onClick={handleStartSigning}>
             <FileText className="w-4 h-4 mr-2" />
             Start Signing Process
           </Button>
-          <Button variant="outline" onClick={handleReschedule}>
+          <Button variant="outline" className="flex-1 sm:flex-none text-sm h-10" onClick={handleReschedule}>
             <Calendar className="w-4 h-4 mr-2" />
             Reschedule
           </Button>
