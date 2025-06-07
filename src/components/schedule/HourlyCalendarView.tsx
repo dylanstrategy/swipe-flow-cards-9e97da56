@@ -66,12 +66,27 @@ const HourlyCalendarView = ({
     return timeString;
   };
 
+  // Safely compare dates by converting to string format
+  const isSameDateSafe = (date1: any, date2: Date): boolean => {
+    try {
+      // Handle both Date objects and date-like objects
+      const d1 = date1 instanceof Date ? date1 : new Date(date1);
+      const d2 = date2 instanceof Date ? date2 : new Date(date2);
+      
+      // Compare using date strings to avoid circular reference issues
+      return format(d1, 'yyyy-MM-dd') === format(d2, 'yyyy-MM-dd');
+    } catch (error) {
+      console.error('Date comparison error:', error);
+      return false;
+    }
+  };
+
   const getEventsForTimeSlot = (slotTime: Date) => {
     const slotHour = slotTime.getHours();
     
-    return events.filter(event => {
-      // Check if event is on the same date
-      if (!isSameDay(event.date, selectedDate)) return false;
+    const filteredEvents = events.filter(event => {
+      // Check if event is on the same date using safe comparison
+      if (!isSameDateSafe(event.date, selectedDate)) return false;
       
       // Normalize the event time and extract hour
       const normalizedTime = normalizeTimeFormat(event.time);
@@ -80,6 +95,13 @@ const HourlyCalendarView = ({
       const [eventHours] = normalizedTime.split(':').map(Number);
       return eventHours === slotHour;
     });
+
+    // Remove duplicates based on title and time to prevent multiple identical events
+    const uniqueEvents = filteredEvents.filter((event, index, self) => 
+      index === self.findIndex(e => e.title === event.title && e.time === event.time)
+    );
+
+    return uniqueEvents;
   };
 
   const handleDragOver = (e: React.DragEvent, timeSlot: string) => {
@@ -88,8 +110,15 @@ const HourlyCalendarView = ({
     setDragOverSlot(timeSlot);
   };
 
-  const handleDragLeave = () => {
-    setDragOverSlot(null);
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear drag over if we're actually leaving the drop zone
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+    
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      setDragOverSlot(null);
+    }
   };
 
   const handleDrop = (e: React.DragEvent, timeString: string) => {
@@ -102,6 +131,19 @@ const HourlyCalendarView = ({
       // Convert timeString to 24-hour format for consistency
       const normalizedTime = normalizeTimeFormat(timeString);
       console.log('Dropping suggestion:', suggestionData.title, 'at time:', normalizedTime);
+      
+      // Check if there's already an event with the same title at this time to prevent duplicates
+      const eventsAtTime = getEventsForTimeSlot(addHours(startOfDay(selectedDate), parseInt(normalizedTime.split(':')[0])));
+      const isDuplicate = eventsAtTime.some(event => event.title === suggestionData.title);
+      
+      if (isDuplicate) {
+        toast({
+          title: "Event Already Exists",
+          description: `${suggestionData.title} is already scheduled at ${timeString}`,
+          variant: "destructive"
+        });
+        return;
+      }
       
       onDropSuggestion?.(suggestionData, normalizedTime);
       
@@ -141,14 +183,14 @@ const HourlyCalendarView = ({
           {timeSlots.map((slot) => {
             const timeString = format(slot, 'h:mm a');
             const eventsInSlot = getEventsForTimeSlot(slot);
-            const isCurrentHour = new Date().getHours() === slot.getHours() && isSameDay(selectedDate, new Date());
+            const isCurrentHour = new Date().getHours() === slot.getHours() && isSameDateSafe(selectedDate, new Date());
             const isDragOver = dragOverSlot === timeString;
             
             return (
               <div
                 key={timeString}
                 className={cn(
-                  "border-b border-gray-50 transition-all duration-200",
+                  "border-b border-gray-50 transition-all duration-200 min-h-[60px]",
                   isCurrentHour && "bg-blue-50",
                   isDragOver && "bg-green-100 border-green-300"
                 )}
@@ -157,7 +199,7 @@ const HourlyCalendarView = ({
                 onDrop={(e) => handleDrop(e, timeString)}
               >
                 <div className="flex items-start p-3 gap-3">
-                  <div className="w-16 flex-shrink-0">
+                  <div className="w-16 flex-shrink-0 pt-1">
                     <span className={cn(
                       "text-sm font-medium",
                       isCurrentHour ? "text-blue-700" : "text-gray-600"
@@ -175,15 +217,15 @@ const HourlyCalendarView = ({
                           : "border-gray-200 hover:border-gray-300"
                       )}>
                         {isDragOver && (
-                          <span className="text-sm text-green-700">Drop here</span>
+                          <span className="text-sm text-green-700 font-medium">Drop here</span>
                         )}
                       </div>
                     ) : (
-                      <div className="space-y-1">
-                        {eventsInSlot.map((event) => (
+                      <div className="space-y-2">
+                        {eventsInSlot.map((event, index) => (
                           <div
-                            key={`${event.id}-${event.time}`}
-                            className="bg-blue-100 border border-blue-200 rounded-lg p-2 cursor-pointer hover:bg-blue-200 transition-colors"
+                            key={`${event.id}-${event.time}-${index}`}
+                            className="bg-blue-100 border border-blue-200 rounded-lg p-3 cursor-pointer hover:bg-blue-200 transition-colors"
                             onClick={() => handleEventClick(event)}
                             onContextMenu={(e) => {
                               e.preventDefault();
@@ -208,7 +250,7 @@ const HourlyCalendarView = ({
                               <div className="flex-1 min-w-0">
                                 <h4 className="text-sm font-medium text-gray-900 truncate">{event.title}</h4>
                                 {event.description && (
-                                  <p className="text-xs text-gray-600 truncate">{event.description}</p>
+                                  <p className="text-xs text-gray-600 truncate mt-1">{event.description}</p>
                                 )}
                               </div>
                               <div className="text-xs text-blue-600 ml-2 flex-shrink-0">

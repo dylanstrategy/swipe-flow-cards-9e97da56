@@ -124,9 +124,21 @@ const ScheduleTab = () => {
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
 
+  // Safely compare dates
+  const isSameDateSafe = (date1: any, date2: Date): boolean => {
+    try {
+      const d1 = date1 instanceof Date ? date1 : new Date(date1);
+      const d2 = date2 instanceof Date ? date2 : new Date(date2);
+      return format(d1, 'yyyy-MM-dd') === format(d2, 'yyyy-MM-dd');
+    } catch (error) {
+      console.error('Date comparison error:', error);
+      return false;
+    }
+  };
+
   const findAvailableTimeSlot = (date: Date, duration: number = 60): string => {
     const eventsForDate = scheduledEvents
-      .filter(event => isSameDay(event.date, date))
+      .filter(event => isSameDateSafe(event.date, date))
       .map(event => ({
         start: convertTimeToMinutes(event.time),
         end: convertTimeToMinutes(event.time) + 60 // Assume 1 hour duration
@@ -164,9 +176,25 @@ const ScheduleTab = () => {
       assignedTime = findAvailableTimeSlot(selectedDate);
     }
 
+    // Check for duplicates before adding
+    const isDuplicate = scheduledEvents.some(event => 
+      isSameDateSafe(event.date, selectedDate) && 
+      event.time === assignedTime && 
+      event.title === suggestion.title
+    );
+
+    if (isDuplicate) {
+      toast({
+        title: "Event Already Exists",
+        description: `${suggestion.title} is already scheduled at ${assignedTime}`,
+        variant: "destructive"
+      });
+      return;
+    }
+
     const newEvent = {
       id: Date.now() + Math.random(), // More unique ID
-      date: selectedDate,
+      date: new Date(selectedDate), // Create new Date object to avoid circular references
       time: assignedTime,
       title: suggestion.title,
       description: suggestion.description,
@@ -195,9 +223,25 @@ const ScheduleTab = () => {
     // This handles drops from calendar dates
     const assignedTime = findAvailableTimeSlot(date);
     
+    // Check for duplicates before adding
+    const isDuplicate = scheduledEvents.some(event => 
+      isSameDateSafe(event.date, date) && 
+      event.time === assignedTime && 
+      event.title === suggestion.title
+    );
+
+    if (isDuplicate) {
+      toast({
+        title: "Event Already Exists",
+        description: `${suggestion.title} is already scheduled at ${assignedTime}`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const newEvent = {
       id: Date.now() + Math.random(), // More unique ID
-      date: date,
+      date: new Date(date), // Create new Date object to avoid circular references
       time: assignedTime,
       title: suggestion.title,
       description: suggestion.description,
@@ -375,7 +419,7 @@ const ScheduleTab = () => {
   };
 
   const getEventsForDate = (date: Date) => {
-    const eventsForDate = scheduledEvents.filter(event => isSameDay(event.date, date))
+    const eventsForDate = scheduledEvents.filter(event => isSameDateSafe(event.date, date))
       .sort((a, b) => {
         const timeA = convertTimeToMinutes(a.time);
         const timeB = convertTimeToMinutes(b.time);
@@ -388,7 +432,7 @@ const ScheduleTab = () => {
 
   // Check if a date has events for calendar styling
   const hasEventsOnDate = (date: Date) => {
-    return scheduledEvents.some(event => isSameDay(event.date, date));
+    return scheduledEvents.some(event => isSameDateSafe(event.date, date));
   };
 
   if (showRescheduleFlow && selectedEvent) {
