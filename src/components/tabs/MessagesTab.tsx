@@ -96,15 +96,7 @@ const MessagesTab: React.FC<MessagesTabProps> = ({
     }
   ]);
 
-  // Calculate initial unread count and notify parent immediately
-  useEffect(() => {
-    const initialUnreadCount = messages.filter(msg => msg.unread).length;
-    if (onUnreadCountChange) {
-      onUnreadCountChange(initialUnreadCount);
-    }
-  }, []); // Empty dependency array to run only on mount
-
-  // Calculate unread count and notify parent when messages change
+  // Single useEffect to handle unread count changes
   useEffect(() => {
     const unreadCount = messages.filter(msg => msg.unread).length;
     if (onUnreadCountChange) {
