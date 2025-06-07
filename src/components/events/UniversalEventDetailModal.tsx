@@ -24,6 +24,7 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'details' | 'message' | 'timeline'>('details');
   const [messageText, setMessageText] = useState('');
+  const [currentEvent, setCurrentEvent] = useState(event);
 
   const getEventTypeIcon = (type: string) => {
     switch (type) {
@@ -54,6 +55,7 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
   const getPriorityColor = (priority: string, status?: string) => {
     if (status === 'urgent') return 'bg-red-100 text-red-800 border-red-200';
     switch (priority) {
+      case 'urgent': return 'bg-red-100 text-red-800 border-red-200';
       case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'medium': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'normal': return 'bg-green-100 text-green-800 border-green-200';
@@ -66,29 +68,55 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
     
     toast({
       title: "Message Sent",
-      description: `Message sent regarding ${event.title}`,
+      description: `Message sent regarding ${currentEvent.title}`,
     });
     
     setMessageText('');
     setActiveTab('timeline');
   };
 
+  const handleWorkOrderNudge = (updatedEvent: any) => {
+    setCurrentEvent(updatedEvent);
+    // Switch to timeline tab to show the new entry
+    setActiveTab('timeline');
+  };
+
+  const handleWorkOrderUrgent = (updatedEvent: any) => {
+    setCurrentEvent(updatedEvent);
+    // Switch to timeline tab to show the new entry
+    setActiveTab('timeline');
+  };
+
+  const handleWorkOrderCancel = (updatedEvent: any) => {
+    setCurrentEvent(updatedEvent);
+    // Switch to timeline tab to show the new entry
+    setActiveTab('timeline');
+  };
+
   const renderEventDetails = () => {
-    switch (event.type) {
+    switch (currentEvent.type) {
       case 'move-in':
-        return <MoveInEventDetails event={event} userRole={userRole} />;
+        return <MoveInEventDetails event={currentEvent} userRole={userRole} />;
       case 'lease':
-        return <LeaseSigningEventDetails event={event} userRole={userRole} />;
+        return <LeaseSigningEventDetails event={currentEvent} userRole={userRole} />;
       case 'message':
-        return <ResidentMessageEventDetails event={event} userRole={userRole} />;
+        return <ResidentMessageEventDetails event={currentEvent} userRole={userRole} />;
       case 'tour':
-        return <TourEventDetails event={event} userRole={userRole} />;
+        return <TourEventDetails event={currentEvent} userRole={userRole} />;
       case 'move-out':
-        return <MoveOutEventDetails event={event} userRole={userRole} />;
+        return <MoveOutEventDetails event={currentEvent} userRole={userRole} />;
       case 'payment':
-        return <PaymentEventDetails event={event} userRole={userRole} />;
+        return <PaymentEventDetails event={currentEvent} userRole={userRole} />;
       case 'maintenance':
-        return <WorkOrderEventDetails event={event} userRole={userRole} />;
+        return (
+          <WorkOrderEventDetails 
+            event={currentEvent} 
+            userRole={userRole}
+            onNudgeSent={handleWorkOrderNudge}
+            onMarkUrgent={handleWorkOrderUrgent}
+            onCancel={handleWorkOrderCancel}
+          />
+        );
       default:
         return <div className="p-4 text-gray-500">Event details not available</div>;
     }
@@ -104,20 +132,20 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div className="flex items-center gap-2">
-              <span className="text-2xl">{getEventTypeIcon(event.type)}</span>
+              <span className="text-2xl">{getEventTypeIcon(currentEvent.type)}</span>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">{event.title}</h2>
-                <p className="text-sm text-gray-600">{event.time} • {event.building} {event.unit}</p>
+                <h2 className="text-lg font-semibold text-gray-900">{currentEvent.title}</h2>
+                <p className="text-sm text-gray-600">{currentEvent.time} • {currentEvent.building} {currentEvent.unit}</p>
               </div>
             </div>
           </div>
           
           <div className="flex items-center gap-2">
-            <Badge className={getEventTypeColor(event.type)}>
-              {event.type === 'maintenance' ? 'Work Order' : event.type.replace('-', ' ')}
+            <Badge className={getEventTypeColor(currentEvent.type)}>
+              {currentEvent.type === 'maintenance' ? 'Work Order' : currentEvent.type.replace('-', ' ')}
             </Badge>
-            <Badge className={getPriorityColor(event.priority, event.status)}>
-              {event.status === 'urgent' ? 'URGENT' : event.priority?.toUpperCase()}
+            <Badge className={getPriorityColor(currentEvent.priority, currentEvent.status)}>
+              {currentEvent.status === 'urgent' ? 'URGENT' : currentEvent.priority?.toUpperCase()}
             </Badge>
           </div>
         </div>
@@ -163,7 +191,7 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
           
           {activeTab === 'message' && (
             <EventMessaging
-              event={event}
+              event={currentEvent}
               messageText={messageText}
               setMessageText={setMessageText}
               onSendMessage={handleSendMessage}
@@ -172,7 +200,7 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
           )}
           
           {activeTab === 'timeline' && (
-            <EventTimeline event={event} userRole={userRole} />
+            <EventTimeline event={currentEvent} userRole={userRole} />
           )}
         </div>
       </div>
