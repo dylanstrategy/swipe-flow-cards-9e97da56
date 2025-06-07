@@ -5,7 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import { ResidentProvider } from "@/contexts/ResidentContext";
-import Index from "./pages/Index";
+import Home from "./pages/Home";
+import Resident from "./pages/Resident";
 import Discovery from "./pages/Discovery";
 import Matches from "./pages/Matches";
 import MoveIn from "./pages/MoveIn";
@@ -24,8 +25,9 @@ const App = () => (
           <Toaster />
           <BrowserRouter>
             <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/resident" element={<Resident />} />
               <Route path="/super-admin" element={<SuperAdmin />} />
-              <Route path="/" element={<Index />} />
               <Route path="/discovery" element={<Discovery />} />
               <Route path="/matches" element={<Matches />} />
               <Route path="/movein" element={<MoveIn />} />
