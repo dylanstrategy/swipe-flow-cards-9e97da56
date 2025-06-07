@@ -98,9 +98,14 @@ const MaintenanceContext = React.createContext<MaintenanceContextType>({
 interface MaintenanceScheduleTabProps {
   onTodayWorkOrdersChange?: (workOrders: any[]) => void;
   todayWorkOrders?: any[];
+  onWorkOrderCompleted?: (workOrderId: string) => void;
 }
 
-const MaintenanceScheduleTab = ({ onTodayWorkOrdersChange, todayWorkOrders: externalTodayWorkOrders }: MaintenanceScheduleTabProps) => {
+const MaintenanceScheduleTab = ({ 
+  onTodayWorkOrdersChange, 
+  todayWorkOrders: externalTodayWorkOrders,
+  onWorkOrderCompleted 
+}: MaintenanceScheduleTabProps) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('queue');
   const [selectedUnitTurn, setSelectedUnitTurn] = useState<any>(null);
@@ -121,6 +126,27 @@ const MaintenanceScheduleTab = ({ onTodayWorkOrdersChange, todayWorkOrders: exte
     } else {
       setInternalTodayWorkOrders(newWorkOrders);
     }
+  };
+
+  const handleWorkOrderCompleted = (workOrderId: string) => {
+    console.log('Schedule tab - Work order completed:', workOrderId);
+    
+    // Remove from scheduled work orders
+    setScheduledWorkOrders(prev => prev.filter(wo => wo.id !== workOrderId));
+    
+    // Remove from today's work orders
+    const updatedTodayWorkOrders = todayWorkOrders.filter(wo => wo.id !== workOrderId);
+    updateTodayWorkOrders(updatedTodayWorkOrders);
+    
+    // Notify parent component
+    if (onWorkOrderCompleted) {
+      onWorkOrderCompleted(workOrderId);
+    }
+    
+    toast({
+      title: "Work Order Completed",
+      description: "The work order has been completed and removed from the schedule.",
+    });
   };
 
   // Helper function to find first available time slot
@@ -213,6 +239,7 @@ const MaintenanceScheduleTab = ({ onTodayWorkOrdersChange, todayWorkOrders: exte
           setShowWorkOrderFlow(false);
           setSelectedWorkOrder(null);
         }}
+        onWorkOrderCompleted={handleWorkOrderCompleted}
       />
     );
   }

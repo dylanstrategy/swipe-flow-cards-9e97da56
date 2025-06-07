@@ -7,13 +7,16 @@ import WorkOrderResolutionStep from './steps/WorkOrderResolutionStep';
 import WorkOrderRescheduleStep from './steps/WorkOrderRescheduleStep';
 import SwipeUpPrompt from '@/components/ui/swipe-up-prompt';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 interface WorkOrderFlowProps {
   workOrder: any;
   onClose: () => void;
+  onWorkOrderCompleted?: (workOrderId: string) => void;
 }
 
-const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
+const WorkOrderFlow = ({ workOrder, onClose, onWorkOrderCompleted }: WorkOrderFlowProps) => {
+  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [showPrompt, setShowPrompt] = useState(false);
   const [diagnosisNotes, setDiagnosisNotes] = useState('');
@@ -46,6 +49,10 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
   const handleNextStep = () => {
     if (showReschedule) {
       console.log('Work order rescheduled');
+      toast({
+        title: "Work Order Rescheduled",
+        description: "The work order has been rescheduled successfully.",
+      });
       onClose();
       return;
     }
@@ -55,8 +62,19 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
         setCurrentStep(currentStep + 1);
         setShowPrompt(false);
       } else {
-        // Submit work order
-        console.log('Work order completed');
+        // Complete work order
+        console.log('Work order completed:', workOrder.id);
+        
+        // Notify parent that work order is completed
+        if (onWorkOrderCompleted) {
+          onWorkOrderCompleted(workOrder.id);
+        }
+        
+        toast({
+          title: "Work Order Completed",
+          description: `Work order ${workOrder.id} has been completed successfully.`,
+        });
+        
         onClose();
       }
     }

@@ -15,6 +15,12 @@ const Maintenance = () => {
     setSharedTodayWorkOrders(workOrders);
   };
 
+  const handleWorkOrderCompleted = (workOrderId: string) => {
+    console.log('Parent - Work order completed:', workOrderId);
+    // Remove the completed work order from the shared state
+    setSharedTodayWorkOrders(prev => prev.filter(wo => wo.id !== workOrderId));
+  };
+
   const tabs = [
     {
       id: 'today',
@@ -42,12 +48,18 @@ const Maintenance = () => {
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'today':
-        return <MaintenanceTodayTab todayWorkOrders={sharedTodayWorkOrders} />;
+        return (
+          <MaintenanceTodayTab 
+            todayWorkOrders={sharedTodayWorkOrders}
+            onWorkOrderCompleted={handleWorkOrderCompleted}
+          />
+        );
       case 'schedule':
         return (
           <MaintenanceScheduleTab 
             onTodayWorkOrdersChange={handleTodayWorkOrdersChange}
             todayWorkOrders={sharedTodayWorkOrders}
+            onWorkOrderCompleted={handleWorkOrderCompleted}
           />
         );
       case 'inventory':
@@ -55,7 +67,12 @@ const Maintenance = () => {
       case 'vendors':
         return <MaintenanceVendorsTab />;
       default:
-        return <MaintenanceTodayTab todayWorkOrders={sharedTodayWorkOrders} />;
+        return (
+          <MaintenanceTodayTab 
+            todayWorkOrders={sharedTodayWorkOrders}
+            onWorkOrderCompleted={handleWorkOrderCompleted}
+          />
+        );
     }
   };
 

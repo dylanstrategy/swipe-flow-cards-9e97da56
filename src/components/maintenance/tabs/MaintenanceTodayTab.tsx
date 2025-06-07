@@ -7,12 +7,15 @@ import WorkOrderFlow from '@/components/maintenance/WorkOrderFlow';
 import UnitTurnDetailTracker from '@/components/maintenance/UnitTurnDetailTracker';
 import HourlyCalendarView from '@/components/schedule/HourlyCalendarView';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 interface MaintenanceTodayTabProps {
   todayWorkOrders?: any[];
+  onWorkOrderCompleted?: (workOrderId: string) => void;
 }
 
-const MaintenanceTodayTab = ({ todayWorkOrders = [] }: MaintenanceTodayTabProps) => {
+const MaintenanceTodayTab = ({ todayWorkOrders = [], onWorkOrderCompleted }: MaintenanceTodayTabProps) => {
+  const { toast } = useToast();
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
   const [selectedUnitTurn, setSelectedUnitTurn] = useState<any>(null);
 
@@ -101,12 +104,27 @@ const MaintenanceTodayTab = ({ todayWorkOrders = [] }: MaintenanceTodayTabProps)
     console.log('Event held:', event);
   };
 
+  const handleWorkOrderCompleted = (workOrderId: string) => {
+    console.log('Work order completed in Today tab:', workOrderId);
+    
+    // Notify parent component if callback provided
+    if (onWorkOrderCompleted) {
+      onWorkOrderCompleted(workOrderId);
+    }
+    
+    toast({
+      title: "Work Order Completed",
+      description: "The work order has been completed and removed from your schedule.",
+    });
+  };
+
   if (selectedWorkOrder) {
     console.log('Showing WorkOrderFlow for:', selectedWorkOrder);
     return (
       <WorkOrderFlow 
         workOrder={selectedWorkOrder}
         onClose={() => setSelectedWorkOrder(null)}
+        onWorkOrderCompleted={handleWorkOrderCompleted}
       />
     );
   }
