@@ -45,7 +45,7 @@ const OperatorTodayTab = () => {
   const [showUniversalEventDetail, setShowUniversalEventDetail] = useState(false);
   const [selectedUniversalEvent, setSelectedUniversalEvent] = useState<any>(null);
 
-  // Today's events - make them stateful for drag/drop updates with enhanced overdue detection
+  // Today's events - make them stateful for drag/drop updates without pre-calculating overdue
   const [todayEvents, setTodayEvents] = useState([
     {
       id: 1,
@@ -126,43 +126,6 @@ const OperatorTodayTab = () => {
       category: 'Collections'
     }
   ]);
-
-  // Enhanced events with overdue detection logic
-  const enhancedTodayEvents = todayEvents.map(event => {
-    const isEventOverdue = () => {
-      // Only check if event is not completed
-      if (event.status === 'completed' || event.status === 'cancelled') return false;
-      
-      const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
-      const now = new Date();
-      
-      // If event date is in the past, it's overdue
-      if (isPast(eventDate) && !isToday(eventDate)) {
-        return true;
-      }
-      
-      // If event is today but the time has passed, it's overdue
-      if (isToday(eventDate) && event.time) {
-        try {
-          const [hours, minutes] = event.time.split(':').map(Number);
-          const eventDateTime = new Date(eventDate);
-          eventDateTime.setHours(hours, minutes || 0, 0, 0);
-          
-          return isPast(eventDateTime);
-        } catch (error) {
-          console.warn('Error parsing event time:', event.time, error);
-          return false;
-        }
-      }
-      
-      return false;
-    };
-
-    return {
-      ...event,
-      isOverdue: isEventOverdue()
-    };
-  });
 
   // Calculate real data from resident context
   const currentResidents = getCurrentResidents();
@@ -775,12 +738,12 @@ const OperatorTodayTab = () => {
                   day: 'numeric' 
                 })}
               </p>
-              <p className="text-sm text-gray-500">{enhancedTodayEvents.length} events scheduled</p>
+              <p className="text-sm text-gray-500">{todayEvents.length} events scheduled</p>
             </div>
             
             <HourlyCalendarView
               selectedDate={new Date()}
-              events={enhancedTodayEvents}
+              events={todayEvents}
               onEventClick={handleDailyEventClick}
               onEventHold={handleHoldEvent}
               onEventReschedule={handleEventReschedule}

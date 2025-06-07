@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { format, addMinutes, startOfDay, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -48,7 +47,7 @@ const HourlyCalendarView = ({
     return `${hour}:00`;
   });
 
-  // Overdue detection logic
+  // Real-time overdue detection logic
   const isEventOverdue = (event: Event): boolean => {
     // If the event already has isOverdue property, use it
     if (event.hasOwnProperty('isOverdue')) {
@@ -114,19 +113,18 @@ const HourlyCalendarView = ({
     });
   };
 
-  const getPriorityColor = (priority: string, isDropped?: boolean, isOverdue?: boolean) => {
-    // Override with red styling if overdue
+  // Updated color logic: Blue by default, red only when overdue
+  const getEventColors = (event: Event, isOverdue: boolean) => {
     if (isOverdue) {
       return 'bg-red-100 border-red-300 text-red-800';
     }
     
-    const baseColors = {
-      'urgent': isDropped ? 'bg-red-500 border-red-600' : 'bg-red-100 border-red-300 text-red-800',
-      'high': isDropped ? 'bg-orange-500 border-orange-600' : 'bg-orange-100 border-orange-300 text-orange-800',
-      'medium': isDropped ? 'bg-yellow-500 border-yellow-600' : 'bg-yellow-100 border-yellow-300 text-yellow-800',
-      'low': isDropped ? 'bg-blue-500 border-blue-600' : 'bg-blue-100 border-blue-300 text-blue-800'
-    };
-    return baseColors[priority as keyof typeof baseColors] || baseColors.low;
+    // Default blue styling for all events
+    if (event.isDroppedSuggestion) {
+      return 'bg-blue-500 border-blue-600 text-white';
+    } else {
+      return 'bg-blue-100 border-blue-300 text-blue-800';
+    }
   };
 
   const getOverdueClasses = (isOverdue: boolean) => {
@@ -239,7 +237,7 @@ const HourlyCalendarView = ({
               </div>
 
               {/* Events column - Flexible with proper overflow handling */}
-              <div className="flex-1 p-4 min-h-[80px] relative overflow-hidden">
+              <div className="flex-1 p-4 min-h-[80px] relative">
                 {slotEvents.length === 0 ? (
                   <div className={cn(
                     "w-full h-full flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg transition-all duration-200",
@@ -256,6 +254,7 @@ const HourlyCalendarView = ({
                     {slotEvents.map((event) => {
                       const isOverdue = isEventOverdue(event);
                       const overdueClasses = getOverdueClasses(isOverdue);
+                      const eventColors = getEventColors(event, isOverdue);
                       
                       return (
                         <div
@@ -270,7 +269,7 @@ const HourlyCalendarView = ({
                           }}
                           className={cn(
                             "p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md active:scale-95 w-full",
-                            getPriorityColor(event.priority, event.isDroppedSuggestion, isOverdue),
+                            eventColors,
                             event.isDroppedSuggestion && !isOverdue && "text-white shadow-lg",
                             !event.isDroppedSuggestion && !isOverdue && "hover:scale-105",
                             overdueClasses
@@ -287,7 +286,7 @@ const HourlyCalendarView = ({
                               </h4>
                               <p className={cn(
                                 "text-xs mt-1 break-words",
-                                (event.isDroppedSuggestion && !isOverdue) ? "text-white/90" : isOverdue ? "text-red-700" : "text-gray-600"
+                                (event.isDroppedSuggestion && !isOverdue) ? "text-white/90" : isOverdue ? "text-red-700" : "text-blue-700"
                               )}>
                                 {event.description}
                               </p>

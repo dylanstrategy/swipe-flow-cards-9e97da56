@@ -55,7 +55,7 @@ const MaintenanceTodayTab = ({ todayWorkOrders = [], onWorkOrderCompleted }: Mai
   // Convert work orders to calendar events format and update state when needed
   React.useEffect(() => {
     const events = [
-      // Add today's scheduled work orders from props
+      // Add today's scheduled work orders from props - without pre-calculating overdue
       ...todayWorkOrders.map(workOrder => {
         console.log('Converting work order to calendar event:', workOrder);
         return {
@@ -73,7 +73,7 @@ const MaintenanceTodayTab = ({ todayWorkOrders = [], onWorkOrderCompleted }: Mai
           rescheduledCount: 0
         };
       }),
-      // Add unit turns scheduled for today
+      // Add unit turns scheduled for today - without pre-calculating overdue
       ...unitTurns.filter(turn => turn.status === 'Scheduled').map(unitTurn => ({
         id: unitTurn.id,
         date: today,
