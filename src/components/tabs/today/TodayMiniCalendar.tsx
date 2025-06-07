@@ -1,6 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
-import DroppableCalendar from '@/components/schedule/DroppableCalendar';
+import HourlyCalendarView from '@/components/schedule/HourlyCalendarView';
 
 interface TodayMiniCalendarProps {
   selectedDate: Date;
@@ -17,14 +17,27 @@ const TodayMiniCalendar = ({
 }: TodayMiniCalendarProps) => {
   const todayEvents = getEventsForDate(selectedDate);
 
-  const hasEventsOnDate = (date: Date) => {
-    return getEventsForDate(date).length > 0;
+  const handleDropSuggestionWithTime = (suggestion: any, targetTime?: string) => {
+    // When dropping a suggestion with a specific time, we still call the original handler
+    // but we can pass the date (selectedDate) since this is the Today tab
+    if (onDropSuggestion) {
+      onDropSuggestion(suggestion, selectedDate);
+    }
   };
 
-  const handleDateSelect = (date: Date) => {
-    if (onDateSelect) {
-      onDateSelect(date);
-    }
+  const handleEventClick = (event: any) => {
+    // Handle event clicks if needed
+    console.log('Event clicked:', event);
+  };
+
+  const handleEventHold = (event: any) => {
+    // Handle event hold for options
+    console.log('Event held:', event);
+  };
+
+  const handleEventReschedule = (event: any, newTime: string) => {
+    // Handle event reschedule within the same day
+    console.log('Event rescheduled:', event, 'to', newTime);
   };
 
   return (
@@ -42,13 +55,14 @@ const TodayMiniCalendar = ({
         </p>
       </div>
 
-      {/* Universal Droppable Calendar */}
-      <DroppableCalendar
+      {/* Hourly Calendar View for Today */}
+      <HourlyCalendarView
         selectedDate={selectedDate}
-        onSelect={handleDateSelect}
-        hasEventsOnDate={hasEventsOnDate}
-        onDropSuggestion={onDropSuggestion}
-        events={[]} // Pass events if needed for overdue detection
+        events={todayEvents}
+        onDropSuggestion={handleDropSuggestionWithTime}
+        onEventClick={handleEventClick}
+        onEventHold={handleEventHold}
+        onEventReschedule={handleEventReschedule}
       />
     </div>
   );
