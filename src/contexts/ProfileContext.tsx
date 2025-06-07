@@ -26,6 +26,7 @@ interface Profile {
   building: string;
   pets: Pet[];
   selectedLifestyleTags: LifestyleTag[];
+  lifestyleTags: string[]; // Add missing property
   emergencyContact: {
     name: string;
     phone: string;
@@ -44,6 +45,7 @@ interface ProfileContextType {
   addPet: (pet: Omit<Pet, 'id'>) => void;
   removePet: (petId: number) => void;
   toggleLifestyleTag: (tag: LifestyleTag) => void;
+  updateLifestyleTags: (tags: string[]) => void; // Add missing method
   getPersonalizedContext: () => string;
 }
 
@@ -68,6 +70,7 @@ const defaultProfile: Profile = {
     { id: 'fitness', label: 'Fitness Enthusiast', emoji: '💪', category: 'fitness' },
     { id: 'foodie', label: 'Foodie', emoji: '🍕', category: 'food' }
   ],
+  lifestyleTags: ['wellness', 'foodAndDrinks'], // Add default value
   emergencyContact: {
     name: 'Mike Johnson',
     phone: '(555) 987-6543',
@@ -115,6 +118,11 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  // Add missing updateLifestyleTags method
+  const updateLifestyleTags = (tags: string[]) => {
+    setProfile(prev => ({ ...prev, lifestyleTags: tags }));
+  };
+
   const getPersonalizedContext = () => {
     if (profile.pets.length > 0) {
       return 'pet-service';
@@ -132,6 +140,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       addPet,
       removePet,
       toggleLifestyleTag,
+      updateLifestyleTags, // Add to provider value
       getPersonalizedContext
     }}>
       {children}

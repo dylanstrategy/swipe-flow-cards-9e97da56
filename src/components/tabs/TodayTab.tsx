@@ -66,7 +66,7 @@ const TodayTab = () => {
       description: 'Broken outlet - Unit 4B',
       image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400',
       category: 'Work Order',
-      priority: 'high',
+      priority: 'high' as const, // Fix priority type
       unit: '4B',
       building: 'Building A',
       dueDate: addDays(new Date(), -1),
@@ -79,7 +79,7 @@ const TodayTab = () => {
       title: 'Message from Management',
       description: 'Please submit your lease renewal documents by Friday',
       category: 'Management',
-      priority: 'medium',
+      priority: 'medium' as const, // Fix priority type
       type: 'message'
     },
     {
@@ -90,7 +90,7 @@ const TodayTab = () => {
       description: 'New rent: $1,550/month starting March 1st',
       image: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=400',
       category: 'Lease',
-      priority: 'high',
+      priority: 'high' as const, // Fix priority type
       unit: '204',
       building: 'Building A',
       dueDate: addDays(new Date(), 2),
@@ -104,7 +104,7 @@ const TodayTab = () => {
       description: '20% OFF at Joe\'s Burger Joint - Show this message',
       image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400',
       category: 'Point of Sale',
-      priority: 'low',
+      priority: 'low' as const, // Fix priority type
       type: 'message'
     },
     {
@@ -114,7 +114,7 @@ const TodayTab = () => {
       title: 'Rooftop BBQ Social',
       description: 'Community event - RSVP required',
       category: 'Community Event',
-      priority: 'low',
+      priority: 'low' as const, // Fix priority type
       type: 'tour'
     },
     {
@@ -125,7 +125,7 @@ const TodayTab = () => {
       description: 'Filter replacement scheduled',
       image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400',
       category: 'Work Order',
-      priority: 'medium',
+      priority: 'medium' as const, // Fix priority type
       unit: '204',
       building: 'Building A',
       type: 'maintenance'
@@ -142,7 +142,7 @@ const TodayTab = () => {
         title: `${profile.pets[0].name}'s Special Offer`,
         description: `Exclusive pet grooming discount for ${profile.pets[0].name}!`,
         category: 'Pet Service',
-        priority: 'low',
+        priority: 'low' as const, // Fix priority type
         type: 'message'
       },
       {
@@ -152,7 +152,7 @@ const TodayTab = () => {
         title: 'Pet-Friendly Community Event',
         description: `Bring ${profile.pets.map(pet => pet.name).join(' and ')} to the pet meetup!`,
         category: 'Community Event',
-        priority: 'low',
+        priority: 'low' as const, // Fix priority type
         type: 'tour'
       }
     ] : []
@@ -168,7 +168,7 @@ const TodayTab = () => {
     title: 'Rent Payment Due',
     description: '$1,550 due in 3 days',
     category: 'Payment',
-    priority: 'high',
+    priority: 'high' as const, // Fix priority type
     dueDate: addDays(new Date(), 3), // Due in 3 days
     type: 'payment'
   };
@@ -430,7 +430,7 @@ const TodayTab = () => {
             {primaryTag.emoji} {primaryTag.label} Offers
           </h2>
           <PointOfSale 
-            context={getPersonalizedContext()} 
+            context={getPersonalizedContext() as 'pet-service' | 'message' | 'event' | 'work-order' | 'appointment' | 'service' | 'document' | 'moving-service' | 'home-setup'} 
             onOfferClick={handleOfferClick}
           />
         </div>
