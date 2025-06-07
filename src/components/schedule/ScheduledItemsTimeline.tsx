@@ -150,7 +150,6 @@ const ScheduledItemsTimeline = ({
     if (item.isEvent && item.originalEvent) {
       onEventHold?.(item.originalEvent);
     } else {
-      // For non-event items, show reschedule toast
       toast({
         title: "Reschedule Item",
         description: `Hold to reschedule ${item.title}`,
@@ -193,9 +192,9 @@ const ScheduledItemsTimeline = ({
         onDragOver={(e) => handleDragOver(e, time, position)}
         onDragLeave={handleDragLeave}
         onDrop={(e) => handleDrop(e, time)}
-        className={`h-2 transition-all duration-200 ${
+        className={`transition-all duration-150 ${
           isActive 
-            ? 'bg-blue-200 border-2 border-dashed border-blue-400 rounded-md mx-4' 
+            ? 'h-4 bg-blue-200 border-2 border-dashed border-blue-400 rounded-md mx-4 scale-[1.02]' 
             : 'h-1'
         }`}
       />
@@ -208,7 +207,7 @@ const ScheduledItemsTimeline = ({
       
       {allItemsForDate.length === 0 ? (
         <div 
-          className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg"
+          className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg transition-all duration-150 hover:border-gray-300"
           onDragOver={(e) => {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
@@ -234,10 +233,10 @@ const ScheduledItemsTimeline = ({
                   onSwipeLeft={item.actions.left}
                   onTap={() => handleItemTap(item)}
                   onHold={() => handleItemHold(item)}
-                  holdDuration={800}
+                  holdDuration={400}
                   className="flex-1"
                 >
-                  <div className="flex items-center p-4 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <div className="flex items-center p-4 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-all duration-150 touch-manipulation active:scale-[0.99]">
                     <div className="w-12 h-12 bg-gray-100 rounded-lg mr-3 flex items-center justify-center">
                       <span className="text-xl">{item.icon}</span>
                     </div>

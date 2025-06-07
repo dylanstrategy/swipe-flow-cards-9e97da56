@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format, addHours, startOfDay, isSameDay } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -104,10 +103,10 @@ const HourlyCalendarView = ({
     return uniqueEvents;
   };
 
-  const handleDragOver = (e: React.DragEvent, timeSlot: string) => {
+  const handleDragOver = (e: React.DragEvent, timeString: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    setDragOverSlot(timeSlot);
+    setDragOverSlot(timeString);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
@@ -190,9 +189,9 @@ const HourlyCalendarView = ({
               <div
                 key={timeString}
                 className={cn(
-                  "border-b border-gray-50 transition-all duration-200 min-h-[60px]",
+                  "border-b border-gray-50 transition-all duration-150 min-h-[60px] relative",
                   isCurrentHour && "bg-blue-50",
-                  isDragOver && "bg-green-100 border-green-300"
+                  isDragOver && "bg-green-100 border-green-300 shadow-md"
                 )}
                 onDragOver={(e) => handleDragOver(e, timeString)}
                 onDragLeave={handleDragLeave}
@@ -208,16 +207,16 @@ const HourlyCalendarView = ({
                     </span>
                   </div>
                   
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 relative">
                     {eventsInSlot.length === 0 ? (
                       <div className={cn(
-                        "h-10 rounded-lg border-2 border-dashed transition-all duration-200 flex items-center justify-center",
+                        "h-12 rounded-lg border-2 border-dashed transition-all duration-150 flex items-center justify-center touch-manipulation",
                         isDragOver 
-                          ? "border-green-400 bg-green-50" 
-                          : "border-gray-200 hover:border-gray-300"
+                          ? "border-green-400 bg-green-50 scale-[1.02]" 
+                          : "border-gray-200 hover:border-gray-300 hover:bg-gray-25"
                       )}>
                         {isDragOver && (
-                          <span className="text-sm text-green-700 font-medium">Drop here</span>
+                          <span className="text-sm text-green-700 font-medium animate-pulse">Drop here</span>
                         )}
                       </div>
                     ) : (
@@ -225,7 +224,7 @@ const HourlyCalendarView = ({
                         {eventsInSlot.map((event, index) => (
                           <div
                             key={`${event.id}-${event.time}-${index}`}
-                            className="bg-blue-100 border border-blue-200 rounded-lg p-3 cursor-pointer hover:bg-blue-200 transition-colors"
+                            className="bg-blue-100 border border-blue-200 rounded-lg p-3 cursor-pointer hover:bg-blue-200 transition-all duration-150 touch-manipulation active:scale-[0.98]"
                             onClick={() => handleEventClick(event)}
                             onContextMenu={(e) => {
                               e.preventDefault();
@@ -234,7 +233,7 @@ const HourlyCalendarView = ({
                             onTouchStart={(e) => {
                               const touchTimeout = setTimeout(() => {
                                 handleEventHold(event);
-                              }, 800);
+                              }, 400); // Reduced from 800ms to 400ms
                               
                               const clearTouch = () => {
                                 clearTimeout(touchTimeout);
@@ -260,6 +259,11 @@ const HourlyCalendarView = ({
                           </div>
                         ))}
                       </div>
+                    )}
+                    
+                    {/* Enhanced drop zone overlay for better mobile touch */}
+                    {isDragOver && (
+                      <div className="absolute inset-0 pointer-events-none bg-green-100 bg-opacity-50 rounded-lg border-2 border-green-400 border-dashed animate-pulse" />
                     )}
                   </div>
                 </div>
