@@ -26,6 +26,7 @@ interface WorkOrder {
 }
 
 interface WorkOrderQueueProps {
+  workOrders?: WorkOrder[];
   onSelectWorkOrder?: (workOrder: WorkOrder) => void;
 }
 
@@ -149,78 +150,8 @@ const WorkOrderCard: React.FC<{ workOrder: WorkOrder; onClick: () => void }> = (
   );
 };
 
-const WorkOrderQueue: React.FC<WorkOrderQueueProps> = ({ onSelectWorkOrder }) => {
+const WorkOrderQueue: React.FC<WorkOrderQueueProps> = ({ workOrders = [], onSelectWorkOrder }) => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  
-  // Mock work orders data
-  const workOrders: WorkOrder[] = [
-    {
-      id: 'WO-544857',
-      unit: '417',
-      title: 'Dripping water faucet',
-      description: 'Bathroom faucet dripping intermittently',
-      category: 'Plumbing',
-      priority: 'medium',
-      status: 'unscheduled',
-      assignedTo: 'Mike Rodriguez',
-      resident: 'Rumi Desai',
-      phone: '(555) 123-4567',
-      daysOpen: 3,
-      estimatedTime: '2 hours',
-      submittedDate: '2025-05-22',
-      photo: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=400'
-    },
-    {
-      id: 'WO-548686',
-      unit: '516',
-      title: 'Window won\'t close properly',
-      description: 'The balancer got stuck and window won\'t close',
-      category: 'Windows',
-      priority: 'high',
-      status: 'unscheduled',
-      assignedTo: 'Sarah Johnson',
-      resident: 'Kalyani Dronamraju',
-      phone: '(555) 345-6789',
-      daysOpen: 5,
-      estimatedTime: '3 hours',
-      submittedDate: '2025-05-14',
-      photo: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400'
-    },
-    {
-      id: 'WO-549321',
-      unit: '204',
-      title: 'HVAC not cooling properly',
-      description: 'Air conditioning unit not providing adequate cooling',
-      category: 'HVAC',
-      priority: 'urgent',
-      status: 'overdue',
-      assignedTo: 'James Wilson',
-      resident: 'Alex Thompson',
-      phone: '(555) 456-7890',
-      daysOpen: 12,
-      estimatedTime: '4 hours',
-      submittedDate: '2025-05-01',
-      photo: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400'
-    },
-    {
-      id: 'WO-545123',
-      unit: '302',
-      title: 'Scheduled Inspection',
-      description: 'Annual HVAC maintenance check',
-      category: 'Maintenance',
-      priority: 'low',
-      status: 'scheduled',
-      assignedTo: 'Mike Rodriguez',
-      resident: 'Jane Smith',
-      phone: '(555) 789-0123',
-      daysOpen: 1,
-      estimatedTime: '1 hour',
-      submittedDate: '2025-06-06',
-      scheduledDate: '2025-06-10',
-      scheduledTime: '10:00 AM',
-      photo: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400'
-    }
-  ];
 
   const filteredWorkOrders = useMemo(() => {
     let filtered = workOrders;
@@ -236,7 +167,7 @@ const WorkOrderQueue: React.FC<WorkOrderQueueProps> = ({ onSelectWorkOrder }) =>
       if (priorityDiff !== 0) return priorityDiff;
       return b.daysOpen - a.daysOpen;
     });
-  }, [filterStatus]);
+  }, [workOrders, filterStatus]);
 
   const unscheduledCount = workOrders.filter(wo => wo.status === 'unscheduled').length;
   const scheduledCount = workOrders.filter(wo => wo.status === 'scheduled').length;
