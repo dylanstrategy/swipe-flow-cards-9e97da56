@@ -13,13 +13,17 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeLeft, canSwipeUp = false }:
   const [showAction, setShowAction] = useState<'up' | 'left' | null>(null);
   const startPos = useRef({ x: 0, y: 0 });
   const startTime = useRef(0);
+  const hasTriggered = useRef(false);
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    console.log('SWIPE: Touch start', { canSwipeUp, onSwipeUp: !!onSwipeUp });
     const touch = e.touches[0];
     startPos.current = { x: touch.clientX, y: touch.clientY };
     startTime.current = Date.now();
+    hasTriggered.current = false;
     setIsDragging(true);
-    console.log('SWIPE: Touch start at:', startPos.current);
+    setDragOffset({ x: 0, y: 0 });
+    setShowAction(null);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -29,61 +33,81 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeLeft, canSwipeUp = false }:
     const deltaX = touch.clientX - startPos.current.x;
     const deltaY = touch.clientY - startPos.current.y;
     
-    // Only prevent default if we're actually swiping
-    if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+    // Prevent default scrolling if we're swiping
+    if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
       e.preventDefault();
     }
     
-    setDragOffset({ x: deltaX * 0.8, y: deltaY * 0.8 });
+    // Apply dampening to the drag
+    const dampening = 0.6;
+    setDragOffset({ x: deltaX * dampening, y: deltaY * dampening });
     
+    // Determine which action to show
     if (Math.abs(deltaY) > Math.abs(deltaX)) {
-      if (deltaY < -30 && canSwipeUp) {
+      // Vertical swipe
+      if (deltaY < -20 && canSwipeUp && onSwipeUp) {
         setShowAction('up');
+        console.log('SWIPE: Showing UP action', { deltaY, canSwipeUp });
       } else {
         setShowAction(null);
       }
     } else {
-      if (deltaX < -30) {
+      // Horizontal swipe
+      if (deltaX < -20 && onSwipeLeft) {
         setShowAction('left');
+        console.log('SWIPE: Showing LEFT action', { deltaX });
       } else {
         setShowAction(null);
       }
     }
-    
-    console.log('SWIPE: Moving', { deltaX, deltaY, showAction });
   };
 
   const handleTouchEnd = () => {
-    if (!isDragging) return;
+    if (!isDragging || hasTriggered.current) {
+      setIsDragging(false);
+      setDragOffset({ x: 0, y: 0 });
+      setShowAction(null);
+      return;
+    }
 
-    const deltaX = dragOffset.x / 0.8; // Reverse the scaling
-    const deltaY = dragOffset.y / 0.8;
+    const deltaX = dragOffset.x / 0.6; // Reverse the dampening
+    const deltaY = dragOffset.y / 0.6;
     const deltaTime = Date.now() - startTime.current;
     
-    console.log('SWIPE: Touch end', { deltaX, deltaY, deltaTime, canSwipeUp });
+    console.log('SWIPE: Touch end', { deltaX, deltaY, deltaTime, canSwipeUp, onSwipeUp: !!onSwipeUp, onSwipeLeft: !!onSwipeLeft });
     
-    // More lenient thresholds
-    const distanceThreshold = 40;
-    const velocityThreshold = 0.2;
+    // More aggressive thresholds for completion
+    const distanceThreshold = 30;
+    const velocityThreshold = 0.15;
     
-    const velocityX = Math.abs(deltaX) / deltaTime;
-    const velocityY = Math.abs(deltaY) / deltaTime;
+    const velocityX = Math.abs(deltaX) / Math.max(deltaTime, 1);
+    const velocityY = Math.abs(deltaY) / Math.max(deltaTime, 1);
     
     const shouldCompleteUp = (Math.abs(deltaY) > distanceThreshold || velocityY > velocityThreshold) && 
-                            deltaY < -20 && canSwipeUp;
+                            deltaY < -15 && canSwipeUp && onSwipeUp;
     const shouldCompleteLeft = (Math.abs(deltaX) > distanceThreshold || velocityX > velocityThreshold) && 
-                              deltaX < -20;
+                              deltaX < -15 && onSwipeLeft;
     
-    console.log('SWIPE: Should complete?', { shouldCompleteUp, shouldCompleteLeft, onSwipeUp: !!onSwipeUp, onSwipeLeft: !!onSwipeLeft });
+    console.log('SWIPE: Should complete?', { 
+      shouldCompleteUp, 
+      shouldCompleteLeft, 
+      velocityY, 
+      velocityX,
+      distanceY: Math.abs(deltaY),
+      distanceX: Math.abs(deltaX)
+    });
     
-    if (shouldCompleteUp && onSwipeUp) {
+    if (shouldCompleteUp) {
       console.log('SWIPE: EXECUTING UP ACTION!');
-      onSwipeUp();
-    } else if (shouldCompleteLeft && onSwipeLeft) {
+      hasTriggered.current = true;
+      setTimeout(() => onSwipeUp(), 50); // Small delay to ensure state is clean
+    } else if (shouldCompleteLeft) {
       console.log('SWIPE: EXECUTING LEFT ACTION!');
-      onSwipeLeft();
+      hasTriggered.current = true;
+      setTimeout(() => onSwipeLeft(), 50);
     }
     
+    // Reset state
     setIsDragging(false);
     setDragOffset({ x: 0, y: 0 });
     setShowAction(null);
@@ -92,13 +116,13 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeLeft, canSwipeUp = false }:
   const getActionOpacity = () => {
     if (!showAction) return 0;
     const distance = showAction === 'up' ? Math.abs(dragOffset.y) : Math.abs(dragOffset.x);
-    const progress = Math.min(distance / 60, 1);
-    return Math.max(0.3, progress * 0.9);
+    const progress = Math.min(distance / 40, 1);
+    return Math.max(0.4, progress * 0.9);
   };
 
   const getRotation = () => {
     if (!isDragging) return 0;
-    return (dragOffset.x * 0.01);
+    return (dragOffset.x * 0.005); // Reduced rotation
   };
 
   return {

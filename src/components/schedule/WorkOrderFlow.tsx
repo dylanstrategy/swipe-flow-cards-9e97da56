@@ -113,7 +113,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
       } else if (!canProceed && showPrompt) {
         setShowPrompt(false);
       }
-    }, 500);
+    }, 300); // Faster response
 
     return () => clearTimeout(timer);
   }, [currentStep, photoCaptured, workOrderDetails, selectedDate, selectedTime, showPrompt]);
@@ -156,7 +156,13 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
 
   const canSwipe = currentStep < 4 && canProceedFromCurrentStep();
 
-  console.log('WorkOrderFlow render:', { currentStep, canSwipe, canProceedFromCurrentStep: canProceedFromCurrentStep() });
+  console.log('WorkOrderFlow render:', { 
+    currentStep, 
+    canSwipe, 
+    canProceedFromCurrentStep: canProceedFromCurrentStep(),
+    photoCaptured,
+    workOrderDetails 
+  });
 
   return (
     <>

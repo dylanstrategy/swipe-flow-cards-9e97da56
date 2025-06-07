@@ -57,7 +57,13 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
     handleTouchEnd
   }), [handleTouchStart, handleTouchMove, handleTouchEnd]);
 
-  console.log('SwipeableScreen render:', { canSwipeUp, onSwipeUp: !!onSwipeUp, hideSwipeHandling });
+  console.log('SwipeableScreen render:', { 
+    canSwipeUp, 
+    onSwipeUp: !!onSwipeUp, 
+    hideSwipeHandling,
+    title,
+    currentStep 
+  });
 
   if (hideSwipeHandling) {
     return (
@@ -88,8 +94,9 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
       onTouchEnd={handleTouchEnd}
       style={{
         transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${getRotation()}deg)`,
-        transition: isDragging ? 'none' : 'transform 0.3s ease-out',
-        transformOrigin: 'center center'
+        transition: isDragging ? 'none' : 'transform 0.2s ease-out',
+        transformOrigin: 'center center',
+        touchAction: 'none' // Prevent default touch behaviors
       }}
     >
       <SwipeActionOverlays
