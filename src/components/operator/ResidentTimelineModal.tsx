@@ -41,7 +41,7 @@ const ResidentTimelineModal: React.FC<ResidentTimelineModalProps> = ({
   const [messageText, setMessageText] = useState('');
   const [expandedStep, setExpandedStep] = useState<any>(null);
 
-  // Mock message history for the expanded step
+  // Mock message history for the expanded step - showing newest first
   const getMessageHistory = () => [
     {
       id: 1,
@@ -71,7 +71,7 @@ const ResidentTimelineModal: React.FC<ResidentTimelineModalProps> = ({
       timestamp: 'May 21, 2025 at 08:30 AM',
       isCurrentUser: false
     }
-  ];
+  ]; // This is already in reverse chronological order (newest first)
 
   // Timeline steps from application to move-out
   const getTimelineSteps = (status: string) => {
