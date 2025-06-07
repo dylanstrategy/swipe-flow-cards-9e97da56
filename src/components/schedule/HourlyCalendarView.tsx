@@ -45,11 +45,26 @@ const HourlyCalendarView = ({
   const handleEventDragStart = (e: React.DragEvent, event: any) => {
     console.log('Event drag start:', event);
     setDraggedEvent(event);
-    e.dataTransfer.setData('application/json', JSON.stringify({
+    
+    // Set the drag data for the event
+    const dragData = {
       type: 'event',
-      event: event
-    }));
+      event: event,
+      eventId: event.id,
+      originalTime: event.time
+    };
+    
+    e.dataTransfer.setData('application/json', JSON.stringify(dragData));
     e.dataTransfer.effectAllowed = 'move';
+    
+    // Add visual feedback
+    e.currentTarget.style.opacity = '0.5';
+  };
+
+  const handleEventDragEnd = (e: React.DragEvent) => {
+    // Reset visual feedback
+    e.currentTarget.style.opacity = '1';
+    setDraggedEvent(null);
   };
 
   const handleSlotDragOver = (e: React.DragEvent, timeSlot: string) => {
@@ -58,8 +73,11 @@ const HourlyCalendarView = ({
     setDragOverSlot(timeSlot);
   };
 
-  const handleSlotDragLeave = () => {
-    setDragOverSlot(null);
+  const handleSlotDragLeave = (e: React.DragEvent) => {
+    // Only clear drag over if we're actually leaving the slot
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragOverSlot(null);
+    }
   };
 
   const handleSlotDrop = (e: React.DragEvent, timeSlot: string) => {
@@ -87,16 +105,16 @@ const HourlyCalendarView = ({
         } else {
           console.error('onDropSuggestion handler not provided');
         }
-      } else if (dragData.type === 'event' && draggedEvent) {
-        console.log('Processing event reschedule:', draggedEvent, 'to time:', timeSlot);
+      } else if (dragData.type === 'event') {
+        console.log('Processing event reschedule:', dragData.event, 'to time:', timeSlot);
         // Handle event reschedule
-        if (draggedEvent.time !== timeSlot) {
+        if (dragData.originalTime !== timeSlot) {
           if (onEventReschedule) {
-            onEventReschedule(draggedEvent, timeSlot);
+            onEventReschedule(dragData.event, timeSlot);
           }
           toast({
             title: "Event Rescheduled",
-            description: `${draggedEvent.title} moved to ${formatTime(timeSlot)}`,
+            description: `${dragData.event.title} moved to ${formatTime(timeSlot)}`,
           });
         }
       }
@@ -130,7 +148,7 @@ const HourlyCalendarView = ({
         <h3 className="text-lg font-semibold text-gray-900">
           {format(selectedDate, 'EEEE, MMMM d, yyyy')}
         </h3>
-        <p className="text-sm text-gray-600">Click to view details • Hold to reschedule • Drag to move</p>
+        <p className="text-sm text-gray-600">Click to view • Drag to reschedule • Drop suggestions here</p>
       </div>
 
       <div className="h-full overflow-y-auto overflow-x-hidden">
@@ -141,8 +159,8 @@ const HourlyCalendarView = ({
           return (
             <div
               key={timeSlot}
-              className={`border-b border-gray-100 last:border-b-0 min-h-[60px] transition-colors ${
-                isDragOver ? 'bg-green-100 border-green-300' : 'hover:bg-gray-50'
+              className={`border-b border-gray-100 last:border-b-0 min-h-[60px] transition-all duration-200 ${
+                isDragOver ? 'bg-green-100 border-green-300 scale-105' : 'hover:bg-gray-50'
               }`}
               onDragOver={(e) => handleSlotDragOver(e, timeSlot)}
               onDragLeave={handleSlotDragLeave}
@@ -152,13 +170,17 @@ const HourlyCalendarView = ({
                 <div className={`flex-shrink-0 p-3 text-sm text-gray-500 border-r border-gray-100 ${
                   isMobile ? 'w-16' : 'w-20'
                 }`}>
-                  <div className="truncate">
+                  <div className="truncate font-medium">
                     {isMobile ? timeSlot : formatTime(timeSlot)}
                   </div>
                 </div>
                 <div className="flex-1 p-3 min-w-0">
                   {eventsAtTime.length === 0 ? (
-                    <div className="text-gray-400 text-sm italic">Available</div>
+                    <div className={`text-gray-400 text-sm italic transition-all ${
+                      isDragOver ? 'text-green-600 font-medium' : ''
+                    }`}>
+                      {isDragOver ? 'Drop here to schedule' : 'Available'}
+                    </div>
                   ) : (
                     <div className="space-y-2">
                       {eventsAtTime.map((event) => (
@@ -166,14 +188,20 @@ const HourlyCalendarView = ({
                           key={event.id}
                           draggable
                           onDragStart={(e) => handleEventDragStart(e, event)}
+                          onDragEnd={handleEventDragEnd}
                           onClick={() => onEventClick?.(event)}
                           onContextMenu={(e) => {
                             e.preventDefault();
                             onEventHold?.(event);
                           }}
-                          className={`p-3 rounded-lg border cursor-move transition-all duration-200 hover:shadow-md min-w-0 ${
+                          className={`p-3 rounded-lg border cursor-move transition-all duration-200 hover:shadow-md min-w-0 touch-manipulation select-none ${
                             getEventUrgencyClass(event) || 'bg-blue-50 border-blue-200 hover:bg-blue-100'
-                          }`}
+                          } ${draggedEvent?.id === event.id ? 'opacity-50 scale-95' : ''}`}
+                          style={{ 
+                            touchAction: 'none',
+                            userSelect: 'none',
+                            WebkitUserSelect: 'none'
+                          }}
                         >
                           <div className="flex items-center justify-between min-w-0">
                             <div className="flex-1 min-w-0">
@@ -183,7 +211,7 @@ const HourlyCalendarView = ({
                                 <p className="text-xs text-gray-500 mt-1 truncate">{event.building} {event.unit}</p>
                               )}
                             </div>
-                            <div className="ml-2 flex-shrink-0">
+                            <div className="ml-2 flex-shrink-0 flex items-center gap-2">
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                 event.priority === 'high' ? 'bg-red-100 text-red-800' :
                                 event.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
@@ -191,6 +219,9 @@ const HourlyCalendarView = ({
                               }`}>
                                 {event.priority}
                               </span>
+                              <div className="text-gray-400 text-xs">
+                                ⋮⋮
+                              </div>
                             </div>
                           </div>
                         </div>
