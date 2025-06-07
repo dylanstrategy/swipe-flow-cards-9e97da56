@@ -1,13 +1,12 @@
-
 import React, { useState } from 'react';
-import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import { format, addDays, isSameDay } from 'date-fns';
 import ScheduleMenu from '../schedule/ScheduleMenu';
 import WorkOrderFlow from '../schedule/WorkOrderFlow';
-import SuggestionsSection from '../schedule/SuggestionsSection';
+import DraggableSuggestionsSection from '../schedule/DraggableSuggestionsSection';
+import DroppableCalendar from '../schedule/DroppableCalendar';
 import ScheduledItemsTimeline from '../schedule/ScheduledItemsTimeline';
 import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
@@ -15,6 +14,7 @@ import EventDetailModal from '../events/EventDetailModal';
 import RescheduleFlow from '../events/RescheduleFlow';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
+import { Calendar } from '@/components/ui/calendar';
 
 const ScheduleTab = () => {
   const { toast } = useToast();
@@ -93,6 +93,14 @@ const ScheduleTab = () => {
       building: 'Building A'
     }
   ];
+
+  const handleDropSuggestion = (suggestion: any, date: Date) => {
+    // Handle the dropped suggestion
+    console.log(`Scheduling ${suggestion.title} on ${format(date, 'MMM d, yyyy')}`);
+    
+    // Here you would typically update your events/schedule data
+    // For now, we'll just show a success message via the existing toast
+  };
 
   const handleAction = (action: string, item: string) => {
     toast({
@@ -298,7 +306,7 @@ const ScheduleTab = () => {
   }
 
   return (
-    <div className="px-4 py-6 pb-24 relative">
+    <div className="px-4 py-6 pb-24 relative bg-gray-50 min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Schedule</h1>
       </div>
@@ -311,33 +319,18 @@ const ScheduleTab = () => {
         <Plus className="text-white" size={28} />
       </button>
       
-      {/* Monthly Calendar View */}
-      <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="p-4 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">Calendar</h3>
-          <p className="text-sm text-gray-600">Select a date to view events and suggestions</p>
-        </div>
-        <Calendar
-          mode="single"
-          selected={selectedDate}
-          onSelect={(date) => date && setSelectedDate(date)}
-          className={cn("p-3 pointer-events-auto")}
-          classNames={{
-            day_today: "bg-blue-600 text-white hover:bg-blue-700 font-bold",
-            day_selected: "bg-blue-600 text-white hover:bg-blue-700",
-            day: "hover:bg-blue-50 transition-colors relative",
-          }}
-          modifiers={{
-            hasEvents: (date) => hasEventsOnDate(date)
-          }}
-          modifiersClassNames={{
-            hasEvents: "after:absolute after:bottom-1 after:left-1/2 after:transform after:-translate-x-1/2 after:w-1 after:h-1 after:bg-orange-500 after:rounded-full"
-          }}
+      {/* Enhanced Calendar with Drag & Drop */}
+      <div className="mb-6">
+        <DroppableCalendar
+          selectedDate={selectedDate}
+          onSelect={setSelectedDate}
+          hasEventsOnDate={hasEventsOnDate}
+          onDropSuggestion={handleDropSuggestion}
         />
       </div>
 
-      {/* Suggestions for Selected Date */}
-      <SuggestionsSection 
+      {/* Draggable Suggestions for Selected Date */}
+      <DraggableSuggestionsSection 
         selectedDate={selectedDate}
         onSchedule={startScheduling}
         onAction={handleAction}
