@@ -172,7 +172,7 @@ const BulkImportModal = ({ isOpen, onClose, importType = 'properties' }: BulkImp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader className="pb-4">
           <DialogTitle className="flex items-center gap-2">
             <Icon className="w-5 h-5" />
@@ -244,11 +244,11 @@ const BulkImportModal = ({ isOpen, onClose, importType = 'properties' }: BulkImp
                 </Card>
               )}
 
-              <div className="flex gap-2 flex-wrap">
+              <div className="space-y-3">
                 <Button 
                   onClick={handleImport} 
                   disabled={!selectedFile || importing}
-                  className="flex-1 min-w-32"
+                  className="w-full"
                 >
                   {importing ? (
                     <>
@@ -262,17 +262,19 @@ const BulkImportModal = ({ isOpen, onClose, importType = 'properties' }: BulkImp
                     </>
                   )}
                 </Button>
+                
                 <Button 
                   variant="outline" 
                   onClick={handleDownloadTemplate} 
                   disabled={importing}
-                  className="flex-1 min-w-32"
+                  className="w-full"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Download Template
                 </Button>
+                
                 {(selectedFile || importResults) && (
-                  <Button variant="ghost" onClick={resetImport} disabled={importing}>
+                  <Button variant="ghost" onClick={resetImport} disabled={importing} className="w-full">
                     Reset
                   </Button>
                 )}
