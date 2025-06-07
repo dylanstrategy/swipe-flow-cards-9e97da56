@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -122,28 +123,28 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-white rounded-xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={onClose}>
+        <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <Button variant="ghost" size="sm" onClick={onClose} className="flex-shrink-0">
               <ArrowLeft className="w-4 h-4" />
             </Button>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">{getEventTypeIcon(currentEvent.type)}</span>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">{currentEvent.title}</h2>
-                <p className="text-sm text-gray-600">{currentEvent.time} • {currentEvent.building} {currentEvent.unit}</p>
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <span className="text-xl sm:text-2xl flex-shrink-0">{getEventTypeIcon(currentEvent.type)}</span>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{currentEvent.title}</h2>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">{currentEvent.time} • {currentEvent.building} {currentEvent.unit}</p>
               </div>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
-            <Badge className={getEventTypeColor(currentEvent.type)}>
+          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-2 flex-shrink-0 ml-2">
+            <Badge className={`${getEventTypeColor(currentEvent.type)} text-xs whitespace-nowrap`}>
               {currentEvent.type === 'maintenance' ? 'Work Order' : currentEvent.type.replace('-', ' ')}
             </Badge>
-            <Badge className={getPriorityColor(currentEvent.priority, currentEvent.status)}>
+            <Badge className={`${getPriorityColor(currentEvent.priority, currentEvent.status)} text-xs whitespace-nowrap`}>
               {currentEvent.status === 'urgent' ? 'URGENT' : currentEvent.priority?.toUpperCase()}
             </Badge>
           </div>
@@ -153,7 +154,7 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
         <div className="flex border-b border-gray-200">
           <button
             onClick={() => setActiveTab('details')}
-            className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+            className={`flex-1 py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-medium transition-colors ${
               activeTab === 'details'
                 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -163,18 +164,18 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
           </button>
           <button
             onClick={() => setActiveTab('message')}
-            className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+            className={`flex-1 py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-medium transition-colors ${
               activeTab === 'message'
                 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
             }`}
           >
-            <MessageSquare className="w-4 h-4 inline mr-2" />
+            <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1 sm:mr-2" />
             Message
           </button>
           <button
             onClick={() => setActiveTab('timeline')}
-            className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+            className={`flex-1 py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-medium transition-colors ${
               activeTab === 'timeline'
                 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -185,7 +186,7 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto max-h-[60vh]">
+        <div className="overflow-y-auto" style={{ maxHeight: 'calc(95vh - 120px)' }}>
           {activeTab === 'details' && renderEventDetails()}
           
           {activeTab === 'message' && (
