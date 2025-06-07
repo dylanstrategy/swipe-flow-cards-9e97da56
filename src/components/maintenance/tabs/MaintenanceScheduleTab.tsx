@@ -91,7 +91,6 @@ const MaintenanceScheduleTab = () => {
   const [showWorkOrderFlow, setShowWorkOrderFlow] = useState(false);
   const [workOrders, setWorkOrders] = useState(initialWorkOrders);
   const [scheduledWorkOrders, setScheduledWorkOrders] = useState<any[]>([]);
-  const [overviewActiveTab, setOverviewActiveTab] = useState('queue');
 
   const handleScheduleWorkOrder = (workOrder: any, scheduledTime: string) => {
     console.log('Scheduling work order:', workOrder, 'for time:', scheduledTime);
@@ -156,33 +155,6 @@ const MaintenanceScheduleTab = () => {
     // Don't set showWorkOrderFlow to true, just show the detail tracker
   };
 
-  // Calculate overview statistics - fixed to match actual status values
-  const totalOrders = workOrders.length + scheduledWorkOrders.length;
-  const scheduledCount = workOrders.filter(wo => wo.status === 'scheduled').length + scheduledWorkOrders.length;
-  const unscheduledCount = workOrders.filter(wo => wo.status === 'unscheduled').length;
-  const overdueCount = workOrders.filter(wo => wo.status === 'overdue').length;
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority.toLowerCase()) {
-      case 'urgent': return 'bg-red-500 text-white';
-      case 'high': return 'bg-orange-500 text-white';
-      case 'medium': return 'bg-yellow-500 text-white';
-      case 'low': return 'bg-green-500 text-white';
-      default: return 'bg-gray-500 text-white';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'scheduled': return 'bg-blue-600 text-white';
-      case 'unscheduled': return 'bg-gray-600 text-white';
-      case 'overdue': return 'bg-red-600 text-white';
-      case 'in-progress': return 'bg-orange-600 text-white';
-      case 'assigned': return 'bg-purple-600 text-white';
-      default: return 'bg-gray-600 text-white';
-    }
-  };
-
   return (
     <DragDropProvider>
       <div className="h-full flex flex-col">
@@ -196,14 +168,10 @@ const MaintenanceScheduleTab = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="queue" className="flex items-center gap-2">
                 <Wrench className="w-4 h-4" />
                 Queue
-              </TabsTrigger>
-              <TabsTrigger value="overview" className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" />
-                Overview
               </TabsTrigger>
               <TabsTrigger value="unitturns" className="flex items-center gap-2">
                 <Home className="w-4 h-4" />
@@ -221,32 +189,6 @@ const MaintenanceScheduleTab = () => {
                 onSelectWorkOrder={handleWorkOrderDetailsView} 
               />
               <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
-            </div>
-          )}
-
-          {activeTab === 'overview' && (
-            <div className="h-full flex flex-col">
-              <div className="flex-shrink-0 px-4 py-6">
-                <Tabs value={overviewActiveTab} onValueChange={setOverviewActiveTab}>
-                  <TabsList className="grid w-full grid-cols-2 mb-6">
-                    <TabsTrigger value="queue">Queue</TabsTrigger>
-                    <TabsTrigger value="unitturns">Unit Turns</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-
-              <div className="flex-1 overflow-y-auto px-4">
-                {overviewActiveTab === 'queue' && (
-                  <WorkOrderQueue 
-                    workOrders={workOrders}
-                    onSelectWorkOrder={handleWorkOrderDetailsView} 
-                  />
-                )}
-
-                {overviewActiveTab === 'unitturns' && (
-                  <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
-                )}
-              </div>
             </div>
           )}
 
