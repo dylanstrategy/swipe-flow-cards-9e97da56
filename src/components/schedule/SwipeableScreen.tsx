@@ -36,7 +36,6 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
   hideSwipeHandling = false,
   rightButton
 }, ref) => {
-  // Use custom hooks
   useViewportZoomPrevention();
   
   const {
@@ -50,7 +49,6 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
     getRotation
   } = useSwipeGestures({ onSwipeUp, onSwipeLeft, canSwipeUp });
 
-  // Expose touch handlers via ref
   useImperativeHandle(ref, () => ({
     handleTouchStart,
     handleTouchMove,
@@ -75,7 +73,6 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
           onClose={onClose}
           rightButton={rightButton}
         />
-
         <div className="flex-1 overflow-y-auto relative z-10">
           <div className="p-4">
             {children}
@@ -87,16 +84,18 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
 
   return (
     <div 
-      className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen overflow-hidden select-none"
+      className="fixed inset-0 bg-white z-[9999] flex flex-col h-screen overflow-hidden"
       data-swipeable-screen
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       style={{
         transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${getRotation()}deg)`,
-        transition: isDragging ? 'none' : 'transform 0.2s ease-out',
+        transition: isDragging ? 'none' : 'transform 0.3s ease-out',
         transformOrigin: 'center center',
-        touchAction: 'none' // Prevent default touch behaviors
+        touchAction: 'none',
+        userSelect: 'none',
+        WebkitUserSelect: 'none'
       }}
     >
       <SwipeActionOverlays

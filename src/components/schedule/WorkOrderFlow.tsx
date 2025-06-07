@@ -26,7 +26,6 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   });
   const [photoCaptured, setPhotoCaptured] = useState(false);
 
-  // Prevent viewport zooming and ensure prompt stays visible
   useEffect(() => {
     const viewport = document.querySelector('meta[name=viewport]');
     const originalContent = viewport?.getAttribute('content');
@@ -35,7 +34,6 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
       viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
     }
 
-    // Add safe area styles
     document.documentElement.style.setProperty('--safe-area-inset-bottom', 'env(safe-area-inset-bottom, 0px)');
 
     return () => {
@@ -56,7 +54,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
       case 3:
         return selectedDate !== undefined && selectedTime !== '';
       case 4:
-        return false; // Review step should not be swipeable
+        return false;
       default:
         return false;
     }
@@ -64,7 +62,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
 
   const nextStep = () => {
     const canProceed = canProceedFromCurrentStep();
-    console.log('WorkOrder nextStep called:', { currentStep, canProceed, photoCaptured, workOrderDetails, selectedDate, selectedTime });
+    console.log('WorkOrder nextStep called:', { currentStep, canProceed });
     
     if (currentStep < 4 && canProceed) {
       console.log('Proceeding to next step');
@@ -87,7 +85,6 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   };
 
   const handleClearData = () => {
-    // Clear all data based on current step
     if (currentStep === 1) {
       setPhotoCaptured(false);
     } else if (currentStep === 2) {
@@ -106,14 +103,14 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   useEffect(() => {
     const timer = setTimeout(() => {
       const canProceed = canProceedFromCurrentStep();
-      console.log('Auto-show check:', { currentStep, canProceed, showPrompt, photoCaptured, workOrderDetails });
+      console.log('Auto-show check:', { currentStep, canProceed, showPrompt });
       
       if (currentStep < 4 && canProceed && !showPrompt) {
         setShowPrompt(true);
       } else if (!canProceed && showPrompt) {
         setShowPrompt(false);
       }
-    }, 300); // Faster response
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [currentStep, photoCaptured, workOrderDetails, selectedDate, selectedTime, showPrompt]);
@@ -159,9 +156,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   console.log('WorkOrderFlow render:', { 
     currentStep, 
     canSwipe, 
-    canProceedFromCurrentStep: canProceedFromCurrentStep(),
-    photoCaptured,
-    workOrderDetails 
+    canProceedFromCurrentStep: canProceedFromCurrentStep()
   });
 
   return (
