@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { format, isSameDay } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useRealtimeOverdueDetection } from '@/hooks/useRealtimeOverdueDetection';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface HourlyCalendarViewProps {
   selectedDate: Date;
@@ -21,6 +23,7 @@ const HourlyCalendarView = ({
   onEventReschedule 
 }: HourlyCalendarViewProps) => {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [draggedEvent, setDraggedEvent] = useState<any>(null);
   const [dragOverSlot, setDragOverSlot] = useState<string | null>(null);
   
@@ -103,7 +106,7 @@ const HourlyCalendarView = ({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden h-[calc(100vh-180px)]">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden h-[calc(100vh-220px)]">
       <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
         <h3 className="text-lg font-semibold text-gray-900">
           {format(selectedDate, 'EEEE, MMMM d, yyyy')}
@@ -111,7 +114,7 @@ const HourlyCalendarView = ({
         <p className="text-sm text-gray-600">Click to view details • Hold to reschedule • Drag to move</p>
       </div>
 
-      <div className="h-full overflow-y-auto">
+      <div className="h-full overflow-y-auto overflow-x-hidden">
         {timeSlots.map((timeSlot) => {
           const eventsAtTime = getEventsForTime(timeSlot);
           const isDragOver = dragOverSlot === timeSlot;
@@ -126,11 +129,15 @@ const HourlyCalendarView = ({
               onDragLeave={handleSlotDragLeave}
               onDrop={(e) => handleSlotDrop(e, timeSlot)}
             >
-              <div className="flex">
-                <div className="w-20 flex-shrink-0 p-3 text-sm text-gray-500 border-r border-gray-100">
-                  {formatTime(timeSlot)}
+              <div className="flex min-w-0">
+                <div className={`flex-shrink-0 p-3 text-sm text-gray-500 border-r border-gray-100 ${
+                  isMobile ? 'w-16' : 'w-20'
+                }`}>
+                  <div className="truncate">
+                    {isMobile ? timeSlot : formatTime(timeSlot)}
+                  </div>
                 </div>
-                <div className="flex-1 p-3">
+                <div className="flex-1 p-3 min-w-0">
                   {eventsAtTime.length === 0 ? (
                     <div className="text-gray-400 text-sm italic">Available</div>
                   ) : (
@@ -145,16 +152,16 @@ const HourlyCalendarView = ({
                             e.preventDefault();
                             onEventHold?.(event);
                           }}
-                          className={`p-3 rounded-lg border cursor-move transition-all duration-200 hover:shadow-md ${
+                          className={`p-3 rounded-lg border cursor-move transition-all duration-200 hover:shadow-md min-w-0 ${
                             getEventUrgencyClass(event) || 'bg-blue-50 border-blue-200 hover:bg-blue-100'
                           }`}
                         >
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between min-w-0">
                             <div className="flex-1 min-w-0">
                               <h4 className="font-medium text-gray-900 truncate">{event.title}</h4>
                               <p className="text-sm text-gray-600 truncate">{event.description}</p>
                               {event.unit && (
-                                <p className="text-xs text-gray-500 mt-1">{event.building} {event.unit}</p>
+                                <p className="text-xs text-gray-500 mt-1 truncate">{event.building} {event.unit}</p>
                               )}
                             </div>
                             <div className="ml-2 flex-shrink-0">
