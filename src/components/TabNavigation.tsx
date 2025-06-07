@@ -20,7 +20,7 @@ const TabNavigation = ({ tabs, activeTab, onTabChange }: TabNavigationProps) => 
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50">
       <div className="flex justify-around items-center max-w-md mx-auto">
         {tabs.map((tab) => (
-          <div key={tab.id} className="relative p-2">
+          <div key={tab.id} className="relative">
             <button
               onClick={() => onTabChange(tab.id)}
               className={cn(
@@ -38,12 +38,8 @@ const TabNavigation = ({ tabs, activeTab, onTabChange }: TabNavigationProps) => 
             
             {tab.badgeCount && tab.badgeCount > 0 && (
               <div 
-                className="absolute bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-[20px] flex items-center justify-center px-1 shadow-lg border-2 border-white"
-                style={{
-                  top: '4px',
-                  right: '4px',
-                  zIndex: 50
-                }}
+                className="absolute bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-[20px] flex items-center justify-center px-1 shadow-lg border-2 border-white -top-1 -right-1"
+                style={{ zIndex: 50 }}
               >
                 {tab.badgeCount > 99 ? '99+' : tab.badgeCount}
               </div>
