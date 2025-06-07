@@ -1,7 +1,7 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, MessageSquare, Calendar, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import MoveInEventDetails from './event-types/MoveInEventDetails';
@@ -77,16 +77,19 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
 
   const handleWorkOrderNudge = (updatedEvent: any) => {
     setCurrentEvent(updatedEvent);
+    // Switch to timeline tab to show the new entry
     setActiveTab('timeline');
   };
 
   const handleWorkOrderUrgent = (updatedEvent: any) => {
     setCurrentEvent(updatedEvent);
+    // Switch to timeline tab to show the new entry
     setActiveTab('timeline');
   };
 
   const handleWorkOrderCancel = (updatedEvent: any) => {
     setCurrentEvent(updatedEvent);
+    // Switch to timeline tab to show the new entry
     setActiveTab('timeline');
   };
 
@@ -120,24 +123,24 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            <Button variant="ghost" size="sm" onClick={onClose} className="flex-shrink-0">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={onClose}>
               <ArrowLeft className="w-4 h-4" />
             </Button>
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <span className="text-2xl flex-shrink-0">{getEventTypeIcon(currentEvent.type)}</span>
-              <div className="min-w-0 flex-1">
-                <h2 className="text-lg font-semibold text-gray-900 truncate">{currentEvent.title}</h2>
-                <p className="text-sm text-gray-600 truncate">{currentEvent.time} • {currentEvent.building} {currentEvent.unit}</p>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">{getEventTypeIcon(currentEvent.type)}</span>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">{currentEvent.title}</h2>
+                <p className="text-sm text-gray-600">{currentEvent.time} • {currentEvent.building} {currentEvent.unit}</p>
               </div>
             </div>
           </div>
           
-          <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+          <div className="flex items-center gap-2">
             <Badge className={getEventTypeColor(currentEvent.type)}>
               {currentEvent.type === 'maintenance' ? 'Work Order' : currentEvent.type.replace('-', ' ')}
             </Badge>
@@ -148,7 +151,7 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-gray-200 flex-shrink-0">
+        <div className="flex border-b border-gray-200">
           <button
             onClick={() => setActiveTab('details')}
             className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
@@ -182,27 +185,23 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
           </button>
         </div>
 
-        {/* Content with ScrollArea */}
-        <div className="flex-1 min-h-0">
-          <ScrollArea className="h-full">
-            <div className="h-full">
-              {activeTab === 'details' && renderEventDetails()}
-              
-              {activeTab === 'message' && (
-                <EventMessaging
-                  event={currentEvent}
-                  messageText={messageText}
-                  setMessageText={setMessageText}
-                  onSendMessage={handleSendMessage}
-                  userRole={userRole}
-                />
-              )}
-              
-              {activeTab === 'timeline' && (
-                <EventTimeline event={currentEvent} userRole={userRole} />
-              )}
-            </div>
-          </ScrollArea>
+        {/* Content */}
+        <div className="overflow-y-auto max-h-[60vh]">
+          {activeTab === 'details' && renderEventDetails()}
+          
+          {activeTab === 'message' && (
+            <EventMessaging
+              event={currentEvent}
+              messageText={messageText}
+              setMessageText={setMessageText}
+              onSendMessage={handleSendMessage}
+              userRole={userRole}
+            />
+          )}
+          
+          {activeTab === 'timeline' && (
+            <EventTimeline event={currentEvent} userRole={userRole} />
+          )}
         </div>
       </div>
     </div>
