@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UnitTurnTracker from '../UnitTurnTracker';
@@ -11,36 +12,16 @@ import DragDropProvider from '../DragDropProvider';
 import { Calendar, Home, Wrench, BarChart3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-// Work order interface to match the expected types
-interface WorkOrder {
-  id: string;
-  unit: string;
-  title: string;
-  description: string;
-  category: string;
-  priority: 'urgent' | 'high' | 'medium' | 'low';
-  status: 'unscheduled' | 'scheduled' | 'overdue';
-  assignedTo: string;
-  resident: string;
-  phone: string;
-  daysOpen: number;
-  estimatedTime: string;
-  submittedDate: string;
-  scheduledDate?: string;
-  scheduledTime?: string;
-  photo: string;
-}
-
 // Mock work orders data - this would normally come from a state management solution or API
-const initialWorkOrders: WorkOrder[] = [
+const initialWorkOrders = [
   {
     id: 'WO-544857',
     unit: '417',
     title: 'Dripping water faucet',
     description: 'Bathroom faucet dripping intermittently',
     category: 'Plumbing',
-    priority: 'medium' as const,
-    status: 'unscheduled' as const,
+    priority: 'medium',
+    status: 'unscheduled',
     assignedTo: 'Mike Rodriguez',
     resident: 'Rumi Desai',
     phone: '(555) 123-4567',
@@ -55,8 +36,8 @@ const initialWorkOrders: WorkOrder[] = [
     title: 'Window won\'t close properly',
     description: 'The balancer got stuck and window won\'t close',
     category: 'Windows',
-    priority: 'high' as const,
-    status: 'unscheduled' as const,
+    priority: 'high',
+    status: 'unscheduled',
     assignedTo: 'Sarah Johnson',
     resident: 'Kalyani Dronamraju',
     phone: '(555) 345-6789',
@@ -71,8 +52,8 @@ const initialWorkOrders: WorkOrder[] = [
     title: 'HVAC not cooling properly',
     description: 'Air conditioning unit not providing adequate cooling',
     category: 'HVAC',
-    priority: 'urgent' as const,
-    status: 'overdue' as const,
+    priority: 'urgent',
+    status: 'overdue',
     assignedTo: 'James Wilson',
     resident: 'Alex Thompson',
     phone: '(555) 456-7890',
@@ -87,8 +68,8 @@ const initialWorkOrders: WorkOrder[] = [
     title: 'Scheduled Inspection',
     description: 'Annual HVAC maintenance check',
     category: 'Maintenance',
-    priority: 'low' as const,
-    status: 'scheduled' as const,
+    priority: 'low',
+    status: 'scheduled',
     assignedTo: 'Mike Rodriguez',
     resident: 'Jane Smith',
     phone: '(555) 789-0123',
@@ -103,20 +84,20 @@ const initialWorkOrders: WorkOrder[] = [
 
 const MaintenanceScheduleTab = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('today');
+  const [activeTab, setActiveTab] = useState('queue');
   const [selectedUnitTurn, setSelectedUnitTurn] = useState<any>(null);
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
   const [showWorkOrderFlow, setShowWorkOrderFlow] = useState(false);
-  const [workOrders, setWorkOrders] = useState<WorkOrder[]>(initialWorkOrders);
-  const [scheduledWorkOrders, setScheduledWorkOrders] = useState<WorkOrder[]>([]);
+  const [workOrders, setWorkOrders] = useState(initialWorkOrders);
+  const [scheduledWorkOrders, setScheduledWorkOrders] = useState<any[]>([]);
 
-  const handleScheduleWorkOrder = (workOrder: WorkOrder, scheduledTime: string) => {
+  const handleScheduleWorkOrder = (workOrder: any, scheduledTime: string) => {
     console.log('Scheduling work order:', workOrder, 'for time:', scheduledTime);
     
     // Update the work order with scheduled information
-    const updatedWorkOrder: WorkOrder = {
+    const updatedWorkOrder = {
       ...workOrder,
-      status: 'scheduled' as const,
+      status: 'scheduled',
       scheduledDate: new Date().toISOString().split('T')[0],
       scheduledTime: scheduledTime.includes('Tomorrow') ? '09:00 AM' : scheduledTime
     };
@@ -187,91 +168,85 @@ const MaintenanceScheduleTab = () => {
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
             <TabsList className="grid w-full grid-cols-3 mb-6">
-              <TabsTrigger value="today" className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Today
-              </TabsTrigger>
               <TabsTrigger value="queue" className="flex items-center gap-2">
                 <Wrench className="w-4 h-4" />
                 Queue
+              </TabsTrigger>
+              <TabsTrigger value="overview" className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Overview
               </TabsTrigger>
               <TabsTrigger value="unitturns" className="flex items-center gap-2">
                 <Home className="w-4 h-4" />
                 Unit Turns
               </TabsTrigger>
             </TabsList>
+          </Tabs>
+        </div>
 
-            <TabsContent value="today" className="flex-1 overflow-hidden">
-              <div className="h-full overflow-y-auto px-0 pb-32">
-                <div className="space-y-6">
-                  {/* Today's Scheduled Work Orders */}
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Today's Scheduled Work Orders</h2>
-                    {scheduledWorkOrders.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
-                        <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                        <p className="text-lg font-medium mb-2">No work orders scheduled for today</p>
-                        <p className="text-sm">Drag work orders from the Queue tab to schedule them</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {scheduledWorkOrders.map((workOrder) => (
-                          <div key={workOrder.id} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <div className="flex items-start gap-3">
-                              <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                                <img 
-                                  src={workOrder.photo} 
-                                  alt="Issue"
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                              <div className="flex-1">
-                                <h4 className="font-semibold text-gray-900">
-                                  Unit {workOrder.unit} - {workOrder.title}
-                                </h4>
-                                <p className="text-sm text-gray-600 mb-1">{workOrder.description}</p>
-                                <div className="flex items-center gap-4 text-xs text-gray-500">
-                                  <span>Scheduled: {workOrder.scheduledTime}</span>
-                                  <span>Assigned: {workOrder.assignedTo}</span>
-                                  <span>Est: {workOrder.estimatedTime}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Overview Section */}
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Overview</h2>
-                    <WorkOrderTracker 
-                      onSelectWorkOrder={handleWorkOrderSelect}
-                      onViewDetails={handleWorkOrderDetailsView}
-                    />
-                    <div className="mt-6">
-                      <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="queue" className="flex-1 overflow-hidden">
+        <div className="flex-1 relative overflow-hidden">
+          {activeTab === 'queue' && (
+            <div className="h-full">
               <WorkOrderQueue 
                 workOrders={workOrders}
                 onSelectWorkOrder={handleWorkOrderDetailsView} 
               />
-            </TabsContent>
+              <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
+            </div>
+          )}
 
-            <TabsContent value="unitturns" className="flex-1 overflow-hidden">
+          {activeTab === 'overview' && (
+            <div className="h-full overflow-y-auto pb-32">
+              <div className="px-4 space-y-6">
+                <WorkOrderTracker 
+                  onSelectWorkOrder={handleWorkOrderSelect}
+                  onViewDetails={handleWorkOrderDetailsView}
+                />
+                <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
+                
+                {/* Today's Scheduled Work Orders */}
+                {scheduledWorkOrders.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Today's Scheduled Work Orders</h3>
+                    <div className="space-y-3">
+                      {scheduledWorkOrders.map((workOrder) => (
+                        <div key={workOrder.id} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <div className="flex items-start gap-3">
+                            <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                              <img 
+                                src={workOrder.photo} 
+                                alt="Issue"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-gray-900">
+                                Unit {workOrder.unit} - {workOrder.title}
+                              </h4>
+                              <p className="text-sm text-gray-600 mb-1">{workOrder.description}</p>
+                              <div className="flex items-center gap-4 text-xs text-gray-500">
+                                <span>Scheduled: {workOrder.scheduledTime}</span>
+                                <span>Assigned: {workOrder.assignedTo}</span>
+                                <span>Est: {workOrder.estimatedTime}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'unitturns' && (
+            <div className="h-full">
               <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
-            </TabsContent>
-          </Tabs>
+              <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
+            </div>
+          )}
         </div>
-
-        <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
       </div>
     </DragDropProvider>
   );
