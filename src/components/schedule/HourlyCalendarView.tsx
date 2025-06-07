@@ -1,8 +1,8 @@
+
 import React, { useState, useRef } from 'react';
 import { format, addMinutes, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Clock, Calendar, Plus } from 'lucide-react';
-import { useRealtimeOverdueDetection } from '@/hooks/useRealtimeOverdueDetection';
 
 interface Event {
   id: number | string;
@@ -17,8 +17,6 @@ interface Event {
   image?: string;
   isDroppedSuggestion?: boolean;
   rescheduledCount?: number;
-  date: Date;
-  status?: string;
 }
 
 interface HourlyCalendarViewProps {
@@ -41,9 +39,6 @@ const HourlyCalendarView = ({
   const [dragOverSlot, setDragOverSlot] = useState<string | null>(null);
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
   const dragCounterRef = useRef(0);
-
-  // Use real-time overdue detection
-  const { isEventOverdue } = useRealtimeOverdueDetection(events);
 
   const timeSlots = Array.from({ length: 24 }, (_, i) => {
     const hour = i.toString().padStart(2, '0');
@@ -81,11 +76,7 @@ const HourlyCalendarView = ({
     });
   };
 
-  const getPriorityColor = (priority: string, isDropped?: boolean, isOverdue?: boolean) => {
-    if (isOverdue) {
-      return 'bg-red-500 border-red-600 text-white wiggle-urgent pulse-urgent';
-    }
-    
+  const getPriorityColor = (priority: string, isDropped?: boolean) => {
     const baseColors = {
       'urgent': isDropped ? 'bg-red-500 border-red-600' : 'bg-red-100 border-red-300 text-red-800',
       'high': isDropped ? 'bg-orange-500 border-orange-600' : 'bg-orange-100 border-orange-300 text-orange-800',
@@ -212,79 +203,72 @@ const HourlyCalendarView = ({
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {slotEvents.map((event) => {
-                      const eventIsOverdue = isEventOverdue(event);
-                      
-                      return (
-                        <div
-                          key={event.id}
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, event)}
-                          onDragEnd={handleDragEnd}
-                          onClick={() => handleEventClick(event)}
-                          onContextMenu={(e) => {
-                            e.preventDefault();
-                            handleEventHold(event);
-                          }}
-                          className={cn(
-                            "p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md active:scale-95",
-                            getPriorityColor(event.priority, event.isDroppedSuggestion, eventIsOverdue),
-                            (event.isDroppedSuggestion || eventIsOverdue) && "text-white shadow-lg",
-                            !event.isDroppedSuggestion && !eventIsOverdue && "hover:scale-105"
-                          )}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1 min-w-0">
-                              <h4 className={cn(
-                                "font-semibold text-sm truncate",
-                                (event.isDroppedSuggestion || eventIsOverdue) ? "text-white" : ""
-                              )}>
-                                {event.title}
-                              </h4>
-                              <p className={cn(
-                                "text-xs mt-1 line-clamp-2",
-                                (event.isDroppedSuggestion || eventIsOverdue) ? "text-white/90" : "text-gray-600"
-                              )}>
-                                {event.description}
-                              </p>
-                              {(event.unit || event.building) && (
-                                <div className="flex items-center gap-2 mt-2">
-                                  {event.building && (
-                                    <span className={cn(
-                                      "text-xs px-2 py-1 rounded-full",
-                                      (event.isDroppedSuggestion || eventIsOverdue)
-                                        ? "bg-white/20 text-white" 
-                                        : "bg-gray-100 text-gray-600"
-                                    )}>
-                                      {event.building}
-                                    </span>
-                                  )}
-                                  {event.unit && (
-                                    <span className={cn(
-                                      "text-xs px-2 py-1 rounded-full",
-                                      (event.isDroppedSuggestion || eventIsOverdue)
-                                        ? "bg-white/20 text-white" 
-                                        : "bg-blue-100 text-blue-700"
-                                    )}>
-                                      Unit {event.unit}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          
-                          {event.rescheduledCount && event.rescheduledCount > 0 && (
-                            <div className={cn(
-                              "mt-2 text-xs px-2 py-1 rounded-full inline-block",
-                              eventIsOverdue ? "bg-white/20 text-white" : "text-orange-600 bg-orange-100"
+                    {slotEvents.map((event) => (
+                      <div
+                        key={event.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, event)}
+                        onDragEnd={handleDragEnd}
+                        onClick={() => handleEventClick(event)}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          handleEventHold(event);
+                        }}
+                        className={cn(
+                          "p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md active:scale-95",
+                          getPriorityColor(event.priority, event.isDroppedSuggestion),
+                          event.isDroppedSuggestion && "text-white shadow-lg",
+                          !event.isDroppedSuggestion && "hover:scale-105"
+                        )}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h4 className={cn(
+                              "font-semibold text-sm truncate",
+                              event.isDroppedSuggestion ? "text-white" : ""
                             )}>
-                              Rescheduled {event.rescheduledCount}x
-                            </div>
-                          )}
+                              {event.title}
+                            </h4>
+                            <p className={cn(
+                              "text-xs mt-1 line-clamp-2",
+                              event.isDroppedSuggestion ? "text-white/90" : "text-gray-600"
+                            )}>
+                              {event.description}
+                            </p>
+                            {(event.unit || event.building) && (
+                              <div className="flex items-center gap-2 mt-2">
+                                {event.building && (
+                                  <span className={cn(
+                                    "text-xs px-2 py-1 rounded-full",
+                                    event.isDroppedSuggestion 
+                                      ? "bg-white/20 text-white" 
+                                      : "bg-gray-100 text-gray-600"
+                                  )}>
+                                    {event.building}
+                                  </span>
+                                )}
+                                {event.unit && (
+                                  <span className={cn(
+                                    "text-xs px-2 py-1 rounded-full",
+                                    event.isDroppedSuggestion 
+                                      ? "bg-white/20 text-white" 
+                                      : "bg-blue-100 text-blue-700"
+                                  )}>
+                                    Unit {event.unit}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      );
-                    })}
+                        
+                        {event.rescheduledCount && event.rescheduledCount > 0 && (
+                          <div className="mt-2 text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded-full inline-block">
+                            Rescheduled {event.rescheduledCount}x
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

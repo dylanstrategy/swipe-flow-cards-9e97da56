@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon } from 'lucide-react';
 import { format, addDays, isSameDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -19,8 +19,6 @@ import RescheduleFlow from '@/components/events/RescheduleFlow';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 import HourlyCalendarView from '@/components/schedule/HourlyCalendarView';
-import { CalendarEvent } from '@/types/calendarEvents';
-import { useRealtimeOverdueDetection } from '@/hooks/useRealtimeOverdueDetection';
 
 const OperatorScheduleTab = () => {
   const { toast } = useToast();
@@ -42,7 +40,7 @@ const OperatorScheduleTab = () => {
   });
 
   // State for managing scheduled events including dropped suggestions
-  const [scheduledEvents, setScheduledEvents] = useState<CalendarEvent[]>([
+  const [scheduledEvents, setScheduledEvents] = useState([
     {
       id: 1,
       date: new Date(),
@@ -55,8 +53,7 @@ const OperatorScheduleTab = () => {
       unit: '204',
       type: 'maintenance',
       isDroppedSuggestion: false,
-      rescheduledCount: 0,
-      status: 'pending'
+      rescheduledCount: 0
     },
     {
       id: 2,
@@ -70,8 +67,7 @@ const OperatorScheduleTab = () => {
       unit: '156',
       type: 'move-in',
       isDroppedSuggestion: false,
-      rescheduledCount: 0,
-      status: 'pending'
+      rescheduledCount: 0
     },
     {
       id: 3,
@@ -80,13 +76,12 @@ const OperatorScheduleTab = () => {
       title: 'Lease Signing',
       description: 'Mike Chen - Lease renewal signing appointment',
       category: 'Leasing',
-      priority: 'medium',
+      priority: 'normal',
       building: 'Building B',
       unit: '302',
       type: 'lease',
       isDroppedSuggestion: false,
-      rescheduledCount: 0,
-      status: 'pending'
+      rescheduledCount: 0
     },
     {
       id: 4,
@@ -100,8 +95,7 @@ const OperatorScheduleTab = () => {
       unit: '108',
       type: 'payment',
       isDroppedSuggestion: false,
-      rescheduledCount: 0,
-      status: 'pending'
+      rescheduledCount: 0
     },
     {
       id: 5,
@@ -110,22 +104,18 @@ const OperatorScheduleTab = () => {
       title: 'Renewal Notice',
       description: 'Jennifer Adams - Lease renewal discussion',
       category: 'Renewals',
-      priority: 'medium',
+      priority: 'normal',
       building: 'Building C',
       unit: '225',
       type: 'message',
       isDroppedSuggestion: false,
-      rescheduledCount: 0,
-      status: 'pending'
+      rescheduledCount: 0
     }
   ]);
 
   // State to track which suggestions have been scheduled and completed
   const [scheduledSuggestionIds, setScheduledSuggestionIds] = useState<number[]>([]);
   const [completedSuggestionIds, setCompletedSuggestionIds] = useState<number[]>([]);
-
-  // Use real-time overdue detection
-  const { isEventOverdue } = useRealtimeOverdueDetection(scheduledEvents);
 
   const convertTimeToMinutes = (timeString: string): number => {
     if (!timeString) return 0;
@@ -214,14 +204,14 @@ const OperatorScheduleTab = () => {
     }
 
     // Create event with proper structure to match existing events
-    const newEvent: CalendarEvent = {
+    const newEvent = {
       id: Date.now() + Math.random(),
       date: new Date(selectedDate),
       time: assignedTime,
       title: suggestion.title,
       description: suggestion.description,
-      category: suggestion.suggestionType || suggestion.type,
-      priority: (suggestion.priority || 'medium') as 'low' | 'medium' | 'high' | 'urgent',
+      category: suggestion.suggestionType || suggestion.type, // Use suggestionType from drag data
+      priority: suggestion.priority,
       isDroppedSuggestion: true,
       type: (suggestion.suggestionType || suggestion.type).toLowerCase(),
       rescheduledCount: 0,
@@ -229,13 +219,16 @@ const OperatorScheduleTab = () => {
       building: suggestion.building || undefined,
       dueDate: suggestion.dueDate || undefined,
       image: suggestion.image || undefined,
-      originalSuggestionId: suggestion.id,
-      status: 'pending'
+      originalSuggestionId: suggestion.id // Track which suggestion this came from
     };
 
     console.log('OperatorScheduleTab: Adding new event from timeline drop:', newEvent);
     
-    setScheduledEvents(prev => [...prev, newEvent]);
+    setScheduledEvents(prev => {
+      const updated = [...prev, newEvent];
+      console.log('OperatorScheduleTab: Updated scheduled events:', updated);
+      return updated;
+    });
     
     // Mark suggestion as scheduled (but not completed yet)
     setScheduledSuggestionIds(prev => {
@@ -271,14 +264,14 @@ const OperatorScheduleTab = () => {
     }
     
     // Create event with proper structure to match existing events
-    const newEvent: CalendarEvent = {
+    const newEvent = {
       id: Date.now() + Math.random(),
       date: new Date(date),
       time: assignedTime,
       title: suggestion.title,
       description: suggestion.description,
-      category: suggestion.suggestionType || suggestion.type,
-      priority: (suggestion.priority || 'medium') as 'low' | 'medium' | 'high' | 'urgent',
+      category: suggestion.suggestionType || suggestion.type, // Use suggestionType from drag data
+      priority: suggestion.priority,
       isDroppedSuggestion: true,
       type: (suggestion.suggestionType || suggestion.type).toLowerCase(),
       rescheduledCount: 0,
@@ -286,13 +279,16 @@ const OperatorScheduleTab = () => {
       building: suggestion.building || undefined,
       dueDate: suggestion.dueDate || undefined,
       image: suggestion.image || undefined,
-      originalSuggestionId: suggestion.id,
-      status: 'pending'
+      originalSuggestionId: suggestion.id // Track which suggestion this came from
     };
 
     console.log('OperatorScheduleTab: Adding calendar drop event:', newEvent);
 
-    setScheduledEvents(prev => [...prev, newEvent]);
+    setScheduledEvents(prev => {
+      const updated = [...prev, newEvent];
+      console.log('OperatorScheduleTab: Updated scheduled events from calendar:', updated);
+      return updated;
+    });
     
     // Mark suggestion as scheduled (but not completed yet)
     setScheduledSuggestionIds(prev => {
@@ -463,11 +459,6 @@ const OperatorScheduleTab = () => {
     return scheduledEvents.some(event => isSameDateSafe(event.date, date));
   };
 
-  const hasOverdueEventsOnDate = (date: Date) => {
-    const eventsForDate = scheduledEvents.filter(event => isSameDateSafe(event.date, date));
-    return eventsForDate.some(event => isEventOverdue(event));
-  };
-
   if (showRescheduleFlow && selectedEvent) {
     return (
       <RescheduleFlow
@@ -559,7 +550,6 @@ const OperatorScheduleTab = () => {
                 selectedDate={selectedDate}
                 onSelect={setSelectedDate}
                 hasEventsOnDate={hasEventsOnDate}
-                hasOverdueEventsOnDate={hasOverdueEventsOnDate}
                 onDropSuggestion={handleDropSuggestion}
                 events={scheduledEvents}
               />
@@ -571,7 +561,7 @@ const OperatorScheduleTab = () => {
           onClick={() => setShowScheduleMenu(true)}
           className="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-700 transition-all duration-200 hover:scale-110 z-50"
         >
-          <span className="text-white text-sm font-medium">available</span>
+          <Plus className="text-white" size={28} />
         </button>
 
         <div className="mb-3">

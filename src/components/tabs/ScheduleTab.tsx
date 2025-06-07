@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon } from 'lucide-react';
 import { format, addDays, isSameDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -17,7 +18,6 @@ import RescheduleFlow from '../events/RescheduleFlow';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 import HourlyCalendarView from '../schedule/HourlyCalendarView';
-import { CalendarEvent } from '@/types/calendarEvents';
 
 const ScheduleTab = () => {
   const { toast } = useToast();
@@ -39,7 +39,7 @@ const ScheduleTab = () => {
   });
 
   // State for managing scheduled events including dropped suggestions
-  const [scheduledEvents, setScheduledEvents] = useState<CalendarEvent[]>([
+  const [scheduledEvents, setScheduledEvents] = useState([
     {
       id: 1,
       date: new Date(),
@@ -204,14 +204,14 @@ const ScheduleTab = () => {
     }
 
     // Create event with proper structure to match existing events
-    const newEvent: CalendarEvent = {
+    const newEvent = {
       id: Date.now() + Math.random(),
       date: new Date(selectedDate),
       time: assignedTime,
       title: suggestion.title,
       description: suggestion.description,
-      category: suggestion.suggestionType || suggestion.type,
-      priority: (suggestion.priority || 'medium') as 'low' | 'medium' | 'high' | 'urgent',
+      category: suggestion.suggestionType || suggestion.type, // Use suggestionType from drag data
+      priority: suggestion.priority,
       isDroppedSuggestion: true,
       type: (suggestion.suggestionType || suggestion.type).toLowerCase(),
       rescheduledCount: 0,
@@ -219,12 +219,16 @@ const ScheduleTab = () => {
       building: suggestion.building || undefined,
       dueDate: suggestion.dueDate || undefined,
       image: suggestion.image || undefined,
-      originalSuggestionId: suggestion.id
+      originalSuggestionId: suggestion.id // Track which suggestion this came from
     };
 
     console.log('ScheduleTab: Adding new event from timeline drop:', newEvent);
     
-    setScheduledEvents(prev => [...prev, newEvent]);
+    setScheduledEvents(prev => {
+      const updated = [...prev, newEvent];
+      console.log('ScheduleTab: Updated scheduled events:', updated);
+      return updated;
+    });
     
     // Mark suggestion as scheduled (but not completed yet)
     setScheduledSuggestionIds(prev => {
@@ -260,14 +264,14 @@ const ScheduleTab = () => {
     }
     
     // Create event with proper structure to match existing events
-    const newEvent: CalendarEvent = {
+    const newEvent = {
       id: Date.now() + Math.random(),
       date: new Date(date),
       time: assignedTime,
       title: suggestion.title,
       description: suggestion.description,
-      category: suggestion.suggestionType || suggestion.type,
-      priority: (suggestion.priority || 'medium') as 'low' | 'medium' | 'high' | 'urgent',
+      category: suggestion.suggestionType || suggestion.type, // Use suggestionType from drag data
+      priority: suggestion.priority,
       isDroppedSuggestion: true,
       type: (suggestion.suggestionType || suggestion.type).toLowerCase(),
       rescheduledCount: 0,
@@ -275,12 +279,16 @@ const ScheduleTab = () => {
       building: suggestion.building || undefined,
       dueDate: suggestion.dueDate || undefined,
       image: suggestion.image || undefined,
-      originalSuggestionId: suggestion.id
+      originalSuggestionId: suggestion.id // Track which suggestion this came from
     };
 
     console.log('ScheduleTab: Adding calendar drop event:', newEvent);
 
-    setScheduledEvents(prev => [...prev, newEvent]);
+    setScheduledEvents(prev => {
+      const updated = [...prev, newEvent];
+      console.log('ScheduleTab: Updated scheduled events from calendar:', updated);
+      return updated;
+    });
     
     // Mark suggestion as scheduled (but not completed yet)
     setScheduledSuggestionIds(prev => {
@@ -565,7 +573,7 @@ const ScheduleTab = () => {
           onClick={() => setShowScheduleMenu(true)}
           className="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-700 transition-all duration-200 hover:scale-110 z-50"
         >
-          <span className="text-white text-sm font-medium">available</span>
+          <Plus className="text-white" size={28} />
         </button>
 
         <div className="mb-3">
