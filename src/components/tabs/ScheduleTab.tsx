@@ -7,7 +7,6 @@ import ScheduleMenu from '../schedule/ScheduleMenu';
 import WorkOrderFlow from '../schedule/WorkOrderFlow';
 import DraggableSuggestionsSection from '../schedule/DraggableSuggestionsSection';
 import DroppableCalendar from '../schedule/DroppableCalendar';
-import ScheduledItemsTimeline from '../schedule/ScheduledItemsTimeline';
 import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
 import EventDetailModal from '../events/EventDetailModal';
@@ -469,16 +468,6 @@ const ScheduleTab = () => {
         onSchedule={startScheduling}
         onAction={handleAction}
         scheduledSuggestionIds={scheduledSuggestionIds}
-      />
-
-      {/* Scheduled Items for Selected Date */}
-      <ScheduledItemsTimeline
-        selectedDate={selectedDate}
-        onAction={handleAction}
-        onEventClick={handleEventClick}
-        onEventHold={handleEventHold}
-        events={getEventsForDate(selectedDate)}
-        onDropSuggestion={handleDropSuggestionInTimeline}
       />
     </div>
   );
