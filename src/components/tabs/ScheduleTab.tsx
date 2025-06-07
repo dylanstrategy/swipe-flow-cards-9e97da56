@@ -112,8 +112,9 @@ const ScheduleTab = () => {
     }
   ]);
 
-  // State to track which suggestions have been scheduled
+  // State to track which suggestions have been scheduled and completed
   const [scheduledSuggestionIds, setScheduledSuggestionIds] = useState<number[]>([]);
+  const [completedSuggestionIds, setCompletedSuggestionIds] = useState<number[]>([]);
 
   const convertTimeToMinutes = (timeString: string): number => {
     if (!timeString) return 0;
@@ -216,7 +217,8 @@ const ScheduleTab = () => {
       unit: suggestion.unit || undefined,
       building: suggestion.building || undefined,
       dueDate: suggestion.dueDate || undefined,
-      image: suggestion.image || undefined
+      image: suggestion.image || undefined,
+      originalSuggestionId: suggestion.id // Track which suggestion this came from
     };
 
     console.log('ScheduleTab: Adding new event from timeline drop:', newEvent);
@@ -227,7 +229,7 @@ const ScheduleTab = () => {
       return updated;
     });
     
-    // Mark suggestion as scheduled to remove it from the suggestions list
+    // Mark suggestion as scheduled (but not completed yet)
     setScheduledSuggestionIds(prev => {
       const updated = [...prev, suggestion.id];
       console.log('ScheduleTab: Updated scheduled suggestion IDs:', updated);
@@ -235,7 +237,7 @@ const ScheduleTab = () => {
     });
 
     toast({
-      title: "Event Scheduled!",
+      title: "Task Scheduled!",
       description: `${suggestion.title} scheduled at ${assignedTime} on ${format(selectedDate, 'MMM d, yyyy')}`,
     });
   };
@@ -275,7 +277,8 @@ const ScheduleTab = () => {
       unit: suggestion.unit || undefined,
       building: suggestion.building || undefined,
       dueDate: suggestion.dueDate || undefined,
-      image: suggestion.image || undefined
+      image: suggestion.image || undefined,
+      originalSuggestionId: suggestion.id // Track which suggestion this came from
     };
 
     console.log('ScheduleTab: Adding calendar drop event:', newEvent);
@@ -286,7 +289,7 @@ const ScheduleTab = () => {
       return updated;
     });
     
-    // Mark suggestion as scheduled to remove it from the suggestions list
+    // Mark suggestion as scheduled (but not completed yet)
     setScheduledSuggestionIds(prev => {
       const updated = [...prev, suggestion.id];
       console.log('ScheduleTab: Updated scheduled suggestion IDs from calendar:', updated);
@@ -294,7 +297,7 @@ const ScheduleTab = () => {
     });
 
     toast({
-      title: "Event Scheduled!",
+      title: "Task Scheduled!",
       description: `${suggestion.title} scheduled for ${format(date, 'MMM d, yyyy')}`,
     });
   };
@@ -373,6 +376,21 @@ const ScheduleTab = () => {
       e.id === updatedEvent.id ? updatedEvent : e
     );
     setScheduledEvents(updatedEvents);
+
+    // If the event was marked as completed and it was from a suggestion, mark the suggestion as completed
+    if (updatedEvent.status === 'completed' && updatedEvent.originalSuggestionId) {
+      setCompletedSuggestionIds(prev => {
+        if (!prev.includes(updatedEvent.originalSuggestionId)) {
+          return [...prev, updatedEvent.originalSuggestionId];
+        }
+        return prev;
+      });
+      
+      toast({
+        title: "Task Completed!",
+        description: `${updatedEvent.title} has been marked as completed and removed from pending tasks.`,
+      });
+    }
   };
 
   const nextStep = () => {
@@ -573,6 +591,7 @@ const ScheduleTab = () => {
           onSchedule={startScheduling}
           onAction={handleAction}
           scheduledSuggestionIds={scheduledSuggestionIds}
+          completedSuggestionIds={completedSuggestionIds}
         />
       </div>
     </div>
