@@ -10,7 +10,7 @@ interface ScheduleDropZoneProps {
 
 const ScheduleDropZone: React.FC<ScheduleDropZoneProps> = ({ onScheduleWorkOrder }) => {
   const { toast } = useToast();
-  const [hoveredWorkOrder, setHoveredWorkOrder] = useState<any>(null);
+  const [hoveredItem, setHoveredItem] = useState<any>(null);
   
   // Get next available time slot for today
   const getNextAvailableTime = () => {
@@ -45,20 +45,48 @@ const ScheduleDropZone: React.FC<ScheduleDropZoneProps> = ({ onScheduleWorkOrder
   };
 
   const [{ isOver, canDrop }, drop] = useDrop(() => ({
-    accept: 'workOrder',
-    drop: (item: { workOrder: any }) => {
+    accept: ['workOrder', 'unitTurn'],
+    drop: (item: { workOrder?: any; unitTurn?: any }) => {
       const scheduledTime = getNextAvailableTime();
-      onScheduleWorkOrder(item.workOrder, scheduledTime);
       
-      toast({
-        title: "Work Order Scheduled!",
-        description: `${item.workOrder.title} scheduled for ${scheduledTime === 'Tomorrow 09:00' ? 'tomorrow at 9:00 AM' : `today at ${scheduledTime}`}`,
-      });
+      if (item.workOrder) {
+        onScheduleWorkOrder(item.workOrder, scheduledTime);
+        
+        toast({
+          title: "Work Order Scheduled!",
+          description: `${item.workOrder.title} scheduled for ${scheduledTime === 'Tomorrow 09:00' ? 'tomorrow at 9:00 AM' : `today at ${scheduledTime}`}`,
+        });
+      } else if (item.unitTurn) {
+        // Convert unit turn to work order format for scheduling
+        const unitTurnAsWorkOrder = {
+          id: item.unitTurn.id,
+          unit: item.unitTurn.unit,
+          title: `Unit Turn - ${item.unitTurn.unit}`,
+          description: `${item.unitTurn.pendingSteps.length} steps remaining`,
+          category: 'Unit Turn',
+          priority: item.unitTurn.priority,
+          status: 'scheduled',
+          assignedTo: item.unitTurn.assignedTo,
+          resident: 'Unit Turn',
+          phone: 'N/A',
+          daysOpen: item.unitTurn.daysUntilMoveIn,
+          estimatedTime: '4 hours',
+          submittedDate: new Date().toISOString().split('T')[0],
+          photo: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400'
+        };
+        
+        onScheduleWorkOrder(unitTurnAsWorkOrder, scheduledTime);
+        
+        toast({
+          title: "Unit Turn Scheduled!",
+          description: `Unit ${item.unitTurn.unit} turn scheduled for ${scheduledTime === 'Tomorrow 09:00' ? 'tomorrow at 9:00 AM' : `today at ${scheduledTime}`}`,
+        });
+      }
       
-      setHoveredWorkOrder(null);
+      setHoveredItem(null);
     },
-    hover: (item: { workOrder: any }) => {
-      setHoveredWorkOrder(item.workOrder);
+    hover: (item: { workOrder?: any; unitTurn?: any }) => {
+      setHoveredItem(item.workOrder || item.unitTurn);
     },
     collect: (monitor) => ({
       isOver: monitor.isOver(),
@@ -87,9 +115,11 @@ const ScheduleDropZone: React.FC<ScheduleDropZoneProps> = ({ onScheduleWorkOrder
               <CheckCircle className="w-5 h-5 text-blue-600" />
               <span className="font-semibold text-blue-900">Release to Schedule</span>
             </div>
-            {hoveredWorkOrder && (
+            {hoveredItem && (
               <div className="text-sm text-blue-700">
-                <div className="font-medium">{hoveredWorkOrder.title}</div>
+                <div className="font-medium">
+                  {hoveredItem.title || `Unit ${hoveredItem.unit} Turn`}
+                </div>
                 <div className="flex items-center justify-center gap-1 mt-1">
                   <Clock className="w-3 h-3" />
                   <span>
