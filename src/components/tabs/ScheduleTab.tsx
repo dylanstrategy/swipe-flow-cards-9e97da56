@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -262,6 +263,11 @@ const ScheduleTab = () => {
     
     setSelectedEvent(enhancedEvent);
     setShowRescheduleFlow(true); // Go directly to reschedule flow
+  };
+
+  const handleEventDetailReschedule = () => {
+    setShowEventDetail(false);
+    setShowRescheduleFlow(true);
   };
 
   const handleRescheduleConfirm = () => {
