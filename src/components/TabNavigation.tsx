@@ -6,6 +6,7 @@ interface Tab {
   id: string;
   label: string;
   icon: string;
+  badgeCount?: number;
 }
 
 interface TabNavigationProps {
@@ -23,13 +24,20 @@ const TabNavigation = ({ tabs, activeTab, onTabChange }: TabNavigationProps) => 
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
             className={cn(
-              "flex flex-col items-center py-2 px-3 rounded-lg transition-all duration-200",
+              "flex flex-col items-center py-2 px-3 rounded-lg transition-all duration-200 relative",
               activeTab === tab.id 
                 ? "text-blue-600 bg-blue-50" 
                 : "text-gray-500 hover:text-gray-700"
             )}
           >
-            <span className="text-2xl mb-1">{tab.icon}</span>
+            <div className="relative">
+              <span className="text-2xl mb-1">{tab.icon}</span>
+              {tab.badgeCount && tab.badgeCount > 0 && (
+                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                  {tab.badgeCount > 99 ? '99+' : tab.badgeCount}
+                </div>
+              )}
+            </div>
             <span className="text-xs font-medium">{tab.label}</span>
           </button>
         ))}

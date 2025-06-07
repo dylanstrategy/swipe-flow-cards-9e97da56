@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TabNavigation from '@/components/TabNavigation';
@@ -52,10 +51,13 @@ const Operator = () => {
     lastLogin: new Date('2025-06-05')
   });
 
+  // Mock unread message count
+  const unreadMessagesCount = 4;
+
   const tabs = [
     { id: 'today', label: 'Today', icon: '📊' },
     { id: 'schedule', label: 'Schedule', icon: '📅' },
-    { id: 'messages', label: 'Messages', icon: '💬' },
+    { id: 'messages', label: 'Messages', icon: '💬', badgeCount: unreadMessagesCount },
     { id: 'residents', label: 'Residents', icon: '👥' }
   ];
 
