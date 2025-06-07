@@ -40,22 +40,15 @@ const SwipeUpPrompt = ({
     <div 
       className={`fixed inset-x-0 bottom-0 bg-white border-t border-gray-200 shadow-2xl ${className}`}
       style={{ 
-        zIndex: 1000, // Much lower z-index
+        zIndex: 100, // Much lower z-index so it doesn't interfere
         paddingBottom: 'max(20px, env(safe-area-inset-bottom, 0px))',
-        pointerEvents: 'none' // Block all pointer events by default
+        pointerEvents: 'auto' // Enable pointer events only for this component
       }}
     >
-      <div 
-        className="px-6 py-5 text-center relative"
-        style={{ pointerEvents: 'auto' }} // Only enable for the content area
-      >
+      <div className="px-6 py-5 text-center relative">
         <button
           onClick={handleClose}
           className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100"
-          style={{ 
-            zIndex: 1001,
-            pointerEvents: 'auto' // Explicitly enable for button
-          }}
         >
           <X size={18} />
         </button>
@@ -73,16 +66,12 @@ const SwipeUpPrompt = ({
             </p>
           </div>
           
-          <div 
-            className="flex gap-3 justify-center pt-2"
-            style={{ pointerEvents: 'auto' }} // Enable for buttons
-          >
+          <div className="flex gap-3 justify-center pt-2">
             {showBack && onBack && (
               <Button
                 onClick={onBack}
                 variant="outline"
                 className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold border-2 hover:bg-gray-50"
-                style={{ pointerEvents: 'auto' }}
               >
                 <ArrowLeft size={18} />
                 {backButtonText}
@@ -91,7 +80,6 @@ const SwipeUpPrompt = ({
             <Button
               onClick={onContinue}
               className="bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg"
-              style={{ pointerEvents: 'auto' }}
             >
               <ArrowUp size={18} />
               {buttonText}

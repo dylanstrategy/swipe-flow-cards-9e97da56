@@ -96,7 +96,8 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
         touchAction: 'none',
         userSelect: 'none',
         WebkitUserSelect: 'none',
-        WebkitTouchCallout: 'none'
+        WebkitTouchCallout: 'none',
+        pointerEvents: 'auto' // Ensure this container can receive touch events
       }}
     >
       <SwipeActionOverlays
@@ -116,7 +117,7 @@ const SwipeableScreen = forwardRef<SwipeableScreenRef, SwipeableScreenProps>(({
       <div className="flex-1 p-4 overflow-hidden relative z-10">
         <div style={{ 
           pointerEvents: isDragging ? 'none' : 'auto',
-          touchAction: 'none'
+          touchAction: 'pan-y' // Allow vertical scrolling within content but still capture swipes
         }}>
           {children}
         </div>

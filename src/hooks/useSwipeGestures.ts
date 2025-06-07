@@ -17,8 +17,6 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeLeft, canSwipeUp = false }:
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     console.log('TOUCH START - SWIPE GESTURE');
-    e.preventDefault();
-    e.stopPropagation();
     
     const touch = e.touches[0];
     startPos.current = { x: touch.clientX, y: touch.clientY };
@@ -32,8 +30,6 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeLeft, canSwipeUp = false }:
     if (!isDragging) return;
     
     console.log('TOUCH MOVE - SWIPE GESTURE');
-    e.preventDefault();
-    e.stopPropagation();
     
     const touch = e.touches[0];
     const deltaX = touch.clientX - startPos.current.x;
@@ -55,8 +51,6 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeLeft, canSwipeUp = false }:
     if (!isDragging) return;
     
     console.log('TOUCH END - SWIPE GESTURE');
-    e.preventDefault();
-    e.stopPropagation();
     
     const deltaX = dragOffset.x / 0.3;
     const deltaY = dragOffset.y / 0.3;
@@ -72,12 +66,12 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeLeft, canSwipeUp = false }:
     // Check for swipe up
     if (deltaY < -30 && Math.abs(deltaY) > Math.abs(deltaX) && canSwipeUp && onSwipeUp) {
       console.log('EXECUTING SWIPE UP!');
-      setTimeout(() => onSwipeUp(), 100);
+      setTimeout(() => onSwipeUp(), 50);
     } 
     // Check for swipe left
     else if (deltaX < -30 && Math.abs(deltaX) > Math.abs(deltaY) && onSwipeLeft) {
       console.log('EXECUTING SWIPE LEFT!');
-      setTimeout(() => onSwipeLeft(), 100);
+      setTimeout(() => onSwipeLeft(), 50);
     }
     
     // Reset state
