@@ -18,8 +18,11 @@ interface UnitTurnStepCardProps {
 }
 
 const UnitTurnStepCard: React.FC<UnitTurnStepCardProps> = ({ step, onClick }) => {
+  const canDrag = !step.completed; // Only allow dragging if not completed
+
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'workOrder',
+    canDrag: () => canDrag,
     item: { 
       workOrder: {
         id: `${step.unitTurn.id}-${step.id}`,
@@ -44,14 +47,17 @@ const UnitTurnStepCard: React.FC<UnitTurnStepCardProps> = ({ step, onClick }) =>
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
-  }));
+  }), [canDrag, step]);
 
   return (
-    <div ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }}>
+    <div 
+      ref={canDrag ? drag : null} 
+      style={{ opacity: isDragging ? 0.5 : 1 }}
+    >
       <Card 
-        className={`cursor-move hover:shadow-md transition-shadow ${
+        className={`transition-shadow ${
           step.completed ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200'
-        }`}
+        } ${canDrag ? 'cursor-move hover:shadow-md' : 'cursor-pointer'}`}
         onClick={onClick}
       >
         <CardContent className="p-4">
@@ -87,6 +93,12 @@ const UnitTurnStepCard: React.FC<UnitTurnStepCardProps> = ({ step, onClick }) =>
               2 hours
             </Badge>
           </div>
+          
+          {!canDrag && (
+            <div className="mt-2 text-xs text-gray-500 italic">
+              Cannot reschedule completed items
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

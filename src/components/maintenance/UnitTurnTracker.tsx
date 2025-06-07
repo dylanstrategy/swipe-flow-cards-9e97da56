@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,9 +9,10 @@ interface UnitTurnTrackerProps {
   onSelectUnitTurn?: (unitTurn: any) => void;
   onUnitCardSelected?: (selected: boolean) => void;
   onStepSelected?: (step: any) => void;
+  scheduledStepIds?: string[];
 }
 
-const UnitTurnTracker = ({ onSelectUnitTurn, onUnitCardSelected, onStepSelected }: UnitTurnTrackerProps) => {
+const UnitTurnTracker = ({ onSelectUnitTurn, onUnitCardSelected, onStepSelected, scheduledStepIds = [] }: UnitTurnTrackerProps) => {
   const [selectedUnitTurn, setSelectedUnitTurn] = useState<any>(null);
 
   const unitTurns = [
@@ -105,6 +105,7 @@ const UnitTurnTracker = ({ onSelectUnitTurn, onUnitCardSelected, onStepSelected 
         unitTurn={selectedUnitTurn}
         onBack={handleBackToList}
         onStepClick={handleStepClick}
+        scheduledStepIds={scheduledStepIds}
       />
     );
   }

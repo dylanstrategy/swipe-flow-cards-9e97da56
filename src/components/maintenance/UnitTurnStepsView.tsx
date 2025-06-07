@@ -8,12 +8,14 @@ interface UnitTurnStepsViewProps {
   unitTurn: any;
   onBack: () => void;
   onStepClick: (step: any) => void;
+  scheduledStepIds?: string[];
 }
 
 const UnitTurnStepsView: React.FC<UnitTurnStepsViewProps> = ({ 
   unitTurn, 
   onBack, 
-  onStepClick 
+  onStepClick,
+  scheduledStepIds = []
 }) => {
   // Create step objects with all necessary data
   const allSteps = [
@@ -67,6 +69,9 @@ const UnitTurnStepsView: React.FC<UnitTurnStepsViewProps> = ({
     }
   ];
 
+  // Filter out steps that have been scheduled for today
+  const availableSteps = allSteps.filter(step => !scheduledStepIds.includes(`${unitTurn.id}-${step.id}`));
+
   const handleStepClick = (step: any) => {
     // Create event object for Universal Event Detail Modal
     const stepEvent = {
@@ -98,19 +103,25 @@ const UnitTurnStepsView: React.FC<UnitTurnStepsViewProps> = ({
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-gray-900">Unit {unitTurn.unit} Steps</h1>
-          <p className="text-gray-600">Drag steps to schedule for today</p>
+          <p className="text-gray-600">Drag pending steps to schedule for today</p>
         </div>
       </div>
 
       {/* Steps List */}
       <div className="space-y-4">
-        {allSteps.map((step) => (
-          <UnitTurnStepCard
-            key={step.id}
-            step={step}
-            onClick={() => handleStepClick(step)}
-          />
-        ))}
+        {availableSteps.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            All steps have been completed or scheduled.
+          </div>
+        ) : (
+          availableSteps.map((step) => (
+            <UnitTurnStepCard
+              key={step.id}
+              step={step}
+              onClick={() => handleStepClick(step)}
+            />
+          ))
+        )}
       </div>
     </div>
   );

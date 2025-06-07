@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UnitTurnTracker from '../UnitTurnTracker';
@@ -120,6 +119,7 @@ const MaintenanceScheduleTab = ({
   const [isUnitCardSelected, setIsUnitCardSelected] = useState(false);
   const [showUniversalEventDetail, setShowUniversalEventDetail] = useState(false);
   const [selectedUniversalEvent, setSelectedUniversalEvent] = useState<any>(null);
+  const [scheduledStepIds, setScheduledStepIds] = useState<string[]>([]);
 
   // Use external state if provided, otherwise use internal state
   const todayWorkOrders = externalTodayWorkOrders || internalTodayWorkOrders;
@@ -143,6 +143,12 @@ const MaintenanceScheduleTab = ({
     // Remove from today's work orders
     const updatedTodayWorkOrders = todayWorkOrders.filter(wo => wo.id !== workOrderId);
     updateTodayWorkOrders(updatedTodayWorkOrders);
+    
+    // If it's a unit turn step, remove from scheduled step IDs
+    const workOrder = todayWorkOrders.find(wo => wo.id === workOrderId);
+    if (workOrder?.unitTurnStep) {
+      setScheduledStepIds(prev => prev.filter(id => id !== workOrderId));
+    }
     
     // Notify parent component
     if (onWorkOrderCompleted) {
@@ -207,9 +213,11 @@ const MaintenanceScheduleTab = ({
       scheduledTime: finalScheduledTime.includes('Tomorrow') ? '09:00' : finalScheduledTime.replace('Tomorrow ', '')
     };
 
-    // If it's a unit turn step, don't remove from work orders queue
-    if (!workOrder.unitTurnStep) {
-      // Remove from work orders queue
+    // If it's a unit turn step, add to scheduled step IDs instead of removing from work orders
+    if (workOrder.unitTurnStep) {
+      setScheduledStepIds(prev => [...prev, workOrder.id]);
+    } else {
+      // Remove from work orders queue for regular work orders
       setWorkOrders(prev => prev.filter(wo => wo.id !== workOrder.id));
     }
     
@@ -350,6 +358,7 @@ const MaintenanceScheduleTab = ({
                   onSelectUnitTurn={setSelectedUnitTurn}
                   onUnitCardSelected={setIsUnitCardSelected}
                   onStepSelected={handleStepSelected}
+                  scheduledStepIds={scheduledStepIds}
                 />
               </div>
             )}
