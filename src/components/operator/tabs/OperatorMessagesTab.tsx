@@ -154,6 +154,24 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
     console.log(`Toggling unread status for message ${messageId}`);
   };
 
+  const toggleUnreadStatusInDetailView = (messageId: number) => {
+    const message = messages.find(msg => msg.id === messageId);
+    if (message) {
+      // Toggle the unread status
+      setMessages(prevMessages =>
+        prevMessages.map(msg =>
+          msg.id === messageId ? { ...msg, unread: !msg.unread } : msg
+        )
+      );
+      
+      // If marking as unread, exit to message list (like Outlook)
+      if (!message.unread) {
+        setSelectedMessage(null);
+      }
+    }
+    console.log(`Toggling unread status for message ${messageId} in detail view`);
+  };
+
   const removeMessage = (messageId: number) => {
     setMessages(prevMessages =>
       prevMessages.filter(msg => msg.id !== messageId)
@@ -211,7 +229,7 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => toggleUnreadStatus(selectedMessage.id)}
+              onClick={() => toggleUnreadStatusInDetailView(selectedMessage.id)}
               className="p-2"
             >
               {selectedMessage.unread ? (
