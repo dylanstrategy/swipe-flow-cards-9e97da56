@@ -19,6 +19,7 @@ import {
 import { useResident } from '@/contexts/ResidentContext';
 import WorkOrdersReview from '@/components/tabs/today/WorkOrdersReview';
 import WorkOrderTimeline from '@/components/maintenance/WorkOrderTimeline';
+import UnitDirectory from '@/components/property/setup/UnitDirectory';
 
 interface OperatorTodayTabProps {
   onTabChange?: (tab: string) => void;
@@ -28,6 +29,7 @@ const OperatorTodayTab = ({ onTabChange }: OperatorTodayTabProps) => {
   const { getCurrentResidents, getNoticeResidents, getOccupancyRate } = useResident();
   const [showWorkOrders, setShowWorkOrders] = useState(false);
   const [showWorkOrderTimeline, setShowWorkOrderTimeline] = useState(false);
+  const [showUnitDirectory, setShowUnitDirectory] = useState(false);
   const [selectedWorkOrder, setSelectedWorkOrder] = useState(null);
 
   const currentResidents = getCurrentResidents();
@@ -58,11 +60,23 @@ const OperatorTodayTab = ({ onTabChange }: OperatorTodayTabProps) => {
     setShowWorkOrders(true);
   };
 
+  const handleUnitDirectoryClick = () => {
+    setShowUnitDirectory(true);
+  };
+
   const handleWorkOrderClick = (workOrder: any) => {
     console.log('Opening work order timeline:', workOrder);
     setSelectedWorkOrder(workOrder);
     setShowWorkOrderTimeline(true);
   };
+
+  if (showUnitDirectory) {
+    return (
+      <UnitDirectory
+        onBack={() => setShowUnitDirectory(false)}
+      />
+    );
+  }
 
   if (showWorkOrderTimeline && selectedWorkOrder) {
     return (
@@ -112,7 +126,10 @@ const OperatorTodayTab = ({ onTabChange }: OperatorTodayTabProps) => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-4 rounded-lg bg-gray-50">
+            <div 
+              className="text-center p-4 rounded-lg bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+              onClick={handleUnitDirectoryClick}
+            >
               <div className="text-3xl font-bold text-gray-900">{propertyStats.totalUnits}</div>
               <div className="text-sm text-gray-600">Total Units</div>
               <div className="text-sm text-blue-600 font-medium">Total Units</div>
