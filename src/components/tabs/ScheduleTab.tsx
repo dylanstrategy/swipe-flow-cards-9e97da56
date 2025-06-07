@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -15,6 +14,7 @@ import EventDetailModal from '../events/EventDetailModal';
 import RescheduleFlow from '../events/RescheduleFlow';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
+import HourlyCalendarView from '../schedule/HourlyCalendarView';
 
 const ScheduleTab = () => {
   const { toast } = useToast();
@@ -449,6 +449,17 @@ const ScheduleTab = () => {
           onSelect={setSelectedDate}
           hasEventsOnDate={hasEventsOnDate}
           onDropSuggestion={handleDropSuggestion}
+        />
+      </div>
+
+      {/* Hourly Calendar View */}
+      <div className="mb-6">
+        <HourlyCalendarView
+          selectedDate={selectedDate}
+          events={getEventsForDate(selectedDate)}
+          onDropSuggestion={handleDropSuggestionInTimeline}
+          onEventClick={handleEventClick}
+          onEventHold={handleEventHold}
         />
       </div>
 
