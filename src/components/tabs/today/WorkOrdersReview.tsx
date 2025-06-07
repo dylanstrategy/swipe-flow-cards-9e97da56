@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -225,30 +226,38 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose, onWorkOrderClick }: Work
           </Button>
         </div>
 
-        {/* Summary Stats - Fixed styling */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        {/* Summary Stats - Improved styling */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
           <Card className="border border-gray-200 shadow-sm">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-orange-600 mb-1">{inProgressCount}</div>
-              <div className="text-sm text-gray-600">In Progress</div>
+            <CardContent className="p-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-600 mb-1">{inProgressCount}</div>
+                <div className="text-sm text-gray-600 leading-tight">In Progress</div>
+              </div>
             </CardContent>
           </Card>
           <Card className="border border-gray-200 shadow-sm">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600 mb-1">{scheduledCount}</div>
-              <div className="text-sm text-gray-600">Scheduled</div>
+            <CardContent className="p-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600 mb-1">{scheduledCount}</div>
+                <div className="text-sm text-gray-600 leading-tight">Scheduled</div>
+              </div>
             </CardContent>
           </Card>
           <Card className="border border-gray-200 shadow-sm">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-purple-600 mb-1">{assignedCount}</div>
-              <div className="text-sm text-gray-600">Assigned</div>
+            <CardContent className="p-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600 mb-1">{assignedCount}</div>
+                <div className="text-sm text-gray-600 leading-tight">Assigned</div>
+              </div>
             </CardContent>
           </Card>
           <Card className="border border-gray-200 shadow-sm">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-600 mb-1">{completedCount}</div>
-              <div className="text-sm text-gray-600">Completed</div>
+            <CardContent className="p-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600 mb-1">{completedCount}</div>
+                <div className="text-sm text-gray-600 leading-tight">Completed</div>
+              </div>
             </CardContent>
           </Card>
         </div>
