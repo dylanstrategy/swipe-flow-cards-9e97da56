@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench, ChevronDown, BarChart3, PieChart, CalendarDays, Activity } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
@@ -276,6 +277,13 @@ const OperatorTodayTab = () => {
   const handleMaintenanceClick = () => {
     console.log('Maintenance Click - Opening Work Order Tracker');
     setShowWorkOrderTracker(true);
+  };
+
+  // Handle clicking on daily events to open universal modal
+  const handleDailyEventClick = (event: any) => {
+    console.log('Daily event clicked:', event);
+    setSelectedUniversalEvent(event);
+    setShowUniversalEventDetail(true);
   };
 
   if (showRescheduleFlow && selectedEventForReschedule) {
@@ -672,7 +680,7 @@ const OperatorTodayTab = () => {
         </div>
 
         {showCalendarView ? (
-          /* Daily Calendar View with Hold-to-Reschedule */
+          /* Daily Calendar View with Click-to-Open */
           <div className="space-y-4">
             <div className="text-center mb-4">
               <p className="text-gray-600">
@@ -687,38 +695,36 @@ const OperatorTodayTab = () => {
             </div>
             
             {dailyEvents.map((event) => (
-              <SwipeCard
+              <div
                 key={event.id}
-                onTap={() => toast({ title: "Event Details", description: `Viewing ${event.title}` })}
-                onHold={() => handleHoldEvent(event)}
+                onClick={() => handleDailyEventClick(event)}
+                className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
               >
-                <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="flex-shrink-0 w-16 text-center">
-                    <div className="text-sm font-medium text-gray-900">{event.time}</div>
+                <div className="flex-shrink-0 w-16 text-center">
+                  <div className="text-sm font-medium text-gray-900">{event.time}</div>
+                </div>
+                
+                <div className="flex-shrink-0 mt-1">
+                  {getEventTypeIcon(event.type)}
+                </div>
+                
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-medium text-gray-900">{event.title}</h3>
+                    <Badge className={getEventPriorityColor(event.priority, event.status)}>
+                      {event.status === 'urgent' ? 'URGENT' : event.priority.toUpperCase()}
+                    </Badge>
                   </div>
-                  
-                  <div className="flex-shrink-0 mt-1">
-                    {getEventTypeIcon(event.type)}
-                  </div>
-                  
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-medium text-gray-900">{event.title}</h3>
-                      <Badge className={getEventPriorityColor(event.priority, event.status)}>
-                        {event.status === 'urgent' ? 'URGENT' : event.priority.toUpperCase()}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-gray-600">{event.description}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Badge variant="outline" className="text-xs">
-                        {event.type.replace('-', ' ')}
-                      </Badge>
-                      <span className="text-xs text-gray-500">•</span>
-                      <span className="text-xs text-gray-500 capitalize">{event.status}</span>
-                    </div>
+                  <p className="text-sm text-gray-600">{event.description}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant="outline" className="text-xs">
+                      {event.type.replace('-', ' ')}
+                    </Badge>
+                    <span className="text-xs text-gray-500">•</span>
+                    <span className="text-xs text-gray-500 capitalize">{event.status}</span>
                   </div>
                 </div>
-              </SwipeCard>
+              </div>
             ))}
           </div>
         ) : (
