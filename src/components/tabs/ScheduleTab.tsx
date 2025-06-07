@@ -540,9 +540,9 @@ const ScheduleTab = () => {
 
   return (
     <div className="w-full bg-gray-50 h-screen flex flex-col overflow-hidden">
-      <div className="px-4 py-6 flex-shrink-0">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Schedule</h1>
+      <div className="px-4 py-4 flex-shrink-0">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold text-gray-900">Schedule</h1>
           
           <Popover>
             <PopoverTrigger asChild>
@@ -575,16 +575,18 @@ const ScheduleTab = () => {
           <Plus className="text-white" size={28} />
         </button>
 
-        <DraggableSuggestionsSection 
-          selectedDate={selectedDate}
-          onSchedule={startScheduling}
-          onAction={handleAction}
-          scheduledSuggestionIds={scheduledSuggestionIds}
-          completedSuggestionIds={completedSuggestionIds}
-        />
+        <div className="mb-3">
+          <DraggableSuggestionsSection 
+            selectedDate={selectedDate}
+            onSchedule={startScheduling}
+            onAction={handleAction}
+            scheduledSuggestionIds={scheduledSuggestionIds}
+            completedSuggestionIds={completedSuggestionIds}
+          />
+        </div>
       </div>
 
-      <div className="flex-1 px-4 overflow-hidden" style={{ height: 'calc(100vh - 320px)' }}>
+      <div className="flex-1 px-4 overflow-hidden" style={{ height: 'calc(100vh - 260px)' }}>
         <HourlyCalendarView
           selectedDate={selectedDate}
           events={getEventsForDate(selectedDate)}
