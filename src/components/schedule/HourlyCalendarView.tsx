@@ -38,29 +38,47 @@ const HourlyCalendarView = ({
 
   const timeSlots = generateTimeSlots();
 
-  const convertTimeToMinutes = (timeString: string): number => {
-    if (timeString.includes('AM') || timeString.includes('PM')) {
-      const [time, period] = timeString.split(' ');
-      const [hours, minutes] = time.split(':').map(Number);
-      let totalMinutes = (hours % 12) * 60 + minutes;
-      if (period === 'PM' && hours !== 12) totalMinutes += 12 * 60;
-      if (period === 'AM' && hours === 12) totalMinutes = minutes;
-      return totalMinutes;
+  // Normalize time to 24-hour format for consistent comparison
+  const normalizeTimeFormat = (timeString: string): string => {
+    if (!timeString) return '';
+    
+    // If already in HH:MM format, return as is
+    if (/^\d{1,2}:\d{2}$/.test(timeString)) {
+      const [hours, minutes] = timeString.split(':');
+      return `${hours.padStart(2, '0')}:${minutes}`;
     }
     
-    // Handle 24-hour format (HH:mm)
-    const [hours, minutes] = timeString.split(':').map(Number);
-    return hours * 60 + minutes;
+    // Handle AM/PM format
+    if (timeString.includes('AM') || timeString.includes('PM')) {
+      const [time, period] = timeString.trim().split(' ');
+      const [hours, minutes] = time.split(':').map(Number);
+      let hour24 = hours;
+      
+      if (period === 'PM' && hours !== 12) {
+        hour24 = hours + 12;
+      } else if (period === 'AM' && hours === 12) {
+        hour24 = 0;
+      }
+      
+      return `${hour24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    }
+    
+    return timeString;
   };
 
   const getEventsForTimeSlot = (slotTime: Date) => {
     const slotHour = slotTime.getHours();
+    
     return events.filter(event => {
+      // Check if event is on the same date
       if (!isSameDay(event.date, selectedDate)) return false;
       
-      const eventMinutes = convertTimeToMinutes(event.time);
-      const eventHour = Math.floor(eventMinutes / 60);
-      return eventHour === slotHour;
+      // Normalize the event time and extract hour
+      const normalizedTime = normalizeTimeFormat(event.time);
+      if (!normalizedTime) return false;
+      
+      const [eventHours] = normalizedTime.split(':').map(Number);
+      return eventHours === slotHour;
     });
   };
 
@@ -80,7 +98,12 @@ const HourlyCalendarView = ({
     
     try {
       const suggestionData = JSON.parse(e.dataTransfer.getData('application/json'));
-      onDropSuggestion?.(suggestionData, timeSlot);
+      
+      // Convert timeSlot to 24-hour format for consistency
+      const normalizedTime = normalizeTimeFormat(timeSlot);
+      console.log('Dropping suggestion:', suggestionData.title, 'at time:', normalizedTime);
+      
+      onDropSuggestion?.(suggestionData, normalizedTime);
       
       toast({
         title: "Event Scheduled!",
@@ -88,6 +111,11 @@ const HourlyCalendarView = ({
       });
     } catch (error) {
       console.error('Error parsing dropped data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to schedule the event. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -109,7 +137,7 @@ const HourlyCalendarView = ({
       </div>
       
       <ScrollArea className="h-96">
-        <div className="min-w-full">
+        <div className="w-full">
           {timeSlots.map((slot) => {
             const timeString = format(slot, 'h:mm a');
             const eventsInSlot = getEventsForTimeSlot(slot);
@@ -120,13 +148,13 @@ const HourlyCalendarView = ({
               <div
                 key={timeString}
                 className={cn(
-                  "border-b border-gray-50 transition-all duration-200 min-w-0",
+                  "border-b border-gray-50 transition-all duration-200",
                   isCurrentHour && "bg-blue-50",
                   isDragOver && "bg-green-100 border-green-300"
                 )}
                 onDragOver={(e) => handleDragOver(e, timeString)}
                 onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, timeString)}
+                onDrop={(e) => handleDrop(e, timeSlot)}
               >
                 <div className="flex items-start p-3 gap-3">
                   <div className="w-16 flex-shrink-0">
@@ -141,7 +169,7 @@ const HourlyCalendarView = ({
                   <div className="flex-1 min-w-0">
                     {eventsInSlot.length === 0 ? (
                       <div className={cn(
-                        "h-10 rounded-lg border-2 border-dashed transition-all duration-200 flex items-center justify-center min-w-0",
+                        "h-10 rounded-lg border-2 border-dashed transition-all duration-200 flex items-center justify-center",
                         isDragOver 
                           ? "border-green-400 bg-green-50" 
                           : "border-gray-200 hover:border-gray-300"
@@ -154,8 +182,8 @@ const HourlyCalendarView = ({
                       <div className="space-y-1">
                         {eventsInSlot.map((event) => (
                           <div
-                            key={event.id}
-                            className="bg-blue-100 border border-blue-200 rounded-lg p-2 cursor-pointer hover:bg-blue-200 transition-colors min-w-0"
+                            key={`${event.id}-${event.time}`}
+                            className="bg-blue-100 border border-blue-200 rounded-lg p-2 cursor-pointer hover:bg-blue-200 transition-colors"
                             onClick={() => handleEventClick(event)}
                             onContextMenu={(e) => {
                               e.preventDefault();
@@ -176,10 +204,12 @@ const HourlyCalendarView = ({
                               document.addEventListener('touchmove', clearTouch);
                             }}
                           >
-                            <div className="flex items-center justify-between min-w-0">
+                            <div className="flex items-center justify-between">
                               <div className="flex-1 min-w-0">
                                 <h4 className="text-sm font-medium text-gray-900 truncate">{event.title}</h4>
-                                <p className="text-xs text-gray-600 truncate">{event.description}</p>
+                                {event.description && (
+                                  <p className="text-xs text-gray-600 truncate">{event.description}</p>
+                                )}
                               </div>
                               <div className="text-xs text-blue-600 ml-2 flex-shrink-0">
                                 {event.time}

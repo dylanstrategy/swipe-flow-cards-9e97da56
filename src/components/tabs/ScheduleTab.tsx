@@ -102,6 +102,8 @@ const ScheduleTab = () => {
   const [scheduledSuggestionIds, setScheduledSuggestionIds] = useState<number[]>([]);
 
   const convertTimeToMinutes = (timeString: string): number => {
+    if (!timeString) return 0;
+    
     if (timeString.includes('AM') || timeString.includes('PM')) {
       const [time, period] = timeString.split(' ');
       const [hours, minutes] = time.split(':').map(Number);
@@ -155,15 +157,15 @@ const ScheduleTab = () => {
     let assignedTime: string;
     
     if (targetTime) {
-      // If dropped on a specific time slot, try to use that time
-      assignedTime = targetTime.replace(/\s(AM|PM)/, '').padStart(5, '0');
+      // Use the provided time directly (it's already normalized)
+      assignedTime = targetTime;
     } else {
       // Find an available time slot
       assignedTime = findAvailableTimeSlot(selectedDate);
     }
 
     const newEvent = {
-      id: Date.now(),
+      id: Date.now() + Math.random(), // More unique ID
       date: selectedDate,
       time: assignedTime,
       title: suggestion.title,
@@ -173,10 +175,20 @@ const ScheduleTab = () => {
       isDroppedSuggestion: true
     };
 
-    setScheduledEvents(prev => [...prev, newEvent]);
+    console.log('Adding new event:', newEvent);
+    
+    setScheduledEvents(prev => {
+      const updated = [...prev, newEvent];
+      console.log('Updated scheduled events:', updated);
+      return updated;
+    });
+    
     setScheduledSuggestionIds(prev => [...prev, suggestion.id]);
 
-    console.log(`Scheduled ${suggestion.title} at ${assignedTime} on ${format(selectedDate, 'MMM d, yyyy')}`);
+    toast({
+      title: "Event Scheduled!",
+      description: `${suggestion.title} scheduled at ${assignedTime} on ${format(selectedDate, 'MMM d, yyyy')}`,
+    });
   };
 
   const handleDropSuggestion = (suggestion: any, date: Date) => {
@@ -184,7 +196,7 @@ const ScheduleTab = () => {
     const assignedTime = findAvailableTimeSlot(date);
     
     const newEvent = {
-      id: Date.now(),
+      id: Date.now() + Math.random(), // More unique ID
       date: date,
       time: assignedTime,
       title: suggestion.title,
@@ -194,10 +206,20 @@ const ScheduleTab = () => {
       isDroppedSuggestion: true
     };
 
-    setScheduledEvents(prev => [...prev, newEvent]);
+    console.log('Adding calendar drop event:', newEvent);
+
+    setScheduledEvents(prev => {
+      const updated = [...prev, newEvent];
+      console.log('Updated scheduled events from calendar:', updated);
+      return updated;
+    });
+    
     setScheduledSuggestionIds(prev => [...prev, suggestion.id]);
 
-    console.log(`Scheduled ${suggestion.title} on ${format(date, 'MMM d, yyyy')}`);
+    toast({
+      title: "Event Scheduled!",
+      description: `${suggestion.title} scheduled for ${format(date, 'MMM d, yyyy')}`,
+    });
   };
 
   const handleAction = (action: string, item: string) => {
@@ -353,8 +375,15 @@ const ScheduleTab = () => {
   };
 
   const getEventsForDate = (date: Date) => {
-    return scheduledEvents.filter(event => isSameDay(event.date, date))
-      .sort((a, b) => a.time.localeCompare(b.time));
+    const eventsForDate = scheduledEvents.filter(event => isSameDay(event.date, date))
+      .sort((a, b) => {
+        const timeA = convertTimeToMinutes(a.time);
+        const timeB = convertTimeToMinutes(b.time);
+        return timeA - timeB;
+      });
+    
+    console.log(`Events for ${format(date, 'MMM d')}:`, eventsForDate);
+    return eventsForDate;
   };
 
   // Check if a date has events for calendar styling
