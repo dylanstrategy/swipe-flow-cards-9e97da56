@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TabNavigation from '@/components/TabNavigation';
@@ -142,7 +143,7 @@ const Operator = () => {
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'today':
-        return <OperatorTodayTab onTabChange={setActiveTab} />;
+        return <OperatorTodayTab />;
       case 'schedule':
         return <OperatorScheduleTab />;
       case 'messages':
@@ -150,7 +151,7 @@ const Operator = () => {
       case 'residents':
         return <OperatorResidentsTab />;
       default:
-        return <OperatorTodayTab onTabChange={setActiveTab} />;
+        return <OperatorTodayTab />;
     }
   };
 
