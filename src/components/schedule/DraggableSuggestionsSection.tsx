@@ -256,7 +256,7 @@ const DraggableSuggestionsSection = ({
       >
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-semibold text-gray-900">
-            Pending Tasks ({availableSuggestions.length})
+            Today's Suggestions ({availableSuggestions.length})
           </h3>
           {overdueCount > 0 && (
             <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full flex items-center gap-1">
