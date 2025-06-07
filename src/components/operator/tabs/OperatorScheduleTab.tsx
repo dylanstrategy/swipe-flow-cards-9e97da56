@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -578,7 +577,7 @@ const OperatorScheduleTab = () => {
         />
       </div>
 
-      <div className="flex-1 px-4 min-h-0 mb-20 overflow-hidden">
+      <div className="flex-1 px-4 overflow-hidden" style={{ height: 'calc(100vh - 320px)' }}>
         <HourlyCalendarView
           selectedDate={selectedDate}
           events={getEventsForDate(selectedDate)}
