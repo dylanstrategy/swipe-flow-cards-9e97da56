@@ -30,10 +30,10 @@ const TabNavigation = ({ tabs, activeTab, onTabChange }: TabNavigationProps) => 
                 : "text-gray-500 hover:text-gray-700"
             )}
           >
-            <div className="relative p-1">
-              <span className="text-2xl mb-1 block">{tab.icon}</span>
+            <div className="relative p-2 mb-1">
+              <span className="text-2xl block">{tab.icon}</span>
               {tab.badgeCount && tab.badgeCount > 0 && (
-                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-[20px] flex items-center justify-center px-1 z-10 shadow-sm border border-white">
+                <div className="absolute -top-0 -right-0 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 z-20 shadow-lg border-2 border-white transform translate-x-1 -translate-y-1">
                   {tab.badgeCount > 99 ? '99+' : tab.badgeCount}
                 </div>
               )}
