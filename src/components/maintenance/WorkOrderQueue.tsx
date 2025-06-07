@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +22,7 @@ interface WorkOrder {
   scheduledDate?: string;
   scheduledTime?: string;
   photo: string;
+  timeline?: any[];
 }
 
 interface WorkOrderQueueProps {
@@ -38,6 +38,30 @@ const WorkOrderCard: React.FC<{ workOrder: WorkOrder; onClick: () => void }> = (
       isDragging: monitor.isDragging(),
     }),
   }));
+
+  // Add timeline data to work order when clicked
+  const handleClick = () => {
+    const workOrderWithTimeline = {
+      ...workOrder,
+      timeline: workOrder.timeline || [
+        {
+          date: workOrder.submittedDate,
+          time: '08:30',
+          type: 'submitted',
+          message: 'Work order submitted by resident',
+          user: workOrder.resident
+        },
+        {
+          date: workOrder.submittedDate,
+          time: '09:15',
+          type: 'assigned',
+          message: `Assigned to ${workOrder.assignedTo}`,
+          user: 'System'
+        }
+      ]
+    };
+    onClick();
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority.toLowerCase()) {
@@ -66,7 +90,7 @@ const WorkOrderCard: React.FC<{ workOrder: WorkOrder; onClick: () => void }> = (
           workOrder.status === 'unscheduled' ? 'border-l-4 border-l-gray-400' :
           'border-l-4 border-l-blue-500'
         }`}
-        onClick={onClick}
+        onClick={handleClick}
       >
         <CardContent className="p-0">
           {/* Priority Strip */}

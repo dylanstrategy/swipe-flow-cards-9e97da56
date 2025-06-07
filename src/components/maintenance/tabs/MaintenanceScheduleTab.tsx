@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UnitTurnTracker from '../UnitTurnTracker';
 import WorkOrderTracker from '../WorkOrderTracker';
 import UnitTurnDetailTracker from '../UnitTurnDetailTracker';
-import WorkOrderDetailTracker from '../WorkOrderDetailTracker';
+import WorkOrderTimeline from '../WorkOrderTimeline';
 import WorkOrderFlow from '../WorkOrderFlow';
 import WorkOrderQueue from '../WorkOrderQueue';
 import ScheduleDropZone from '../ScheduleDropZone';
@@ -138,7 +139,7 @@ const MaintenanceScheduleTab = () => {
 
   if (selectedWorkOrder && !showWorkOrderFlow) {
     return (
-      <WorkOrderDetailTracker 
+      <WorkOrderTimeline 
         workOrder={selectedWorkOrder}
         onClose={() => setSelectedWorkOrder(null)}
       />
@@ -152,7 +153,7 @@ const MaintenanceScheduleTab = () => {
 
   const handleWorkOrderDetailsView = (workOrder: any) => {
     setSelectedWorkOrder(workOrder);
-    // Don't set showWorkOrderFlow to true, just show the detail tracker
+    // Don't set showWorkOrderFlow to true, just show the timeline
   };
 
   return (
