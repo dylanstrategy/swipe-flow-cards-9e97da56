@@ -12,7 +12,6 @@ import ResidentTimeline from '../ResidentTimeline';
 import TodayHeader from './today/TodayHeader';
 import QuickActionsGrid from './today/QuickActionsGrid';
 import TodayMiniCalendar from './today/TodayMiniCalendar';
-import EventsList from './today/EventsList';
 import PointOfSale from '../PointOfSale';
 import { useRealtimeOverdueDetection } from '@/hooks/useRealtimeOverdueDetection';
 
@@ -551,14 +550,6 @@ const TodayTab = () => {
           getEventsForDate={getEventsForDate}
           onDropSuggestion={handleDropSuggestion}
           onDateSelect={handleDateSelect}
-        />
-
-        <EventsList 
-          events={todayEvents}
-          onAction={handleAction}
-          onQuickReply={handleQuickReply}
-          getSwipeActionsForEvent={getSwipeActionsForEvent}
-          onEventClick={handleEventClick}
         />
       </div>
     </div>
