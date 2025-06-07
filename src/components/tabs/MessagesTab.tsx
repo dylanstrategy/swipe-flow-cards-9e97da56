@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -97,7 +96,15 @@ const MessagesTab: React.FC<MessagesTabProps> = ({
     }
   ]);
 
-  // Calculate unread count and notify parent when it changes
+  // Calculate initial unread count and notify parent immediately
+  useEffect(() => {
+    const initialUnreadCount = messages.filter(msg => msg.unread).length;
+    if (onUnreadCountChange) {
+      onUnreadCountChange(initialUnreadCount);
+    }
+  }, []); // Empty dependency array to run only on mount
+
+  // Calculate unread count and notify parent when messages change
   useEffect(() => {
     const unreadCount = messages.filter(msg => msg.unread).length;
     if (onUnreadCountChange) {
