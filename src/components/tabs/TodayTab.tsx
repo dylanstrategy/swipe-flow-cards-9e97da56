@@ -3,6 +3,7 @@ import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
 import WorkOrderFlow from '../schedule/WorkOrderFlow';
 import WorkOrdersReview from './today/WorkOrdersReview';
+import WorkOrderTimeline from '../maintenance/WorkOrderTimeline';
 import { useToast } from '@/hooks/use-toast';
 import { format, addDays, isSameDay, differenceInDays, isPast, isToday } from 'date-fns';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -22,6 +23,8 @@ const TodayTab = () => {
   const [showServiceModule, setShowServiceModule] = useState(false);
   const [showWorkOrderFlow, setShowWorkOrderFlow] = useState(false);
   const [showWorkOrdersReview, setShowWorkOrdersReview] = useState(false);
+  const [showWorkOrderTimeline, setShowWorkOrderTimeline] = useState(false);
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [messageConfig, setMessageConfig] = useState({
     subject: '',
@@ -177,6 +180,11 @@ const TodayTab = () => {
       title: "Offer Activated",
       description: `${offer.title} from ${offer.business}`,
     });
+  };
+
+  const handleWorkOrderClick = (workOrder: any) => {
+    setSelectedWorkOrder(workOrder);
+    setShowWorkOrderTimeline(true);
   };
 
   const nextStep = () => {
@@ -368,6 +376,18 @@ const TodayTab = () => {
     return null;
   };
 
+  if (showWorkOrderTimeline && selectedWorkOrder) {
+    return (
+      <WorkOrderTimeline
+        workOrder={selectedWorkOrder}
+        onClose={() => {
+          setShowWorkOrderTimeline(false);
+          setSelectedWorkOrder(null);
+        }}
+      />
+    );
+  }
+
   if (showWorkOrderFlow) {
     return (
       <WorkOrderFlow
@@ -409,6 +429,7 @@ const TodayTab = () => {
           setShowWorkOrderFlow(true);
         }}
         onClose={() => setShowWorkOrdersReview(false)}
+        onWorkOrderClick={handleWorkOrderClick}
       />
     );
   }

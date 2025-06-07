@@ -8,9 +8,10 @@ import { Wrench, Clock, User, Plus, Calendar, MapPin } from 'lucide-react';
 interface WorkOrdersReviewProps {
   onCreateWorkOrder: () => void;
   onClose: () => void;
+  onWorkOrderClick?: (workOrder: any) => void;
 }
 
-const WorkOrdersReview = ({ onCreateWorkOrder, onClose }: WorkOrdersReviewProps) => {
+const WorkOrdersReview = ({ onCreateWorkOrder, onClose, onWorkOrderClick }: WorkOrdersReviewProps) => {
   // Sample pending work orders data - all for the same unit (resident's unit)
   const pendingWorkOrders = [
     {
@@ -23,7 +24,39 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose }: WorkOrdersReviewProps)
       assignedTo: 'Mike Rodriguez',
       techNotes: 'Replacement parts ordered. Will need to shut off water for 30 minutes.',
       status: 'Scheduled',
-      photo: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=400'
+      photo: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=400',
+      submittedDate: '2025-05-20',
+      dueDate: '2025-06-05',
+      timeline: [
+        {
+          date: '2025-05-20',
+          time: '2:30 PM',
+          type: 'submitted',
+          message: 'Work order submitted by resident',
+          user: 'You'
+        },
+        {
+          date: '2025-05-22',
+          time: '9:15 AM',
+          type: 'assigned',
+          message: 'Assigned to Mike Rodriguez',
+          user: 'Management'
+        },
+        {
+          date: '2025-05-25',
+          time: '1:45 PM',
+          type: 'tech_note',
+          message: 'Replacement parts ordered. Will need to shut off water for 30 minutes.',
+          user: 'Mike Rodriguez'
+        },
+        {
+          date: '2025-06-01',
+          time: '10:30 AM',
+          type: 'scheduled',
+          message: 'Scheduled for June 3rd at 10:00 AM',
+          user: 'Mike Rodriguez'
+        }
+      ]
     },
     {
       id: 'WO-548686',
@@ -35,7 +68,46 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose }: WorkOrdersReviewProps)
       assignedTo: 'Sarah Johnson',
       techNotes: 'Window hardware inspection needed. May require balancer replacement.',
       status: 'In Progress',
-      photo: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400'
+      photo: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400',
+      submittedDate: '2025-05-18',
+      dueDate: '2025-06-02',
+      timeline: [
+        {
+          date: '2025-05-18',
+          time: '4:20 PM',
+          type: 'submitted',
+          message: 'Work order submitted by resident',
+          user: 'You'
+        },
+        {
+          date: '2025-05-19',
+          time: '8:00 AM',
+          type: 'assigned',
+          message: 'Assigned to Sarah Johnson',
+          user: 'Management'
+        },
+        {
+          date: '2025-05-28',
+          time: '11:30 AM',
+          type: 'message',
+          message: 'When will this be fixed? It\'s been over a week.',
+          user: 'You'
+        },
+        {
+          date: '2025-05-28',
+          time: '2:15 PM',
+          type: 'tech_note',
+          message: 'Window hardware inspection needed. May require balancer replacement.',
+          user: 'Sarah Johnson'
+        },
+        {
+          date: '2025-06-01',
+          time: '3:45 PM',
+          type: 'in_progress',
+          message: 'Work started - investigating window mechanism',
+          user: 'Sarah Johnson'
+        }
+      ]
     },
     {
       id: 'WO-547116',
@@ -47,7 +119,32 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose }: WorkOrdersReviewProps)
       assignedTo: 'Mike Rodriguez',
       techNotes: 'Wall anchor failed. Need to patch and reinstall with proper anchors.',
       status: 'Assigned',
-      photo: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?w=400'
+      photo: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?w=400',
+      submittedDate: '2025-05-25',
+      dueDate: '2025-06-10',
+      timeline: [
+        {
+          date: '2025-05-25',
+          time: '7:45 PM',
+          type: 'submitted',
+          message: 'Work order submitted by resident',
+          user: 'You'
+        },
+        {
+          date: '2025-05-26',
+          time: '9:30 AM',
+          type: 'assigned',
+          message: 'Assigned to Mike Rodriguez',
+          user: 'Management'
+        },
+        {
+          date: '2025-05-30',
+          time: '4:20 PM',
+          type: 'tech_note',
+          message: 'Wall anchor failed. Need to patch and reinstall with proper anchors.',
+          user: 'Mike Rodriguez'
+        }
+      ]
     }
   ];
 
@@ -65,6 +162,7 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose }: WorkOrdersReviewProps)
       case 'in progress': return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'scheduled': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'assigned': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
@@ -83,6 +181,13 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose }: WorkOrdersReviewProps)
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
   };
+
+  const handleWorkOrderClick = (workOrder: any) => {
+    onWorkOrderClick?.(workOrder);
+  };
+
+  // Calculate completed work orders (for demo purposes, let's say we have 3 completed)
+  const completedCount = 3;
 
   return (
     <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
@@ -115,7 +220,7 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose }: WorkOrdersReviewProps)
         </div>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-4 gap-4 mb-6">
           <Card>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-orange-600">1</div>
@@ -134,6 +239,12 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose }: WorkOrdersReviewProps)
               <div className="text-sm text-gray-600">Assigned</div>
             </CardContent>
           </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-green-600">{completedCount}</div>
+              <div className="text-sm text-gray-600">Completed</div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Work Orders List - Stacked Layout */}
@@ -141,7 +252,11 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose }: WorkOrdersReviewProps)
           <h2 className="text-lg font-semibold text-gray-900">Pending Work Orders</h2>
           
           {pendingWorkOrders.map((workOrder) => (
-            <Card key={workOrder.id} className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-blue-500">
+            <Card 
+              key={workOrder.id} 
+              className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-blue-500 cursor-pointer"
+              onClick={() => handleWorkOrderClick(workOrder)}
+            >
               <CardContent className="p-0">
                 {/* Main Work Order Header */}
                 <div className="p-4 border-b border-gray-100">
@@ -201,28 +316,6 @@ const WorkOrdersReview = ({ onCreateWorkOrder, onClose }: WorkOrdersReviewProps)
               </CardContent>
             </Card>
           ))}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mt-8 bg-gray-50 rounded-xl p-4">
-          <h3 className="font-medium text-gray-900 mb-3">Quick Actions</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              variant="outline"
-              className="justify-start"
-              onClick={onCreateWorkOrder}
-            >
-              <Plus size={16} className="mr-2" />
-              Create Work Order
-            </Button>
-            <Button
-              variant="outline"
-              className="justify-start"
-            >
-              <Clock size={16} className="mr-2" />
-              View Schedule
-            </Button>
-          </div>
         </div>
       </div>
     </div>
