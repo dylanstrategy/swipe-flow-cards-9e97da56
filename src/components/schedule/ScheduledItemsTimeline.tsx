@@ -10,9 +10,33 @@ interface ScheduledItemsTimelineProps {
   events?: any[];
 }
 
+interface BaseItem {
+  id: string | number;
+  date: Date;
+  time: string;
+  title: string;
+  description: string;
+  icon: string;
+  actions: {
+    right: { label: string; action: () => void; color: string; icon: string };
+    left: { label: string; action: () => void; color: string; icon: string };
+  };
+}
+
+interface MockItem extends BaseItem {
+  isEvent?: false;
+}
+
+interface EventItem extends BaseItem {
+  isEvent: true;
+  originalEvent: any;
+}
+
+type CombinedItem = MockItem | EventItem;
+
 const ScheduledItemsTimeline = ({ selectedDate, onAction, onEventClick, events = [] }: ScheduledItemsTimelineProps) => {
   // Mock items that would be scheduled (this would come from props or API in real app)
-  const mockItems = [
+  const mockItems: MockItem[] = [
     {
       id: 1,
       date: new Date(),
@@ -43,7 +67,7 @@ const ScheduledItemsTimeline = ({ selectedDate, onAction, onEventClick, events =
   const itemsForDate = mockItems.filter(item => isSameDay(item.date, selectedDate));
   
   // Combine with events if provided
-  const allItemsForDate = [...itemsForDate, ...events.map(event => ({
+  const eventItems: EventItem[] = events.map(event => ({
     id: `event-${event.id}`,
     date: event.date,
     time: event.time.includes(':') ? 
@@ -57,13 +81,15 @@ const ScheduledItemsTimeline = ({ selectedDate, onAction, onEventClick, events =
     title: event.title,
     description: event.description,
     icon: getEventIcon(event.category),
-    isEvent: true,
+    isEvent: true as const,
     originalEvent: event,
     actions: {
       right: { label: "View Details", action: () => onEventClick?.(event), color: "#3B82F6", icon: "👁️" },
       left: { label: "Reschedule", action: () => onEventClick?.(event), color: "#F59E0B", icon: "📅" }
     }
-  }))].sort((a, b) => {
+  }));
+
+  const allItemsForDate: CombinedItem[] = [...itemsForDate, ...eventItems].sort((a, b) => {
     const timeA = convertTimeToMinutes(a.time);
     const timeB = convertTimeToMinutes(b.time);
     return timeA - timeB;
@@ -115,7 +141,13 @@ const ScheduledItemsTimeline = ({ selectedDate, onAction, onEventClick, events =
             <SwipeCard
               onSwipeRight={item.actions.right}
               onSwipeLeft={item.actions.left}
-              onTap={() => item.isEvent && item.originalEvent ? onEventClick?.(item.originalEvent) : onAction("Viewed", item.title)}
+              onTap={() => {
+                if (item.isEvent && item.originalEvent) {
+                  onEventClick?.(item.originalEvent);
+                } else {
+                  onAction("Viewed", item.title);
+                }
+              }}
               className="flex-1"
             >
               <div className="flex items-center p-4 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
