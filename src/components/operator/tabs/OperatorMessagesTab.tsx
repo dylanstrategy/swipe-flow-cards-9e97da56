@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -68,7 +69,7 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
       time: 'Yesterday',
       priority: 'low',
       category: 'maintenance',
-      unread: false,
+      unread: true, // Changed back to unread for presentation
       date: new Date(Date.now() - 24 * 60 * 60 * 1000) // Yesterday
     },
     {
@@ -80,7 +81,7 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
       time: '2 days ago',
       priority: 'normal',
       category: 'collections',
-      unread: false,
+      unread: true, // Changed back to unread for presentation
       unit: '302',
       residentPhone: '(555) 345-6789',
       date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // 2 days ago
@@ -94,7 +95,7 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
       time: '3 days ago',
       priority: 'low',
       category: 'community',
-      unread: false,
+      unread: true, // Changed back to unread for presentation
       date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) // 3 days ago
     }
   ]);
