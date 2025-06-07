@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UnitTurnTracker from '../UnitTurnTracker';
@@ -165,7 +166,12 @@ const MaintenanceScheduleTab = () => {
     
     // If scheduled for today, add to today's work orders for the Today tab
     if (isToday && !finalScheduledTime.includes('Tomorrow')) {
-      setTodayWorkOrders(prev => [...prev, updatedWorkOrder]);
+      console.log('Adding to today work orders:', updatedWorkOrder);
+      setTodayWorkOrders(prev => {
+        const updated = [...prev, updatedWorkOrder];
+        console.log('Updated today work orders:', updated);
+        return updated;
+      });
     }
     
     toast({
@@ -175,7 +181,12 @@ const MaintenanceScheduleTab = () => {
   };
 
   const addTodayWorkOrder = (workOrder: any) => {
-    setTodayWorkOrders(prev => [...prev, workOrder]);
+    console.log('Adding work order to today context:', workOrder);
+    setTodayWorkOrders(prev => {
+      const updated = [...prev, workOrder];
+      console.log('Today work orders after add:', updated);
+      return updated;
+    });
   };
 
   const contextValue = {

@@ -16,6 +16,8 @@ const MaintenanceTodayTab = () => {
 
   const today = new Date();
 
+  console.log('MaintenanceTodayTab - todayWorkOrders:', todayWorkOrders);
+
   // Sample unit turns data
   const unitTurns = [
     {
@@ -46,21 +48,24 @@ const MaintenanceTodayTab = () => {
 
   // Convert work orders to calendar events format
   const calendarEvents = [
-    // Add today's scheduled work orders
-    ...todayWorkOrders.map(workOrder => ({
-      id: workOrder.id,
-      date: today,
-      time: workOrder.scheduledTime || '09:00',
-      title: `Work Order - Unit ${workOrder.unit}`,
-      description: workOrder.title,
-      category: 'work-order',
-      priority: workOrder.priority,
-      workOrderData: workOrder,
-      canReschedule: true,
-      canCancel: false,
-      estimatedDuration: 120,
-      rescheduledCount: 0
-    })),
+    // Add today's scheduled work orders from context
+    ...todayWorkOrders.map(workOrder => {
+      console.log('Converting work order to calendar event:', workOrder);
+      return {
+        id: workOrder.id,
+        date: today,
+        time: workOrder.scheduledTime || '09:00',
+        title: `Work Order - Unit ${workOrder.unit}`,
+        description: workOrder.title,
+        category: 'work-order',
+        priority: workOrder.priority,
+        workOrderData: workOrder,
+        canReschedule: true,
+        canCancel: false,
+        estimatedDuration: 120,
+        rescheduledCount: 0
+      };
+    }),
     // Add unit turns scheduled for today
     ...unitTurns.filter(turn => turn.status === 'Scheduled').map(unitTurn => ({
       id: unitTurn.id,
@@ -78,7 +83,10 @@ const MaintenanceTodayTab = () => {
     }))
   ];
 
+  console.log('Calendar events:', calendarEvents);
+
   const handleEventClick = (event: any) => {
+    console.log('Event clicked:', event);
     if (event.category === 'work-order') {
       setSelectedWorkOrder(event.workOrderData);
     } else if (event.category === 'unit-turn') {
@@ -92,6 +100,7 @@ const MaintenanceTodayTab = () => {
   };
 
   if (selectedWorkOrder) {
+    console.log('Showing WorkOrderFlow for:', selectedWorkOrder);
     return (
       <WorkOrderFlow 
         workOrder={selectedWorkOrder}
