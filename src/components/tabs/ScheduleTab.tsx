@@ -98,12 +98,74 @@ const ScheduleTab = () => {
     }
   ]);
 
-  const handleDropSuggestion = (suggestion: any, date: Date) => {
-    // Generate a new event from the dropped suggestion
+  // State to track which suggestions have been scheduled
+  const [scheduledSuggestionIds, setScheduledSuggestionIds] = useState<number[]>([]);
+
+  const convertTimeToMinutes = (timeString: string): number => {
+    if (timeString.includes('AM') || timeString.includes('PM')) {
+      const [time, period] = timeString.split(' ');
+      const [hours, minutes] = time.split(':').map(Number);
+      let totalMinutes = (hours % 12) * 60 + minutes;
+      if (period === 'PM' && hours !== 12) totalMinutes += 12 * 60;
+      if (period === 'AM' && hours === 12) totalMinutes = minutes;
+      return totalMinutes;
+    }
+    
+    // Handle 24-hour format (HH:mm)
+    const [hours, minutes] = timeString.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
+  const formatTimeFromMinutes = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+  };
+
+  const findAvailableTimeSlot = (date: Date, duration: number = 60): string => {
+    const eventsForDate = scheduledEvents
+      .filter(event => isSameDay(event.date, date))
+      .map(event => ({
+        start: convertTimeToMinutes(event.time),
+        end: convertTimeToMinutes(event.time) + 60 // Assume 1 hour duration
+      }))
+      .sort((a, b) => a.start - b.start);
+
+    // Start looking from 9 AM (540 minutes)
+    let proposedStart = 540;
+    
+    for (const event of eventsForDate) {
+      if (proposedStart + duration <= event.start) {
+        // Found a gap before this event
+        break;
+      }
+      // Move past this event
+      proposedStart = Math.max(proposedStart, event.end);
+    }
+    
+    // Don't schedule past 6 PM (1080 minutes)
+    if (proposedStart + duration > 1080) {
+      proposedStart = 1080 - duration;
+    }
+    
+    return formatTimeFromMinutes(proposedStart);
+  };
+
+  const handleDropSuggestionInTimeline = (suggestion: any, targetTime?: string) => {
+    let assignedTime: string;
+    
+    if (targetTime) {
+      // If dropped on a specific time slot, try to use that time
+      assignedTime = targetTime.replace(/\s(AM|PM)/, '').padStart(5, '0');
+    } else {
+      // Find an available time slot
+      assignedTime = findAvailableTimeSlot(selectedDate);
+    }
+
     const newEvent = {
-      id: Date.now(), // Use timestamp as unique ID
-      date: date,
-      time: suggestion.timeSlot ? suggestion.timeSlot.split(' - ')[0] : '10:00',
+      id: Date.now(),
+      date: selectedDate,
+      time: assignedTime,
       title: suggestion.title,
       description: suggestion.description,
       category: suggestion.type,
@@ -111,8 +173,29 @@ const ScheduleTab = () => {
       isDroppedSuggestion: true
     };
 
-    // Add the new event to scheduled events
     setScheduledEvents(prev => [...prev, newEvent]);
+    setScheduledSuggestionIds(prev => [...prev, suggestion.id]);
+
+    console.log(`Scheduled ${suggestion.title} at ${assignedTime} on ${format(selectedDate, 'MMM d, yyyy')}`);
+  };
+
+  const handleDropSuggestion = (suggestion: any, date: Date) => {
+    // This handles drops from calendar dates
+    const assignedTime = findAvailableTimeSlot(date);
+    
+    const newEvent = {
+      id: Date.now(),
+      date: date,
+      time: assignedTime,
+      title: suggestion.title,
+      description: suggestion.description,
+      category: suggestion.type,
+      priority: suggestion.priority,
+      isDroppedSuggestion: true
+    };
+
+    setScheduledEvents(prev => [...prev, newEvent]);
+    setScheduledSuggestionIds(prev => [...prev, suggestion.id]);
 
     console.log(`Scheduled ${suggestion.title} on ${format(date, 'MMM d, yyyy')}`);
   };
@@ -349,6 +432,7 @@ const ScheduleTab = () => {
         selectedDate={selectedDate}
         onSchedule={startScheduling}
         onAction={handleAction}
+        scheduledSuggestionIds={scheduledSuggestionIds}
       />
 
       {/* Scheduled Items for Selected Date */}
@@ -357,6 +441,7 @@ const ScheduleTab = () => {
         onAction={handleAction}
         onEventClick={handleEventClick}
         events={getEventsForDate(selectedDate)}
+        onDropSuggestion={handleDropSuggestionInTimeline}
       />
     </div>
   );
