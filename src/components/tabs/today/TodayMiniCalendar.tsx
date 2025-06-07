@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format } from 'date-fns';
 import HourlyCalendarView from '@/components/schedule/HourlyCalendarView';
@@ -7,13 +8,15 @@ interface TodayMiniCalendarProps {
   getEventsForDate: (date: Date) => any[];
   onDropSuggestion?: (suggestion: any, date: Date) => void;
   onDateSelect?: (date: Date) => void;
+  onEventReschedule?: (event: any, newTime: string) => void;
 }
 
 const TodayMiniCalendar = ({ 
   selectedDate, 
   getEventsForDate, 
   onDropSuggestion,
-  onDateSelect 
+  onDateSelect,
+  onEventReschedule 
 }: TodayMiniCalendarProps) => {
   const todayEvents = getEventsForDate(selectedDate);
 
@@ -36,8 +39,11 @@ const TodayMiniCalendar = ({
   };
 
   const handleEventReschedule = (event: any, newTime: string) => {
-    // Handle event reschedule within the same day
-    console.log('Event rescheduled:', event, 'to', newTime);
+    // Pass the reschedule request up to TodayTab
+    console.log('Event rescheduled in TodayMiniCalendar:', event, 'to', newTime);
+    if (onEventReschedule) {
+      onEventReschedule(event, newTime);
+    }
   };
 
   return (

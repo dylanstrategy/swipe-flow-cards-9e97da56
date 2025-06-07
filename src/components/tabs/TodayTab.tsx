@@ -56,8 +56,8 @@ const TodayTab = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Enhanced calendar events with realistic examples and times
-  const calendarEvents = [
+  // Enhanced calendar events with realistic examples and times - now as state
+  const [calendarEvents, setCalendarEvents] = useState([
     {
       id: 1,
       date: new Date(),
@@ -130,31 +130,33 @@ const TodayTab = () => {
       building: 'Building A',
       type: 'maintenance'
     }
-  ];
+  ]);
 
-  // Add pet-specific events if user has pets
-  const petEvents = profile.pets.length > 0 ? [
-    {
-      id: 101,
-      date: new Date(),
-      time: '16:00',
-      title: `${profile.pets[0].name}'s Special Offer`,
-      description: `Exclusive pet grooming discount for ${profile.pets[0].name}!`,
-      category: 'Pet Service',
-      priority: 'low',
-      type: 'message'
-    },
-    {
-      id: 102,
-      date: addDays(new Date(), 1),
-      time: '18:00',
-      title: 'Pet-Friendly Community Event',
-      description: `Bring ${profile.pets.map(pet => pet.name).join(' and ')} to the pet meetup!`,
-      category: 'Community Event',
-      priority: 'low',
-      type: 'tour'
-    }
-  ] : [];
+  // Add pet-specific events if user has pets - also as state
+  const [petEvents, setPetEvents] = useState(() => 
+    profile.pets.length > 0 ? [
+      {
+        id: 101,
+        date: new Date(),
+        time: '16:00',
+        title: `${profile.pets[0].name}'s Special Offer`,
+        description: `Exclusive pet grooming discount for ${profile.pets[0].name}!`,
+        category: 'Pet Service',
+        priority: 'low',
+        type: 'message'
+      },
+      {
+        id: 102,
+        date: addDays(new Date(), 1),
+        time: '18:00',
+        title: 'Pet-Friendly Community Event',
+        description: `Bring ${profile.pets.map(pet => pet.name).join(' and ')} to the pet meetup!`,
+        category: 'Community Event',
+        priority: 'low',
+        type: 'tour'
+      }
+    ] : []
+  );
 
   const allEvents = [...calendarEvents, ...petEvents];
 
@@ -381,6 +383,29 @@ const TodayTab = () => {
     });
   };
 
+  // NEW: Handle event rescheduling
+  const handleEventReschedule = (event: any, newTime: string) => {
+    console.log('Handling event reschedule in TodayTab:', event, 'to', newTime);
+    
+    // Update the event time in both calendar events and pet events
+    setCalendarEvents(prevEvents => 
+      prevEvents.map(e => 
+        e.id === event.id ? { ...e, time: newTime } : e
+      )
+    );
+    
+    setPetEvents(prevEvents => 
+      prevEvents.map(e => 
+        e.id === event.id ? { ...e, time: newTime } : e
+      )
+    );
+
+    toast({
+      title: "Event Rescheduled",
+      description: `${event.title} moved to ${formatTime(newTime)}`,
+    });
+  };
+
   const renderPersonalizedOffers = () => {
     if (profile.pets.length > 0) {
       return (
@@ -550,6 +575,7 @@ const TodayTab = () => {
           getEventsForDate={getEventsForDate}
           onDropSuggestion={handleDropSuggestion}
           onDateSelect={handleDateSelect}
+          onEventReschedule={handleEventReschedule}
         />
       </div>
     </div>
