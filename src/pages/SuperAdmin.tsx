@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Building,
@@ -13,21 +12,24 @@ import {
   DollarSign,
   Plus,
   Search,
-  Filter,
-  Download,
   Upload,
+  BarChart3,
   Calendar,
   MessageSquare,
   FileText,
-  BarChart3,
-  Settings,
-  Eye,
-  Edit,
-  Trash2,
   Mail,
   Phone,
-  MapPin
+  CreditCard,
+  UserCheck,
+  Briefcase,
+  Menu,
+  X
 } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import BulkImportModal from '@/components/admin/BulkImportModal';
 import PropertyDetailsModal from '@/components/property/PropertyDetailsModal';
 import UserManagement from '@/components/user/UserManagement';
@@ -39,7 +41,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const SuperAdmin = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeSection, setActiveSection] = useState('overview');
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [showAddUser, setShowAddUser] = useState(false);
   const [showLeadDetails, setShowLeadDetails] = useState(false);
@@ -48,6 +50,7 @@ const SuperAdmin = () => {
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [selectedLead, setSelectedLead] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Mock data
   const [properties] = useState([
@@ -144,28 +147,71 @@ const SuperAdmin = () => {
     return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="border-b bg-white">
-        <div className="px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Super Admin Dashboard</h1>
-          <p className="text-sm text-gray-600">Manage properties, users, and business operations</p>
+  const menuItems = [
+    { id: 'overview', label: 'Overview', icon: BarChart3 },
+    { id: 'properties', label: 'Properties', icon: Building },
+    { id: 'clients', label: 'Clients', icon: Briefcase },
+    { id: 'crm', label: 'CRM & Sales', icon: Users },
+    { id: 'users', label: 'User Management', icon: UserCheck },
+    { id: 'billing', label: 'Billing', icon: CreditCard },
+    { id: 'marketing', label: 'Marketing', icon: Mail },
+    { id: 'calendar', label: 'Calendar', icon: Calendar },
+    { id: 'operators', label: 'Operators', icon: Users },
+  ];
+
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full">
+      <div className="p-6 border-b">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center text-white font-bold">
+            SA
+          </div>
+          <span className="font-semibold text-lg">Super Admin</span>
         </div>
       </div>
+      
+      <ScrollArea className="flex-1 p-4">
+        <nav className="space-y-2">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveSection(item.id);
+                  setSidebarOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                  activeSection === item.id 
+                    ? 'bg-blue-50 text-blue-600 font-medium' 
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Icon className="w-5 h-5" />
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
+      </ScrollArea>
 
-      <div className="p-4">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="properties">Properties</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
-            <TabsTrigger value="leads">Leads</TabsTrigger>
-            <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-            <TabsTrigger value="events">Events</TabsTrigger>
-            <TabsTrigger value="billing">Billing</TabsTrigger>
-          </TabsList>
+      <div className="p-4 border-t">
+        <div className="bg-gray-50 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-green-600 mb-1">
+            <DollarSign className="w-4 h-4" />
+            <span className="font-medium">Revenue</span>
+          </div>
+          <div className="text-2xl font-bold text-gray-900">$0</div>
+        </div>
+      </div>
+    </div>
+  );
 
-          <TabsContent value="dashboard" className="space-y-6">
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'overview':
+        return (
+          <div className="space-y-6">
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card>
@@ -210,7 +256,8 @@ const SuperAdmin = () => {
                 <CardContent>
                   <div className="space-y-3">
                     {properties.slice(0, 3).map((property) => (
-                      <div key={property.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div key={property.id} className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
+                           onClick={() => handlePropertyClick(property)}>
                         <div>
                           <h4 className="font-medium">{property.name}</h4>
                           <p className="text-sm text-gray-600">{property.units} units</p>
@@ -231,7 +278,8 @@ const SuperAdmin = () => {
                 <CardContent>
                   <div className="space-y-3">
                     {leads.slice(0, 3).map((lead) => (
-                      <div key={lead.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div key={lead.id} className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
+                           onClick={() => handleLeadClick(lead)}>
                         <div>
                           <h4 className="font-medium">{lead.name}</h4>
                           <p className="text-sm text-gray-600">{lead.email}</p>
@@ -245,9 +293,12 @@ const SuperAdmin = () => {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
+          </div>
+        );
 
-          <TabsContent value="properties" className="space-y-4">
+      case 'properties':
+        return (
+          <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Properties Management</h2>
               <div className="flex gap-2">
@@ -290,13 +341,15 @@ const SuperAdmin = () => {
                 </Card>
               ))}
             </div>
-          </TabsContent>
+          </div>
+        );
 
-          <TabsContent value="users">
-            <UserManagement />
-          </TabsContent>
+      case 'users':
+        return <UserManagement />;
 
-          <TabsContent value="leads" className="space-y-4">
+      case 'crm':
+        return (
+          <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Leads Management</h2>
               <div className="flex gap-2">
@@ -354,9 +407,33 @@ const SuperAdmin = () => {
                 </Card>
               ))}
             </div>
-          </TabsContent>
+          </div>
+        );
 
-          <TabsContent value="campaigns" className="space-y-4">
+      case 'clients':
+        return (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Client Management</h2>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Client
+              </Button>
+            </div>
+            <Card>
+              <CardContent className="p-8 text-center">
+                <Briefcase className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">No clients yet</h3>
+                <p className="text-gray-600 mb-4">Add your first client to get started</p>
+                <Button>Add Client</Button>
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case 'marketing':
+        return (
+          <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Marketing Campaigns</h2>
               <Button>
@@ -372,9 +449,12 @@ const SuperAdmin = () => {
                 <Button>Create Campaign</Button>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+        );
 
-          <TabsContent value="events" className="space-y-4">
+      case 'calendar':
+        return (
+          <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Events Management</h2>
               <Button onClick={() => setShowCreateEvent(true)}>
@@ -416,9 +496,12 @@ const SuperAdmin = () => {
                 </CardContent>
               </Card>
             )}
-          </TabsContent>
+          </div>
+        );
 
-          <TabsContent value="billing" className="space-y-4">
+      case 'billing':
+        return (
+          <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Billing & Invoices</h2>
               <Button onClick={() => setShowCreateInvoice(true)}>
@@ -459,8 +542,63 @@ const SuperAdmin = () => {
                 </CardContent>
               </Card>
             )}
-          </TabsContent>
-        </Tabs>
+          </div>
+        );
+
+      case 'operators':
+        return (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Operators Management</h2>
+              <Button onClick={() => setShowAddUser(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Operator
+              </Button>
+            </div>
+            <Card>
+              <CardContent className="p-8 text-center">
+                <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">No operators yet</h3>
+                <p className="text-gray-600 mb-4">Add your first operator to get started</p>
+                <Button onClick={() => setShowAddUser(true)}>Add Operator</Button>
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      default:
+        return <div>Section not found</div>;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="border-b bg-white">
+        <div className="px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="w-5 h-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0 w-80">
+                <SidebarContent />
+              </SheetContent>
+            </Sheet>
+            
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Super Admin Dashboard</h1>
+              <p className="text-sm text-gray-600">Manage properties, users, and business operations</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="p-4">
+        {renderContent()}
       </div>
 
       {/* Modals */}
