@@ -12,8 +12,28 @@ import DragDropProvider from '../DragDropProvider';
 import { Calendar, Home, Wrench, BarChart3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+// Work order interface to match the expected types
+interface WorkOrder {
+  id: string;
+  unit: string;
+  title: string;
+  description: string;
+  category: string;
+  priority: 'urgent' | 'high' | 'medium' | 'low';
+  status: 'unscheduled' | 'scheduled' | 'overdue';
+  assignedTo: string;
+  resident: string;
+  phone: string;
+  daysOpen: number;
+  estimatedTime: string;
+  submittedDate: string;
+  scheduledDate?: string;
+  scheduledTime?: string;
+  photo: string;
+}
+
 // Mock work orders data - this would normally come from a state management solution or API
-const initialWorkOrders = [
+const initialWorkOrders: WorkOrder[] = [
   {
     id: 'WO-544857',
     unit: '417',
@@ -84,18 +104,18 @@ const initialWorkOrders = [
 
 const MaintenanceScheduleTab = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('queue');
+  const [activeTab, setActiveTab] = useState('today');
   const [selectedUnitTurn, setSelectedUnitTurn] = useState<any>(null);
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
   const [showWorkOrderFlow, setShowWorkOrderFlow] = useState(false);
-  const [workOrders, setWorkOrders] = useState(initialWorkOrders);
-  const [scheduledWorkOrders, setScheduledWorkOrders] = useState<any[]>([]);
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>(initialWorkOrders);
+  const [scheduledWorkOrders, setScheduledWorkOrders] = useState<WorkOrder[]>([]);
 
-  const handleScheduleWorkOrder = (workOrder: any, scheduledTime: string) => {
+  const handleScheduleWorkOrder = (workOrder: WorkOrder, scheduledTime: string) => {
     console.log('Scheduling work order:', workOrder, 'for time:', scheduledTime);
     
     // Update the work order with scheduled information
-    const updatedWorkOrder = {
+    const updatedWorkOrder: WorkOrder = {
       ...workOrder,
       status: 'scheduled',
       scheduledDate: new Date().toISOString().split('T')[0],
@@ -168,13 +188,13 @@ const MaintenanceScheduleTab = () => {
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
             <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsTrigger value="today" className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Today
+              </TabsTrigger>
               <TabsTrigger value="queue" className="flex items-center gap-2">
                 <Wrench className="w-4 h-4" />
                 Queue
-              </TabsTrigger>
-              <TabsTrigger value="overview" className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" />
-                Overview
               </TabsTrigger>
               <TabsTrigger value="unitturns" className="flex items-center gap-2">
                 <Home className="w-4 h-4" />
@@ -185,29 +205,19 @@ const MaintenanceScheduleTab = () => {
         </div>
 
         <div className="flex-1 relative overflow-hidden">
-          {activeTab === 'queue' && (
-            <div className="h-full">
-              <WorkOrderQueue 
-                workOrders={workOrders}
-                onSelectWorkOrder={handleWorkOrderDetailsView} 
-              />
-              <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
-            </div>
-          )}
-
-          {activeTab === 'overview' && (
-            <div className="h-full overflow-y-auto pb-32">
-              <div className="px-4 space-y-6">
-                <WorkOrderTracker 
-                  onSelectWorkOrder={handleWorkOrderSelect}
-                  onViewDetails={handleWorkOrderDetailsView}
-                />
-                <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
-                
+          {activeTab === 'today' && (
+            <div className="h-full overflow-y-auto px-4 pb-32">
+              <div className="space-y-6">
                 {/* Today's Scheduled Work Orders */}
-                {scheduledWorkOrders.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Today's Scheduled Work Orders</h3>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Today's Scheduled Work Orders</h2>
+                  {scheduledWorkOrders.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+                      <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <p className="text-lg font-medium mb-2">No work orders scheduled for today</p>
+                      <p className="text-sm">Drag work orders from the Queue tab to schedule them</p>
+                    </div>
+                  ) : (
                     <div className="space-y-3">
                       {scheduledWorkOrders.map((workOrder) => (
                         <div key={workOrder.id} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -234,9 +244,31 @@ const MaintenanceScheduleTab = () => {
                         </div>
                       ))}
                     </div>
+                  )}
+                </div>
+
+                {/* Overview Section */}
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Overview</h2>
+                  <WorkOrderTracker 
+                    onSelectWorkOrder={handleWorkOrderSelect}
+                    onViewDetails={handleWorkOrderDetailsView}
+                  />
+                  <div className="mt-6">
+                    <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
                   </div>
-                )}
+                </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'queue' && (
+            <div className="h-full">
+              <WorkOrderQueue 
+                workOrders={workOrders}
+                onSelectWorkOrder={handleWorkOrderDetailsView} 
+              />
+              <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
             </div>
           )}
 
