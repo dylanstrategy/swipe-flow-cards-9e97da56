@@ -22,11 +22,12 @@ const Resident = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('today');
   const [showSettings, setShowSettings] = useState(false);
+  const [messagesUnreadCount, setMessagesUnreadCount] = useState(0);
 
   const tabs = [
     { id: 'today', label: 'Today', icon: '🏠' },
     { id: 'schedule', label: 'Schedule', icon: '📅' },
-    { id: 'messages', label: 'Messages', icon: '💬' },
+    { id: 'messages', label: 'Messages', icon: '💬', badgeCount: messagesUnreadCount },
     { id: 'account', label: 'Account', icon: '👤' }
   ];
 
@@ -57,7 +58,7 @@ const Resident = () => {
       case 'schedule':
         return <ScheduleTab />;
       case 'messages':
-        return <MessagesTab />;
+        return <MessagesTab onUnreadCountChange={setMessagesUnreadCount} />;
       case 'account':
         return <AccountTab />;
       default:
