@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Clock, MapPin, AlertTriangle, Check, Home, MessageSquare, Users, Calendar, Wrench } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -135,6 +136,17 @@ const OperatorTodayTab = () => {
     return '';
   };
 
+  const getEventCardClass = (event: any) => {
+    const isOverdue = isEventOverdue(event);
+    const baseClass = 'flex items-center justify-between p-4 rounded-lg border border-gray-100 shadow-sm cursor-pointer hover:bg-gray-50 transition-colors';
+    
+    if (isOverdue) {
+      return `${baseClass} bg-red-50 border-red-200 wiggle-urgent pulse-urgent`;
+    }
+    
+    return `${baseClass} bg-white`;
+  };
+
   const getSwipeActionsForEvent = (event: any) => {
     return {
       onSwipeRight: {
@@ -182,7 +194,7 @@ const OperatorTodayTab = () => {
         <div className="space-y-3">
           {todayEvents.map((event) => {
             const swipeActions = getSwipeActionsForEvent(event);
-            const urgencyClass = getUrgencyClass(event);
+            const isOverdue = isEventOverdue(event);
             
             return (
               <SwipeCard
@@ -191,27 +203,35 @@ const OperatorTodayTab = () => {
                 onSwipeLeft={swipeActions.onSwipeLeft}
                 onTap={() => handleAction("Viewed", event)}
               >
-                <div className={`flex items-center justify-between p-4 bg-white rounded-lg border border-gray-100 shadow-sm cursor-pointer hover:bg-gray-50 transition-colors ${urgencyClass}`}>
+                <div className={getEventCardClass(event)}>
                   <div className="flex items-center space-x-3">
                     <div className="flex items-center justify-center w-10 h-10 bg-blue-50 rounded-lg">
                       {getTypeIcon(event.type)}
                     </div>
                     <div>
-                      <h3 className="font-medium text-gray-900">{event.title}</h3>
-                      <p className="text-sm text-gray-600">{event.description}</p>
+                      <h3 className={`font-medium ${isOverdue ? 'text-red-800' : 'text-gray-900'}`}>
+                        {event.title}
+                      </h3>
+                      <p className={`text-sm ${isOverdue ? 'text-red-700' : 'text-gray-600'}`}>
+                        {event.description}
+                      </p>
                       <div className="flex items-center space-x-2 mt-1">
-                        <Clock size={14} className="text-gray-400" />
-                        <span className="text-sm text-gray-500">{formatTime(event.time)}</span>
-                        <span className="text-sm text-gray-400">•</span>
-                        <span className="text-sm text-gray-500">{event.unit}</span>
+                        <Clock size={14} className={isOverdue ? 'text-red-500' : 'text-gray-400'} />
+                        <span className={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
+                          {formatTime(event.time)}
+                        </span>
+                        <span className={`text-sm ${isOverdue ? 'text-red-400' : 'text-gray-400'}`}>•</span>
+                        <span className={`text-sm ${isOverdue ? 'text-red-600' : 'text-gray-500'}`}>
+                          {event.unit}
+                        </span>
                       </div>
                     </div>
                   </div>
                   <div className="flex flex-col items-end space-y-2">
-                    <Badge className={getPriorityColor(event.priority)}>
+                    <Badge className={isOverdue ? 'bg-red-200 text-red-800' : getPriorityColor(event.priority)}>
                       {event.priority}
                     </Badge>
-                    {isEventOverdue(event) && (
+                    {isOverdue && (
                       <div className="flex items-center text-red-600">
                         <AlertTriangle size={12} className="mr-1" />
                         <span className="text-xs font-medium">Overdue</span>
