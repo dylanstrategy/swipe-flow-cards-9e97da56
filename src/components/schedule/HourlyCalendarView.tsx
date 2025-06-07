@@ -1,9 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { format, addHours, startOfDay, isSameDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface HourlyCalendarViewProps {
   selectedDate: Date;
@@ -312,132 +310,130 @@ const HourlyCalendarView = ({
         </div>
       </div>
       
-      <ScrollArea className="h-96">
-        <div className="w-full">
-          {!isSelectedDateWorkDay ? (
-            <div className="p-8 text-center text-gray-500">
-              <p>This day is not configured as a work day.</p>
-              <p className="text-sm mt-2">Check your scheduling preferences to modify work days.</p>
-            </div>
-          ) : (
-            timeSlots.map((slot) => {
-              const timeString = format(slot, 'h:mm a');
-              const hour = slot.getHours();
-              const eventsInSlot = getEventsForTimeSlot(slot);
-              const isCurrentHour = new Date().getHours() === hour && isSameDateSafe(selectedDate, new Date());
-              const isDragOver = dragOverSlot === timeString;
-              const isLunch = isLunchBreak(hour);
-              const isOutsideWorkHours = !isWorkHour(hour);
-              const maxReached = isMaxAppointmentsReached();
-              
-              return (
-                <div
-                  key={timeString}
-                  className={cn(
-                    "border-b border-gray-50 transition-all duration-150 min-h-[60px] relative",
-                    isCurrentHour && "bg-blue-50",
-                    isDragOver && !isLunch && !isOutsideWorkHours && !maxReached && "bg-green-100 border-green-300 shadow-md",
-                    isLunch && "bg-orange-50",
-                    isOutsideWorkHours && "bg-gray-50"
-                  )}
-                  onDragOver={(e) => handleDragOver(e, timeString)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, timeString)}
-                >
-                  <div className="flex items-start p-3 gap-3">
-                    <div className="w-16 flex-shrink-0 pt-1">
-                      <span className={cn(
-                        "text-sm font-medium",
-                        isCurrentHour ? "text-blue-700" : "text-gray-600",
-                        isLunch && "text-orange-600",
-                        isOutsideWorkHours && "text-gray-400"
+      <div className="w-full">
+        {!isSelectedDateWorkDay ? (
+          <div className="p-8 text-center text-gray-500">
+            <p>This day is not configured as a work day.</p>
+            <p className="text-sm mt-2">Check your scheduling preferences to modify work days.</p>
+          </div>
+        ) : (
+          timeSlots.map((slot) => {
+            const timeString = format(slot, 'h:mm a');
+            const hour = slot.getHours();
+            const eventsInSlot = getEventsForTimeSlot(slot);
+            const isCurrentHour = new Date().getHours() === hour && isSameDateSafe(selectedDate, new Date());
+            const isDragOver = dragOverSlot === timeString;
+            const isLunch = isLunchBreak(hour);
+            const isOutsideWorkHours = !isWorkHour(hour);
+            const maxReached = isMaxAppointmentsReached();
+            
+            return (
+              <div
+                key={timeString}
+                className={cn(
+                  "border-b border-gray-50 transition-all duration-150 min-h-[60px] relative",
+                  isCurrentHour && "bg-blue-50",
+                  isDragOver && !isLunch && !isOutsideWorkHours && !maxReached && "bg-green-100 border-green-300 shadow-md",
+                  isLunch && "bg-orange-50",
+                  isOutsideWorkHours && "bg-gray-50"
+                )}
+                onDragOver={(e) => handleDragOver(e, timeString)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, timeString)}
+              >
+                <div className="flex items-start p-3 gap-3">
+                  <div className="w-16 flex-shrink-0 pt-1">
+                    <span className={cn(
+                      "text-sm font-medium",
+                      isCurrentHour ? "text-blue-700" : "text-gray-600",
+                      isLunch && "text-orange-600",
+                      isOutsideWorkHours && "text-gray-400"
+                    )}>
+                      {timeString}
+                    </span>
+                    {isLunch && (
+                      <div className="text-xs text-orange-600 mt-1">Lunch</div>
+                    )}
+                    {isOutsideWorkHours && !isLunch && (
+                      <div className="text-xs text-gray-400 mt-1">Off Hours</div>
+                    )}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0 relative">
+                    {eventsInSlot.length === 0 ? (
+                      <div className={cn(
+                        "h-12 rounded-lg border-2 border-dashed transition-all duration-150 flex items-center justify-center touch-manipulation",
+                        isDragOver && !isLunch && !isOutsideWorkHours && !maxReached
+                          ? "border-green-400 bg-green-50 scale-[1.02]" 
+                          : isLunch || isOutsideWorkHours || maxReached
+                          ? "border-gray-200 bg-gray-100 cursor-not-allowed"
+                          : "border-gray-200 hover:border-gray-300 hover:bg-gray-25"
                       )}>
-                        {timeString}
-                      </span>
-                      {isLunch && (
-                        <div className="text-xs text-orange-600 mt-1">Lunch</div>
-                      )}
-                      {isOutsideWorkHours && !isLunch && (
-                        <div className="text-xs text-gray-400 mt-1">Off Hours</div>
-                      )}
-                    </div>
-                    
-                    <div className="flex-1 min-w-0 relative">
-                      {eventsInSlot.length === 0 ? (
-                        <div className={cn(
-                          "h-12 rounded-lg border-2 border-dashed transition-all duration-150 flex items-center justify-center touch-manipulation",
-                          isDragOver && !isLunch && !isOutsideWorkHours && !maxReached
-                            ? "border-green-400 bg-green-50 scale-[1.02]" 
-                            : isLunch || isOutsideWorkHours || maxReached
-                            ? "border-gray-200 bg-gray-100 cursor-not-allowed"
-                            : "border-gray-200 hover:border-gray-300 hover:bg-gray-25"
-                        )}>
-                          {isDragOver && !isLunch && !isOutsideWorkHours && !maxReached && (
-                            <span className="text-sm text-green-700 font-medium animate-pulse">Drop here</span>
-                          )}
-                          {isLunch && (
-                            <span className="text-xs text-orange-600">Lunch Break</span>
-                          )}
-                          {isOutsideWorkHours && !isLunch && (
-                            <span className="text-xs text-gray-400">Outside Work Hours</span>
-                          )}
-                          {maxReached && !isLunch && !isOutsideWorkHours && (
-                            <span className="text-xs text-red-600">Daily Limit Reached</span>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          {eventsInSlot.map((event, index) => (
-                            <div
-                              key={`${event.id}-${event.time}-${index}`}
-                              className="bg-blue-100 border border-blue-200 rounded-lg p-3 cursor-pointer hover:bg-blue-200 transition-all duration-150 touch-manipulation active:scale-[0.98]"
-                              onClick={() => handleEventClick(event)}
-                              onContextMenu={(e) => {
-                                e.preventDefault();
+                        {isDragOver && !isLunch && !isOutsideWorkHours && !maxReached && (
+                          <span className="text-sm text-green-700 font-medium animate-pulse">Drop here</span>
+                        )}
+                        {isLunch && (
+                          <span className="text-xs text-orange-600">Lunch Break</span>
+                        )}
+                        {isOutsideWorkHours && !isLunch && (
+                          <span className="text-xs text-gray-400">Outside Work Hours</span>
+                        )}
+                        {maxReached && !isLunch && !isOutsideWorkHours && (
+                          <span className="text-xs text-red-600">Daily Limit Reached</span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {eventsInSlot.map((event, index) => (
+                          <div
+                            key={`${event.id}-${event.time}-${index}`}
+                            className="bg-blue-100 border border-blue-200 rounded-lg p-3 cursor-pointer hover:bg-blue-200 transition-all duration-150 touch-manipulation active:scale-[0.98]"
+                            onClick={() => handleEventClick(event)}
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              handleEventHold(event);
+                            }}
+                            onTouchStart={(e) => {
+                              const touchTimeout = setTimeout(() => {
                                 handleEventHold(event);
-                              }}
-                              onTouchStart={(e) => {
-                                const touchTimeout = setTimeout(() => {
-                                  handleEventHold(event);
-                                }, 300);
-                                
-                                const clearTouch = () => {
-                                  clearTimeout(touchTimeout);
-                                  document.removeEventListener('touchend', clearTouch);
-                                  document.removeEventListener('touchmove', clearTouch);
-                                };
-                                
-                                document.addEventListener('touchend', clearTouch);
-                                document.addEventListener('touchmove', clearTouch);
-                              }}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1 min-w-0">
-                                  <h4 className="text-sm font-medium text-gray-900 truncate">{event.title}</h4>
-                                  {event.description && (
-                                    <p className="text-xs text-gray-600 truncate mt-1">{event.description}</p>
-                                  )}
-                                </div>
-                                <div className="text-xs text-blue-600 ml-2 flex-shrink-0">
-                                  {event.time}
-                                </div>
+                              }, 300);
+                              
+                              const clearTouch = () => {
+                                clearTimeout(touchTimeout);
+                                document.removeEventListener('touchend', clearTouch);
+                                document.removeEventListener('touchmove', clearTouch);
+                              };
+                              
+                              document.addEventListener('touchend', clearTouch);
+                              document.addEventListener('touchmove', clearTouch);
+                            }}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-sm font-medium text-gray-900 truncate">{event.title}</h4>
+                                {event.description && (
+                                  <p className="text-xs text-gray-600 truncate mt-1">{event.description}</p>
+                                )}
+                              </div>
+                              <div className="text-xs text-blue-600 ml-2 flex-shrink-0">
+                                {event.time}
                               </div>
                             </div>
-                          ))}
-                        </div>
-                      )}
-                      
-                      {isDragOver && !isLunch && !isOutsideWorkHours && !maxReached && (
-                        <div className="absolute inset-0 pointer-events-none bg-green-100 bg-opacity-50 rounded-lg border-2 border-green-400 border-dashed animate-pulse" />
-                      )}
-                    </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {isDragOver && !isLunch && !isOutsideWorkHours && !maxReached && (
+                      <div className="absolute inset-0 pointer-events-none bg-green-100 bg-opacity-50 rounded-lg border-2 border-green-400 border-dashed animate-pulse" />
+                    )}
                   </div>
                 </div>
-              );
-            })
-          )}
-        </div>
-      </ScrollArea>
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 };
