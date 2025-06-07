@@ -12,6 +12,7 @@ import LeadIntakeForm from '@/components/forms/LeadIntakeForm';
 import ContractManager from '@/components/contracts/ContractManager';
 import UserManagement from '@/components/user/UserManagement';
 import PropertyDetailsModal from '@/components/property/PropertyDetailsModal';
+import BulkImportModal from '@/components/admin/BulkImportModal';
 import {
   Building, 
   Users, 
@@ -35,7 +36,8 @@ import {
   Activity,
   ChevronDown,
   MapPin,
-  Home
+  Home,
+  Upload
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -68,6 +70,8 @@ const SuperAdmin = () => {
   const [showLeadForm, setShowLeadForm] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [showPropertyDetails, setShowPropertyDetails] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
+  const [bulkImportType, setBulkImportType] = useState<'properties' | 'residents' | 'clients' | 'users'>('properties');
 
   useEffect(() => {
     loadData();
@@ -301,6 +305,11 @@ const SuperAdmin = () => {
   const handleSignOut = () => {
     localStorage.clear();
     navigate('/owner-login');
+  };
+
+  const handleBulkImport = (type: 'properties' | 'residents' | 'clients' | 'users') => {
+    setBulkImportType(type);
+    setShowBulkImport(true);
   };
 
   const navigationItems = [
@@ -583,10 +592,16 @@ const SuperAdmin = () => {
           <div className="space-y-6 max-w-full">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">Properties Management</h2>
-              <Button className="flex-shrink-0">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Property
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => handleBulkImport('properties')}>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Bulk Import
+                </Button>
+                <Button className="flex-shrink-0">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Property
+                </Button>
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -713,10 +728,16 @@ const SuperAdmin = () => {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">Users Management</h2>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Add User
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => handleBulkImport('users')}>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Bulk Import
+                </Button>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add User
+                </Button>
+              </div>
             </div>
 
             <div className="flex gap-4">
@@ -856,10 +877,16 @@ const SuperAdmin = () => {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">Client Management</h2>
-              <Button onClick={handleAddClient}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Client
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => handleBulkImport('clients')}>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Bulk Import
+                </Button>
+                <Button onClick={handleAddClient}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Client
+                </Button>
+              </div>
             </div>
 
             <div className="flex gap-4">
@@ -962,10 +989,16 @@ const SuperAdmin = () => {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">CRM & Sales Pipeline</h2>
-              <Button onClick={handleAddLead}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Lead
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => handleBulkImport('residents')}>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Bulk Import Leads
+                </Button>
+                <Button onClick={handleAddLead}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Lead
+                </Button>
+              </div>
             </div>
 
             {/* Sales Stage Summary */}
@@ -1396,6 +1429,15 @@ const SuperAdmin = () => {
           </div>
         )}
       </div>
+
+      {/* Bulk Import Modal */}
+      {showBulkImport && (
+        <BulkImportModal
+          isOpen={showBulkImport}
+          onClose={() => setShowBulkImport(false)}
+          importType={bulkImportType}
+        />
+      )}
 
       {/* Property Details Modal */}
       {showPropertyDetails && selectedProperty && (
