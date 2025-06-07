@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UnitTurnTracker from '../UnitTurnTracker';
@@ -106,18 +105,56 @@ const MaintenanceScheduleTab = () => {
   const [scheduledWorkOrders, setScheduledWorkOrders] = useState<any[]>([]);
   const [todayWorkOrders, setTodayWorkOrders] = useState<any[]>([]);
 
+  // Helper function to find first available time slot
+  const findFirstAvailableTimeSlot = () => {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    // If it's before 9 AM, start at 9 AM
+    if (currentHour < 9) {
+      return '09:00';
+    }
+    
+    // If it's after 5 PM, schedule for tomorrow 9 AM
+    if (currentHour >= 17) {
+      return 'Tomorrow 09:00';
+    }
+    
+    // Find next available hour slot (round up to next hour)
+    let nextHour = currentMinute > 0 ? currentHour + 1 : currentHour;
+    
+    // Check for conflicts with existing scheduled work orders
+    const timeSlot = `${nextHour.toString().padStart(2, '0')}:00`;
+    const hasConflict = todayWorkOrders.some(wo => wo.scheduledTime === timeSlot);
+    
+    if (hasConflict) {
+      // Try next hour
+      nextHour += 1;
+      if (nextHour >= 17) {
+        return 'Tomorrow 09:00';
+      }
+      return `${nextHour.toString().padStart(2, '0')}:00`;
+    }
+    
+    return timeSlot;
+  };
+
   const handleScheduleWorkOrder = (workOrder: any, scheduledTime: string) => {
     console.log('Scheduling work order:', workOrder, 'for time:', scheduledTime);
     
     const isToday = scheduledTime.includes('Today') || !scheduledTime.includes('Tomorrow');
     const today = new Date().toISOString().split('T')[0];
     
+    // If scheduling for today, find first available time slot
+    const finalScheduledTime = isToday ? findFirstAvailableTimeSlot() : scheduledTime;
+    
     // Update the work order with scheduled information
     const updatedWorkOrder = {
       ...workOrder,
       status: 'scheduled',
       scheduledDate: isToday ? today : new Date(Date.now() + 86400000).toISOString().split('T')[0],
-      scheduledTime: scheduledTime.includes('Tomorrow') ? '09:00 AM' : scheduledTime
+      scheduledTime: finalScheduledTime.includes('Tomorrow') ? '09:00' : finalScheduledTime.replace('Tomorrow ', '')
     };
 
     // Remove from work orders queue
@@ -127,13 +164,13 @@ const MaintenanceScheduleTab = () => {
     setScheduledWorkOrders(prev => [...prev, updatedWorkOrder]);
     
     // If scheduled for today, add to today's work orders for the Today tab
-    if (isToday) {
+    if (isToday && !finalScheduledTime.includes('Tomorrow')) {
       setTodayWorkOrders(prev => [...prev, updatedWorkOrder]);
     }
     
     toast({
       title: "Work Order Scheduled",
-      description: `${workOrder.title} has been scheduled for ${scheduledTime.includes('Tomorrow') ? 'tomorrow at 9:00 AM' : `today at ${scheduledTime}`}`,
+      description: `${workOrder.title} has been scheduled for ${finalScheduledTime.includes('Tomorrow') ? 'tomorrow at 9:00 AM' : `today at ${finalScheduledTime}`}`,
     });
   };
 
