@@ -44,6 +44,8 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
   };
 
   const handleNextStep = () => {
+    console.log('Maintenance handleNextStep called, currentStep:', currentStep, 'canProceed:', canProceedFromCurrentStep());
+    
     if (showReschedule) {
       console.log('Work order rescheduled');
       onClose();
@@ -99,9 +101,12 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
   // Auto-show prompt when content is ready and not already showing
   React.useEffect(() => {
     const timer = setTimeout(() => {
-      if (canProceedFromCurrentStep() && !showPrompt) {
+      const canProceed = canProceedFromCurrentStep();
+      console.log('Maintenance auto-show check:', { currentStep, canProceed, showPrompt, showReschedule });
+      
+      if (canProceed && !showPrompt) {
         setShowPrompt(true);
-      } else if (!canProceedFromCurrentStep() && showPrompt) {
+      } else if (!canProceed && showPrompt) {
         setShowPrompt(false);
       }
     }, 500); // Small delay to ensure state is stable
@@ -162,40 +167,42 @@ const WorkOrderFlow = ({ workOrder, onClose }: WorkOrderFlowProps) => {
   };
 
   return (
-    <SwipeableScreen
-      title={getStepTitle()}
-      currentStep={showReschedule ? 1 : currentStep}
-      totalSteps={showReschedule ? 1 : 3}
-      onClose={onClose}
-      onSwipeUp={canProceedFromCurrentStep() ? handleNextStep : undefined}
-      onSwipeLeft={showReschedule || currentStep > 1 ? handlePrevStep : undefined}
-      canSwipeUp={canProceedFromCurrentStep()}
-      rightButton={
-        !showReschedule && currentStep === 1 ? (
-          <Button variant="outline" size="sm" onClick={handleReschedule}>
-            Reschedule
-          </Button>
-        ) : undefined
-      }
-    >
-      <div className="h-full overflow-hidden relative">
-        <div className="pb-32">
-          {renderCurrentStep()}
+    <>
+      <SwipeableScreen
+        title={getStepTitle()}
+        currentStep={showReschedule ? 1 : currentStep}
+        totalSteps={showReschedule ? 1 : 3}
+        onClose={onClose}
+        onSwipeUp={canProceedFromCurrentStep() ? handleNextStep : undefined}
+        onSwipeLeft={showReschedule || currentStep > 1 ? handlePrevStep : undefined}
+        canSwipeUp={canProceedFromCurrentStep()}
+        rightButton={
+          !showReschedule && currentStep === 1 ? (
+            <Button variant="outline" size="sm" onClick={handleReschedule}>
+              Reschedule
+            </Button>
+          ) : undefined
+        }
+      >
+        <div className="h-full overflow-hidden relative">
+          <div className="pb-40">
+            {renderCurrentStep()}
+          </div>
         </div>
-        
-        {/* Conditional SwipeUpPrompt - Show when ready and prompt is shown */}
-        {showPrompt && canProceedFromCurrentStep() && (
-          <SwipeUpPrompt 
-            onContinue={handleNextStep}
-            onBack={showReschedule || currentStep > 1 ? handlePrevStep : undefined}
-            onClose={handleClosePrompt}
-            message={showReschedule ? "Ready to reschedule!" : currentStep === 3 ? "Ready to complete!" : "Ready to continue!"}
-            buttonText={showReschedule ? "Reschedule" : currentStep === 3 ? "Complete" : "Continue"}
-            showBack={showReschedule || currentStep > 1}
-          />
-        )}
-      </div>
-    </SwipeableScreen>
+      </SwipeableScreen>
+      
+      {/* Conditional SwipeUpPrompt - Show when ready and prompt is shown */}
+      {showPrompt && canProceedFromCurrentStep() && (
+        <SwipeUpPrompt 
+          onContinue={handleNextStep}
+          onBack={showReschedule || currentStep > 1 ? handlePrevStep : undefined}
+          onClose={handleClosePrompt}
+          message={showReschedule ? "Ready to reschedule!" : currentStep === 3 ? "Ready to complete!" : "Ready to continue!"}
+          buttonText={showReschedule ? "Reschedule" : currentStep === 3 ? "Complete" : "Continue"}
+          showBack={showReschedule || currentStep > 1}
+        />
+      )}
+    </>
   );
 };
 

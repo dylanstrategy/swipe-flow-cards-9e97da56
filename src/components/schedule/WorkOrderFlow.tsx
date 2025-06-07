@@ -64,6 +64,7 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   };
 
   const nextStep = () => {
+    console.log('nextStep called, currentStep:', currentStep, 'canProceed:', canProceedFromCurrentStep());
     if (currentStep < 4 && canProceedFromCurrentStep()) {
       onNextStep();
       setShowPrompt(false);
@@ -100,9 +101,12 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   // Auto-show prompt when content is ready and not already showing
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (currentStep < 4 && canProceedFromCurrentStep() && !showPrompt) {
+      const canProceed = canProceedFromCurrentStep();
+      console.log('Auto-show check:', { currentStep, canProceed, showPrompt, photoCaptured, workOrderDetails });
+      
+      if (currentStep < 4 && canProceed && !showPrompt) {
         setShowPrompt(true);
-      } else if (!canProceedFromCurrentStep() && showPrompt) {
+      } else if (!canProceed && showPrompt) {
         setShowPrompt(false);
       }
     }, 500); // Small delay to ensure state is stable
@@ -147,35 +151,37 @@ const WorkOrderFlow = ({ selectedScheduleType, currentStep, onNextStep, onPrevSt
   };
 
   return (
-    <SwipeableScreen
-      title="Create Work Order"
-      currentStep={currentStep}
-      totalSteps={4}
-      onClose={onClose}
-      onSwipeUp={currentStep < 4 && canProceedFromCurrentStep() ? nextStep : undefined}
-      onSwipeLeft={currentStep > 1 ? prevStep : undefined}
-      canSwipeUp={canProceedFromCurrentStep()}
-      hideSwipeHandling={currentStep === 4}
-    >
-      <div className="h-full overflow-hidden relative">
-        <div className={currentStep < 4 ? "pb-32" : ""}>
-          {renderCurrentStep()}
+    <>
+      <SwipeableScreen
+        title="Create Work Order"
+        currentStep={currentStep}
+        totalSteps={4}
+        onClose={onClose}
+        onSwipeUp={currentStep < 4 && canProceedFromCurrentStep() ? nextStep : undefined}
+        onSwipeLeft={currentStep > 1 ? prevStep : undefined}
+        canSwipeUp={canProceedFromCurrentStep()}
+        hideSwipeHandling={currentStep === 4}
+      >
+        <div className="h-full overflow-hidden relative">
+          <div className={currentStep < 4 ? "pb-40" : ""}>
+            {renderCurrentStep()}
+          </div>
         </div>
-        
-        {/* Conditional SwipeUpPrompt - Only show on steps 1-3 when ready and prompt is shown */}
-        {currentStep < 4 && showPrompt && canProceedFromCurrentStep() && (
-          <SwipeUpPrompt 
-            onContinue={nextStep}
-            onBack={currentStep > 1 ? prevStep : undefined}
-            onClose={handleClosePrompt}
-            onClear={handleClearData}
-            message="Ready to continue!"
-            buttonText="Continue"
-            showBack={currentStep > 1}
-          />
-        )}
-      </div>
-    </SwipeableScreen>
+      </SwipeableScreen>
+      
+      {/* Conditional SwipeUpPrompt - Only show on steps 1-3 when ready and prompt is shown */}
+      {currentStep < 4 && showPrompt && canProceedFromCurrentStep() && (
+        <SwipeUpPrompt 
+          onContinue={nextStep}
+          onBack={currentStep > 1 ? prevStep : undefined}
+          onClose={handleClosePrompt}
+          onClear={handleClearData}
+          message="Ready to continue!"
+          buttonText="Continue"
+          showBack={currentStep > 1}
+        />
+      )}
+    </>
   );
 };
 
