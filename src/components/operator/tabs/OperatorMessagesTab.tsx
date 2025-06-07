@@ -4,7 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Send, MessageSquare, Bell } from 'lucide-react';
+import { ArrowLeft, Send, MessageSquare, Bell, MailOpen, Mail } from 'lucide-react';
+import { isToday } from 'date-fns';
 
 interface Message {
   id: number;
@@ -18,6 +19,7 @@ interface Message {
   fullMessage?: string;
   unit?: string;
   residentPhone?: string;
+  date?: Date;
 }
 
 interface OperatorMessagesTabProps {
@@ -41,7 +43,8 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
       category: 'maintenance',
       unread: true,
       unit: '204',
-      residentPhone: '(555) 123-4567'
+      residentPhone: '(555) 123-4567',
+      date: new Date()
     },
     {
       id: 2,
@@ -54,7 +57,8 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
       category: 'leasing',
       unread: true,
       unit: '156',
-      residentPhone: '(555) 234-5678'
+      residentPhone: '(555) 234-5678',
+      date: new Date()
     },
     {
       id: 3,
@@ -65,7 +69,8 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
       time: 'Yesterday',
       priority: 'low',
       category: 'maintenance',
-      unread: false
+      unread: false,
+      date: new Date(Date.now() - 24 * 60 * 60 * 1000) // Yesterday
     },
     {
       id: 4,
@@ -78,7 +83,8 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
       category: 'collections',
       unread: true,
       unit: '302',
-      residentPhone: '(555) 345-6789'
+      residentPhone: '(555) 345-6789',
+      date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // 2 days ago
     },
     {
       id: 5,
@@ -89,7 +95,8 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
       time: '3 days ago',
       priority: 'low',
       category: 'community',
-      unread: false
+      unread: false,
+      date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) // 3 days ago
     }
   ]);
 
@@ -139,10 +146,37 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
     console.log(`Marking message ${messageId} as read`);
   };
 
+  const toggleUnreadStatus = (messageId: number) => {
+    setMessages(prevMessages =>
+      prevMessages.map(msg =>
+        msg.id === messageId ? { ...msg, unread: !msg.unread } : msg
+      )
+    );
+    console.log(`Toggling unread status for message ${messageId}`);
+  };
+
+  const removeMessage = (messageId: number) => {
+    setMessages(prevMessages =>
+      prevMessages.filter(msg => msg.id !== messageId)
+    );
+    console.log(`Removing message ${messageId}`);
+  };
+
   const handleMessageClick = (message: Message) => {
     setSelectedMessage(message);
+    
+    // If message is unread, mark as read
     if (message.unread) {
       markAsRead(message.id);
+    }
+
+    // If message is not happening today and becomes read, remove it
+    if (message.date && !isToday(message.date) && message.unread) {
+      // Small delay to allow the user to see the message before it disappears
+      setTimeout(() => {
+        removeMessage(message.id);
+        setSelectedMessage(null);
+      }, 2000);
     }
   };
 
@@ -166,6 +200,18 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
             </div>
           </div>
           <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => toggleUnreadStatus(selectedMessage.id)}
+              className="p-2"
+            >
+              {selectedMessage.unread ? (
+                <MailOpen className="w-5 h-5" />
+              ) : (
+                <Mail className="w-5 h-5" />
+              )}
+            </Button>
             <Badge className={getPriorityColor(selectedMessage.priority)}>
               {selectedMessage.priority}
             </Badge>
@@ -266,7 +312,24 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
                     {message.category}
                   </Badge>
                 </div>
-                <span className="text-sm text-gray-500">{message.time}</span>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleUnreadStatus(message.id);
+                    }}
+                    className="p-1"
+                  >
+                    {message.unread ? (
+                      <Mail className="w-4 h-4" />
+                    ) : (
+                      <MailOpen className="w-4 h-4" />
+                    )}
+                  </Button>
+                  <span className="text-sm text-gray-500">{message.time}</span>
+                </div>
               </div>
               <h3 className={`mb-2 ${
                 message.unread ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'
