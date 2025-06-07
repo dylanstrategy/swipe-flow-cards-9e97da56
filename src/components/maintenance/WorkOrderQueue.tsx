@@ -243,63 +243,65 @@ const WorkOrderQueue: React.FC<WorkOrderQueueProps> = ({ onSelectWorkOrder }) =>
   const overdueCount = workOrders.filter(wo => wo.status === 'overdue').length;
 
   return (
-    <div className="px-4 py-6 pb-32">
-      {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-2">
-          <Wrench className="w-5 h-5 text-orange-600" />
-          Work Order Queue
-        </h2>
-        <div className="flex gap-2 mb-4">
-          <Badge variant="outline" className="bg-gray-50">
-            {unscheduledCount} Unscheduled
-          </Badge>
-          <Badge variant="outline" className="bg-blue-50">
-            {scheduledCount} Scheduled
-          </Badge>
-          <Badge variant="outline" className="bg-red-50">
-            {overdueCount} Overdue
-          </Badge>
-        </div>
-      </div>
-
-      {/* Filter */}
-      <div className="mb-6">
-        <div className="flex items-center space-x-2">
-          <Filter className="w-4 h-4 text-gray-500" />
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Filter work orders" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Work Orders</SelectItem>
-              <SelectItem value="overdue">Overdue</SelectItem>
-              <SelectItem value="urgent">Urgent</SelectItem>
-              <SelectItem value="high">High Priority</SelectItem>
-              <SelectItem value="medium">Medium Priority</SelectItem>
-              <SelectItem value="low">Low Priority</SelectItem>
-              <SelectItem value="unscheduled">Unscheduled</SelectItem>
-              <SelectItem value="scheduled">Future Scheduled</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Work Orders List */}
-      <div className="space-y-4">
-        {filteredWorkOrders.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            No work orders found for the selected filter.
+    <div className="h-full overflow-y-auto pb-32">
+      <div className="px-4 py-6">
+        {/* Header */}
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-2">
+            <Wrench className="w-5 h-5 text-orange-600" />
+            Work Order Queue
+          </h2>
+          <div className="flex gap-2 mb-4">
+            <Badge variant="outline" className="bg-gray-50">
+              {unscheduledCount} Unscheduled
+            </Badge>
+            <Badge variant="outline" className="bg-blue-50">
+              {scheduledCount} Scheduled
+            </Badge>
+            <Badge variant="outline" className="bg-red-50">
+              {overdueCount} Overdue
+            </Badge>
           </div>
-        ) : (
-          filteredWorkOrders.map((workOrder) => (
-            <WorkOrderCard
-              key={workOrder.id}
-              workOrder={workOrder}
-              onClick={() => onSelectWorkOrder?.(workOrder)}
-            />
-          ))
-        )}
+        </div>
+
+        {/* Filter */}
+        <div className="mb-6">
+          <div className="flex items-center space-x-2">
+            <Filter className="w-4 h-4 text-gray-500" />
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filter work orders" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Work Orders</SelectItem>
+                <SelectItem value="overdue">Overdue</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+                <SelectItem value="high">High Priority</SelectItem>
+                <SelectItem value="medium">Medium Priority</SelectItem>
+                <SelectItem value="low">Low Priority</SelectItem>
+                <SelectItem value="unscheduled">Unscheduled</SelectItem>
+                <SelectItem value="scheduled">Future Scheduled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Work Orders List */}
+        <div className="space-y-4">
+          {filteredWorkOrders.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              No work orders found for the selected filter.
+            </div>
+          ) : (
+            filteredWorkOrders.map((workOrder) => (
+              <WorkOrderCard
+                key={workOrder.id}
+                workOrder={workOrder}
+                onClick={() => onSelectWorkOrder?.(workOrder)}
+              />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
