@@ -75,40 +75,6 @@ const ResidentTimelineModal: React.FC<ResidentTimelineModalProps> = ({
       }
     ];
 
-    // Customize messages based on step
-    if (stepId === 'application') {
-      return [
-        {
-          id: 1,
-          user: 'You',
-          message: 'Please expedite this process',
-          timestamp: 'Jun 6, 2025 at 12:13 AM',
-          isCurrentUser: true
-        },
-        {
-          id: 2,
-          user: 'Mike Rodriguez',
-          message: 'Scheduled for completion',
-          timestamp: 'May 22, 2025 at 10:00 AM',
-          isCurrentUser: false
-        },
-        {
-          id: 3,
-          user: 'System',
-          message: 'Assigned to Mike Rodriguez',
-          timestamp: 'May 21, 2025 at 09:15 AM',
-          isCurrentUser: false
-        },
-        {
-          id: 4,
-          user: 'Rumi Desai',
-          message: 'Work order submitted by resident',
-          timestamp: 'May 21, 2025 at 08:30 AM',
-          isCurrentUser: false
-        }
-      ];
-    }
-
     return baseHistory;
   };
 
@@ -433,22 +399,28 @@ const ResidentTimelineModal: React.FC<ResidentTimelineModalProps> = ({
                   </CardContent>
                 </Card>
 
-                {/* Timeline - This is the message history section */}
+                {/* Timeline - Message History */}
                 <Card>
                   <CardContent className="p-6">
                     <h3 className="text-lg font-semibold mb-4">Timeline</h3>
-                    <div className="space-y-4">
-                      {messageHistory.map((message) => (
-                        <div key={message.id} className="flex items-start space-x-3">
-                          <div className={`w-3 h-3 rounded-full mt-2 flex-shrink-0 ${
-                            message.isCurrentUser ? 'bg-blue-500' : 'bg-gray-400'
-                          }`}></div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1">
-                              <p className="font-medium text-sm text-gray-900">{message.user}</p>
-                              <p className="text-xs text-gray-500 flex-shrink-0 ml-2">{message.timestamp}</p>
+                    <div className="space-y-6">
+                      {messageHistory.map((message, index) => (
+                        <div key={message.id} className="flex space-x-4">
+                          <div className="flex-shrink-0">
+                            <div className={`w-10 h-10 rounded-full ${
+                              message.isCurrentUser ? 'bg-blue-500' : 'bg-gray-400'
+                            } flex items-center justify-center text-white text-sm font-medium`}>
+                              {message.user.charAt(0)}
                             </div>
-                            <p className="text-gray-700 text-sm">{message.message}</p>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <p className="text-sm font-medium text-gray-900">{message.user}</p>
+                              <p className="text-xs text-gray-500">{message.timestamp}</p>
+                            </div>
+                            <div className="bg-gray-50 rounded-lg p-3">
+                              <p className="text-sm text-gray-900">{message.message}</p>
+                            </div>
                           </div>
                         </div>
                       ))}
