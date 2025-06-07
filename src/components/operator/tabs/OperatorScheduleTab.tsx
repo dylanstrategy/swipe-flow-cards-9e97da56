@@ -528,7 +528,7 @@ const OperatorScheduleTab = () => {
   }
 
   return (
-    <div className="w-full bg-gray-50 h-screen flex flex-col">
+    <div className="w-full bg-gray-50 h-screen flex flex-col overflow-hidden">
       <div className="px-4 py-6 flex-shrink-0">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Schedule</h1>
@@ -578,7 +578,7 @@ const OperatorScheduleTab = () => {
         />
       </div>
 
-      <div className="flex-1 px-4 min-h-0 overflow-hidden pb-20">
+      <div className="flex-1 px-4 min-h-0 mb-20 overflow-hidden">
         <HourlyCalendarView
           selectedDate={selectedDate}
           events={getEventsForDate(selectedDate)}
