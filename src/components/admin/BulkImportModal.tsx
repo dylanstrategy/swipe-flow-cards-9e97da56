@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import {
   Dialog,
   DialogContent,
@@ -19,7 +20,8 @@ import {
   Home,
   DollarSign,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Clock
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -33,6 +35,8 @@ const BulkImportModal = ({ isOpen, onClose, importType = 'properties' }: BulkImp
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
+  const [importStatus, setImportStatus] = useState<string>('');
   const [importResults, setImportResults] = useState<any>(null);
 
   const importOptions = {
@@ -69,6 +73,8 @@ const BulkImportModal = ({ isOpen, onClose, importType = 'properties' }: BulkImp
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
+      setImportResults(null);
+      setImportProgress(0);
     }
   };
 
@@ -103,26 +109,54 @@ const BulkImportModal = ({ isOpen, onClose, importType = 'properties' }: BulkImp
     }
 
     setImporting(true);
+    setImportProgress(0);
+    setImportResults(null);
     
-    // Simulate import process
+    // Simulate import progress with realistic steps
+    const progressSteps = [
+      { progress: 20, status: 'Validating file format...' },
+      { progress: 40, status: 'Processing data records...' },
+      { progress: 60, status: 'Validating required fields...' },
+      { progress: 80, status: 'Importing to database...' },
+      { progress: 100, status: 'Import completed!' }
+    ];
+
+    for (const step of progressSteps) {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      setImportProgress(step.progress);
+      setImportStatus(step.status);
+    }
+
+    // Simulate final results
     setTimeout(() => {
       setImportResults({
         total: 156,
         successful: 148,
         failed: 8,
         errors: [
-          'Row 12: Invalid email format',
-          'Row 23: Missing required field: Phone',
-          'Row 45: Duplicate entry',
+          'Row 12: Invalid email format for john.doe@invalid',
+          'Row 23: Missing required field: Phone number',
+          'Row 45: Duplicate entry detected',
+          'Row 67: Invalid date format in Move In Date',
+          'Row 89: Unit number does not exist',
         ]
       });
       setImporting(false);
+      setImportStatus('');
       
       toast({
         title: "Import Completed",
         description: `Successfully imported 148 of 156 ${importType} records`,
       });
-    }, 3000);
+    }, 200);
+  };
+
+  const resetImport = () => {
+    setSelectedFile(null);
+    setImporting(false);
+    setImportProgress(0);
+    setImportStatus('');
+    setImportResults(null);
   };
 
   return (
@@ -157,16 +191,17 @@ const BulkImportModal = ({ isOpen, onClose, importType = 'properties' }: BulkImp
                   <FileSpreadsheet className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <div className="space-y-2">
                     <p className="text-lg font-medium">Drop your CSV file here</p>
-                    <p className="text-gray-600">or click to browse</p>
+                    <p className="text-gray-600">or click to browse (CSV, XLSX, XLS supported)</p>
                     <input
                       type="file"
                       accept=".csv,.xlsx,.xls"
                       onChange={handleFileSelect}
                       className="hidden"
                       id="file-upload"
+                      disabled={importing}
                     />
                     <label htmlFor="file-upload">
-                      <Button variant="outline" className="cursor-pointer">
+                      <Button variant="outline" className="cursor-pointer" disabled={importing}>
                         Choose File
                       </Button>
                     </label>
@@ -182,6 +217,21 @@ const BulkImportModal = ({ isOpen, onClose, importType = 'properties' }: BulkImp
                     </div>
                   )}
                 </div>
+
+                {/* Import Progress */}
+                {importing && (
+                  <Card className="bg-blue-50">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Clock className="w-5 h-5 text-blue-600 animate-spin" />
+                        <span className="font-medium text-blue-800">Import in Progress</span>
+                      </div>
+                      <Progress value={importProgress} className="mb-2" />
+                      <p className="text-sm text-blue-700">{importStatus}</p>
+                      <p className="text-xs text-blue-600 mt-1">{importProgress}% complete</p>
+                    </CardContent>
+                  </Card>
+                )}
 
                 <div className="flex gap-2">
                   <Button 
@@ -201,10 +251,15 @@ const BulkImportModal = ({ isOpen, onClose, importType = 'properties' }: BulkImp
                       </>
                     )}
                   </Button>
-                  <Button variant="outline" onClick={handleDownloadTemplate}>
+                  <Button variant="outline" onClick={handleDownloadTemplate} disabled={importing}>
                     <Download className="w-4 h-4 mr-2" />
                     Download Template
                   </Button>
+                  {(selectedFile || importResults) && (
+                    <Button variant="ghost" onClick={resetImport} disabled={importing}>
+                      Reset
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -237,9 +292,9 @@ const BulkImportModal = ({ isOpen, onClose, importType = 'properties' }: BulkImp
                     <div>
                       <h4 className="font-medium text-red-800 mb-2 flex items-center gap-2">
                         <AlertCircle className="w-4 h-4" />
-                        Import Errors
+                        Import Errors ({importResults.errors.length})
                       </h4>
-                      <div className="space-y-1">
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
                         {importResults.errors.map((error: string, index: number) => (
                           <p key={index} className="text-sm text-red-600 bg-red-50 p-2 rounded">
                             {error}
@@ -274,6 +329,16 @@ const BulkImportModal = ({ isOpen, onClose, importType = 'properties' }: BulkImp
                   </div>
                 </div>
 
+                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                  <h4 className="font-medium text-yellow-800 mb-2">Important Notes:</h4>
+                  <ul className="text-sm text-yellow-700 space-y-1">
+                    <li>• All required columns must be present in your file</li>
+                    <li>• Email addresses must be valid format</li>
+                    <li>• Dates should be in MM/DD/YYYY format</li>
+                    <li>• Remove the sample data row before uploading</li>
+                  </ul>
+                </div>
+
                 <Button onClick={handleDownloadTemplate} className="w-full">
                   <Download className="w-4 h-4 mr-2" />
                   Download {currentOption.title} Template
@@ -292,21 +357,21 @@ const BulkImportModal = ({ isOpen, onClose, importType = 'properties' }: BulkImp
                   <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <p className="font-medium">Properties Import</p>
-                      <p className="text-sm text-gray-600">December 15, 2024 • 156 records</p>
+                      <p className="text-sm text-gray-600">December 15, 2024 • 156 records • 148 successful</p>
                     </div>
                     <Badge className="bg-green-100 text-green-800">Completed</Badge>
                   </div>
                   <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <p className="font-medium">Residents Import</p>
-                      <p className="text-sm text-gray-600">December 12, 2024 • 340 records</p>
+                      <p className="text-sm text-gray-600">December 12, 2024 • 340 records • 335 successful</p>
                     </div>
                     <Badge className="bg-green-100 text-green-800">Completed</Badge>
                   </div>
                   <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <p className="font-medium">Users Import</p>
-                      <p className="text-sm text-gray-600">December 10, 2024 • 45 records</p>
+                      <p className="text-sm text-gray-600">December 10, 2024 • 45 records • 32 successful</p>
                     </div>
                     <Badge className="bg-orange-100 text-orange-800">Partial</Badge>
                   </div>
