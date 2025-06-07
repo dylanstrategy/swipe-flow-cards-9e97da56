@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,7 +22,10 @@ import {
   UserCheck,
   Briefcase,
   Menu,
-  X
+  X,
+  Send,
+  Target,
+  Activity
 } from 'lucide-react';
 import {
   Sheet,
@@ -37,6 +39,7 @@ import AddUserModal from '@/components/admin/AddUserModal';
 import LeadDetailsModal from '@/components/admin/LeadDetailsModal';
 import CreateInvoiceModal from '@/components/admin/CreateInvoiceModal';
 import CreateEventModal from '@/components/admin/CreateEventModal';
+import CreateCampaignModal from '@/components/admin/CreateCampaignModal';
 import { useToast } from '@/hooks/use-toast';
 
 const SuperAdmin = () => {
@@ -47,6 +50,7 @@ const SuperAdmin = () => {
   const [showLeadDetails, setShowLeadDetails] = useState(false);
   const [showCreateInvoice, setShowCreateInvoice] = useState(false);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
+  const [showCreateCampaign, setShowCreateCampaign] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [selectedLead, setSelectedLead] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -108,6 +112,36 @@ const SuperAdmin = () => {
   const [users, setUsers] = useState([]);
   const [events, setEvents] = useState([]);
   const [invoices, setInvoices] = useState([]);
+  const [campaigns, setCampaigns] = useState([
+    {
+      id: '1',
+      name: 'Spring Move-In Special',
+      type: 'email',
+      status: 'active',
+      targetAudience: 'prospects',
+      sentCount: 1250,
+      openRate: 32.5,
+      clickRate: 8.7,
+      conversions: 23,
+      createdDate: '2025-01-10',
+      budget: 500,
+      description: 'Promote spring move-in discounts and incentives'
+    },
+    {
+      id: '2',
+      name: 'Renewal Campaign',
+      type: 'sms',
+      status: 'scheduled',
+      targetAudience: 'current_residents',
+      sentCount: 0,
+      openRate: 0,
+      clickRate: 0,
+      conversions: 0,
+      createdDate: '2025-01-12',
+      budget: 200,
+      description: 'Encourage lease renewals with special offers'
+    }
+  ]);
 
   const handlePropertyClick = (property: any) => {
     setSelectedProperty(property);
@@ -142,20 +176,36 @@ const SuperAdmin = () => {
     });
   };
 
-  const handleAddProperty = () => {
-    setShowBulkImport(true);
+  const handleCampaignCreated = (campaign: any) => {
+    setCampaigns([...campaigns, campaign]);
+    toast({
+      title: "Success",
+      description: "Marketing campaign created successfully",
+    });
   };
 
-  const handleAddClient = () => {
-    setShowAddUser(true);
+  const handleLaunchCampaign = (campaignId: string) => {
+    setCampaigns(campaigns.map(campaign => 
+      campaign.id === campaignId 
+        ? { ...campaign, status: 'active' }
+        : campaign
+    ));
+    toast({
+      title: "Campaign Launched",
+      description: "Marketing campaign has been launched successfully",
+    });
   };
 
-  const handleAddLead = () => {
-    setShowAddUser(true);
-  };
-
-  const handleCreateCampaign = () => {
-    setShowCreateEvent(true);
+  const handlePauseCampaign = (campaignId: string) => {
+    setCampaigns(campaigns.map(campaign => 
+      campaign.id === campaignId 
+        ? { ...campaign, status: 'paused' }
+        : campaign
+    ));
+    toast({
+      title: "Campaign Paused",
+      description: "Marketing campaign has been paused",
+    });
   };
 
   const filteredLeads = leads.filter(lead =>
@@ -170,7 +220,10 @@ const SuperAdmin = () => {
       qualified: 'bg-green-100 text-green-800',
       lost: 'bg-red-100 text-red-800',
       active: 'bg-green-100 text-green-800',
-      inactive: 'bg-gray-100 text-gray-800'
+      inactive: 'bg-gray-100 text-gray-800',
+      scheduled: 'bg-blue-100 text-blue-800',
+      paused: 'bg-orange-100 text-orange-800',
+      completed: 'bg-gray-100 text-gray-800'
     };
     return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
@@ -461,22 +514,139 @@ const SuperAdmin = () => {
 
       case 'marketing':
         return (
-          <div className="space-y-4 max-w-full">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Marketing Campaigns</h2>
+          <div className="space-y-6 max-w-full">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h2 className="text-xl font-semibold">Marketing Campaigns</h2>
+                <p className="text-sm text-gray-600 mt-1">Create and manage marketing campaigns to reach prospects and residents</p>
+              </div>
               <Button onClick={handleCreateCampaign}>
                 <Plus className="w-4 h-4 mr-2" />
                 Create Campaign
               </Button>
             </div>
-            <Card>
-              <CardContent className="p-8 text-center">
-                <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No campaigns yet</h3>
-                <p className="text-gray-600 mb-4">Create your first marketing campaign to reach potential residents</p>
-                <Button onClick={handleCreateCampaign}>Create Campaign</Button>
-              </CardContent>
-            </Card>
+
+            {/* Campaign Performance Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <Send className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-gray-900">
+                    {campaigns.reduce((sum, campaign) => sum + campaign.sentCount, 0).toLocaleString()}
+                  </div>
+                  <div className="text-sm text-gray-600">Total Sent</div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <Target className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-gray-900">
+                    {campaigns.reduce((sum, campaign) => sum + campaign.conversions, 0)}
+                  </div>
+                  <div className="text-sm text-gray-600">Conversions</div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <Activity className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-gray-900">
+                    {campaigns.filter(c => c.status === 'active').length}
+                  </div>
+                  <div className="text-sm text-gray-600">Active Campaigns</div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <DollarSign className="w-8 h-8 text-orange-600 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-gray-900">
+                    ${campaigns.reduce((sum, campaign) => sum + campaign.budget, 0).toLocaleString()}
+                  </div>
+                  <div className="text-sm text-gray-600">Total Budget</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Campaigns List */}
+            <div className="space-y-4">
+              {campaigns.map((campaign) => (
+                <Card key={campaign.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold text-lg truncate">{campaign.name}</h3>
+                          <Badge className={getStatusColor(campaign.status)}>
+                            {campaign.status}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {campaign.type.toUpperCase()}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">{campaign.description}</p>
+                        
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-500">Target:</span>
+                            <div className="font-medium">{campaign.targetAudience.replace('_', ' ')}</div>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Sent:</span>
+                            <div className="font-medium">{campaign.sentCount.toLocaleString()}</div>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Open Rate:</span>
+                            <div className="font-medium">{campaign.openRate}%</div>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Conversions:</span>
+                            <div className="font-medium">{campaign.conversions}</div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
+                        {campaign.status === 'scheduled' && (
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleLaunchCampaign(campaign.id)}
+                          >
+                            <Send className="w-4 h-4 mr-2" />
+                            Launch
+                          </Button>
+                        )}
+                        {campaign.status === 'active' && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handlePauseCampaign(campaign.id)}
+                          >
+                            Pause
+                          </Button>
+                        )}
+                        <Button variant="outline" size="sm">
+                          <Activity className="w-4 h-4 mr-2" />
+                          Analytics
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {campaigns.length === 0 && (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Mail className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No campaigns yet</h3>
+                  <p className="text-gray-600 mb-4">Create your first marketing campaign to reach potential residents</p>
+                  <Button onClick={handleCreateCampaign}>Create Campaign</Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
         );
 
@@ -672,6 +842,12 @@ const SuperAdmin = () => {
         isOpen={showCreateEvent}
         onClose={() => setShowCreateEvent(false)}
         onEventCreated={handleEventCreated}
+      />
+
+      <CreateCampaignModal
+        isOpen={showCreateCampaign}
+        onClose={() => setShowCreateCampaign(false)}
+        onCampaignCreated={handleCampaignCreated}
       />
 
       {selectedProperty && (
