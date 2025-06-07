@@ -73,7 +73,7 @@ const MaintenanceScheduleTab = () => {
   return (
     <DragDropProvider>
       <div className="h-full flex flex-col">
-        <div className="px-4 py-6">
+        <div className="flex-shrink-0 px-4 py-6">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
               <BarChart3 className="w-6 h-6 text-orange-600" />
@@ -83,7 +83,7 @@ const MaintenanceScheduleTab = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="queue" className="flex items-center gap-2">
                 <Wrench className="w-4 h-4" />
                 Queue
@@ -97,35 +97,35 @@ const MaintenanceScheduleTab = () => {
                 Unit Turns
               </TabsTrigger>
             </TabsList>
-
-            <div className="flex-1 relative">
-              <TabsContent value="queue" className="h-full mt-6">
-                <WorkOrderQueue onSelectWorkOrder={handleWorkOrderDetailsView} />
-                <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
-              </TabsContent>
-
-              <TabsContent value="overview" className="h-full mt-6">
-                <div className="h-full overflow-y-auto pb-32">
-                  <div className="px-4 space-y-6">
-                    <WorkOrderTracker 
-                      onSelectWorkOrder={handleWorkOrderSelect}
-                      onViewDetails={handleWorkOrderDetailsView}
-                    />
-                    <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="unitturns" className="h-full mt-6">
-                <DragDropProvider>
-                  <div className="h-full relative">
-                    <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
-                    <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
-                  </div>
-                </DragDropProvider>
-              </TabsContent>
-            </div>
           </Tabs>
+        </div>
+
+        <div className="flex-1 relative overflow-hidden">
+          {activeTab === 'queue' && (
+            <div className="h-full">
+              <WorkOrderQueue onSelectWorkOrder={handleWorkOrderDetailsView} />
+              <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
+            </div>
+          )}
+
+          {activeTab === 'overview' && (
+            <div className="h-full overflow-y-auto pb-32">
+              <div className="px-4 space-y-6">
+                <WorkOrderTracker 
+                  onSelectWorkOrder={handleWorkOrderSelect}
+                  onViewDetails={handleWorkOrderDetailsView}
+                />
+                <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'unitturns' && (
+            <div className="h-full">
+              <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
+              <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
+            </div>
+          )}
         </div>
       </div>
     </DragDropProvider>
