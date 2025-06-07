@@ -77,8 +77,8 @@ const Maintenance = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col pb-20">
-      <div className="flex-1 overflow-hidden">
+    <div className="min-h-screen pb-20">
+      <div className="w-full">
         {renderActiveTab()}
       </div>
       

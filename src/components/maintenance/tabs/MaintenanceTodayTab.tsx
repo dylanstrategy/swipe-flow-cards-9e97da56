@@ -139,9 +139,9 @@ const MaintenanceTodayTab = ({ todayWorkOrders = [], onWorkOrderCompleted }: Mai
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="w-full">
       {/* Header Stats */}
-      <div className="flex-shrink-0 px-4 py-6">
+      <div className="px-4 py-6">
         <div className="grid grid-cols-2 gap-4 mb-6">
           <Card>
             <CardContent className="p-4">
@@ -159,7 +159,7 @@ const MaintenanceTodayTab = ({ todayWorkOrders = [], onWorkOrderCompleted }: Mai
       </div>
 
       {/* Calendar View */}
-      <div className="flex-1 px-4 pb-6">
+      <div className="px-4 pb-6">
         <HourlyCalendarView
           selectedDate={today}
           events={calendarEvents}

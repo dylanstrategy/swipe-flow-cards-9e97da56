@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UnitTurnTracker from '../UnitTurnTracker';
@@ -275,8 +276,8 @@ const MaintenanceScheduleTab = ({
   return (
     <MaintenanceContext.Provider value={contextValue}>
       <DragDropProvider>
-        <div className="h-full flex flex-col">
-          <div className="flex-shrink-0 px-4 py-6">
+        <div className="w-full">
+          <div className="px-4 py-6">
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
                 <BarChart3 className="w-6 h-6 text-orange-600" />
@@ -285,7 +286,7 @@ const MaintenanceScheduleTab = ({
               <p className="text-gray-600">Track work orders, unit turns, and maintenance operations</p>
             </div>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="queue" className="flex items-center gap-2">
                   <Wrench className="w-4 h-4" />
@@ -299,9 +300,9 @@ const MaintenanceScheduleTab = ({
             </Tabs>
           </div>
 
-          <div className="flex-1 relative overflow-hidden">
+          <div className="relative">
             {activeTab === 'queue' && (
-              <div className="h-full">
+              <div className="w-full">
                 <WorkOrderQueue 
                   workOrders={workOrders}
                   onSelectWorkOrder={handleWorkOrderDetailsView} 
@@ -311,7 +312,7 @@ const MaintenanceScheduleTab = ({
             )}
 
             {activeTab === 'unitturns' && (
-              <div className="h-full">
+              <div className="w-full">
                 <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
                 <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
               </div>
