@@ -92,22 +92,22 @@ const HourlyCalendarView = ({
     setDragOverSlot(null);
   };
 
-  const handleDrop = (e: React.DragEvent, timeSlot: string) => {
+  const handleDrop = (e: React.DragEvent, timeString: string) => {
     e.preventDefault();
     setDragOverSlot(null);
     
     try {
       const suggestionData = JSON.parse(e.dataTransfer.getData('application/json'));
       
-      // Convert timeSlot to 24-hour format for consistency
-      const normalizedTime = normalizeTimeFormat(timeSlot);
+      // Convert timeString to 24-hour format for consistency
+      const normalizedTime = normalizeTimeFormat(timeString);
       console.log('Dropping suggestion:', suggestionData.title, 'at time:', normalizedTime);
       
       onDropSuggestion?.(suggestionData, normalizedTime);
       
       toast({
         title: "Event Scheduled!",
-        description: `${suggestionData.title} has been scheduled for ${timeSlot}`,
+        description: `${suggestionData.title} has been scheduled for ${timeString}`,
       });
     } catch (error) {
       console.error('Error parsing dropped data:', error);
@@ -154,7 +154,7 @@ const HourlyCalendarView = ({
                 )}
                 onDragOver={(e) => handleDragOver(e, timeString)}
                 onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, timeSlot)}
+                onDrop={(e) => handleDrop(e, timeString)}
               >
                 <div className="flex items-start p-3 gap-3">
                   <div className="w-16 flex-shrink-0">
