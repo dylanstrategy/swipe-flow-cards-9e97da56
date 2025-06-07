@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UnitTurnTracker from '../UnitTurnTracker';
@@ -181,113 +182,115 @@ const MaintenanceScheduleTab = () => {
                 Unit Turns
               </TabsTrigger>
             </TabsList>
+          </Tabs>
+        </div>
 
-            <TabsContent value="queue" className="flex-1 mt-0">
-              <div className="h-full">
-                <WorkOrderQueue 
-                  workOrders={workOrders}
-                  onSelectWorkOrder={handleWorkOrderDetailsView} 
-                />
-                <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
+        <div className="flex-1 relative overflow-hidden">
+          {activeTab === 'queue' && (
+            <div className="h-full">
+              <WorkOrderQueue 
+                workOrders={workOrders}
+                onSelectWorkOrder={handleWorkOrderDetailsView} 
+              />
+              <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
+            </div>
+          )}
+
+          {activeTab === 'overview' && (
+            <div className="h-full flex flex-col">
+              {/* Sub-navigation for Overview */}
+              <div className="flex-shrink-0 px-4 mb-4">
+                <Tabs value={overviewSubTab} onValueChange={setOverviewSubTab}>
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="queue" className="flex items-center gap-2">
+                      <Wrench className="w-4 h-4" />
+                      Queue
+                    </TabsTrigger>
+                    <TabsTrigger value="overview" className="flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4" />
+                      Overview
+                    </TabsTrigger>
+                    <TabsTrigger value="unitturns" className="flex items-center gap-2">
+                      <Home className="w-4 h-4" />
+                      Unit Turns
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
-            </TabsContent>
 
-            <TabsContent value="overview" className="flex-1 mt-0">
-              <div className="h-full flex flex-col">
-                {/* Sub-navigation for Overview */}
-                <div className="flex-shrink-0 mb-4">
-                  <Tabs value={overviewSubTab} onValueChange={setOverviewSubTab}>
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="queue" className="flex items-center gap-2">
-                        <Wrench className="w-4 h-4" />
-                        Queue
-                      </TabsTrigger>
-                      <TabsTrigger value="overview" className="flex items-center gap-2">
-                        <BarChart3 className="w-4 h-4" />
-                        Overview
-                      </TabsTrigger>
-                      <TabsTrigger value="unitturns" className="flex items-center gap-2">
-                        <Home className="w-4 h-4" />
-                        Unit Turns
-                      </TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                </div>
+              {/* Sub-tab content */}
+              <div className="flex-1 relative overflow-hidden">
+                {overviewSubTab === 'queue' && (
+                  <div className="h-full">
+                    <WorkOrderQueue 
+                      workOrders={workOrders}
+                      onSelectWorkOrder={handleWorkOrderDetailsView} 
+                    />
+                    <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
+                  </div>
+                )}
 
-                {/* Sub-tab content */}
-                <div className="flex-1 relative overflow-hidden">
-                  {overviewSubTab === 'queue' && (
-                    <div className="h-full">
-                      <WorkOrderQueue 
-                        workOrders={workOrders}
-                        onSelectWorkOrder={handleWorkOrderDetailsView} 
+                {overviewSubTab === 'overview' && (
+                  <div className="h-full overflow-y-auto pb-32">
+                    <div className="px-4 space-y-6">
+                      <WorkOrderTracker 
+                        onSelectWorkOrder={handleWorkOrderSelect}
+                        onViewDetails={handleWorkOrderDetailsView}
                       />
-                      <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
-                    </div>
-                  )}
-
-                  {overviewSubTab === 'overview' && (
-                    <div className="h-full overflow-y-auto pb-32">
-                      <div className="space-y-6">
-                        <WorkOrderTracker 
-                          onSelectWorkOrder={handleWorkOrderSelect}
-                          onViewDetails={handleWorkOrderDetailsView}
-                        />
-                        <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
-                        
-                        {/* Today's Scheduled Work Orders */}
-                        {scheduledWorkOrders.length > 0 && (
-                          <div className="mt-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Today's Scheduled Work Orders</h3>
-                            <div className="space-y-3">
-                              {scheduledWorkOrders.map((workOrder) => (
-                                <div key={workOrder.id} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                  <div className="flex items-start gap-3">
-                                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                                      <img 
-                                        src={workOrder.photo} 
-                                        alt="Issue"
-                                        className="w-full h-full object-cover"
-                                      />
-                                    </div>
-                                    <div className="flex-1">
-                                      <h4 className="font-semibold text-gray-900">
-                                        Unit {workOrder.unit} - {workOrder.title}
-                                      </h4>
-                                      <p className="text-sm text-gray-600 mb-1">{workOrder.description}</p>
-                                      <div className="flex items-center gap-4 text-xs text-gray-500">
-                                        <span>Scheduled: {workOrder.scheduledTime}</span>
-                                        <span>Assigned: {workOrder.assignedTo}</span>
-                                        <span>Est: {workOrder.estimatedTime}</span>
-                                      </div>
+                      <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
+                      
+                      {/* Today's Scheduled Work Orders */}
+                      {scheduledWorkOrders.length > 0 && (
+                        <div className="mt-6">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-4">Today's Scheduled Work Orders</h3>
+                          <div className="space-y-3">
+                            {scheduledWorkOrders.map((workOrder) => (
+                              <div key={workOrder.id} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div className="flex items-start gap-3">
+                                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                                    <img 
+                                      src={workOrder.photo} 
+                                      alt="Issue"
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="flex-1">
+                                    <h4 className="font-semibold text-gray-900">
+                                      Unit {workOrder.unit} - {workOrder.title}
+                                    </h4>
+                                    <p className="text-sm text-gray-600 mb-1">{workOrder.description}</p>
+                                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                                      <span>Scheduled: {workOrder.scheduledTime}</span>
+                                      <span>Assigned: {workOrder.assignedTo}</span>
+                                      <span>Est: {workOrder.estimatedTime}</span>
                                     </div>
                                   </div>
                                 </div>
-                              ))}
-                            </div>
+                              </div>
+                            ))}
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {overviewSubTab === 'unitturns' && (
-                    <div className="h-full">
-                      <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
-                      <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
-                    </div>
-                  )}
-                </div>
+                {overviewSubTab === 'unitturns' && (
+                  <div className="h-full">
+                    <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
+                    <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
+                  </div>
+                )}
               </div>
-            </TabsContent>
+            </div>
+          )}
 
-            <TabsContent value="unitturns" className="flex-1 mt-0">
-              <div className="h-full">
-                <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
-                <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
-              </div>
-            </TabsContent>
-          </Tabs>
+          {activeTab === 'unitturns' && (
+            <div className="h-full">
+              <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
+              <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
+            </div>
+          )}
         </div>
       </div>
     </DragDropProvider>
