@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -176,6 +177,8 @@ const ScheduleTab = () => {
   };
 
   const handleDropSuggestionInTimeline = (suggestion: any, targetTime?: string) => {
+    console.log('ScheduleTab: handleDropSuggestionInTimeline called with:', suggestion, targetTime);
+    
     let assignedTime: string;
     
     if (targetTime) {
@@ -212,11 +215,11 @@ const ScheduleTab = () => {
       rescheduledCount: 0
     };
 
-    console.log('Adding new event:', newEvent);
+    console.log('ScheduleTab: Adding new event from timeline drop:', newEvent);
     
     setScheduledEvents(prev => {
       const updated = [...prev, newEvent];
-      console.log('Updated scheduled events:', updated);
+      console.log('ScheduleTab: Updated scheduled events:', updated);
       return updated;
     });
     
