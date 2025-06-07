@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TabNavigation from '@/components/TabNavigation';
 import TodayTab from '@/components/tabs/TodayTab';
@@ -24,6 +24,11 @@ const Resident = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [messagesUnreadCount, setMessagesUnreadCount] = useState(0);
 
+  // Log the unread count changes for debugging
+  useEffect(() => {
+    console.log('Resident: messagesUnreadCount updated to:', messagesUnreadCount);
+  }, [messagesUnreadCount]);
+
   const tabs = [
     { id: 'today', label: 'Today', icon: '🏠' },
     { id: 'schedule', label: 'Schedule', icon: '📅' },
@@ -47,6 +52,11 @@ const Resident = () => {
     }
   };
 
+  const handleMessagesUnreadCountChange = (count: number) => {
+    console.log('Resident: Received unread count update:', count);
+    setMessagesUnreadCount(count);
+  };
+
   if (showSettings) {
     return <PersonalizedSettings onClose={() => setShowSettings(false)} userRole="resident" />;
   }
@@ -58,7 +68,7 @@ const Resident = () => {
       case 'schedule':
         return <ScheduleTab />;
       case 'messages':
-        return <MessagesTab onUnreadCountChange={setMessagesUnreadCount} />;
+        return <MessagesTab onUnreadCountChange={handleMessagesUnreadCountChange} />;
       case 'account':
         return <AccountTab />;
       default:
