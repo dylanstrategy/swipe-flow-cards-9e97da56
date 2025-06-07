@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -48,7 +47,7 @@ const ScheduleTab = () => {
       description: 'Broken outlet - Unit 4B',
       image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400',
       category: 'Work Order',
-      priority: 'high',
+      priority: 'high' as const,
       unit: '4B',
       building: 'Building A',
       dueDate: addDays(new Date(), -1),
@@ -63,7 +62,7 @@ const ScheduleTab = () => {
       title: 'Message from Management',
       description: 'Please submit your lease renewal documents by Friday',
       category: 'Management',
-      priority: 'medium',
+      priority: 'medium' as const,
       isDroppedSuggestion: false,
       type: 'message',
       rescheduledCount: 0
@@ -76,7 +75,7 @@ const ScheduleTab = () => {
       description: 'New rent: $1,550/month starting March 1st',
       image: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=400',
       category: 'Lease',
-      priority: 'high',
+      priority: 'high' as const,
       unit: '204',
       building: 'Building A',
       dueDate: addDays(new Date(), 2),
@@ -91,7 +90,7 @@ const ScheduleTab = () => {
       title: 'Rooftop BBQ Social',
       description: 'Community event - RSVP required',
       category: 'Community Event',
-      priority: 'low',
+      priority: 'low' as const,
       isDroppedSuggestion: false,
       type: 'tour',
       rescheduledCount: 0
@@ -104,7 +103,7 @@ const ScheduleTab = () => {
       description: 'Filter replacement scheduled',
       image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400',
       category: 'Work Order',
-      priority: 'medium',
+      priority: 'medium' as const,
       unit: '204',
       building: 'Building A',
       isDroppedSuggestion: false,
@@ -211,7 +210,7 @@ const ScheduleTab = () => {
       title: suggestion.title,
       description: suggestion.description,
       category: suggestion.suggestionType || suggestion.type, // Use suggestionType from drag data
-      priority: suggestion.priority,
+      priority: (suggestion.priority || 'medium') as 'low' | 'medium' | 'high' | 'urgent',
       isDroppedSuggestion: true,
       type: (suggestion.suggestionType || suggestion.type).toLowerCase(),
       rescheduledCount: 0,
@@ -271,7 +270,7 @@ const ScheduleTab = () => {
       title: suggestion.title,
       description: suggestion.description,
       category: suggestion.suggestionType || suggestion.type, // Use suggestionType from drag data
-      priority: suggestion.priority,
+      priority: (suggestion.priority || 'medium') as 'low' | 'medium' | 'high' | 'urgent',
       isDroppedSuggestion: true,
       type: (suggestion.suggestionType || suggestion.type).toLowerCase(),
       rescheduledCount: 0,

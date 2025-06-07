@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -48,7 +47,7 @@ const OperatorScheduleTab = () => {
       title: 'Unit 204 - HVAC Repair',
       description: 'Unit 204 - Scheduled maintenance for reported AC issue',
       category: 'Property Services',
-      priority: 'urgent',
+      priority: 'urgent' as const,
       building: 'Building A',
       unit: '204',
       type: 'maintenance',
@@ -62,7 +61,7 @@ const OperatorScheduleTab = () => {
       title: 'Move-In Inspection',
       description: 'Sarah Johnson - New resident move-in inspection',
       category: 'Community Management',
-      priority: 'high',
+      priority: 'high' as const,
       building: 'Building A',
       unit: '156',
       type: 'move-in',
@@ -76,7 +75,7 @@ const OperatorScheduleTab = () => {
       title: 'Lease Signing',
       description: 'Mike Chen - Lease renewal signing appointment',
       category: 'Leasing',
-      priority: 'normal',
+      priority: 'medium' as const,
       building: 'Building B',
       unit: '302',
       type: 'lease',
@@ -90,7 +89,7 @@ const OperatorScheduleTab = () => {
       title: 'Delinquency Follow-up',
       description: 'John Smith - Payment plan discussion',
       category: 'Delinquency',
-      priority: 'high',
+      priority: 'high' as const,
       building: 'Building A',
       unit: '108',
       type: 'payment',
@@ -104,7 +103,7 @@ const OperatorScheduleTab = () => {
       title: 'Renewal Notice',
       description: 'Jennifer Adams - Lease renewal discussion',
       category: 'Renewals',
-      priority: 'normal',
+      priority: 'medium' as const,
       building: 'Building C',
       unit: '225',
       type: 'message',
@@ -211,7 +210,7 @@ const OperatorScheduleTab = () => {
       title: suggestion.title,
       description: suggestion.description,
       category: suggestion.suggestionType || suggestion.type, // Use suggestionType from drag data
-      priority: suggestion.priority,
+      priority: (suggestion.priority || 'medium') as 'low' | 'medium' | 'high' | 'urgent',
       isDroppedSuggestion: true,
       type: (suggestion.suggestionType || suggestion.type).toLowerCase(),
       rescheduledCount: 0,
@@ -271,7 +270,7 @@ const OperatorScheduleTab = () => {
       title: suggestion.title,
       description: suggestion.description,
       category: suggestion.suggestionType || suggestion.type, // Use suggestionType from drag data
-      priority: suggestion.priority,
+      priority: (suggestion.priority || 'medium') as 'low' | 'medium' | 'high' | 'urgent',
       isDroppedSuggestion: true,
       type: (suggestion.suggestionType || suggestion.type).toLowerCase(),
       rescheduledCount: 0,

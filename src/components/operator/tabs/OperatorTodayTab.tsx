@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench, ChevronDown, BarChart3, PieChart, CalendarDays, Activity } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
@@ -53,8 +52,9 @@ const OperatorTodayTab = () => {
       time: '09:00',
       title: 'Move-In Inspection',
       description: 'Unit 4B - Sarah Johnson',
+      category: 'Move-In',
       type: 'move-in',
-      priority: 'high',
+      priority: 'high' as const,
       status: 'scheduled',
       building: 'Building A',
       unit: '4B'
@@ -64,8 +64,9 @@ const OperatorTodayTab = () => {
       time: '10:30',
       title: 'Lease Signing',
       description: 'Unit 2C - Mike Chen renewal',
+      category: 'Leasing',
       type: 'lease',
-      priority: 'medium',
+      priority: 'medium' as const,
       status: 'confirmed',
       building: 'Building B',
       unit: '2C'
@@ -75,8 +76,9 @@ const OperatorTodayTab = () => {
       time: '11:15',
       title: 'Resident Message',
       description: 'Unit 5A - HVAC repair follow-up',
+      category: 'Maintenance',
       type: 'message',
-      priority: 'normal',
+      priority: 'medium' as const,
       status: 'pending',
       building: 'Building C',
       unit: '5A'
@@ -86,8 +88,9 @@ const OperatorTodayTab = () => {
       time: '14:00',
       title: 'Tour Scheduled',
       description: 'Studio unit - Alex Rodriguez',
+      category: 'Leasing',
       type: 'tour',
-      priority: 'normal',
+      priority: 'medium' as const,
       status: 'confirmed',
       building: 'Building A',
       unit: 'Studio-12'
@@ -97,8 +100,9 @@ const OperatorTodayTab = () => {
       time: '15:30',
       title: 'Move-Out Notice',
       description: 'Unit 1A - Notice processing',
+      category: 'Move-Out',
       type: 'move-out',
-      priority: 'medium',
+      priority: 'medium' as const,
       status: 'processing',
       building: 'Building A',
       unit: '1A'
@@ -108,8 +112,9 @@ const OperatorTodayTab = () => {
       time: '16:15',
       title: 'Payment Follow-up',
       description: 'Unit 3D - Late rent discussion',
+      category: 'Payment',
       type: 'payment',
-      priority: 'high',
+      priority: 'urgent' as const,
       status: 'urgent',
       building: 'Building B',
       unit: '3D'
@@ -249,7 +254,7 @@ const OperatorTodayTab = () => {
     switch (priority) {
       case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'medium': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'normal': return 'bg-green-100 text-green-800 border-green-200';
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
@@ -697,46 +702,63 @@ const OperatorTodayTab = () => {
         </div>
 
         {showCalendarView ? (
+          <HourlyCalendarView
+            selectedDate={new Date()}
+            events={todayEvents}
+            onEventClick={handleDailyEventClick}
+            onEventHold={handleHoldEvent}
+            onEventReschedule={handleEventReschedule}
+          />
+        ) : (
           /* Live Activity Feed */
           <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-              <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-              <span className="text-sm text-gray-700">New lead: Sarah Johnson - 2BR inquiry</span>
-              <span className="text-xs text-gray-500 ml-auto">2 min ago</span>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-              <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-              <span className="text-sm text-gray-700">Tour completed: Unit 5C - Mike Chen</span>
-              <span className="text-xs text-gray-500 ml-auto">15 min ago</span>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg">
-              <div className="w-2 h-2 bg-yellow-600 rounded-full"></div>
-              <span className="text-sm text-gray-700">Maintenance request: Unit 3A - Leaky faucet</span>
-              <span className="text-xs text-gray-500 ml-auto">32 min ago</span>
-            </div>
-          </div>
-        ) : (
-          /* Universal Today Calendar View */
-          <div className="space-y-4">
-            <div className="text-center mb-4">
-              <p className="text-gray-600">
-                {new Date().toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-              </p>
-              <p className="text-sm text-gray-500">{todayEvents.length} events scheduled</p>
-            </div>
-            
-            <HourlyCalendarView
-              selectedDate={new Date()}
-              events={todayEvents}
-              onEventClick={handleDailyEventClick}
-              onEventHold={handleHoldEvent}
-              onEventReschedule={handleEventReschedule}
-            />
+            {todayEvents.map((event) => (
+              <SwipeCard
+                key={event.id}
+                onSwipeRight={{
+                  label: "Complete",
+                  action: () => console.log('Complete', event.title),
+                  color: "#10B981",
+                  icon: "✅"
+                }}
+                onSwipeLeft={{
+                  label: "Reschedule",
+                  action: () => console.log('Reschedule', event.title),
+                  color: "#F59E0B",
+                  icon: "📅"
+                }}
+                onClick={() => handleDailyEventClick(event)}
+              >
+                <div className={`p-4 rounded-lg border-2 transition-colors ${getEventPriorityColor(event.priority, event.status)}`}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      {getEventTypeIcon(event.type)}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-semibold text-sm">{event.title}</h4>
+                          <span className="text-xs font-medium text-gray-600">{event.time}</span>
+                        </div>
+                        <p className="text-xs text-gray-600 mb-2">{event.description}</p>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="text-xs">
+                            {event.building}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            Unit {event.unit}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                    <Badge 
+                      variant={event.status === 'urgent' ? 'destructive' : 'default'}
+                      className="text-xs"
+                    >
+                      {event.status}
+                    </Badge>
+                  </div>
+                </div>
+              </SwipeCard>
+            ))}
           </div>
         )}
       </div>
