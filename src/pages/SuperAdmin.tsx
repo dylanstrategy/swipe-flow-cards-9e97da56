@@ -210,7 +210,8 @@ const SuperAdmin = () => {
                 <CardContent>
                   <div className="space-y-3">
                     {properties.slice(0, 3).map((property) => (
-                      <div key={property.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div key={property.id} className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
+                           onClick={() => handlePropertyClick(property)}>
                         <div>
                           <h4 className="font-medium">{property.name}</h4>
                           <p className="text-sm text-gray-600">{property.units} units</p>
