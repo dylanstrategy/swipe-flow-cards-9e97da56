@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Building,
@@ -12,38 +13,21 @@ import {
   DollarSign,
   Plus,
   Search,
+  Filter,
+  Download,
   Upload,
-  BarChart3,
   Calendar,
   MessageSquare,
   FileText,
+  BarChart3,
+  Settings,
+  Eye,
+  Edit,
+  Trash2,
   Mail,
   Phone,
-  CreditCard,
-  UserCheck,
-  Briefcase,
-  FolderOpen
+  MapPin
 } from 'lucide-react';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-  SidebarInset,
-  SidebarHeader,
-  SidebarFooter
-} from '@/components/ui/sidebar';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import BulkImportModal from '@/components/admin/BulkImportModal';
 import PropertyDetailsModal from '@/components/property/PropertyDetailsModal';
 import UserManagement from '@/components/user/UserManagement';
@@ -55,7 +39,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const SuperAdmin = () => {
   const { toast } = useToast();
-  const [activeSection, setActiveSection] = useState('overview');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [showAddUser, setShowAddUser] = useState(false);
   const [showLeadDetails, setShowLeadDetails] = useState(false);
@@ -122,7 +106,6 @@ const SuperAdmin = () => {
   const [events, setEvents] = useState([]);
   const [invoices, setInvoices] = useState([]);
 
-  // Event handlers
   const handlePropertyClick = (property: any) => {
     setSelectedProperty(property);
   };
@@ -161,11 +144,28 @@ const SuperAdmin = () => {
     return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
-  const renderContent = () => {
-    switch (activeSection) {
-      case 'overview':
-        return (
-          <div className="space-y-6">
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="border-b bg-white">
+        <div className="px-4 py-4">
+          <h1 className="text-2xl font-bold text-gray-900">Super Admin Dashboard</h1>
+          <p className="text-sm text-gray-600">Manage properties, users, and business operations</p>
+        </div>
+      </div>
+
+      <div className="p-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-7">
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="properties">Properties</TabsTrigger>
+            <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="leads">Leads</TabsTrigger>
+            <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
+            <TabsTrigger value="events">Events</TabsTrigger>
+            <TabsTrigger value="billing">Billing</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dashboard" className="space-y-6">
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card>
@@ -210,8 +210,7 @@ const SuperAdmin = () => {
                 <CardContent>
                   <div className="space-y-3">
                     {properties.slice(0, 3).map((property) => (
-                      <div key={property.id} className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
-                           onClick={() => handlePropertyClick(property)}>
+                      <div key={property.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div>
                           <h4 className="font-medium">{property.name}</h4>
                           <p className="text-sm text-gray-600">{property.units} units</p>
@@ -227,57 +226,79 @@ const SuperAdmin = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent Client Activity</CardTitle>
+                  <CardTitle>Recent Leads</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <h4 className="font-medium">New client onboarded</h4>
-                        <p className="text-sm text-gray-600">ABC Property Management</p>
+                    {leads.slice(0, 3).map((lead) => (
+                      <div key={lead.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <h4 className="font-medium">{lead.name}</h4>
+                          <p className="text-sm text-gray-600">{lead.email}</p>
+                        </div>
+                        <Badge className={getStatusColor(lead.status)}>
+                          {lead.status}
+                        </Badge>
                       </div>
-                      <span className="text-sm text-gray-500">2 hours ago</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <h4 className="font-medium">Contract signed</h4>
-                        <p className="text-sm text-gray-600">Ocean View Towers</p>
-                      </div>
-                      <span className="text-sm text-gray-500">1 day ago</span>
-                    </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
             </div>
-          </div>
-        );
+          </TabsContent>
 
-      case 'clients':
-        return (
-          <div className="space-y-4">
+          <TabsContent value="properties" className="space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Client Management</h2>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Client
-              </Button>
+              <h2 className="text-xl font-semibold">Properties Management</h2>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowBulkImport(true)}>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Bulk Import
+                </Button>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Property
+                </Button>
+              </div>
             </div>
-            <Card>
-              <CardContent className="p-8 text-center">
-                <Building className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No clients yet</h3>
-                <p className="text-gray-600 mb-4">Add your first client to get started</p>
-                <Button>Add Client</Button>
-              </CardContent>
-            </Card>
-          </div>
-        );
 
-      case 'crm':
-        return (
-          <div className="space-y-4">
+            <div className="space-y-4">
+              {properties.map((property) => (
+                <Card key={property.id} className="hover:shadow-md transition-shadow cursor-pointer" 
+                      onClick={() => handlePropertyClick(property)}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <Building className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">{property.name}</h3>
+                          <p className="text-sm text-gray-600">{property.address}</p>
+                          <p className="text-sm text-gray-500">{property.client_name}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-semibold">{property.units} units</div>
+                        <div className="text-sm text-gray-600">{property.occupancy_rate}% occupied</div>
+                        <Badge className={getStatusColor(property.status)}>
+                          {property.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="users">
+            <UserManagement />
+          </TabsContent>
+
+          <TabsContent value="leads" className="space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">CRM & Sales</h2>
+              <h2 className="text-xl font-semibold">Leads Management</h2>
               <div className="flex gap-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -333,15 +354,71 @@ const SuperAdmin = () => {
                 </Card>
               ))}
             </div>
-          </div>
-        );
+          </TabsContent>
 
-      case 'users':
-        return <UserManagement />;
+          <TabsContent value="campaigns" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Marketing Campaigns</h2>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Campaign
+              </Button>
+            </div>
+            <Card>
+              <CardContent className="p-8 text-center">
+                <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">No campaigns yet</h3>
+                <p className="text-gray-600 mb-4">Create your first marketing campaign to reach potential residents</p>
+                <Button>Create Campaign</Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-      case 'billing':
-        return (
-          <div className="space-y-4">
+          <TabsContent value="events" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Events Management</h2>
+              <Button onClick={() => setShowCreateEvent(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Event
+              </Button>
+            </div>
+            
+            {events.length > 0 ? (
+              <div className="space-y-4">
+                {events.map((event) => (
+                  <Card key={event.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-semibold">{event.title}</h3>
+                          <p className="text-sm text-gray-600">{event.description}</p>
+                          <div className="flex items-center gap-4 text-sm text-gray-500 mt-2">
+                            <span>{event.date}</span>
+                            <span>{event.startTime}</span>
+                            {event.location && <span>{event.location}</span>}
+                          </div>
+                        </div>
+                        <Badge className={getStatusColor(event.status)}>
+                          {event.status}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No events scheduled</h3>
+                  <p className="text-gray-600 mb-4">Create your first event to engage with residents</p>
+                  <Button onClick={() => setShowCreateEvent(true)}>Create Event</Button>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="billing" className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Billing & Invoices</h2>
               <Button onClick={() => setShowCreateInvoice(true)}>
@@ -382,226 +459,8 @@ const SuperAdmin = () => {
                 </CardContent>
               </Card>
             )}
-          </div>
-        );
-
-      case 'marketing':
-        return (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Marketing Campaigns</h2>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Campaign
-              </Button>
-            </div>
-            <Card>
-              <CardContent className="p-8 text-center">
-                <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No campaigns yet</h3>
-                <p className="text-gray-600 mb-4">Create your first marketing campaign to reach potential residents</p>
-                <Button>Create Campaign</Button>
-              </CardContent>
-            </Card>
-          </div>
-        );
-
-      case 'calendar':
-        return (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Calendar & Events</h2>
-              <Button onClick={() => setShowCreateEvent(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Event
-              </Button>
-            </div>
-            
-            {events.length > 0 ? (
-              <div className="space-y-4">
-                {events.map((event) => (
-                  <Card key={event.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-semibold">{event.title}</h3>
-                          <p className="text-sm text-gray-600">{event.description}</p>
-                          <div className="flex items-center gap-4 text-sm text-gray-500 mt-2">
-                            <span>{event.date}</span>
-                            <span>{event.startTime}</span>
-                            {event.location && <span>{event.location}</span>}
-                          </div>
-                        </div>
-                        <Badge className={getStatusColor(event.status)}>
-                          {event.status}
-                        </Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No events scheduled</h3>
-                  <p className="text-gray-600 mb-4">Create your first event to engage with residents</p>
-                  <Button onClick={() => setShowCreateEvent(true)}>Create Event</Button>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        );
-
-      case 'operators':
-        return (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Operators Management</h2>
-              <Button onClick={() => setShowAddUser(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Operator
-              </Button>
-            </div>
-            <Card>
-              <CardContent className="p-8 text-center">
-                <UserCheck className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No operators yet</h3>
-                <p className="text-gray-600 mb-4">Add operators to manage your properties</p>
-                <Button onClick={() => setShowAddUser(true)}>Add Operator</Button>
-              </CardContent>
-            </Card>
-          </div>
-        );
-
-      default:
-        return <div>Select a section from the sidebar</div>;
-    }
-  };
-
-  return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <Sidebar className="w-64">
-          <SidebarHeader className="p-4 border-b">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">SA</span>
-              </div>
-              <span className="font-semibold">Super Admin</span>
-            </div>
-          </SidebarHeader>
-
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      onClick={() => setActiveSection('overview')}
-                      isActive={activeSection === 'overview'}
-                    >
-                      <BarChart3 className="w-4 h-4" />
-                      <span>Overview</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      onClick={() => setActiveSection('clients')}
-                      isActive={activeSection === 'clients'}
-                    >
-                      <Briefcase className="w-4 h-4" />
-                      <span>Clients</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      onClick={() => setActiveSection('crm')}
-                      isActive={activeSection === 'crm'}
-                    >
-                      <Users className="w-4 h-4" />
-                      <span>CRM & Sales</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      onClick={() => setActiveSection('users')}
-                      isActive={activeSection === 'users'}
-                    >
-                      <UserCheck className="w-4 h-4" />
-                      <span>User Management</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      onClick={() => setActiveSection('billing')}
-                      isActive={activeSection === 'billing'}
-                    >
-                      <CreditCard className="w-4 h-4" />
-                      <span>Billing</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      onClick={() => setActiveSection('marketing')}
-                      isActive={activeSection === 'marketing'}
-                    >
-                      <Mail className="w-4 h-4" />
-                      <span>Marketing</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      onClick={() => setActiveSection('calendar')}
-                      isActive={activeSection === 'calendar'}
-                    >
-                      <Calendar className="w-4 h-4" />
-                      <span>Calendar</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      onClick={() => setActiveSection('operators')}
-                      isActive={activeSection === 'operators'}
-                    >
-                      <Users className="w-4 h-4" />
-                      <span>Operators</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-
-          <SidebarFooter className="p-4 border-t">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <DollarSign className="w-4 h-4 text-green-600" />
-              <div>
-                <div className="font-medium text-gray-900">Revenue</div>
-                <div>$0</div>
-              </div>
-            </div>
-          </SidebarFooter>
-        </Sidebar>
-
-        <SidebarInset>
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-            <SidebarTrigger className="-ml-1" />
-            <div className="mx-2 h-4 w-px bg-sidebar-border" />
-            <h1 className="text-lg font-semibold">Applaud Super Admin</h1>
-          </header>
-
-          <div className="flex flex-1 flex-col gap-4 p-4">
-            {renderContent()}
-          </div>
-        </SidebarInset>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Modals */}
@@ -643,7 +502,7 @@ const SuperAdmin = () => {
           onClose={() => setSelectedProperty(null)}
         />
       )}
-    </SidebarProvider>
+    </div>
   );
 };
 
