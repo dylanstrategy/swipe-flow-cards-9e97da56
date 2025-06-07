@@ -20,7 +20,7 @@ import {
   Mail, 
   ChevronRight,
   UserCheck,
-  UserClock,
+  Clock,
   UserX,
   TrendingUp,
   Truck,
@@ -59,7 +59,7 @@ const OperatorResidentsTab = () => {
 
     if (searchTerm) {
       filtered = filtered.filter(resident => 
-        resident.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        resident.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         resident.unitNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         resident.email.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -128,7 +128,7 @@ const OperatorResidentsTab = () => {
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <UserClock className="w-5 h-5 text-blue-600" />
+                <Clock className="w-5 h-5 text-blue-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-600">Future</p>
@@ -244,7 +244,7 @@ const OperatorResidentsTab = () => {
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-3 mb-1">
-                      <h3 className="font-semibold text-gray-900 truncate">{resident.name}</h3>
+                      <h3 className="font-semibold text-gray-900 truncate">{resident.fullName}</h3>
                       <Badge className={getStatusColor(resident.status)}>
                         {resident.status}
                       </Badge>
