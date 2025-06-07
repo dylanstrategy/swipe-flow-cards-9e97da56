@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UnitTurnTracker from '../UnitTurnTracker';
@@ -96,7 +95,12 @@ const MaintenanceContext = React.createContext<MaintenanceContextType>({
   addTodayWorkOrder: () => {}
 });
 
-const MaintenanceScheduleTab = () => {
+interface MaintenanceScheduleTabProps {
+  onTodayWorkOrdersChange?: (workOrders: any[]) => void;
+  todayWorkOrders?: any[];
+}
+
+const MaintenanceScheduleTab = ({ onTodayWorkOrdersChange, todayWorkOrders: externalTodayWorkOrders }: MaintenanceScheduleTabProps) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('queue');
   const [selectedUnitTurn, setSelectedUnitTurn] = useState<any>(null);
@@ -104,7 +108,11 @@ const MaintenanceScheduleTab = () => {
   const [showWorkOrderFlow, setShowWorkOrderFlow] = useState(false);
   const [workOrders, setWorkOrders] = useState(initialWorkOrders);
   const [scheduledWorkOrders, setScheduledWorkOrders] = useState<any[]>([]);
-  const [todayWorkOrders, setTodayWorkOrders] = useState<any[]>([]);
+  const [internalTodayWorkOrders, setInternalTodayWorkOrders] = useState<any[]>([]);
+
+  // Use external state if provided, otherwise use internal state
+  const todayWorkOrders = externalTodayWorkOrders || internalTodayWorkOrders;
+  const setTodayWorkOrders = onTodayWorkOrdersChange || setInternalTodayWorkOrders;
 
   // Helper function to find first available time slot
   const findFirstAvailableTimeSlot = () => {
@@ -168,7 +176,7 @@ const MaintenanceScheduleTab = () => {
     if (isToday && !finalScheduledTime.includes('Tomorrow')) {
       console.log('Adding to today work orders:', updatedWorkOrder);
       setTodayWorkOrders(prev => {
-        const updated = [...prev, updatedWorkOrder];
+        const updated = Array.isArray(prev) ? [...prev, updatedWorkOrder] : [updatedWorkOrder];
         console.log('Updated today work orders:', updated);
         return updated;
       });
@@ -183,7 +191,7 @@ const MaintenanceScheduleTab = () => {
   const addTodayWorkOrder = (workOrder: any) => {
     console.log('Adding work order to today context:', workOrder);
     setTodayWorkOrders(prev => {
-      const updated = [...prev, workOrder];
+      const updated = Array.isArray(prev) ? [...prev, workOrder] : [workOrder];
       console.log('Today work orders after add:', updated);
       return updated;
     });

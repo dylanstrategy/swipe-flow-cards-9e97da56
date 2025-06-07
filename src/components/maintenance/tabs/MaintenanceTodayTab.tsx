@@ -6,17 +6,19 @@ import SwipeCard from '@/components/SwipeCard';
 import WorkOrderFlow from '@/components/maintenance/WorkOrderFlow';
 import UnitTurnDetailTracker from '@/components/maintenance/UnitTurnDetailTracker';
 import HourlyCalendarView from '@/components/schedule/HourlyCalendarView';
-import { MaintenanceContext } from './MaintenanceScheduleTab';
 import { format } from 'date-fns';
 
-const MaintenanceTodayTab = () => {
+interface MaintenanceTodayTabProps {
+  todayWorkOrders?: any[];
+}
+
+const MaintenanceTodayTab = ({ todayWorkOrders = [] }: MaintenanceTodayTabProps) => {
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
   const [selectedUnitTurn, setSelectedUnitTurn] = useState<any>(null);
-  const { todayWorkOrders } = useContext(MaintenanceContext);
 
   const today = new Date();
 
-  console.log('MaintenanceTodayTab - todayWorkOrders:', todayWorkOrders);
+  console.log('MaintenanceTodayTab - received todayWorkOrders:', todayWorkOrders);
 
   // Sample unit turns data
   const unitTurns = [
@@ -48,7 +50,7 @@ const MaintenanceTodayTab = () => {
 
   // Convert work orders to calendar events format
   const calendarEvents = [
-    // Add today's scheduled work orders from context
+    // Add today's scheduled work orders from props
     ...todayWorkOrders.map(workOrder => {
       console.log('Converting work order to calendar event:', workOrder);
       return {
@@ -83,7 +85,7 @@ const MaintenanceTodayTab = () => {
     }))
   ];
 
-  console.log('Calendar events:', calendarEvents);
+  console.log('Calendar events generated:', calendarEvents);
 
   const handleEventClick = (event: any) => {
     console.log('Event clicked:', event);
