@@ -400,6 +400,15 @@ const TodayTab = () => {
     return null;
   };
 
+  const handleEventUpdate = (updatedEvent: any) => {
+    // For TodayTab, we would typically refresh the events from the source
+    // Since we're using static data, we'll just show a success message
+    toast({
+      title: "Event Updated",
+      description: `${updatedEvent.title} has been updated successfully.`,
+    });
+  };
+
   if (showUniversalEventDetail && selectedUniversalEvent) {
     return (
       <UniversalEventDetailModal
@@ -409,6 +418,7 @@ const TodayTab = () => {
           setSelectedUniversalEvent(null);
         }}
         userRole="resident"
+        onEventUpdate={handleEventUpdate}
       />
     );
   }

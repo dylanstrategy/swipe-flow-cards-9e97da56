@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MessageSquare, Calendar, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Calendar, AlertTriangle, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import MoveInEventDetails from './event-types/MoveInEventDetails';
 import LeaseSigningEventDetails from './event-types/LeaseSigningEventDetails';
@@ -13,18 +12,23 @@ import PaymentEventDetails from './event-types/PaymentEventDetails';
 import WorkOrderEventDetails from './event-types/WorkOrderEventDetails';
 import EventMessaging from './EventMessaging';
 import EventTimeline from './EventTimeline';
+import RescheduleFlow from './RescheduleFlow';
+import { EnhancedEvent } from '@/types/events';
+import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 
 interface UniversalEventDetailModalProps {
   event: any;
   onClose: () => void;
   userRole?: 'operator' | 'maintenance' | 'resident';
+  onEventUpdate?: (updatedEvent: any) => void;
 }
 
-const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: UniversalEventDetailModalProps) => {
+const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator', onEventUpdate }: UniversalEventDetailModalProps) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'details' | 'message' | 'timeline'>('details');
   const [messageText, setMessageText] = useState('');
   const [currentEvent, setCurrentEvent] = useState(event);
+  const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
 
   const getEventTypeIcon = (type: string) => {
     switch (type) {
@@ -93,6 +97,56 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
     setActiveTab('timeline');
   };
 
+  const handleReschedule = () => {
+    // Convert event to EnhancedEvent format for reschedule flow
+    const enhancedEvent: EnhancedEvent = {
+      id: currentEvent.id,
+      date: currentEvent.date,
+      time: currentEvent.time,
+      title: currentEvent.title,
+      description: currentEvent.description,
+      category: currentEvent.category,
+      priority: currentEvent.priority,
+      canReschedule: true,
+      canCancel: true,
+      estimatedDuration: 60,
+      rescheduledCount: currentEvent.rescheduledCount || 0,
+      assignedTeamMember: currentEvent.assignedTeamMember || teamAvailabilityService.assignTeamMember({ category: currentEvent.category }),
+      residentName: currentEvent.residentName || 'Resident',
+      phone: currentEvent.phone || '(555) 123-4567',
+      unit: currentEvent.unit,
+      building: currentEvent.building,
+      status: currentEvent.status
+    };
+    
+    setShowRescheduleFlow(true);
+  };
+
+  const handleRescheduleConfirm = (rescheduleData: any) => {
+    const updatedEvent = {
+      ...currentEvent,
+      date: rescheduleData.newDate,
+      time: rescheduleData.newTime,
+      rescheduledCount: (currentEvent.rescheduledCount || 0) + 1
+    };
+    
+    setCurrentEvent(updatedEvent);
+    setShowRescheduleFlow(false);
+    
+    // Notify parent component of the update
+    onEventUpdate?.(updatedEvent);
+    
+    toast({
+      title: "Event Rescheduled",
+      description: `${updatedEvent.title} has been rescheduled successfully.`,
+    });
+  };
+
+  const canReschedule = () => {
+    // Most event types can be rescheduled, except completed ones
+    return currentEvent.status !== 'completed' && currentEvent.status !== 'cancelled';
+  };
+
   const renderEventDetails = () => {
     switch (currentEvent.type) {
       case 'move-in':
@@ -122,6 +176,37 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
     }
   };
 
+  if (showRescheduleFlow) {
+    const enhancedEvent: EnhancedEvent = {
+      id: currentEvent.id,
+      date: currentEvent.date,
+      time: currentEvent.time,
+      title: currentEvent.title,
+      description: currentEvent.description,
+      category: currentEvent.category,
+      priority: currentEvent.priority,
+      canReschedule: true,
+      canCancel: true,
+      estimatedDuration: 60,
+      rescheduledCount: currentEvent.rescheduledCount || 0,
+      assignedTeamMember: currentEvent.assignedTeamMember || teamAvailabilityService.assignTeamMember({ category: currentEvent.category }),
+      residentName: currentEvent.residentName || 'Resident',
+      phone: currentEvent.phone || '(555) 123-4567',
+      unit: currentEvent.unit,
+      building: currentEvent.building,
+      status: currentEvent.status
+    };
+
+    return (
+      <RescheduleFlow
+        event={enhancedEvent}
+        onClose={() => setShowRescheduleFlow(false)}
+        onConfirm={handleRescheduleConfirm}
+        userRole={userRole}
+      />
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-2 sm:p-4">
       <div className="bg-white rounded-xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
@@ -149,6 +234,21 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator' }: Un
             </Badge>
           </div>
         </div>
+
+        {/* Action Buttons */}
+        {canReschedule() && (
+          <div className="px-3 sm:px-4 py-2 border-b border-gray-100 bg-gray-50">
+            <Button
+              onClick={handleReschedule}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Clock className="w-4 h-4" />
+              Reschedule
+            </Button>
+          </div>
+        )}
 
         {/* Tab Navigation */}
         <div className="flex border-b border-gray-200">

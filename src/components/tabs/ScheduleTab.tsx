@@ -321,6 +321,28 @@ const ScheduleTab = () => {
     setSelectedEvent(null);
   };
 
+  const handleEventReschedule = (event: any, newTime: string) => {
+    const updatedEvents = scheduledEvents.map(e => 
+      e.id === event.id 
+        ? { ...e, time: newTime, rescheduledCount: (e.rescheduledCount || 0) + 1 }
+        : e
+    );
+    
+    setScheduledEvents(updatedEvents);
+    
+    toast({
+      title: "Event Rescheduled",
+      description: `${event.title} moved to ${newTime}`,
+    });
+  };
+
+  const handleEventUpdate = (updatedEvent: any) => {
+    const updatedEvents = scheduledEvents.map(e => 
+      e.id === updatedEvent.id ? updatedEvent : e
+    );
+    setScheduledEvents(updatedEvents);
+  };
+
   const nextStep = () => {
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
@@ -425,6 +447,7 @@ const ScheduleTab = () => {
           setSelectedUniversalEvent(null);
         }}
         userRole="resident"
+        onEventUpdate={handleEventUpdate}
       />
     );
   }
@@ -509,6 +532,7 @@ const ScheduleTab = () => {
             onDropSuggestion={handleDropSuggestionInTimeline}
             onEventClick={handleEventClick}
             onEventHold={handleEventHold}
+            onEventReschedule={handleEventReschedule}
           />
         </div>
 

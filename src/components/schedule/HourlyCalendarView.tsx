@@ -1,34 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { format, addHours, startOfDay, isSameDay, isPast, isToday } from 'date-fns';
-import { cn } from '@/lib/utils';
+import React, { useState } from 'react';
+import { format, isSameDay } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useRealtimeOverdueDetection } from '@/hooks/useRealtimeOverdueDetection';
 
 interface HourlyCalendarViewProps {
   selectedDate: Date;
   events: any[];
-  onDropSuggestion?: (suggestion: any, targetTime: string) => void;
+  onDropSuggestion?: (suggestion: any, targetTime?: string) => void;
   onEventClick?: (event: any) => void;
   onEventHold?: (event: any) => void;
-}
-
-interface SchedulingPreferences {
-  workStartTime: string;
-  workEndTime: string;
-  enableLunchBreak: boolean;
-  lunchBreakStart: string;
-  lunchBreakEnd: string;
-  maxDailyAppointments: string;
-  bufferTime: string;
-  workDays: {
-    monday: boolean;
-    tuesday: boolean;
-    wednesday: boolean;
-    thursday: boolean;
-    friday: boolean;
-    saturday: boolean;
-    sunday: boolean;
-  };
+  onEventReschedule?: (event: any, newTime: string) => void;
 }
 
 const HourlyCalendarView = ({ 
@@ -36,261 +17,89 @@ const HourlyCalendarView = ({
   events, 
   onDropSuggestion, 
   onEventClick, 
-  onEventHold 
+  onEventHold,
+  onEventReschedule 
 }: HourlyCalendarViewProps) => {
   const { toast } = useToast();
+  const [draggedEvent, setDraggedEvent] = useState<any>(null);
   const [dragOverSlot, setDragOverSlot] = useState<string | null>(null);
-  const [schedulingPrefs, setSchedulingPrefs] = useState<SchedulingPreferences | null>(null);
-
+  
   // Use real-time overdue detection
   const { isEventOverdue } = useRealtimeOverdueDetection(events);
 
-  // Load scheduling preferences on mount
-  useEffect(() => {
-    const savedPrefs = localStorage.getItem('schedulingPreferences');
-    if (savedPrefs) {
-      try {
-        setSchedulingPrefs(JSON.parse(savedPrefs));
-      } catch (error) {
-        console.error('Error loading scheduling preferences:', error);
-      }
-    }
-  }, []);
+  const timeSlots = Array.from({ length: 18 }, (_, i) => {
+    const hour = Math.floor(i / 2) + 6;
+    const minute = i % 2 === 0 ? '00' : '30';
+    return `${hour.toString().padStart(2, '0')}:${minute}`;
+  });
 
-  // Check if a day is a work day
-  const isWorkDay = (date: Date): boolean => {
-    if (!schedulingPrefs) return true; // Default to all days if no preferences
-    
-    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const dayName = dayNames[date.getDay()] as keyof typeof schedulingPrefs.workDays;
-    return schedulingPrefs.workDays[dayName];
+  const convertTimeToMinutes = (timeString: string): number => {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    return hours * 60 + minutes;
   };
 
-  // Convert time string to hour number
-  const timeToHour = (timeString: string): number => {
-    const [hours] = timeString.split(':').map(Number);
-    return hours;
+  const handleEventDragStart = (e: React.DragEvent, event: any) => {
+    setDraggedEvent(event);
+    e.dataTransfer.setData('application/json', JSON.stringify({
+      type: 'event',
+      event: event
+    }));
+    e.dataTransfer.effectAllowed = 'move';
   };
 
-  // Check if a time slot is during work hours
-  const isWorkHour = (hour: number): boolean => {
-    if (!schedulingPrefs) return true; // Default to all hours if no preferences
-    
-    const startHour = timeToHour(schedulingPrefs.workStartTime);
-    const endHour = timeToHour(schedulingPrefs.workEndTime);
-    
-    return hour >= startHour && hour < endHour;
-  };
-
-  // Check if a time slot is during lunch break
-  const isLunchBreak = (hour: number): boolean => {
-    if (!schedulingPrefs || !schedulingPrefs.enableLunchBreak) return false;
-    
-    const lunchStart = timeToHour(schedulingPrefs.lunchBreakStart);
-    const lunchEnd = timeToHour(schedulingPrefs.lunchBreakEnd);
-    
-    return hour >= lunchStart && hour < lunchEnd;
-  };
-
-  // Check if max daily appointments limit is reached
-  const isMaxAppointmentsReached = (): boolean => {
-    if (!schedulingPrefs) return false;
-    
-    const maxAppointments = parseInt(schedulingPrefs.maxDailyAppointments);
-    const todayEvents = events.filter(event => isSameDateSafe(event.date, selectedDate));
-    
-    return todayEvents.length >= maxAppointments;
-  };
-
-  // Generate hourly time slots based on work hours or default 6 AM to 10 PM
-  const generateTimeSlots = () => {
-    const slots = [];
-    const startTime = startOfDay(selectedDate);
-    
-    let startHour = 6; // Default start
-    let endHour = 22; // Default end (10 PM)
-    
-    if (schedulingPrefs) {
-      startHour = timeToHour(schedulingPrefs.workStartTime);
-      endHour = timeToHour(schedulingPrefs.workEndTime);
-    }
-    
-    const totalHours = endHour - startHour;
-    
-    for (let i = 0; i < totalHours; i++) {
-      const time = addHours(startTime, startHour + i);
-      slots.push(time);
-    }
-    return slots;
-  };
-
-  const timeSlots = generateTimeSlots();
-
-  // Normalize time to 24-hour format for consistent comparison
-  const normalizeTimeFormat = (timeString: string): string => {
-    if (!timeString) return '';
-    
-    // If already in HH:MM format, return as is
-    if (/^\d{1,2}:\d{2}$/.test(timeString)) {
-      const [hours, minutes] = timeString.split(':');
-      return `${hours.padStart(2, '0')}:${minutes}`;
-    }
-    
-    // Handle AM/PM format
-    if (timeString.includes('AM') || timeString.includes('PM')) {
-      const [time, period] = timeString.trim().split(' ');
-      const [hours, minutes] = time.split(':').map(Number);
-      let hour24 = hours;
-      
-      if (period === 'PM' && hours !== 12) {
-        hour24 = hours + 12;
-      } else if (period === 'AM' && hours === 12) {
-        hour24 = 0;
-      }
-      
-      return `${hour24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    }
-    
-    return timeString;
-  };
-
-  // Safely compare dates by converting to string format
-  const isSameDateSafe = (date1: any, date2: Date): boolean => {
-    try {
-      const d1 = date1 instanceof Date ? date1 : new Date(date1);
-      const d2 = date2 instanceof Date ? date2 : new Date(date2);
-      
-      return format(d1, 'yyyy-MM-dd') === format(d2, 'yyyy-MM-dd');
-    } catch (error) {
-      console.error('Date comparison error:', error);
-      return false;
-    }
-  };
-
-  const getEventsForTimeSlot = (slotTime: Date) => {
-    const slotHour = slotTime.getHours();
-    
-    const filteredEvents = events.filter(event => {
-      if (!isSameDateSafe(event.date, selectedDate)) return false;
-      
-      const normalizedTime = normalizeTimeFormat(event.time);
-      if (!normalizedTime) return false;
-      
-      const [eventHours] = normalizedTime.split(':').map(Number);
-      return eventHours === slotHour;
-    });
-
-    const uniqueEvents = filteredEvents.filter((event, index, self) => 
-      index === self.findIndex(e => e.title === event.title && e.time === event.time)
-    );
-
-    return uniqueEvents;
-  };
-
-  const handleDragOver = (e: React.DragEvent, timeString: string) => {
+  const handleSlotDragOver = (e: React.DragEvent, timeSlot: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    setDragOverSlot(timeString);
+    setDragOverSlot(timeSlot);
   };
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const x = e.clientX;
-    const y = e.clientY;
-    
-    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
-      setDragOverSlot(null);
-    }
+  const handleSlotDragLeave = () => {
+    setDragOverSlot(null);
   };
 
-  const handleDrop = (e: React.DragEvent, timeString: string) => {
+  const handleSlotDrop = (e: React.DragEvent, timeSlot: string) => {
     e.preventDefault();
     setDragOverSlot(null);
     
     try {
-      const suggestionData = JSON.parse(e.dataTransfer.getData('application/json'));
-      const normalizedTime = normalizeTimeFormat(timeString);
-      const hour = parseInt(normalizedTime.split(':')[0]);
+      const dragData = JSON.parse(e.dataTransfer.getData('application/json'));
       
-      // Check work day
-      if (!isWorkDay(selectedDate)) {
-        toast({
-          title: "Non-Work Day",
-          description: "This day is not configured as a work day in your scheduling preferences.",
-          variant: "destructive"
-        });
-        return;
+      if (dragData.type === 'event' && draggedEvent) {
+        // Handle event reschedule
+        if (draggedEvent.time !== timeSlot) {
+          onEventReschedule?.(draggedEvent, timeSlot);
+          toast({
+            title: "Event Rescheduled",
+            description: `${draggedEvent.title} moved to ${formatTime(timeSlot)}`,
+          });
+        }
+      } else if (dragData.type === 'suggestion') {
+        // Handle suggestion drop
+        onDropSuggestion?.(dragData, timeSlot);
       }
-
-      // Check work hours
-      if (!isWorkHour(hour)) {
-        toast({
-          title: "Outside Work Hours",
-          description: "This time is outside your configured work hours.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Check lunch break
-      if (isLunchBreak(hour)) {
-        toast({
-          title: "Lunch Break",
-          description: "This time conflicts with your lunch break.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Check max appointments
-      if (isMaxAppointmentsReached()) {
-        toast({
-          title: "Daily Limit Reached",
-          description: `You've reached your daily appointment limit of ${schedulingPrefs?.maxDailyAppointments || 'N/A'} appointments.`,
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Check for duplicates
-      const eventsAtTime = getEventsForTimeSlot(addHours(startOfDay(selectedDate), hour));
-      const isDuplicate = eventsAtTime.some(event => event.title === suggestionData.title);
-      
-      if (isDuplicate) {
-        toast({
-          title: "Event Already Exists",
-          description: `${suggestionData.title} is already scheduled at ${timeString}`,
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      onDropSuggestion?.(suggestionData, normalizedTime);
-      
-      toast({
-        title: "Event Scheduled!",
-        description: `${suggestionData.title} has been scheduled for ${timeString}`,
-      });
     } catch (error) {
       console.error('Error parsing dropped data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to schedule the event. Please try again.",
-        variant: "destructive"
-      });
     }
+    
+    setDraggedEvent(null);
   };
 
-  const handleEventClick = (event: any) => {
-    onEventClick?.(event);
+  const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes?.padStart(2, '0') || '00'} ${ampm}`;
   };
 
-  const handleEventHold = (event: any) => {
-    onEventHold?.(event);
+  const getEventsForTime = (time: string) => {
+    return events.filter(event => event.time === time);
   };
 
-  // Check if the selected date is a work day
-  const isSelectedDateWorkDay = isWorkDay(selectedDate);
+  const getEventUrgencyClass = (event: any) => {
+    const isOverdue = isEventOverdue(event);
+    return isOverdue ? 'wiggle-urgent bg-red-100 border-red-300' : '';
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -298,168 +107,74 @@ const HourlyCalendarView = ({
         <h3 className="text-lg font-semibold text-gray-900">
           {format(selectedDate, 'EEEE, MMMM d, yyyy')}
         </h3>
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-600">
-            {isSelectedDateWorkDay ? 'Drag suggestions to time slots to schedule them' : 'Non-work day'}
-          </p>
-          {schedulingPrefs && (
-            <div className="text-xs text-gray-500">
-              {isMaxAppointmentsReached() ? (
-                <span className="text-red-600 font-medium">Daily limit reached ({schedulingPrefs.maxDailyAppointments})</span>
-              ) : (
-                <span>{events.filter(e => isSameDateSafe(e.date, selectedDate)).length}/{schedulingPrefs.maxDailyAppointments} appointments</span>
-              )}
-            </div>
-          )}
-        </div>
+        <p className="text-sm text-gray-600">Click to view details • Hold to reschedule • Drag to move</p>
       </div>
-      
-      <div className="w-full">
-        {!isSelectedDateWorkDay ? (
-          <div className="p-8 text-center text-gray-500">
-            <p>This day is not configured as a work day.</p>
-            <p className="text-sm mt-2">Check your scheduling preferences to modify work days.</p>
-          </div>
-        ) : (
-          timeSlots.map((slot) => {
-            const timeString = format(slot, 'h:mm a');
-            const hour = slot.getHours();
-            const eventsInSlot = getEventsForTimeSlot(slot);
-            const isCurrentHour = new Date().getHours() === hour && isSameDateSafe(selectedDate, new Date());
-            const isDragOver = dragOverSlot === timeString;
-            const isLunch = isLunchBreak(hour);
-            const isOutsideWorkHours = !isWorkHour(hour);
-            const maxReached = isMaxAppointmentsReached();
-            
-            return (
-              <div
-                key={timeString}
-                className={cn(
-                  "border-b border-gray-50 transition-all duration-150 min-h-[60px] relative",
-                  isCurrentHour && "bg-blue-50",
-                  isDragOver && !isLunch && !isOutsideWorkHours && !maxReached && "bg-green-100 border-green-300 shadow-md",
-                  isLunch && "bg-orange-50",
-                  isOutsideWorkHours && "bg-gray-50"
-                )}
-                onDragOver={(e) => handleDragOver(e, timeString)}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, timeString)}
-              >
-                <div className="flex items-start p-3 gap-3">
-                  <div className="w-16 flex-shrink-0 pt-1">
-                    <span className={cn(
-                      "text-sm font-medium",
-                      isCurrentHour ? "text-blue-700" : "text-gray-600",
-                      isLunch && "text-orange-600",
-                      isOutsideWorkHours && "text-gray-400"
-                    )}>
-                      {timeString}
-                    </span>
-                    {isLunch && (
-                      <div className="text-xs text-orange-600 mt-1">Lunch</div>
-                    )}
-                    {isOutsideWorkHours && !isLunch && (
-                      <div className="text-xs text-gray-400 mt-1">Off Hours</div>
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0 relative">
-                    {eventsInSlot.length === 0 ? (
-                      <div className={cn(
-                        "h-12 rounded-lg border-2 border-dashed transition-all duration-150 flex items-center justify-center touch-manipulation",
-                        isDragOver && !isLunch && !isOutsideWorkHours && !maxReached
-                          ? "border-green-400 bg-green-50 scale-[1.02]" 
-                          : isLunch || isOutsideWorkHours || maxReached
-                          ? "border-gray-200 bg-gray-100 cursor-not-allowed"
-                          : "border-gray-200 hover:border-gray-300 hover:bg-gray-25"
-                      )}>
-                        {isDragOver && !isLunch && !isOutsideWorkHours && !maxReached && (
-                          <span className="text-sm text-green-700 font-medium animate-pulse">Drop here</span>
-                        )}
-                        {isLunch && (
-                          <span className="text-xs text-orange-600">Lunch Break</span>
-                        )}
-                        {isOutsideWorkHours && !isLunch && (
-                          <span className="text-xs text-gray-400">Outside Work Hours</span>
-                        )}
-                        {maxReached && !isLunch && !isOutsideWorkHours && (
-                          <span className="text-xs text-red-600">Daily Limit Reached</span>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {eventsInSlot.map((event, index) => {
-                          const isOverdue = isEventOverdue(event);
-                          
-                          return (
-                            <div
-                              key={`${event.id}-${event.time}-${index}`}
-                              className={cn(
-                                "border rounded-lg p-3 cursor-pointer transition-all duration-150 touch-manipulation active:scale-[0.98]",
-                                isOverdue 
-                                  ? "bg-red-100 border-red-300 text-red-900 wiggle-urgent pulse-urgent hover:bg-red-200" 
-                                  : "bg-blue-100 border-blue-200 hover:bg-blue-200"
+
+      <div className="max-h-96 overflow-y-auto">
+        {timeSlots.map((timeSlot) => {
+          const eventsAtTime = getEventsForTime(timeSlot);
+          const isDragOver = dragOverSlot === timeSlot;
+          
+          return (
+            <div
+              key={timeSlot}
+              className={`border-b border-gray-100 last:border-b-0 min-h-[60px] transition-colors ${
+                isDragOver ? 'bg-green-100 border-green-300' : 'hover:bg-gray-50'
+              }`}
+              onDragOver={(e) => handleSlotDragOver(e, timeSlot)}
+              onDragLeave={handleSlotDragLeave}
+              onDrop={(e) => handleSlotDrop(e, timeSlot)}
+            >
+              <div className="flex">
+                <div className="w-20 flex-shrink-0 p-3 text-sm text-gray-500 border-r border-gray-100">
+                  {formatTime(timeSlot)}
+                </div>
+                <div className="flex-1 p-3">
+                  {eventsAtTime.length === 0 ? (
+                    <div className="text-gray-400 text-sm italic">Available</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {eventsAtTime.map((event) => (
+                        <div
+                          key={event.id}
+                          draggable
+                          onDragStart={(e) => handleEventDragStart(e, event)}
+                          onClick={() => onEventClick?.(event)}
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            onEventHold?.(event);
+                          }}
+                          className={`p-3 rounded-lg border cursor-move transition-all duration-200 hover:shadow-md ${
+                            getEventUrgencyClass(event) || 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-gray-900 truncate">{event.title}</h4>
+                              <p className="text-sm text-gray-600 truncate">{event.description}</p>
+                              {event.unit && (
+                                <p className="text-xs text-gray-500 mt-1">{event.building} {event.unit}</p>
                               )}
-                              onClick={() => handleEventClick(event)}
-                              onContextMenu={(e) => {
-                                e.preventDefault();
-                                handleEventHold(event);
-                              }}
-                              onTouchStart={(e) => {
-                                const touchTimeout = setTimeout(() => {
-                                  handleEventHold(event);
-                                }, 300);
-                                
-                                const clearTouch = () => {
-                                  clearTimeout(touchTimeout);
-                                  document.removeEventListener('touchend', clearTouch);
-                                  document.removeEventListener('touchmove', clearTouch);
-                                };
-                                
-                                document.addEventListener('touchend', clearTouch);
-                                document.addEventListener('touchmove', clearTouch);
-                              }}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1 min-w-0">
-                                  <h4 className={cn(
-                                    "text-sm font-medium truncate",
-                                    isOverdue ? "text-red-900" : "text-gray-900"
-                                  )}>
-                                    {event.title}
-                                    {isOverdue && <span className="ml-2 text-xs font-bold">OVERDUE</span>}
-                                  </h4>
-                                  {event.description && (
-                                    <p className={cn(
-                                      "text-xs truncate mt-1",
-                                      isOverdue ? "text-red-700" : "text-gray-600"
-                                    )}>
-                                      {event.description}
-                                    </p>
-                                  )}
-                                </div>
-                                <div className={cn(
-                                  "text-xs ml-2 flex-shrink-0",
-                                  isOverdue ? "text-red-700 font-bold" : "text-blue-600"
-                                )}>
-                                  {event.time}
-                                </div>
-                              </div>
                             </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                    
-                    {isDragOver && !isLunch && !isOutsideWorkHours && !maxReached && (
-                      <div className="absolute inset-0 pointer-events-none bg-green-100 bg-opacity-50 rounded-lg border-2 border-green-400 border-dashed animate-pulse" />
-                    )}
-                  </div>
+                            <div className="ml-2 flex-shrink-0">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                event.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                event.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-green-100 text-green-800'
+                              }`}>
+                                {event.priority}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
-            );
-          })
-        )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
