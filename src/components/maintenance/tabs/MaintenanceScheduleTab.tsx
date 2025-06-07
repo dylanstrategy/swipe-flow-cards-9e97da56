@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UnitTurnTracker from '../UnitTurnTracker';
@@ -300,7 +299,7 @@ const MaintenanceScheduleTab = ({
             </Tabs>
           </div>
 
-          <div className="relative">
+          <div className="w-full">
             {activeTab === 'queue' && (
               <div className="w-full">
                 <WorkOrderQueue 
