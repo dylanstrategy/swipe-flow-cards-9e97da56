@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, Wrench, AlertTriangle, CheckCircle2, User, ArrowLeft } from 'lucide-react';
+import { Clock, Wrench, AlertTriangle, CheckCircle2, User, ArrowLeft, Phone, Calendar } from 'lucide-react';
 import WorkOrderTimeline from './WorkOrderTimeline';
 
 interface WorkOrderTrackerProps {
@@ -184,22 +185,22 @@ const WorkOrderTracker = ({ onSelectWorkOrder, onViewDetails, onClose }: WorkOrd
 
   const getPriorityColor = (priority: string) => {
     switch (priority.toLowerCase()) {
-      case 'urgent': return 'bg-red-100 text-red-800 border-red-200';
-      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'urgent': return 'bg-red-500 text-white border-red-500';
+      case 'high': return 'bg-orange-500 text-white border-orange-500';
+      case 'medium': return 'bg-yellow-500 text-white border-yellow-500';
+      case 'low': return 'bg-green-500 text-white border-green-500';
+      default: return 'bg-gray-500 text-white border-gray-500';
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'in progress': return 'bg-blue-100 text-blue-800';
-      case 'assigned': return 'bg-purple-100 text-purple-800';
-      case 'scheduled': return 'bg-indigo-100 text-indigo-800';
-      case 'overdue': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'completed': return 'bg-green-600 text-white';
+      case 'in progress': return 'bg-blue-600 text-white';
+      case 'assigned': return 'bg-purple-600 text-white';
+      case 'scheduled': return 'bg-indigo-600 text-white';
+      case 'overdue': return 'bg-red-600 text-white';
+      default: return 'bg-gray-600 text-white';
     }
   };
 
@@ -294,61 +295,87 @@ const WorkOrderTracker = ({ onSelectWorkOrder, onViewDetails, onClose }: WorkOrd
         </div>
 
         {/* Pending Work Orders */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           <h3 className="text-lg font-medium text-gray-900">Pending Work Orders</h3>
           {recentWorkOrders.map((order) => (
             <Card 
               key={order.id} 
-              className="hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-blue-500"
+              className="hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-[1.02] border-0 shadow-lg bg-gradient-to-r from-white to-gray-50"
               onClick={() => handleWorkOrderClick(order)}
             >
               <CardContent className="p-0">
-                <div className="flex items-start p-4">
-                  {/* Work Order Photo */}
-                  <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 mr-4">
-                    <img 
-                      src={order.photo} 
-                      alt="Work order issue"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+                <div className="relative overflow-hidden rounded-lg">
+                  {/* Priority Color Strip */}
+                  <div className={`absolute top-0 left-0 w-full h-1 ${
+                    order.priority.toLowerCase() === 'urgent' ? 'bg-red-500' :
+                    order.priority.toLowerCase() === 'high' ? 'bg-orange-500' :
+                    order.priority.toLowerCase() === 'medium' ? 'bg-yellow-500' :
+                    'bg-green-500'
+                  }`}></div>
                   
-                  {/* Work Order Details */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="font-bold text-gray-900">
-                        #{order.id}
+                  <div className="p-6">
+                    <div className="flex items-start gap-4">
+                      {/* Work Order Photo */}
+                      <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 shadow-md">
+                        <img 
+                          src={order.photo} 
+                          alt="Work order issue"
+                          className="w-full h-full object-cover"
+                        />
                       </div>
-                      <div className="flex gap-2">
-                        <Badge className={getPriorityColor(order.priority)}>
-                          {order.priority}
-                        </Badge>
-                        <Badge className={getStatusColor(order.status)}>
-                          {order.status}
-                        </Badge>
+                      
+                      {/* Work Order Details */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-xl text-gray-900">#{order.id}</span>
+                            <Badge className={`${getPriorityColor(order.priority)} font-semibold px-3 py-1`}>
+                              {order.priority.toUpperCase()}
+                            </Badge>
+                          </div>
+                          <Badge className={`${getStatusColor(order.status)} font-semibold px-3 py-1`}>
+                            {order.status.toUpperCase()}
+                          </Badge>
+                        </div>
+                        
+                        <div className="mb-3">
+                          <h3 className="font-bold text-lg text-gray-900 mb-1">
+                            Unit {order.unit} - {order.title}
+                          </h3>
+                          <p className="text-gray-600 text-sm leading-relaxed">
+                            {order.description}
+                          </p>
+                        </div>
+                        
+                        {/* Resident Info Row */}
+                        <div className="flex items-center gap-4 mb-3 p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <User className="w-4 h-4 text-gray-500" />
+                            <span className="text-sm font-medium text-gray-700">{order.resident}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Phone className="w-4 h-4 text-gray-500" />
+                            <span className="text-sm text-gray-600">{order.phone}</span>
+                          </div>
+                        </div>
+                        
+                        {/* Bottom Info Row */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                              <User className="w-4 h-4 text-blue-500" />
+                              <span className="text-sm font-medium text-gray-700">{order.assignedTo}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-4 h-4 text-green-500" />
+                              <span className="text-sm text-gray-600">Est. {order.estimatedTime}</span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-sm font-bold text-red-600">{order.daysOpen} days open</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    
-                    <h3 className="font-semibold text-gray-900 mb-1">
-                      Unit {order.unit} - {order.title}
-                    </h3>
-                    
-                    <div className="text-sm text-gray-600 mb-2">
-                      {order.description}
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                      <div className="flex items-center gap-4">
-                        <span className="flex items-center gap-1">
-                          <User className="w-3 h-3" />
-                          {order.assignedTo}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          Est. {order.estimatedTime}
-                        </span>
-                      </div>
-                      <span>{order.daysOpen} days open</span>
                     </div>
                   </div>
                 </div>
