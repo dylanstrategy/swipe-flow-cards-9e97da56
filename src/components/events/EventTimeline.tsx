@@ -9,10 +9,26 @@ interface EventTimelineProps {
   userRole: string;
 }
 
+interface TimelineItem {
+  id: number;
+  timestamp: Date;
+  type: string;
+  title: string;
+  description: string;
+  icon: any;
+  user: string;
+  color: string;
+  attachments?: Array<{
+    type: 'image' | 'video';
+    url: string;
+    description: string;
+  }>;
+}
+
 const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
   // Generate timeline items based on event type
-  const getTimelineItems = () => {
-    const baseItems = [
+  const getTimelineItems = (): TimelineItem[] => {
+    const baseItems: TimelineItem[] = [
       {
         id: 1,
         timestamp: new Date('2025-05-21T08:30:00'),
@@ -24,7 +40,7 @@ const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
         color: 'text-blue-600 bg-blue-100',
         attachments: event.type === 'maintenance' && event.image ? [
           {
-            type: 'image',
+            type: 'image' as const,
             url: event.image,
             description: 'Work order photo'
           }
@@ -145,9 +161,7 @@ const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
     return format(date, 'MMM d, yyyy at h:mm a');
   };
 
-  const renderAttachments = (attachments: any[]) => {
-    if (!attachments || attachments.length === 0) return null;
-
+  const renderAttachments = (attachments: Array<{type: string; url: string; description: string}>) => {
     return (
       <div className="mt-3 space-y-2">
         {attachments.map((attachment, index) => (
@@ -229,7 +243,7 @@ const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
                     </div>
 
                     {/* Render attachments if available */}
-                    {item.attachments && renderAttachments(item.attachments)}
+                    {item.attachments && item.attachments.length > 0 && renderAttachments(item.attachments)}
                   </div>
                 </div>
               );
