@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -162,21 +161,22 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
     console.log(`Removing message ${messageId}`);
   };
 
+  const handleBackToList = () => {
+    if (selectedMessage) {
+      // Check if message should be removed when going back
+      if (selectedMessage.date && !isToday(selectedMessage.date) && !selectedMessage.unread) {
+        removeMessage(selectedMessage.id);
+      }
+    }
+    setSelectedMessage(null);
+  };
+
   const handleMessageClick = (message: Message) => {
     setSelectedMessage(message);
     
     // If message is unread, mark as read
     if (message.unread) {
       markAsRead(message.id);
-    }
-
-    // If message is not happening today and becomes read, remove it
-    if (message.date && !isToday(message.date) && message.unread) {
-      // Small delay to allow the user to see the message before it disappears
-      setTimeout(() => {
-        removeMessage(message.id);
-        setSelectedMessage(null);
-      }, 2000);
     }
   };
 
@@ -197,7 +197,7 @@ const OperatorMessagesTab: React.FC<OperatorMessagesTabProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setSelectedMessage(null)}
+              onClick={handleBackToList}
               className="p-2"
             >
               <ArrowLeft className="w-5 h-5" />
