@@ -549,16 +549,6 @@ const ScheduleTab = () => {
       >
         <Plus className="text-white" size={28} />
       </button>
-      
-      {/* Enhanced Calendar with Drag & Drop */}
-      <div className="mb-6">
-        <DroppableCalendar
-          selectedDate={selectedDate}
-          onSelect={setSelectedDate}
-          hasEventsOnDate={hasEventsOnDate}
-          onDropSuggestion={handleDropSuggestion}
-        />
-      </div>
 
       {/* Hourly Calendar View */}
       <div className="mb-6">
