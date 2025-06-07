@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Clock, MapPin, AlertTriangle, Check, Home, MessageSquare, Users, Calendar, Wrench } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +12,7 @@ const OperatorTodayTab = () => {
   const [todayEvents] = useState([
     {
       id: 1,
+      date: new Date(), // Add date property for today
       time: '09:00',
       title: 'Move-in Inspection',
       description: 'Unit 204A - Sarah Johnson',
@@ -25,6 +25,7 @@ const OperatorTodayTab = () => {
     },
     {
       id: 2,
+      date: new Date(), // Add date property for today
       time: '10:30',
       title: 'Lease Signing',
       description: 'Michael Chen - Unit 156B renewal',
@@ -37,6 +38,7 @@ const OperatorTodayTab = () => {
     },
     {
       id: 3,
+      date: new Date(), // Add date property for today
       time: '11:45',
       title: 'Delinquency Follow-up',
       description: 'Payment plan discussion - Unit 108',
@@ -49,6 +51,7 @@ const OperatorTodayTab = () => {
     },
     {
       id: 4,
+      date: new Date(), // Add date property for today
       time: '14:00',
       title: 'Maintenance Coordination',
       description: 'HVAC repair scheduling for Units 301-305',
@@ -61,6 +64,7 @@ const OperatorTodayTab = () => {
     },
     {
       id: 5,
+      date: new Date(), // Add date property for today
       time: '15:30',
       title: 'Prospect Tour',
       description: 'Jennifer Adams - 1BR apartment viewing',
@@ -73,6 +77,7 @@ const OperatorTodayTab = () => {
     },
     {
       id: 6,
+      date: new Date(), // Add date property for today
       time: '16:45',
       title: 'Renewal Discussion',
       description: 'Thompson Family - Lease renewal negotiation',
