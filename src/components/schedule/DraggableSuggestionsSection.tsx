@@ -109,10 +109,13 @@ const DraggableSuggestionsSection = ({
   };
 
   const handleDragStart = (e: React.DragEvent, suggestion: Suggestion) => {
-    e.dataTransfer.setData('application/json', JSON.stringify({
+    console.log('Suggestion drag start:', suggestion);
+    const dragData = {
       type: 'suggestion',
       ...suggestion
-    }));
+    };
+    console.log('Setting drag data:', dragData);
+    e.dataTransfer.setData('application/json', JSON.stringify(dragData));
     e.dataTransfer.effectAllowed = 'move';
   };
 
@@ -200,4 +203,3 @@ const DraggableSuggestionsSection = ({
 };
 
 export default DraggableSuggestionsSection;
-

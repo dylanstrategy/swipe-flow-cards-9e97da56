@@ -43,6 +43,7 @@ const HourlyCalendarView = ({
   };
 
   const handleEventDragStart = (e: React.DragEvent, event: any) => {
+    console.log('Event drag start:', event);
     setDraggedEvent(event);
     e.dataTransfer.setData('application/json', JSON.stringify({
       type: 'event',
@@ -63,23 +64,41 @@ const HourlyCalendarView = ({
 
   const handleSlotDrop = (e: React.DragEvent, timeSlot: string) => {
     e.preventDefault();
+    console.log('Drop event triggered on time slot:', timeSlot);
     setDragOverSlot(null);
     
     try {
-      const dragData = JSON.parse(e.dataTransfer.getData('application/json'));
+      const dragDataText = e.dataTransfer.getData('application/json');
+      console.log('Drag data received:', dragDataText);
       
-      if (dragData.type === 'event' && draggedEvent) {
+      if (!dragDataText) {
+        console.error('No drag data found');
+        return;
+      }
+      
+      const dragData = JSON.parse(dragDataText);
+      console.log('Parsed drag data:', dragData);
+      
+      if (dragData.type === 'suggestion') {
+        console.log('Processing suggestion drop:', dragData, 'at time:', timeSlot);
+        // Handle suggestion drop
+        if (onDropSuggestion) {
+          onDropSuggestion(dragData, timeSlot);
+        } else {
+          console.error('onDropSuggestion handler not provided');
+        }
+      } else if (dragData.type === 'event' && draggedEvent) {
+        console.log('Processing event reschedule:', draggedEvent, 'to time:', timeSlot);
         // Handle event reschedule
         if (draggedEvent.time !== timeSlot) {
-          onEventReschedule?.(draggedEvent, timeSlot);
+          if (onEventReschedule) {
+            onEventReschedule(draggedEvent, timeSlot);
+          }
           toast({
             title: "Event Rescheduled",
             description: `${draggedEvent.title} moved to ${formatTime(timeSlot)}`,
           });
         }
-      } else if (dragData.type === 'suggestion') {
-        // Handle suggestion drop
-        onDropSuggestion?.(dragData, timeSlot);
       }
     } catch (error) {
       console.error('Error parsing dropped data:', error);
@@ -106,7 +125,7 @@ const HourlyCalendarView = ({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden h-[calc(100vh-220px)]">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden h-[calc(100vh-300px)]">
       <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
         <h3 className="text-lg font-semibold text-gray-900">
           {format(selectedDate, 'EEEE, MMMM d, yyyy')}
