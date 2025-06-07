@@ -16,6 +16,9 @@ const UnitTurnCard: React.FC<{ unitTurn: any; onClick: () => void }> = ({ unitTu
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
+    options: {
+      dropEffect: 'move',
+    },
   }));
 
   const getPriorityColor = (priority: string) => {
@@ -43,7 +46,14 @@ const UnitTurnCard: React.FC<{ unitTurn: any; onClick: () => void }> = ({ unitTu
   };
 
   return (
-    <div ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }}>
+    <div 
+      ref={drag} 
+      style={{ 
+        opacity: isDragging ? 0.5 : 1,
+        transform: isDragging ? 'rotate(2deg)' : 'none',
+        cursor: 'move'
+      }}
+    >
       <Card 
         className="hover:shadow-md transition-shadow cursor-move"
         onClick={onClick}

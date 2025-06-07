@@ -57,7 +57,7 @@ const ScheduleDropZone: React.FC<ScheduleDropZoneProps> = ({ onScheduleWorkOrder
           description: `${item.workOrder.title} scheduled for ${scheduledTime === 'Tomorrow 09:00' ? 'tomorrow at 9:00 AM' : `today at ${scheduledTime}`}`,
         });
       } else if (item.unitTurn) {
-        // Convert unit turn to work order format for scheduling
+        // Convert unit turn to work order format for consistent scheduling
         const unitTurnAsWorkOrder = {
           id: item.unitTurn.id,
           unit: item.unitTurn.unit,
@@ -72,9 +72,13 @@ const ScheduleDropZone: React.FC<ScheduleDropZoneProps> = ({ onScheduleWorkOrder
           daysOpen: item.unitTurn.daysUntilMoveIn,
           estimatedTime: '4 hours',
           submittedDate: new Date().toISOString().split('T')[0],
-          photo: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400'
+          photo: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400',
+          // Mark this as a unit turn for proper handling
+          isUnitTurn: true,
+          originalUnitTurn: item.unitTurn
         };
         
+        // Schedule using the same logic as work orders
         onScheduleWorkOrder(unitTurnAsWorkOrder, scheduledTime);
         
         toast({
