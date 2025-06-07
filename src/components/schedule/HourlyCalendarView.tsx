@@ -1,236 +1,276 @@
 
-import React, { useState } from 'react';
-import { format, isSameDay } from 'date-fns';
-import { useToast } from '@/hooks/use-toast';
-import { useRealtimeOverdueDetection } from '@/hooks/useRealtimeOverdueDetection';
-import { useIsMobile } from '@/hooks/use-mobile';
+import React, { useState, useRef } from 'react';
+import { format, addMinutes, startOfDay } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { Clock, Calendar, Plus } from 'lucide-react';
+
+interface Event {
+  id: number | string;
+  time: string;
+  title: string;
+  description: string;
+  category: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  unit?: string;
+  building?: string;
+  dueDate?: Date;
+  image?: string;
+  isDroppedSuggestion?: boolean;
+  rescheduledCount?: number;
+}
 
 interface HourlyCalendarViewProps {
   selectedDate: Date;
-  events: any[];
+  events: Event[];
   onDropSuggestion?: (suggestion: any, targetTime?: string) => void;
-  onEventClick?: (event: any) => void;
-  onEventHold?: (event: any) => void;
-  onEventReschedule?: (event: any, newTime: string) => void;
+  onEventClick?: (event: Event) => void;
+  onEventHold?: (event: Event) => void;
+  onEventReschedule?: (event: Event, newTime: string) => void;
 }
 
-const HourlyCalendarView = ({ 
-  selectedDate, 
-  events, 
-  onDropSuggestion, 
-  onEventClick, 
+const HourlyCalendarView = ({
+  selectedDate,
+  events,
+  onDropSuggestion,
+  onEventClick,
   onEventHold,
-  onEventReschedule 
+  onEventReschedule
 }: HourlyCalendarViewProps) => {
-  const { toast } = useToast();
-  const isMobile = useIsMobile();
-  const [draggedEvent, setDraggedEvent] = useState<any>(null);
   const [dragOverSlot, setDragOverSlot] = useState<string | null>(null);
-  
-  // Use real-time overdue detection
-  const { isEventOverdue } = useRealtimeOverdueDetection(events);
+  const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
+  const dragCounterRef = useRef(0);
 
-  // Generate all 48 time slots for 24 hours (30-minute intervals)
-  const timeSlots = Array.from({ length: 48 }, (_, i) => {
-    const hour = Math.floor(i / 2);
-    const minute = i % 2 === 0 ? '00' : '30';
-    return `${hour.toString().padStart(2, '0')}:${minute}`;
+  const timeSlots = Array.from({ length: 24 }, (_, i) => {
+    const hour = i.toString().padStart(2, '0');
+    return `${hour}:00`;
   });
 
   const convertTimeToMinutes = (timeString: string): number => {
+    if (!timeString) return 0;
+    
+    if (timeString.includes('AM') || timeString.includes('PM')) {
+      const [time, period] = timeString.split(' ');
+      const [hours, minutes] = time.split(':').map(Number);
+      let totalMinutes = (hours % 12) * 60 + minutes;
+      if (period === 'PM' && hours !== 12) totalMinutes += 12 * 60;
+      if (period === 'AM' && hours === 12) totalMinutes = minutes;
+      return totalMinutes;
+    }
+    
     const [hours, minutes] = timeString.split(':').map(Number);
     return hours * 60 + minutes;
   };
 
-  const handleEventDragStart = (e: React.DragEvent, event: any) => {
-    console.log('Event drag start:', event);
-    setDraggedEvent(event);
-    
-    // Set the drag data for the event
-    const dragData = {
-      type: 'event',
-      event: event,
-      eventId: event.id,
-      originalTime: event.time
+  const formatTime12Hour = (timeString: string): string => {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+    return `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
+  };
+
+  const getEventsForTimeSlot = (timeSlot: string) => {
+    const slotMinutes = convertTimeToMinutes(timeSlot);
+    return events.filter(event => {
+      const eventMinutes = convertTimeToMinutes(event.time);
+      return eventMinutes >= slotMinutes && eventMinutes < slotMinutes + 60;
+    });
+  };
+
+  const getPriorityColor = (priority: string, isDropped?: boolean) => {
+    const baseColors = {
+      'urgent': isDropped ? 'bg-red-500 border-red-600' : 'bg-red-100 border-red-300 text-red-800',
+      'high': isDropped ? 'bg-orange-500 border-orange-600' : 'bg-orange-100 border-orange-300 text-orange-800',
+      'medium': isDropped ? 'bg-yellow-500 border-yellow-600' : 'bg-yellow-100 border-yellow-300 text-yellow-800',
+      'low': isDropped ? 'bg-blue-500 border-blue-600' : 'bg-blue-100 border-blue-300 text-blue-800'
     };
-    
-    e.dataTransfer.setData('application/json', JSON.stringify(dragData));
+    return baseColors[priority as keyof typeof baseColors] || baseColors.low;
+  };
+
+  const handleDragStart = (e: React.DragEvent, event: Event) => {
+    setDraggedEvent(event);
     e.dataTransfer.effectAllowed = 'move';
-    
-    // Add visual feedback - properly cast to HTMLElement
-    const target = e.currentTarget as HTMLElement;
-    target.style.opacity = '0.5';
+    e.dataTransfer.setData('text/plain', '');
   };
 
-  const handleEventDragEnd = (e: React.DragEvent) => {
-    // Reset visual feedback - properly cast to HTMLElement
-    const target = e.currentTarget as HTMLElement;
-    target.style.opacity = '1';
+  const handleDragEnd = () => {
     setDraggedEvent(null);
+    setDragOverSlot(null);
+    dragCounterRef.current = 0;
   };
 
-  const handleSlotDragOver = (e: React.DragEvent, timeSlot: string) => {
+  const handleDragOver = (e: React.DragEvent, timeSlot: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     setDragOverSlot(timeSlot);
   };
 
-  const handleSlotDragLeave = (e: React.DragEvent) => {
-    // Only clear drag over if we're actually leaving the slot
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+  const handleDragEnter = (e: React.DragEvent, timeSlot: string) => {
+    e.preventDefault();
+    dragCounterRef.current++;
+    setDragOverSlot(timeSlot);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) {
       setDragOverSlot(null);
     }
   };
 
-  const handleSlotDrop = (e: React.DragEvent, timeSlot: string) => {
+  const handleDrop = (e: React.DragEvent, timeSlot: string) => {
     e.preventDefault();
-    console.log('Drop event triggered on time slot:', timeSlot);
     setDragOverSlot(null);
-    
+    dragCounterRef.current = 0;
+
     try {
-      const dragDataText = e.dataTransfer.getData('application/json');
-      console.log('Drag data received:', dragDataText);
-      
-      if (!dragDataText) {
-        console.error('No drag data found');
+      // First check if it's an existing event being moved
+      if (draggedEvent) {
+        onEventReschedule?.(draggedEvent, timeSlot);
+        setDraggedEvent(null);
         return;
       }
-      
-      const dragData = JSON.parse(dragDataText);
-      console.log('Parsed drag data:', dragData);
-      
-      if (dragData.type === 'suggestion') {
-        console.log('Processing suggestion drop:', dragData, 'at time:', timeSlot);
-        // Handle suggestion drop
-        if (onDropSuggestion) {
-          onDropSuggestion(dragData, timeSlot);
-        } else {
-          console.error('onDropSuggestion handler not provided');
-        }
-      } else if (dragData.type === 'event') {
-        console.log('Processing event reschedule:', dragData.event, 'to time:', timeSlot);
-        // Handle event reschedule
-        if (dragData.originalTime !== timeSlot) {
-          if (onEventReschedule) {
-            onEventReschedule(dragData.event, timeSlot);
-          }
-          toast({
-            title: "Event Rescheduled",
-            description: `${dragData.event.title} moved to ${formatTime(timeSlot)}`,
-          });
-        }
+
+      // Then check if it's a suggestion being dropped
+      const suggestionData = e.dataTransfer.getData('application/json');
+      if (suggestionData) {
+        const suggestion = JSON.parse(suggestionData);
+        onDropSuggestion?.(suggestion, timeSlot);
       }
     } catch (error) {
-      console.error('Error parsing dropped data:', error);
+      console.error('Error handling drop:', error);
     }
-    
-    setDraggedEvent(null);
   };
 
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes?.padStart(2, '0') || '00'} ${ampm}`;
+  const handleEventClick = (event: Event) => {
+    onEventClick?.(event);
   };
 
-  const getEventsForTime = (time: string) => {
-    return events.filter(event => event.time === time);
-  };
-
-  const getEventUrgencyClass = (event: any) => {
-    const isOverdue = isEventOverdue(event);
-    return isOverdue ? 'wiggle-urgent bg-red-100 border-red-300' : '';
+  const handleEventHold = (event: Event) => {
+    onEventHold?.(event);
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden h-[calc(100vh-300px)]">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
       <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-        <h3 className="text-lg font-semibold text-gray-900">
-          {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-        </h3>
-        <p className="text-sm text-gray-600">Click to view • Drag to reschedule • Drop suggestions here</p>
+        <div className="flex items-center gap-2 mb-2">
+          <Clock className="w-5 h-5 text-blue-600" />
+          <h3 className="text-lg font-semibold text-gray-900">
+            {format(selectedDate, 'EEEE, MMMM d')}
+          </h3>
+        </div>
+        <p className="text-sm text-gray-600">
+          Drag suggestions here to schedule them at specific times
+        </p>
       </div>
 
-      <div className="h-full overflow-y-auto overflow-x-hidden">
+      <div className="divide-y divide-gray-100">
         {timeSlots.map((timeSlot) => {
-          const eventsAtTime = getEventsForTime(timeSlot);
+          const slotEvents = getEventsForTimeSlot(timeSlot);
           const isDragOver = dragOverSlot === timeSlot;
           
           return (
             <div
               key={timeSlot}
-              className={`border-b border-gray-100 last:border-b-0 min-h-[60px] transition-all duration-200 ${
-                isDragOver ? 'bg-green-100 border-green-300 scale-105' : 'hover:bg-gray-50'
-              }`}
-              onDragOver={(e) => handleSlotDragOver(e, timeSlot)}
-              onDragLeave={handleSlotDragLeave}
-              onDrop={(e) => handleSlotDrop(e, timeSlot)}
+              className={cn(
+                "flex min-h-[80px] transition-all duration-200",
+                isDragOver && "bg-green-50 border-l-4 border-green-400"
+              )}
+              onDragOver={(e) => handleDragOver(e, timeSlot)}
+              onDragEnter={(e) => handleDragEnter(e, timeSlot)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, timeSlot)}
             >
-              <div className="flex min-w-0">
-                <div className={`flex-shrink-0 p-3 text-sm text-gray-500 border-r border-gray-100 ${
-                  isMobile ? 'w-16' : 'w-20'
-                }`}>
-                  <div className="truncate font-medium">
-                    {isMobile ? timeSlot : formatTime(timeSlot)}
+              {/* Time column */}
+              <div className="w-20 flex-shrink-0 p-4 bg-gray-50 flex flex-col items-center justify-start">
+                <span className="text-sm font-medium text-gray-900">
+                  {formatTime12Hour(timeSlot)}
+                </span>
+              </div>
+
+              {/* Events column */}
+              <div className="flex-1 p-4 min-h-[80px] relative">
+                {slotEvents.length === 0 ? (
+                  <div className={cn(
+                    "w-full h-full flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg transition-all duration-200",
+                    isDragOver && "border-green-400 bg-green-50 text-green-600"
+                  )}>
+                    {isDragOver ? (
+                      <span className="text-sm font-medium">Drop here to schedule</span>
+                    ) : (
+                      <Plus className="w-4 h-4" />
+                    )}
                   </div>
-                </div>
-                <div className="flex-1 p-3 min-w-0">
-                  {eventsAtTime.length === 0 ? (
-                    <div className={`text-gray-400 text-sm italic transition-all ${
-                      isDragOver ? 'text-green-600 font-medium' : ''
-                    }`}>
-                      {isDragOver ? 'Drop here to schedule' : 'Available'}
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {eventsAtTime.map((event) => (
-                        <div
-                          key={event.id}
-                          draggable
-                          onDragStart={(e) => handleEventDragStart(e, event)}
-                          onDragEnd={handleEventDragEnd}
-                          onClick={() => onEventClick?.(event)}
-                          onContextMenu={(e) => {
-                            e.preventDefault();
-                            onEventHold?.(event);
-                          }}
-                          className={`p-3 rounded-lg border cursor-move transition-all duration-200 hover:shadow-md min-w-0 touch-manipulation select-none ${
-                            getEventUrgencyClass(event) || 'bg-blue-50 border-blue-200 hover:bg-blue-100'
-                          } ${draggedEvent?.id === event.id ? 'opacity-50 scale-95' : ''}`}
-                          style={{ 
-                            touchAction: 'none',
-                            userSelect: 'none',
-                            WebkitUserSelect: 'none'
-                          }}
-                        >
-                          <div className="flex items-center justify-between min-w-0">
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-gray-900 truncate">{event.title}</h4>
-                              <p className="text-sm text-gray-600 truncate">{event.description}</p>
-                              {event.unit && (
-                                <p className="text-xs text-gray-500 mt-1 truncate">{event.building} {event.unit}</p>
-                              )}
-                            </div>
-                            <div className="ml-2 flex-shrink-0 flex items-center gap-2">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                event.priority === 'high' ? 'bg-red-100 text-red-800' :
-                                event.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-green-100 text-green-800'
-                              }`}>
-                                {event.priority}
-                              </span>
-                              <div className="text-gray-400 text-xs">
-                                ⋮⋮
+                ) : (
+                  <div className="space-y-2">
+                    {slotEvents.map((event) => (
+                      <div
+                        key={event.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, event)}
+                        onDragEnd={handleDragEnd}
+                        onClick={() => handleEventClick(event)}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          handleEventHold(event);
+                        }}
+                        className={cn(
+                          "p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md active:scale-95",
+                          getPriorityColor(event.priority, event.isDroppedSuggestion),
+                          event.isDroppedSuggestion && "text-white shadow-lg",
+                          !event.isDroppedSuggestion && "hover:scale-105"
+                        )}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h4 className={cn(
+                              "font-semibold text-sm truncate",
+                              event.isDroppedSuggestion ? "text-white" : ""
+                            )}>
+                              {event.title}
+                            </h4>
+                            <p className={cn(
+                              "text-xs mt-1 line-clamp-2",
+                              event.isDroppedSuggestion ? "text-white/90" : "text-gray-600"
+                            )}>
+                              {event.description}
+                            </p>
+                            {(event.unit || event.building) && (
+                              <div className="flex items-center gap-2 mt-2">
+                                {event.building && (
+                                  <span className={cn(
+                                    "text-xs px-2 py-1 rounded-full",
+                                    event.isDroppedSuggestion 
+                                      ? "bg-white/20 text-white" 
+                                      : "bg-gray-100 text-gray-600"
+                                  )}>
+                                    {event.building}
+                                  </span>
+                                )}
+                                {event.unit && (
+                                  <span className={cn(
+                                    "text-xs px-2 py-1 rounded-full",
+                                    event.isDroppedSuggestion 
+                                      ? "bg-white/20 text-white" 
+                                      : "bg-blue-100 text-blue-700"
+                                  )}>
+                                    Unit {event.unit}
+                                  </span>
+                                )}
                               </div>
-                            </div>
+                            )}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                        
+                        {event.rescheduledCount && event.rescheduledCount > 0 && (
+                          <div className="mt-2 text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded-full inline-block">
+                            Rescheduled {event.rescheduledCount}x
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           );
