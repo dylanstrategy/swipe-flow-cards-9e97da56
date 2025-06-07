@@ -57,13 +57,15 @@ const HourlyCalendarView = ({
     e.dataTransfer.setData('application/json', JSON.stringify(dragData));
     e.dataTransfer.effectAllowed = 'move';
     
-    // Add visual feedback
-    e.currentTarget.style.opacity = '0.5';
+    // Add visual feedback - properly cast to HTMLElement
+    const target = e.currentTarget as HTMLElement;
+    target.style.opacity = '0.5';
   };
 
   const handleEventDragEnd = (e: React.DragEvent) => {
-    // Reset visual feedback
-    e.currentTarget.style.opacity = '1';
+    // Reset visual feedback - properly cast to HTMLElement
+    const target = e.currentTarget as HTMLElement;
+    target.style.opacity = '1';
     setDraggedEvent(null);
   };
 
