@@ -575,6 +575,14 @@ const ScheduleTab = () => {
           <Plus className="text-white" size={28} />
         </button>
 
+        <DraggableSuggestionsSection 
+          selectedDate={selectedDate}
+          onSchedule={startScheduling}
+          onAction={handleAction}
+          scheduledSuggestionIds={scheduledSuggestionIds}
+          completedSuggestionIds={completedSuggestionIds}
+        />
+
         <div className="mb-6">
           <HourlyCalendarView
             selectedDate={selectedDate}
@@ -585,14 +593,6 @@ const ScheduleTab = () => {
             onEventReschedule={handleEventReschedule}
           />
         </div>
-
-        <DraggableSuggestionsSection 
-          selectedDate={selectedDate}
-          onSchedule={startScheduling}
-          onAction={handleAction}
-          scheduledSuggestionIds={scheduledSuggestionIds}
-          completedSuggestionIds={completedSuggestionIds}
-        />
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format, differenceInDays, isPast, isToday } from 'date-fns';
 import { ChevronDown, ChevronUp, Calendar, MessageSquare, Wrench, Gift, Coffee, Car, AlertTriangle } from 'lucide-react';
@@ -33,7 +32,7 @@ const DraggableSuggestionsSection = ({
   scheduledSuggestionIds,
   completedSuggestionIds = []
 }: DraggableSuggestionsSectionProps) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false); // Default to collapsed
 
   // Enhanced suggestions with completion tracking and due dates
   const suggestions: Suggestion[] = [
@@ -235,7 +234,7 @@ const DraggableSuggestionsSection = ({
 
   if (availableSuggestions.length === 0) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
         <div className="text-center text-gray-500">
           <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
           <h3 className="font-medium text-gray-900 mb-1">All caught up!</h3>
@@ -249,7 +248,7 @@ const DraggableSuggestionsSection = ({
   const highPriorityCount = availableSuggestions.filter(s => s.priority === 'high').length;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full p-4 bg-gradient-to-r from-purple-50 to-pink-50 border-b border-gray-100 flex items-center justify-between hover:from-purple-100 hover:to-pink-100 transition-colors"

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -564,17 +563,6 @@ const OperatorScheduleTab = () => {
           <Plus className="text-white" size={28} />
         </button>
 
-        <div className="mb-6">
-          <HourlyCalendarView
-            selectedDate={selectedDate}
-            events={getEventsForDate(selectedDate)}
-            onDropSuggestion={handleDropSuggestionInTimeline}
-            onEventClick={handleEventClick}
-            onEventHold={handleEventHold}
-            onEventReschedule={handleEventReschedule}
-          />
-        </div>
-
         <DraggableSuggestionsSection 
           selectedDate={selectedDate}
           onSchedule={startScheduling}
@@ -587,6 +575,17 @@ const OperatorScheduleTab = () => {
           scheduledSuggestionIds={scheduledSuggestionIds}
           completedSuggestionIds={completedSuggestionIds}
         />
+
+        <div className="mb-6">
+          <HourlyCalendarView
+            selectedDate={selectedDate}
+            events={getEventsForDate(selectedDate)}
+            onDropSuggestion={handleDropSuggestionInTimeline}
+            onEventClick={handleEventClick}
+            onEventHold={handleEventHold}
+            onEventReschedule={handleEventReschedule}
+          />
+        </div>
       </div>
     </div>
   );
