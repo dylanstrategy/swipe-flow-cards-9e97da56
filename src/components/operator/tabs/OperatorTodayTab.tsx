@@ -13,10 +13,12 @@ import RescheduleFlow from '@/components/events/RescheduleFlow';
 import EventDetailModal from '@/components/events/EventDetailModal';
 import UniversalEventDetailModal from '@/components/events/UniversalEventDetailModal';
 import WorkOrderTracker from '@/components/maintenance/WorkOrderTracker';
+import HourlyCalendarView from '@/components/schedule/HourlyCalendarView';
 import { useToast } from '@/hooks/use-toast';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 import { useResident } from '@/contexts/ResidentContext';
+import { format, addDays } from 'date-fns';
 
 const OperatorTodayTab = () => {
   const { toast } = useToast();
@@ -43,6 +45,76 @@ const OperatorTodayTab = () => {
   const [selectedEventForReschedule, setSelectedEventForReschedule] = useState<EnhancedEvent | null>(null);
   const [showUniversalEventDetail, setShowUniversalEventDetail] = useState(false);
   const [selectedUniversalEvent, setSelectedUniversalEvent] = useState<any>(null);
+
+  // Today's events - make them stateful for drag/drop updates
+  const [todayEvents, setTodayEvents] = useState([
+    {
+      id: 1,
+      time: '09:00',
+      title: 'Move-In Inspection',
+      description: 'Unit 4B - Sarah Johnson',
+      type: 'move-in',
+      priority: 'high',
+      status: 'scheduled',
+      building: 'Building A',
+      unit: '4B'
+    },
+    {
+      id: 2,
+      time: '10:30',
+      title: 'Lease Signing',
+      description: 'Unit 2C - Mike Chen renewal',
+      type: 'lease',
+      priority: 'medium',
+      status: 'confirmed',
+      building: 'Building B',
+      unit: '2C'
+    },
+    {
+      id: 3,
+      time: '11:15',
+      title: 'Resident Message',
+      description: 'Unit 5A - HVAC repair follow-up',
+      type: 'message',
+      priority: 'normal',
+      status: 'pending',
+      building: 'Building C',
+      unit: '5A'
+    },
+    {
+      id: 4,
+      time: '14:00',
+      title: 'Tour Scheduled',
+      description: 'Studio unit - Alex Rodriguez',
+      type: 'tour',
+      priority: 'normal',
+      status: 'confirmed',
+      building: 'Building A',
+      unit: 'Studio-12'
+    },
+    {
+      id: 5,
+      time: '15:30',
+      title: 'Move-Out Notice',
+      description: 'Unit 1A - Notice processing',
+      type: 'move-out',
+      priority: 'medium',
+      status: 'processing',
+      building: 'Building A',
+      unit: '1A'
+    },
+    {
+      id: 6,
+      time: '16:15',
+      title: 'Payment Follow-up',
+      description: 'Unit 3D - Late rent discussion',
+      type: 'payment',
+      priority: 'high',
+      status: 'urgent',
+      building: 'Building B',
+      unit: '3D'
+    }
+  ]);
 
   // Calculate real data from resident context
   const currentResidents = getCurrentResidents();
@@ -83,76 +155,6 @@ const OperatorTodayTab = () => {
   };
 
   const currentCounts = getCountsForTimeframe(selectedTimeframe);
-
-  // Daily scheduled events for calendar view
-  const dailyEvents = [
-    {
-      id: 1,
-      time: '09:00 AM',
-      title: 'Move-In Inspection',
-      description: 'Unit 4B - Sarah Johnson',
-      type: 'move-in',
-      priority: 'high',
-      status: 'scheduled',
-      building: 'Building A',
-      unit: '4B'
-    },
-    {
-      id: 2,
-      time: '10:30 AM',
-      title: 'Lease Signing',
-      description: 'Unit 2C - Mike Chen renewal',
-      type: 'lease',
-      priority: 'medium',
-      status: 'confirmed',
-      building: 'Building B',
-      unit: '2C'
-    },
-    {
-      id: 3,
-      time: '11:15 AM',
-      title: 'Resident Message',
-      description: 'Unit 5A - HVAC repair follow-up',
-      type: 'message',
-      priority: 'normal',
-      status: 'pending',
-      building: 'Building C',
-      unit: '5A'
-    },
-    {
-      id: 4,
-      time: '02:00 PM',
-      title: 'Tour Scheduled',
-      description: 'Studio unit - Alex Rodriguez',
-      type: 'tour',
-      priority: 'normal',
-      status: 'confirmed',
-      building: 'Building A',
-      unit: 'Studio-12'
-    },
-    {
-      id: 5,
-      time: '03:30 PM',
-      title: 'Move-Out Notice',
-      description: 'Unit 1A - Notice processing',
-      type: 'move-out',
-      priority: 'medium',
-      status: 'processing',
-      building: 'Building A',
-      unit: '1A'
-    },
-    {
-      id: 6,
-      time: '04:15 PM',
-      title: 'Payment Follow-up',
-      description: 'Unit 3D - Late rent discussion',
-      type: 'payment',
-      priority: 'high',
-      status: 'urgent',
-      building: 'Building B',
-      unit: '3D'
-    }
-  ];
 
   // Chart data using real occupancy rate
   const occupancyTrendData = [
@@ -284,6 +286,30 @@ const OperatorTodayTab = () => {
     console.log('Daily event clicked:', event);
     setSelectedUniversalEvent(event);
     setShowUniversalEventDetail(true);
+  };
+
+  // Handle event rescheduling in the universal calendar
+  const handleEventReschedule = (event: any, newTime: string) => {
+    console.log('Handling event reschedule in OperatorTodayTab:', event, 'to', newTime);
+    
+    setTodayEvents(prevEvents => 
+      prevEvents.map(e => 
+        e.id === event.id ? { ...e, time: newTime } : e
+      )
+    );
+
+    const formatTime = (time: string) => {
+      const [hours, minutes] = time.split(':');
+      const hour = parseInt(hours);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour % 12 || 12;
+      return `${displayHour}:${minutes?.padStart(2, '0') || '00'} ${ampm}`;
+    };
+
+    toast({
+      title: "Event Rescheduled",
+      description: `${event.title} moved to ${formatTime(newTime)}`,
+    });
   };
 
   if (showRescheduleFlow && selectedEventForReschedule) {
@@ -644,21 +670,12 @@ const OperatorTodayTab = () => {
         </div>
       </div>
 
-      {/* Live Activity Feed / Daily Calendar Toggle */}
+      {/* Today's Schedule - Universal Calendar View */}
       <div className="bg-white rounded-xl shadow-sm border p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-            {showCalendarView ? (
-              <>
-                <CalendarDays className="text-blue-600" size={24} />
-                TODAY'S SCHEDULE
-              </>
-            ) : (
-              <>
-                <TrendingUp className="text-purple-600" size={24} />
-                LIVE FEED
-              </>
-            )}
+            <CalendarDays className="text-blue-600" size={24} />
+            TODAY'S SCHEDULE
           </h2>
           
           <button
@@ -680,54 +697,6 @@ const OperatorTodayTab = () => {
         </div>
 
         {showCalendarView ? (
-          /* Daily Calendar View with Click-to-Open */
-          <div className="space-y-4">
-            <div className="text-center mb-4">
-              <p className="text-gray-600">
-                {new Date().toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-              </p>
-              <p className="text-sm text-gray-500">{dailyEvents.length} events scheduled</p>
-            </div>
-            
-            {dailyEvents.map((event) => (
-              <div
-                key={event.id}
-                onClick={() => handleDailyEventClick(event)}
-                className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
-              >
-                <div className="flex-shrink-0 w-16 text-center">
-                  <div className="text-sm font-medium text-gray-900">{event.time}</div>
-                </div>
-                
-                <div className="flex-shrink-0 mt-1">
-                  {getEventTypeIcon(event.type)}
-                </div>
-                
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-medium text-gray-900">{event.title}</h3>
-                    <Badge className={getEventPriorityColor(event.priority, event.status)}>
-                      {event.status === 'urgent' ? 'URGENT' : event.priority.toUpperCase()}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-gray-600">{event.description}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="outline" className="text-xs">
-                      {event.type.replace('-', ' ')}
-                    </Badge>
-                    <span className="text-xs text-gray-500">•</span>
-                    <span className="text-xs text-gray-500 capitalize">{event.status}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
           /* Live Activity Feed */
           <div className="space-y-3">
             <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
@@ -745,6 +714,29 @@ const OperatorTodayTab = () => {
               <span className="text-sm text-gray-700">Maintenance request: Unit 3A - Leaky faucet</span>
               <span className="text-xs text-gray-500 ml-auto">32 min ago</span>
             </div>
+          </div>
+        ) : (
+          /* Universal Today Calendar View */
+          <div className="space-y-4">
+            <div className="text-center mb-4">
+              <p className="text-gray-600">
+                {new Date().toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </p>
+              <p className="text-sm text-gray-500">{todayEvents.length} events scheduled</p>
+            </div>
+            
+            <HourlyCalendarView
+              selectedDate={new Date()}
+              events={todayEvents}
+              onEventClick={handleDailyEventClick}
+              onEventHold={handleHoldEvent}
+              onEventReschedule={handleEventReschedule}
+            />
           </div>
         )}
       </div>
