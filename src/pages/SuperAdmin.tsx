@@ -143,31 +143,19 @@ const SuperAdmin = () => {
   };
 
   const handleAddProperty = () => {
-    toast({
-      title: "Add Property",
-      description: "Property creation functionality coming soon",
-    });
+    setShowBulkImport(true);
   };
 
   const handleAddClient = () => {
-    toast({
-      title: "Add Client", 
-      description: "Client creation functionality coming soon",
-    });
+    setShowAddUser(true);
   };
 
   const handleAddLead = () => {
-    toast({
-      title: "Add Lead",
-      description: "Lead creation functionality coming soon", 
-    });
+    setShowAddUser(true);
   };
 
   const handleCreateCampaign = () => {
-    toast({
-      title: "Create Campaign",
-      description: "Marketing campaign functionality coming soon",
-    });
+    setShowCreateEvent(true);
   };
 
   const filteredLeads = leads.filter(lead =>
@@ -251,7 +239,7 @@ const SuperAdmin = () => {
     switch (activeSection) {
       case 'overview':
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 max-w-full">
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card>
@@ -298,9 +286,9 @@ const SuperAdmin = () => {
                     {properties.slice(0, 3).map((property) => (
                       <div key={property.id} className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
                            onClick={() => handlePropertyClick(property)}>
-                        <div>
-                          <h4 className="font-medium">{property.name}</h4>
-                          <p className="text-sm text-gray-600">{property.units} units</p>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-medium truncate">{property.name}</h4>
+                          <p className="text-sm text-gray-600 truncate">{property.units} units</p>
                         </div>
                         <Badge className={getStatusColor(property.status)}>
                           {property.status}
@@ -320,9 +308,9 @@ const SuperAdmin = () => {
                     {leads.slice(0, 3).map((lead) => (
                       <div key={lead.id} className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
                            onClick={() => handleLeadClick(lead)}>
-                        <div>
-                          <h4 className="font-medium">{lead.name}</h4>
-                          <p className="text-sm text-gray-600">{lead.email}</p>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-medium truncate">{lead.name}</h4>
+                          <p className="text-sm text-gray-600 truncate">{lead.email}</p>
                         </div>
                         <Badge className={getStatusColor(lead.status)}>
                           {lead.status}
@@ -338,7 +326,7 @@ const SuperAdmin = () => {
 
       case 'properties':
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 max-w-full">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-xl font-semibold">Properties Management</h2>
               <div className="flex flex-wrap gap-2">
@@ -359,17 +347,17 @@ const SuperAdmin = () => {
                       onClick={() => handlePropertyClick(property)}>
                   <CardContent className="p-4">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <div className="flex items-center gap-4 min-w-0 flex-1">
+                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                           <Building className="w-6 h-6 text-blue-600" />
                         </div>
-                        <div>
-                          <h3 className="font-semibold">{property.name}</h3>
-                          <p className="text-sm text-gray-600">{property.address}</p>
-                          <p className="text-sm text-gray-500">{property.client_name}</p>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold truncate">{property.name}</h3>
+                          <p className="text-sm text-gray-600 truncate">{property.address}</p>
+                          <p className="text-sm text-gray-500 truncate">{property.client_name}</p>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex-shrink-0">
                         <div className="text-lg font-semibold">{property.units} units</div>
                         <div className="text-sm text-gray-600">{property.occupancy_rate}% occupied</div>
                         <Badge className={getStatusColor(property.status)}>
@@ -389,7 +377,7 @@ const SuperAdmin = () => {
 
       case 'crm':
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 max-w-full">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-xl font-semibold">Leads Management</h2>
               <div className="flex flex-wrap gap-2 items-center">
@@ -415,26 +403,26 @@ const SuperAdmin = () => {
                       onClick={() => handleLeadClick(lead)}>
                   <CardContent className="p-4">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <div className="flex items-center gap-4 min-w-0 flex-1">
+                        <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
                           <Users className="w-6 h-6 text-purple-600" />
                         </div>
-                        <div>
-                          <h3 className="font-semibold">{lead.name}</h3>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold truncate">{lead.name}</h3>
                           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-sm text-gray-600">
                             <div className="flex items-center gap-1">
                               <Mail className="w-4 h-4" />
-                              {lead.email}
+                              <span className="truncate">{lead.email}</span>
                             </div>
                             <div className="flex items-center gap-1">
                               <Phone className="w-4 h-4" />
-                              {lead.phone}
+                              <span className="truncate">{lead.phone}</span>
                             </div>
                           </div>
                           <p className="text-sm text-gray-500">Budget: ${lead.budget?.toLocaleString()}</p>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex-shrink-0">
                         <Badge className={getStatusColor(lead.status)}>
                           {lead.status}
                         </Badge>
@@ -452,7 +440,7 @@ const SuperAdmin = () => {
 
       case 'clients':
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 max-w-full">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Client Management</h2>
               <Button onClick={handleAddClient}>
@@ -473,7 +461,7 @@ const SuperAdmin = () => {
 
       case 'marketing':
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 max-w-full">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Marketing Campaigns</h2>
               <Button onClick={handleCreateCampaign}>
@@ -494,7 +482,7 @@ const SuperAdmin = () => {
 
       case 'calendar':
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 max-w-full">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Events Management</h2>
               <Button onClick={() => setShowCreateEvent(true)}>
@@ -509,13 +497,13 @@ const SuperAdmin = () => {
                   <Card key={event.id}>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-semibold">{event.title}</h3>
-                          <p className="text-sm text-gray-600">{event.description}</p>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold truncate">{event.title}</h3>
+                          <p className="text-sm text-gray-600 truncate">{event.description}</p>
                           <div className="flex items-center gap-4 text-sm text-gray-500 mt-2">
                             <span>{event.date}</span>
                             <span>{event.startTime}</span>
-                            {event.location && <span>{event.location}</span>}
+                            {event.location && <span className="truncate">{event.location}</span>}
                           </div>
                         </div>
                         <Badge className={getStatusColor(event.status)}>
@@ -541,7 +529,7 @@ const SuperAdmin = () => {
 
       case 'billing':
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 max-w-full">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Billing & Invoices</h2>
               <Button onClick={() => setShowCreateInvoice(true)}>
@@ -556,12 +544,12 @@ const SuperAdmin = () => {
                   <Card key={invoice.id}>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-semibold">{invoice.invoiceNumber}</h3>
-                          <p className="text-sm text-gray-600">{invoice.clientName}</p>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold truncate">{invoice.invoiceNumber}</h3>
+                          <p className="text-sm text-gray-600 truncate">{invoice.clientName}</p>
                           <p className="text-sm text-gray-500">Due: {invoice.dueDate}</p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex-shrink-0">
                           <div className="text-lg font-semibold">${invoice.total.toFixed(2)}</div>
                           <Badge className={getStatusColor(invoice.status)}>
                             {invoice.status}
@@ -587,7 +575,7 @@ const SuperAdmin = () => {
 
       case 'operators':
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 max-w-full">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Operators Management</h2>
               <Button onClick={() => setShowAddUser(true)}>
@@ -612,9 +600,9 @@ const SuperAdmin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className="hidden lg:block w-80 bg-white border-r">
+    <div className="min-h-screen bg-gray-50 flex w-full">
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block w-80 bg-white border-r flex-shrink-0">
         <SidebarContent />
       </div>
 
@@ -628,7 +616,7 @@ const SuperAdmin = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <div className="border-b bg-white px-4 py-4 flex items-center justify-between">
+        <div className="border-b bg-white px-4 py-4 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-4">
             <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
               <SheetTrigger asChild>
@@ -647,7 +635,9 @@ const SuperAdmin = () => {
 
         {/* Content Area */}
         <div className="flex-1 p-4 overflow-auto">
-          {renderContent()}
+          <div className="max-w-full">
+            {renderContent()}
+          </div>
         </div>
       </div>
 
