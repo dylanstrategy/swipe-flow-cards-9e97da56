@@ -11,8 +11,10 @@ import SuggestionsSection from '../schedule/SuggestionsSection';
 import ScheduledItemsTimeline from '../schedule/ScheduledItemsTimeline';
 import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
-import MiniCalendar from './today/MiniCalendar';
-import EventsList from './today/EventsList';
+import EventDetailModal from '../events/EventDetailModal';
+import RescheduleFlow from '../events/RescheduleFlow';
+import { EnhancedEvent } from '@/types/events';
+import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 
 const ScheduleTab = () => {
   const { toast } = useToast();
@@ -23,6 +25,9 @@ const ScheduleTab = () => {
   const [selectedScheduleType, setSelectedScheduleType] = useState<string>('');
   const [showMessageModule, setShowMessageModule] = useState(false);
   const [showServiceModule, setShowServiceModule] = useState(false);
+  const [showEventDetail, setShowEventDetail] = useState(false);
+  const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<EnhancedEvent | null>(null);
   const [messageConfig, setMessageConfig] = useState({
     subject: '',
     recipientType: 'management' as 'management' | 'maintenance' | 'leasing',
@@ -68,16 +73,6 @@ const ScheduleTab = () => {
     },
     {
       id: 4,
-      date: new Date(),
-      time: '14:00',
-      title: 'Local Business Offer',
-      description: '20% OFF at Joe\'s Burger Joint - Show this message',
-      image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400',
-      category: 'Point of Sale',
-      priority: 'low'
-    },
-    {
-      id: 5,
       date: addDays(new Date(), 1),
       time: '14:00',
       title: 'Rooftop BBQ Social',
@@ -86,7 +81,7 @@ const ScheduleTab = () => {
       priority: 'low'
     },
     {
-      id: 6,
+      id: 5,
       date: addDays(new Date(), 2),
       time: '09:00',
       title: 'HVAC Maintenance',
@@ -115,11 +110,57 @@ const ScheduleTab = () => {
     setShowMessageModule(true);
   };
 
+  const handleEventClick = (event: any) => {
+    const enhancedEvent: EnhancedEvent = {
+      id: event.id,
+      date: event.date,
+      time: event.time,
+      title: event.title,
+      description: event.description,
+      category: event.category,
+      priority: event.priority,
+      canReschedule: true,
+      canCancel: true,
+      estimatedDuration: 60,
+      rescheduledCount: 0,
+      assignedTeamMember: teamAvailabilityService.assignTeamMember({ category: event.category }),
+      residentName: 'John Doe',
+      phone: '(555) 123-4567',
+      unit: event.unit,
+      building: event.building
+    };
+    
+    setSelectedEvent(enhancedEvent);
+    setShowEventDetail(true);
+  };
+
+  const handleEventDetailReschedule = () => {
+    setShowEventDetail(false);
+    setShowRescheduleFlow(true);
+  };
+
+  const handleRescheduleConfirm = () => {
+    toast({
+      title: "Event Rescheduled",
+      description: `${selectedEvent?.title} has been rescheduled successfully.`,
+    });
+    setShowRescheduleFlow(false);
+    setSelectedEvent(null);
+  };
+
+  const handleEventDetailCancel = () => {
+    toast({
+      title: "Event Cancelled",
+      description: `${selectedEvent?.title} has been cancelled.`,
+    });
+    setShowEventDetail(false);
+    setSelectedEvent(null);
+  };
+
   const nextStep = () => {
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Final submission
       setIsCreatingOrder(false);
       setCurrentStep(1);
       setShowScheduleMenu(false);
@@ -157,7 +198,6 @@ const ScheduleTab = () => {
       setShowServiceModule(true);
       setShowScheduleMenu(false);
     } else {
-      // For other types, you can implement different flows
       toast({
         title: `${type} Selected`,
         description: `${type} flow coming soon!`,
@@ -187,75 +227,39 @@ const ScheduleTab = () => {
       .sort((a, b) => a.time.localeCompare(b.time));
   };
 
-  const getSwipeActionsForEvent = (event: any) => {
-    switch (event.category) {
-      case 'Work Order':
-        return {
-          onSwipeRight: {
-            label: "Reschedule",
-            action: () => handleAction("Requested reschedule", event.title),
-            color: "#F59E0B",
-            icon: "📅"
-          }
-        };
-      
-      case 'Management':
-        return {
-          onSwipeRight: {
-            label: "Archive",
-            action: () => handleAction("Archived", event.title),
-            color: "#6B7280",
-            icon: "📦"
-          },
-          onSwipeLeft: {
-            label: "Quick Reply",
-            action: () => handleQuickReply(event.title, 'management'),
-            color: "#3B82F6",
-            icon: "💬"
-          }
-        };
-      
-      case 'Lease':
-        return {
-          onSwipeRight: {
-            label: "Accept",
-            action: () => handleAction("Accepted lease renewal", event.title),
-            color: "#10B981",
-            icon: "✅"
-          }
-        };
-      
-      case 'Point of Sale':
-        return {
-          onSwipeRight: {
-            label: "Save to Wallet",
-            action: () => handleAction("Saved to wallet", event.title),
-            color: "#10B981",
-            icon: "💾"
-          }
-        };
-      
-      case 'Community Event':
-        return {
-          onSwipeRight: {
-            label: "Confirm Attendance",
-            action: () => handleAction("Confirmed attendance", event.title),
-            color: "#10B981",
-            icon: "✅"
-          }
-        };
-      
-      default:
-        return {
-          onSwipeRight: {
-            label: "View",
-            action: () => handleAction("Viewed", event.title),
-            color: "#3B82F6",
-            icon: "👁️"
-          }
-        };
-    }
+  // Check if a date has events for calendar styling
+  const hasEventsOnDate = (date: Date) => {
+    return calendarEvents.some(event => isSameDay(event.date, date));
   };
+
+  if (showRescheduleFlow && selectedEvent) {
+    return (
+      <RescheduleFlow
+        event={selectedEvent}
+        onClose={() => {
+          setShowRescheduleFlow(false);
+          setSelectedEvent(null);
+        }}
+        onConfirm={handleRescheduleConfirm}
+        userRole="resident"
+      />
+    );
+  }
+
+  if (showEventDetail && selectedEvent) {
+    return (
+      <EventDetailModal
+        event={selectedEvent}
+        onClose={() => {
+          setShowEventDetail(false);
+          setSelectedEvent(null);
+        }}
+        onReschedule={handleEventDetailReschedule}
+        onCancel={handleEventDetailCancel}
+        userRole="resident"
+      />
+    );
+  }
 
   if (showServiceModule) {
     return <ServiceModule onClose={handleCloseService} />;
@@ -293,8 +297,6 @@ const ScheduleTab = () => {
     );
   }
 
-  const selectedDateEvents = getEventsForDate(selectedDate);
-
   return (
     <div className="px-4 py-6 pb-24 relative">
       <div className="flex items-center justify-between mb-6">
@@ -309,31 +311,11 @@ const ScheduleTab = () => {
         <Plus className="text-white" size={28} />
       </button>
       
-      {/* Calendar with week view */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
-          {isSameDay(selectedDate, new Date()) ? 'Calendar' : 'Calendar'}
-        </h2>
-        
-        <MiniCalendar 
-          selectedDate={selectedDate}
-          onDateSelect={setSelectedDate}
-          getEventsForDate={getEventsForDate}
-        />
-
-        <EventsList 
-          events={selectedDateEvents}
-          onAction={handleAction}
-          onQuickReply={handleQuickReply}
-          getSwipeActionsForEvent={getSwipeActionsForEvent}
-        />
-      </div>
-
-      {/* Enhanced Monthly Calendar View */}
+      {/* Monthly Calendar View */}
       <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-100">
         <div className="p-4 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">Monthly View</h3>
-          <p className="text-sm text-gray-600">Full calendar overview</p>
+          <h3 className="text-lg font-semibold text-gray-900">Calendar</h3>
+          <p className="text-sm text-gray-600">Select a date to view events and suggestions</p>
         </div>
         <Calendar
           mode="single"
@@ -343,21 +325,30 @@ const ScheduleTab = () => {
           classNames={{
             day_today: "bg-blue-600 text-white hover:bg-blue-700 font-bold",
             day_selected: "bg-blue-600 text-white hover:bg-blue-700",
-            day: "hover:bg-blue-50 transition-colors"
+            day: "hover:bg-blue-50 transition-colors relative",
+          }}
+          modifiers={{
+            hasEvents: (date) => hasEventsOnDate(date)
+          }}
+          modifiersClassNames={{
+            hasEvents: "after:absolute after:bottom-1 after:left-1/2 after:transform after:-translate-x-1/2 after:w-1 after:h-1 after:bg-orange-500 after:rounded-full"
           }}
         />
       </div>
 
-      {/* Daily Suggestions */}
+      {/* Suggestions for Selected Date */}
       <SuggestionsSection 
+        selectedDate={selectedDate}
         onSchedule={startScheduling}
         onAction={handleAction}
       />
 
-      {/* Scheduled Items */}
+      {/* Scheduled Items for Selected Date */}
       <ScheduledItemsTimeline
         selectedDate={selectedDate}
         onAction={handleAction}
+        onEventClick={handleEventClick}
+        events={getEventsForDate(selectedDate)}
       />
     </div>
   );
