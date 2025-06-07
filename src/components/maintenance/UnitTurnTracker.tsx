@@ -1,25 +1,15 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Calendar, Clock, Home, CheckCircle2, AlertCircle } from 'lucide-react';
-import { useDrag } from 'react-dnd';
 
 interface UnitTurnTrackerProps {
   onSelectUnitTurn?: (unitTurn: any) => void;
-  unitTurns?: any[];
-  onDragStart?: () => void;
-  onDragEnd?: () => void;
 }
 
-const UnitTurnTracker = ({ 
-  onSelectUnitTurn, 
-  unitTurns: propUnitTurns,
-  onDragStart,
-  onDragEnd 
-}: UnitTurnTrackerProps) => {
-  const defaultUnitTurns = [
+const UnitTurnTracker = ({ onSelectUnitTurn }: UnitTurnTrackerProps) => {
+  const unitTurns = [
     {
       id: 'UT-323-4',
       unit: '323-4',
@@ -58,8 +48,6 @@ const UnitTurnTracker = ({
     }
   ];
 
-  const unitTurns = propUnitTurns || defaultUnitTurns;
-
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'urgent': return 'bg-red-100 text-red-800';
@@ -82,131 +70,6 @@ const UnitTurnTracker = ({
 
   const calculateProgress = (completed: string[], total: string[]) => {
     return (completed.length / (completed.length + total.length)) * 100;
-  };
-
-  const DraggableUnitTurnCard = ({ turn }: { turn: any }) => {
-    const [{ isDragging }, drag, preview] = useDrag(() => ({
-      type: 'unitTurn',
-      item: { unitTurn: turn, type: 'unitTurn' },
-      collect: (monitor) => ({
-        isDragging: monitor.isDragging(),
-      }),
-    }));
-
-    // Handle drag start/end events using useEffect
-    React.useEffect(() => {
-      if (isDragging) {
-        console.log('Starting to drag unit turn:', turn.id);
-        onDragStart?.();
-      } else {
-        console.log('Finished dragging unit turn:', turn.id);
-        onDragEnd?.();
-      }
-    }, [isDragging, turn.id, onDragStart, onDragEnd]);
-
-    // Set empty drag preview to hide the default ghost image
-    React.useEffect(() => {
-      preview(new Image(), { captureDraggingState: true });
-    }, [preview]);
-
-    return (
-      <Card 
-        ref={drag}
-        className={`hover:shadow-md transition-all cursor-move ${
-          isDragging ? 'opacity-50 scale-95' : ''
-        }`}
-        onClick={() => onSelectUnitTurn?.(turn)}
-      >
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h3 className="font-semibold text-lg">Unit {turn.unit}</h3>
-              <Badge className={getPriorityColor(turn.priority)}>
-                {turn.priority}
-              </Badge>
-              <Badge className={getStatusColor(turn.status)}>
-                {turn.status}
-              </Badge>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Clock className="w-4 h-4" />
-              {turn.daysUntilMoveIn} days
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="space-y-4">
-            {/* Timeline */}
-            <div className="flex items-center gap-4 text-sm text-gray-600">
-              <div className="flex items-center gap-1">
-                <Calendar className="w-4 h-4" />
-                Move Out: {new Date(turn.moveOutDate).toLocaleDateString()}
-              </div>
-              <div>→</div>
-              <div className="flex items-center gap-1">
-                <Calendar className="w-4 h-4" />
-                Move In: {new Date(turn.moveInDate).toLocaleDateString()}
-              </div>
-            </div>
-
-            {/* Progress */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-medium">Progress</span>
-                <span>{turn.completedSteps.length}/{turn.completedSteps.length + turn.pendingSteps.length} steps</span>
-              </div>
-              <Progress 
-                value={calculateProgress(turn.completedSteps, turn.pendingSteps)} 
-                className="h-2"
-              />
-            </div>
-
-            {/* Steps Status */}
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <div className="text-xs font-medium text-green-700 mb-1 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Completed
-                </div>
-                <div className="space-y-1">
-                  {turn.completedSteps.map((step) => (
-                    <div key={step} className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                      {step}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs font-medium text-orange-700 mb-1 flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" />
-                  Pending
-                </div>
-                <div className="space-y-1">
-                  {turn.pendingSteps.slice(0, 3).map((step) => (
-                    <div key={step} className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
-                      {step}
-                    </div>
-                  ))}
-                  {turn.pendingSteps.length > 3 && (
-                    <div className="text-xs text-gray-500">
-                      +{turn.pendingSteps.length - 3} more
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Assigned To */}
-            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-              <span className="text-sm text-gray-600">Assigned to: {turn.assignedTo}</span>
-              <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                View Details
-              </button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
   };
 
   return (
@@ -252,7 +115,100 @@ const UnitTurnTracker = ({
       {/* Unit Turn Cards */}
       <div className="space-y-4">
         {unitTurns.map((turn) => (
-          <DraggableUnitTurnCard key={turn.id} turn={turn} />
+          <Card 
+            key={turn.id} 
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => onSelectUnitTurn?.(turn)}
+          >
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <h3 className="font-semibold text-lg">Unit {turn.unit}</h3>
+                  <Badge className={getPriorityColor(turn.priority)}>
+                    {turn.priority}
+                  </Badge>
+                  <Badge className={getStatusColor(turn.status)}>
+                    {turn.status}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Clock className="w-4 h-4" />
+                  {turn.daysUntilMoveIn} days
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-4">
+                {/* Timeline */}
+                <div className="flex items-center gap-4 text-sm text-gray-600">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    Move Out: {new Date(turn.moveOutDate).toLocaleDateString()}
+                  </div>
+                  <div>→</div>
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    Move In: {new Date(turn.moveInDate).toLocaleDateString()}
+                  </div>
+                </div>
+
+                {/* Progress */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium">Progress</span>
+                    <span>{turn.completedSteps.length}/{turn.completedSteps.length + turn.pendingSteps.length} steps</span>
+                  </div>
+                  <Progress 
+                    value={calculateProgress(turn.completedSteps, turn.pendingSteps)} 
+                    className="h-2"
+                  />
+                </div>
+
+                {/* Steps Status */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <div className="text-xs font-medium text-green-700 mb-1 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Completed
+                    </div>
+                    <div className="space-y-1">
+                      {turn.completedSteps.map((step) => (
+                        <div key={step} className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                          {step}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-orange-700 mb-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      Pending
+                    </div>
+                    <div className="space-y-1">
+                      {turn.pendingSteps.slice(0, 3).map((step) => (
+                        <div key={step} className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
+                          {step}
+                        </div>
+                      ))}
+                      {turn.pendingSteps.length > 3 && (
+                        <div className="text-xs text-gray-500">
+                          +{turn.pendingSteps.length - 3} more
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Assigned To */}
+                <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span className="text-sm text-gray-600">Assigned to: {turn.assignedTo}</span>
+                  <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                    View Details
+                  </button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </div>

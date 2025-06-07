@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,39 +29,16 @@ interface WorkOrder {
 interface WorkOrderQueueProps {
   workOrders?: WorkOrder[];
   onSelectWorkOrder?: (workOrder: WorkOrder) => void;
-  onDragStart?: () => void;
-  onDragEnd?: () => void;
 }
 
-const WorkOrderCard: React.FC<{ 
-  workOrder: WorkOrder; 
-  onClick: () => void;
-  onDragStart?: () => void;
-  onDragEnd?: () => void;
-}> = ({ workOrder, onClick, onDragStart, onDragEnd }) => {
-  const [{ isDragging }, drag, preview] = useDrag(() => ({
+const WorkOrderCard: React.FC<{ workOrder: WorkOrder; onClick: () => void }> = ({ workOrder, onClick }) => {
+  const [{ isDragging }, drag] = useDrag(() => ({
     type: 'workOrder',
-    item: { workOrder, type: 'workOrder' },
+    item: { workOrder },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
   }));
-
-  // Handle drag start/end events using useEffect
-  React.useEffect(() => {
-    if (isDragging) {
-      console.log('Starting to drag work order:', workOrder.id);
-      onDragStart?.();
-    } else {
-      console.log('Finished dragging work order:', workOrder.id);
-      onDragEnd?.();
-    }
-  }, [isDragging, workOrder.id, onDragStart, onDragEnd]);
-
-  // Set empty drag preview to hide the default ghost image
-  React.useEffect(() => {
-    preview(new Image(), { captureDraggingState: true });
-  }, [preview]);
 
   // Add timeline data to work order when clicked
   const handleClick = () => {
@@ -197,12 +175,7 @@ const WorkOrderCard: React.FC<{
   );
 };
 
-const WorkOrderQueue: React.FC<WorkOrderQueueProps> = ({ 
-  workOrders = [], 
-  onSelectWorkOrder,
-  onDragStart,
-  onDragEnd 
-}) => {
+const WorkOrderQueue: React.FC<WorkOrderQueueProps> = ({ workOrders = [], onSelectWorkOrder }) => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
   const filteredWorkOrders = useMemo(() => {
@@ -283,8 +256,6 @@ const WorkOrderQueue: React.FC<WorkOrderQueueProps> = ({
                 key={workOrder.id}
                 workOrder={workOrder}
                 onClick={() => onSelectWorkOrder?.(workOrder)}
-                onDragStart={onDragStart}
-                onDragEnd={onDragEnd}
               />
             ))
           )}
