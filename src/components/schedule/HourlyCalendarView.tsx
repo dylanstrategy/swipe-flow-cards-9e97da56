@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { format, addHours, startOfDay, isSameDay, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useRealtimeOverdueDetection } from '@/hooks/useRealtimeOverdueDetection';
 
 interface HourlyCalendarViewProps {
   selectedDate: Date;
@@ -40,6 +41,9 @@ const HourlyCalendarView = ({
   const { toast } = useToast();
   const [dragOverSlot, setDragOverSlot] = useState<string | null>(null);
   const [schedulingPrefs, setSchedulingPrefs] = useState<SchedulingPreferences | null>(null);
+
+  // Use real-time overdue detection
+  const { isEventOverdue } = useRealtimeOverdueDetection(events);
 
   // Load scheduling preferences on mount
   useEffect(() => {
@@ -96,31 +100,6 @@ const HourlyCalendarView = ({
     const todayEvents = events.filter(event => isSameDateSafe(event.date, selectedDate));
     
     return todayEvents.length >= maxAppointments;
-  };
-
-  // Check if an event is overdue
-  const isEventOverdue = (event: any): boolean => {
-    // Only check if event is not completed
-    if (event.status === 'completed') return false;
-    
-    const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
-    const now = new Date();
-    
-    // If event date is in the past, it's overdue
-    if (isPast(eventDate) && !isToday(eventDate)) {
-      return true;
-    }
-    
-    // If event is today but the time has passed, it's overdue
-    if (isToday(eventDate) && event.time) {
-      const [hours, minutes] = event.time.split(':').map(Number);
-      const eventDateTime = new Date(eventDate);
-      eventDateTime.setHours(hours, minutes || 0);
-      
-      return isPast(eventDateTime);
-    }
-    
-    return false;
   };
 
   // Generate hourly time slots based on work hours or default 6 AM to 10 PM

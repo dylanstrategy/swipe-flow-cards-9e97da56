@@ -484,22 +484,12 @@ const ScheduleTab = () => {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-                classNames={{
-                  day_today: "bg-blue-600 text-white hover:bg-blue-700",
-                  day_selected: "bg-blue-600 text-white hover:bg-blue-700"
-                }}
-                modifiers={{
-                  hasEvents: (date) => hasEventsOnDate(date)
-                }}
-                modifiersClassNames={{
-                  hasEvents: "after:absolute after:bottom-1 after:left-1/2 after:transform after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-orange-500 after:rounded-full after:shadow-sm relative"
-                }}
+              <DroppableCalendar
+                selectedDate={selectedDate}
+                onSelect={setSelectedDate}
+                hasEventsOnDate={hasEventsOnDate}
+                onDropSuggestion={handleDropSuggestion}
+                events={scheduledEvents}
               />
             </PopoverContent>
           </Popover>

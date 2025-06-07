@@ -14,6 +14,7 @@ import QuickActionsGrid from './today/QuickActionsGrid';
 import TodayMiniCalendar from './today/TodayMiniCalendar';
 import EventsList from './today/EventsList';
 import PointOfSale from '../PointOfSale';
+import { useRealtimeOverdueDetection } from '@/hooks/useRealtimeOverdueDetection';
 
 const TodayTab = () => {
   const { toast } = useToast();
@@ -245,16 +246,22 @@ const TodayTab = () => {
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
+  // Use real-time overdue detection for events
+  const { isEventOverdue } = useRealtimeOverdueDetection(allEvents);
+
   const getUrgencyClass = (event: any) => {
-    if (!event.dueDate) return '';
-    
-    const daysUntilDue = differenceInDays(event.dueDate, new Date());
-    const isOverdue = isPast(event.dueDate) && !isToday(event.dueDate);
-    const isDueSoon = daysUntilDue <= 3 && daysUntilDue >= 0;
+    const isOverdue = isEventOverdue(event);
     
     if (isOverdue) {
       return 'wiggle-urgent pulse-urgent';
-    } else if (isDueSoon && event.priority === 'high') {
+    }
+    
+    if (!event.dueDate) return '';
+    
+    const daysUntilDue = differenceInDays(event.dueDate, new Date());
+    const isDueSoon = daysUntilDue <= 3 && daysUntilDue >= 0;
+    
+    if (isDueSoon && event.priority === 'high') {
       return 'wiggle-urgent';
     }
     

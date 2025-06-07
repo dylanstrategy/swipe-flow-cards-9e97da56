@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { format, isSameDay, isPast, isToday } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
+import { useRealtimeOverdueDetection } from '@/hooks/useRealtimeOverdueDetection';
 
 interface DroppableCalendarProps {
   selectedDate: Date;
@@ -11,6 +12,7 @@ interface DroppableCalendarProps {
   hasEventsOnDate: (date: Date) => boolean;
   hasOverdueEventsOnDate?: (date: Date) => boolean;
   onDropSuggestion?: (suggestion: any, date: Date) => void;
+  events?: any[]; // Add events prop for real-time overdue detection
 }
 
 const DroppableCalendar = ({ 
@@ -18,10 +20,28 @@ const DroppableCalendar = ({
   onSelect, 
   hasEventsOnDate, 
   hasOverdueEventsOnDate,
-  onDropSuggestion 
+  onDropSuggestion,
+  events = []
 }: DroppableCalendarProps) => {
   const { toast } = useToast();
   const [dragOverDate, setDragOverDate] = useState<Date | null>(null);
+  
+  // Use real-time overdue detection
+  const { isEventOverdue } = useRealtimeOverdueDetection(events);
+
+  // Real-time overdue check for dates
+  const hasRealtimeOverdueEventsOnDate = (date: Date): boolean => {
+    const eventsForDate = events.filter(event => {
+      try {
+        const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+        return isSameDay(eventDate, date);
+      } catch (error) {
+        return false;
+      }
+    });
+    
+    return eventsForDate.some(event => isEventOverdue(event));
+  };
 
   const handleDragOver = (e: React.DragEvent, date: Date) => {
     e.preventDefault();
@@ -72,7 +92,7 @@ const DroppableCalendar = ({
           }}
           modifiers={{
             hasEvents: (date) => hasEventsOnDate(date),
-            hasOverdueEvents: (date) => hasOverdueEventsOnDate?.(date) || false,
+            hasOverdueEvents: (date) => hasRealtimeOverdueEventsOnDate(date),
             dragOver: (date) => dragOverDate && isSameDay(date, dragOverDate)
           }}
           modifiersClassNames={{
@@ -82,7 +102,7 @@ const DroppableCalendar = ({
           }}
           components={{
             Day: ({ date, displayMonth }) => {
-              const hasOverdue = hasOverdueEventsOnDate?.(date) || false;
+              const hasOverdue = hasRealtimeOverdueEventsOnDate(date);
               
               return (
                 <div
