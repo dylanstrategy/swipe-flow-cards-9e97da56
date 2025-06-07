@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UnitTurnTracker from '../UnitTurnTracker';
@@ -245,8 +244,11 @@ const MaintenanceScheduleTab = ({
     setShowUniversalEventDetail(true);
   };
 
-  // Show drop zone when dragging OR when unit card is selected in unit turns tab
-  const shouldShowDropZone = isDragging || (activeTab === 'unitturns' && isUnitCardSelected);
+  // Show drop zone when: 
+  // 1. On Queue tab, OR
+  // 2. Currently dragging, OR 
+  // 3. On Unit Turns tab AND a unit card is selected
+  const shouldShowDropZone = activeTab === 'queue' || isDragging || (activeTab === 'unitturns' && isUnitCardSelected);
 
   if (showUniversalEventDetail && selectedUniversalEvent) {
     return (
@@ -352,7 +354,7 @@ const MaintenanceScheduleTab = ({
             )}
           </div>
 
-          {/* Show drop zone when dragging OR when unit card is selected */}
+          {/* Show drop zone based on updated logic */}
           {shouldShowDropZone && (
             <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
           )}
