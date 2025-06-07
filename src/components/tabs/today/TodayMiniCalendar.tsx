@@ -1,35 +1,55 @@
-
 import React from 'react';
-import { format, isSameDay } from 'date-fns';
+import { format } from 'date-fns';
+import DroppableCalendar from '@/components/schedule/DroppableCalendar';
 
 interface TodayMiniCalendarProps {
   selectedDate: Date;
   getEventsForDate: (date: Date) => any[];
+  onDropSuggestion?: (suggestion: any, date: Date) => void;
+  onDateSelect?: (date: Date) => void;
 }
 
-const TodayMiniCalendar = ({ selectedDate, getEventsForDate }: TodayMiniCalendarProps) => {
-  const today = new Date();
-  const todayEvents = getEventsForDate(today);
-  
+const TodayMiniCalendar = ({ 
+  selectedDate, 
+  getEventsForDate, 
+  onDropSuggestion,
+  onDateSelect 
+}: TodayMiniCalendarProps) => {
+  const todayEvents = getEventsForDate(selectedDate);
+
+  const hasEventsOnDate = (date: Date) => {
+    return getEventsForDate(date).length > 0;
+  };
+
+  const handleDateSelect = (date: Date) => {
+    if (onDateSelect) {
+      onDateSelect(date);
+    }
+  };
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-      <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Today</h3>
-        <div className="text-3xl font-bold text-blue-600 mb-1">
-          {format(today, 'd')}
-        </div>
-        <div className="text-sm text-gray-600 mb-4">
-          {format(today, 'EEEE, MMMM yyyy')}
-        </div>
-        
-        {todayEvents.length > 0 && (
-          <div className="flex justify-center">
-            <div className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm font-medium">
-              {todayEvents.length} {todayEvents.length === 1 ? 'event' : 'events'} today
-            </div>
-          </div>
-        )}
+    <div className="mb-6">
+      {/* Today Section - Keep existing styling */}
+      <div className="text-center mb-6">
+        <h2 className="text-4xl font-bold text-blue-600 mb-2">
+          {format(selectedDate, 'd')}
+        </h2>
+        <p className="text-lg text-gray-900 font-medium">
+          {format(selectedDate, 'EEEE, MMMM yyyy')}
+        </p>
+        <p className="text-blue-600 text-sm font-medium">
+          {todayEvents.length} events today
+        </p>
       </div>
+
+      {/* Universal Droppable Calendar */}
+      <DroppableCalendar
+        selectedDate={selectedDate}
+        onSelect={handleDateSelect}
+        hasEventsOnDate={hasEventsOnDate}
+        onDropSuggestion={onDropSuggestion}
+        events={[]} // Pass events if needed for overdue detection
+      />
     </div>
   );
 };

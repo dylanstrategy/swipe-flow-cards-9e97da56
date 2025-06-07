@@ -366,6 +366,22 @@ const TodayTab = () => {
     }
   };
 
+  const handleDropSuggestion = (suggestion: any, date: Date) => {
+    // For TodayTab, we can show a toast or handle the drop
+    toast({
+      title: "Suggestion Scheduled!",
+      description: `${suggestion.title} scheduled for ${format(date, 'MMM d, yyyy')}`,
+    });
+  };
+
+  const handleDateSelect = (date: Date) => {
+    // For TodayTab, we could navigate to schedule tab or show events for that date
+    toast({
+      title: "Date Selected",
+      description: `Viewing events for ${format(date, 'MMM d, yyyy')}`,
+    });
+  };
+
   const renderPersonalizedOffers = () => {
     if (profile.pets.length > 0) {
       return (
@@ -533,6 +549,8 @@ const TodayTab = () => {
         <TodayMiniCalendar 
           selectedDate={selectedDate}
           getEventsForDate={getEventsForDate}
+          onDropSuggestion={handleDropSuggestion}
+          onDateSelect={handleDateSelect}
         />
 
         <EventsList 
