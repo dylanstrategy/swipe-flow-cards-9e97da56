@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format, isSameDay } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -104,7 +103,7 @@ const HourlyCalendarView = ({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden h-[calc(100vh-180px)]">
       <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
         <h3 className="text-lg font-semibold text-gray-900">
           {format(selectedDate, 'EEEE, MMMM d, yyyy')}
@@ -112,7 +111,7 @@ const HourlyCalendarView = ({
         <p className="text-sm text-gray-600">Click to view details • Hold to reschedule • Drag to move</p>
       </div>
 
-      <div className="max-h-96 overflow-y-auto">
+      <div className="h-full overflow-y-auto">
         {timeSlots.map((timeSlot) => {
           const eventsAtTime = getEventsForTime(timeSlot);
           const isDragOver = dragOverSlot === timeSlot;

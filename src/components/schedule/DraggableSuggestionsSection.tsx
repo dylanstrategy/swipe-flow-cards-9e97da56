@@ -1,277 +1,203 @@
 
 import React, { useState } from 'react';
-import SwipeCard from '../SwipeCard';
-import { cn } from '@/lib/utils';
-import { format, isSameDay, isToday } from 'date-fns';
+import { format } from 'date-fns';
+import { ChevronDown, ChevronUp, Calendar, MessageSquare, Wrench, Gift, Coffee, Car } from 'lucide-react';
 
 interface Suggestion {
   id: number;
-  type: string;
   title: string;
   description: string;
+  type: string;
   priority: 'high' | 'medium' | 'low';
-  timeSlot?: string;
-  duration?: string;
+  estimatedTime?: string;
+  category?: string;
 }
 
 interface DraggableSuggestionsSectionProps {
   selectedDate: Date;
   onSchedule: (type: string) => void;
   onAction: (action: string, item: string) => void;
-  onDragStart?: (suggestion: Suggestion) => void;
-  scheduledSuggestionIds?: number[]; // New prop to track scheduled suggestions
+  scheduledSuggestionIds: number[];
 }
 
 const DraggableSuggestionsSection = ({ 
   selectedDate, 
   onSchedule, 
-  onAction, 
-  onDragStart,
-  scheduledSuggestionIds = []
+  onAction,
+  scheduledSuggestionIds 
 }: DraggableSuggestionsSectionProps) => {
-  const [draggedItem, setDraggedItem] = useState<Suggestion | null>(null);
+  const [isExpanded, setIsExpanded] = useState(true);
 
-  // Generate suggestions based on the selected date
-  const generateSuggestionsForDate = (date: Date): Suggestion[] => {
-    const baseId = date.getTime();
-    
-    if (isToday(date)) {
-      return [
-        { 
-          id: baseId + 1, 
-          type: 'payment', 
-          title: 'Rent Due Soon', 
-          description: 'Due in 3 days - $1,550', 
-          priority: 'high',
-          timeSlot: '2:00 PM - 3:00 PM',
-          duration: '1 hour'
-        },
-        { 
-          id: baseId + 2, 
-          type: 'service', 
-          title: 'Free Time Slot Available', 
-          description: 'Perfect time for quarterly cleaning', 
-          priority: 'medium',
-          timeSlot: '10:00 AM - 12:00 PM',
-          duration: '2 hours'
-        },
-        { 
-          id: baseId + 3, 
-          type: 'event', 
-          title: 'Community Event Planning', 
-          description: 'Help organize this Saturday\'s BBQ', 
-          priority: 'low',
-          timeSlot: '4:00 PM - 5:00 PM',
-          duration: '1 hour'
-        },
-      ];
+  const suggestions: Suggestion[] = [
+    {
+      id: 1,
+      title: 'Schedule Annual Inspection',
+      description: 'Fire safety and HVAC inspection due',
+      type: 'Maintenance',
+      priority: 'high',
+      estimatedTime: '2 hours',
+      category: 'safety'
+    },
+    {
+      id: 2,
+      title: 'Community Newsletter',
+      description: 'Monthly updates and announcements',
+      type: 'Message',
+      priority: 'medium',
+      estimatedTime: '15 min',
+      category: 'communication'
+    },
+    {
+      id: 3,
+      title: 'Book Dog Walking Service',
+      description: 'Professional pet care available',
+      type: 'Service',
+      priority: 'low',
+      estimatedTime: '30 min',
+      category: 'pet'
+    },
+    {
+      id: 4,
+      title: 'Coffee Shop Discount',
+      description: '25% off at ground floor café',
+      type: 'Offer',
+      priority: 'low',
+      estimatedTime: '5 min',
+      category: 'dining'
+    },
+    {
+      id: 5,
+      title: 'Parking Spot Upgrade',
+      description: 'Covered parking now available',
+      type: 'Service',
+      priority: 'medium',
+      estimatedTime: '10 min',
+      category: 'parking'
+    },
+    {
+      id: 6,
+      title: 'Lease Renewal Reminder',
+      description: 'Review your renewal options',
+      type: 'Message',
+      priority: 'high',
+      estimatedTime: '20 min',
+      category: 'lease'
     }
+  ];
 
-    // Future dates get different suggestions
-    const daysDiff = Math.ceil((date.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (daysDiff === 1) {
-      return [
-        { 
-          id: baseId + 1, 
-          type: 'maintenance', 
-          title: 'Schedule Maintenance', 
-          description: 'Free slot available for HVAC check', 
-          priority: 'medium',
-          timeSlot: '9:00 AM - 11:00 AM',
-          duration: '2 hours'
-        },
-        { 
-          id: baseId + 2, 
-          type: 'meeting', 
-          title: 'Lease Discussion', 
-          description: 'Available time to discuss renewal', 
-          priority: 'high',
-          timeSlot: '3:00 PM - 4:00 PM',
-          duration: '1 hour'
-        },
-      ];
-    }
-
-    if (daysDiff >= 2 && daysDiff <= 7) {
-      return [
-        { 
-          id: baseId + 1, 
-          type: 'service', 
-          title: 'Book Cleaning Service', 
-          description: 'Multiple time slots available', 
-          priority: 'medium',
-          timeSlot: '10:00 AM - 2:00 PM',
-          duration: '4 hours'
-        },
-        { 
-          id: baseId + 2, 
-          type: 'tour', 
-          title: 'Property Tour Available', 
-          description: 'Show friends around the building', 
-          priority: 'low',
-          timeSlot: '1:00 PM - 2:30 PM',
-          duration: '1.5 hours'
-        },
-      ];
-    }
-
-    // Weekend suggestions
-    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-    if (isWeekend) {
-      return [
-        { 
-          id: baseId + 1, 
-          type: 'event', 
-          title: 'Weekend Activity', 
-          description: 'Join the rooftop social event', 
-          priority: 'medium',
-          timeSlot: '6:00 PM - 8:00 PM',
-          duration: '2 hours'
-        },
-        { 
-          id: baseId + 2, 
-          type: 'personal', 
-          title: 'Free Time Available', 
-          description: 'Perfect for personal errands', 
-          priority: 'low',
-          timeSlot: '11:00 AM - 4:00 PM',
-          duration: '5 hours'
-        },
-      ];
-    }
-
-    // Default weekday suggestions
-    return [
-      { 
-        id: baseId + 1, 
-        type: 'meeting', 
-        title: 'Available Meeting Slot', 
-        description: 'Schedule important discussions', 
-        priority: 'medium',
-        timeSlot: '2:00 PM - 3:00 PM',
-        duration: '1 hour'
-      },
-      { 
-        id: baseId + 2, 
-        type: 'service', 
-        title: 'Service Window Open', 
-        description: 'Book maintenance or cleaning', 
-        priority: 'low',
-        timeSlot: '9:00 AM - 12:00 PM',
-        duration: '3 hours'
-      },
-    ];
-  };
-
-  const allSuggestions = generateSuggestionsForDate(selectedDate);
-  
-  // Filter out suggestions that have been scheduled
-  const suggestions = allSuggestions.filter(suggestion => 
-    !scheduledSuggestionIds.includes(suggestion.id)
+  const availableSuggestions = suggestions.filter(
+    suggestion => !scheduledSuggestionIds.includes(suggestion.id)
   );
 
-  const handleDragStart = (e: React.DragEvent, suggestion: Suggestion) => {
-    setDraggedItem(suggestion);
-    onDragStart?.(suggestion);
-    e.dataTransfer.setData('application/json', JSON.stringify(suggestion));
-    e.dataTransfer.effectAllowed = 'move';
-    
-    // Add a slight visual feedback
-    const target = e.target as HTMLElement;
-    target.style.opacity = '0.5';
-  };
-
-  const handleDragEnd = (e: React.DragEvent) => {
-    setDraggedItem(null);
-    const target = e.target as HTMLElement;
-    target.style.opacity = '1';
-  };
-
-  const getDateDisplayText = () => {
-    if (isToday(selectedDate)) {
-      return "Today's Suggestions";
+  const getIcon = (type: string) => {
+    switch (type) {
+      case 'Maintenance': return <Wrench className="w-4 h-4" />;
+      case 'Message': return <MessageSquare className="w-4 h-4" />;
+      case 'Service': return <Car className="w-4 h-4" />;
+      case 'Offer': return <Gift className="w-4 h-4" />;
+      default: return <Calendar className="w-4 h-4" />;
     }
-    return `Suggestions for ${format(selectedDate, 'EEEE, MMM d')}`;
   };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800 border-red-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, suggestion: Suggestion) => {
+    e.dataTransfer.setData('application/json', JSON.stringify({
+      type: 'suggestion',
+      ...suggestion
+    }));
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  if (availableSuggestions.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="text-center text-gray-500">
+          <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+          <h3 className="font-medium text-gray-900 mb-1">All caught up!</h3>
+          <p className="text-sm">No pending suggestions for {format(selectedDate, 'MMMM d')}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="mb-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">{getDateDisplayText()}</h2>
-      <div className="space-y-3">
-        {suggestions.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <p>No suggestions available for this date.</p>
-            <p className="text-sm mt-2">All suggestions may have been scheduled!</p>
-          </div>
-        ) : (
-          suggestions.map((suggestion) => (
-            <div
-              key={suggestion.id}
-              draggable
-              onDragStart={(e) => handleDragStart(e, suggestion)}
-              onDragEnd={handleDragEnd}
-              className={cn(
-                "cursor-grab active:cursor-grabbing transition-all duration-200",
-                draggedItem?.id === suggestion.id ? "opacity-50 scale-95" : "hover:scale-[1.02]"
-              )}
-            >
-              <SwipeCard
-                onSwipeRight={{
-                  label: "Schedule",
-                  action: () => onSchedule(suggestion.type),
-                  color: "#10B981",
-                  icon: "📅"
-                }}
-                onSwipeLeft={{
-                  label: "Remind Me",
-                  action: () => onAction("Remind Me", suggestion.title),
-                  color: "#F59E0B",
-                  icon: "⏰"
-                }}
-                onTap={() => onAction("Viewed", suggestion.title)}
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full p-4 bg-gradient-to-r from-purple-50 to-pink-50 border-b border-gray-100 flex items-center justify-between hover:from-purple-100 hover:to-pink-100 transition-colors"
+      >
+        <h3 className="text-lg font-semibold text-gray-900">
+          Today's Suggestions ({availableSuggestions.length})
+        </h3>
+        {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+      </button>
+
+      {isExpanded && (
+        <div className="p-4">
+          <div className="grid grid-cols-2 gap-3">
+            {availableSuggestions.map((suggestion) => (
+              <div
+                key={suggestion.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, suggestion)}
+                className="p-3 rounded-lg border border-gray-200 bg-gradient-to-br from-white to-gray-50 hover:shadow-md transition-all duration-200 cursor-move group"
               >
-                <div className="flex items-center p-4 bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-semibold text-gray-900">{suggestion.title}</h3>
-                      <div className="flex items-center space-x-2">
-                        <span className={cn(
-                          "text-xs px-2 py-1 rounded-full",
-                          suggestion.priority === 'high' ? "bg-red-100 text-red-800" :
-                          suggestion.priority === 'medium' ? "bg-yellow-100 text-yellow-800" :
-                          "bg-green-100 text-green-800"
-                        )}>
-                          {suggestion.priority}
-                        </span>
-                        <div className="text-xs text-gray-400 cursor-grab">⋮⋮</div>
-                      </div>
-                    </div>
-                    <p className="text-gray-600 text-sm mb-2">{suggestion.description}</p>
-                    {suggestion.timeSlot && (
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
-                        <span className="flex items-center gap-1">
-                          🕐 {suggestion.timeSlot}
-                        </span>
-                        {suggestion.duration && (
-                          <span className="flex items-center gap-1">
-                            ⏱️ {suggestion.duration}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                <div className="flex items-start gap-2 mb-2">
+                  <div className="flex-shrink-0 p-1.5 rounded-md bg-blue-100 text-blue-600 group-hover:bg-blue-200 transition-colors">
+                    {getIcon(suggestion.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-gray-900 text-sm leading-tight truncate">
+                      {suggestion.title}
+                    </h4>
+                    <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                      {suggestion.description}
+                    </p>
                   </div>
                 </div>
-              </SwipeCard>
-            </div>
-          ))
-        )}
-      </div>
-      <div className="mt-4 text-sm text-gray-500 text-center">
-        💡 Drag suggestions to calendar dates to schedule them
-      </div>
+
+                <div className="flex items-center justify-between mt-2">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(suggestion.priority)}`}>
+                    {suggestion.priority}
+                  </span>
+                  {suggestion.estimatedTime && (
+                    <span className="text-xs text-gray-500">
+                      {suggestion.estimatedTime}
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-2 pt-2 border-t border-gray-100">
+                  <button
+                    onClick={() => onSchedule(suggestion.type)}
+                    className="w-full text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                  >
+                    Schedule Now
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+            <p className="text-sm text-blue-800 flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Drag suggestions to the calendar above to schedule them
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default DraggableSuggestionsSection;
+
