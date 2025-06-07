@@ -9,16 +9,10 @@ import TabNavigation from '@/components/TabNavigation';
 const Maintenance = () => {
   const [activeTab, setActiveTab] = useState('today');
   const [sharedTodayWorkOrders, setSharedTodayWorkOrders] = useState<any[]>([]);
-  const [sharedTodayUnitTurns, setSharedTodayUnitTurns] = useState<any[]>([]);
 
   const handleTodayWorkOrdersChange = (workOrders: any[]) => {
     console.log('Parent - Updating shared today work orders:', workOrders);
     setSharedTodayWorkOrders(workOrders);
-  };
-
-  const handleTodayUnitTurnsChange = (unitTurns: any[]) => {
-    console.log('Parent - Updating shared today unit turns:', unitTurns);
-    setSharedTodayUnitTurns(unitTurns);
   };
 
   const handleWorkOrderCompleted = (workOrderId: string) => {
@@ -32,7 +26,7 @@ const Maintenance = () => {
       id: 'today',
       label: 'Today',
       icon: '📅',
-      badgeCount: sharedTodayWorkOrders.length + sharedTodayUnitTurns.length
+      badgeCount: sharedTodayWorkOrders.length
     },
     {
       id: 'schedule',
@@ -57,7 +51,6 @@ const Maintenance = () => {
         return (
           <MaintenanceTodayTab 
             todayWorkOrders={sharedTodayWorkOrders}
-            todayUnitTurns={sharedTodayUnitTurns}
             onWorkOrderCompleted={handleWorkOrderCompleted}
           />
         );
@@ -65,7 +58,6 @@ const Maintenance = () => {
         return (
           <MaintenanceScheduleTab 
             onTodayWorkOrdersChange={handleTodayWorkOrdersChange}
-            onTodayUnitTurnsChange={handleTodayUnitTurnsChange}
             todayWorkOrders={sharedTodayWorkOrders}
             onWorkOrderCompleted={handleWorkOrderCompleted}
           />
@@ -78,7 +70,6 @@ const Maintenance = () => {
         return (
           <MaintenanceTodayTab 
             todayWorkOrders={sharedTodayWorkOrders}
-            todayUnitTurns={sharedTodayUnitTurns}
             onWorkOrderCompleted={handleWorkOrderCompleted}
           />
         );

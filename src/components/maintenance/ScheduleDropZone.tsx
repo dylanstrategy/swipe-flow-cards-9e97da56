@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useDrop } from 'react-dnd';
 import { Calendar, Clock, CheckCircle } from 'lucide-react';
@@ -5,12 +6,11 @@ import { useToast } from '@/hooks/use-toast';
 
 interface ScheduleDropZoneProps {
   onScheduleWorkOrder: (workOrder: any, scheduledTime: string) => void;
-  onScheduleUnitTurn?: (unitTurn: any, scheduledTime: string) => void;
 }
 
-const ScheduleDropZone: React.FC<ScheduleDropZoneProps> = ({ onScheduleWorkOrder, onScheduleUnitTurn }) => {
+const ScheduleDropZone: React.FC<ScheduleDropZoneProps> = ({ onScheduleWorkOrder }) => {
   const { toast } = useToast();
-  const [hoveredItem, setHoveredItem] = useState<any>(null);
+  const [hoveredWorkOrder, setHoveredWorkOrder] = useState<any>(null);
   
   // Get next available time slot for today
   const getNextAvailableTime = () => {
@@ -45,33 +45,20 @@ const ScheduleDropZone: React.FC<ScheduleDropZoneProps> = ({ onScheduleWorkOrder
   };
 
   const [{ isOver, canDrop }, drop] = useDrop(() => ({
-    accept: ['workOrder', 'unitTurn'],
-    drop: (item: { workOrder?: any; unitTurn?: any }) => {
+    accept: 'workOrder',
+    drop: (item: { workOrder: any }) => {
       const scheduledTime = getNextAvailableTime();
+      onScheduleWorkOrder(item.workOrder, scheduledTime);
       
-      if (item.workOrder) {
-        onScheduleWorkOrder(item.workOrder, scheduledTime);
-        
-        toast({
-          title: "Work Order Scheduled!",
-          description: `${item.workOrder.title} scheduled for ${scheduledTime === 'Tomorrow 09:00' ? 'tomorrow at 9:00 AM' : `today at ${scheduledTime}`}`,
-        });
-      } else if (item.unitTurn) {
-        // Handle unit turn scheduling directly
-        if (onScheduleUnitTurn) {
-          onScheduleUnitTurn(item.unitTurn, scheduledTime);
-        }
-        
-        toast({
-          title: "Unit Turn Scheduled!",
-          description: `Unit ${item.unitTurn.unit} turn scheduled for ${scheduledTime === 'Tomorrow 09:00' ? 'tomorrow at 9:00 AM' : `today at ${scheduledTime}`}`,
-        });
-      }
+      toast({
+        title: "Work Order Scheduled!",
+        description: `${item.workOrder.title} scheduled for ${scheduledTime === 'Tomorrow 09:00' ? 'tomorrow at 9:00 AM' : `today at ${scheduledTime}`}`,
+      });
       
-      setHoveredItem(null);
+      setHoveredWorkOrder(null);
     },
-    hover: (item: { workOrder?: any; unitTurn?: any }) => {
-      setHoveredItem(item.workOrder || item.unitTurn);
+    hover: (item: { workOrder: any }) => {
+      setHoveredWorkOrder(item.workOrder);
     },
     collect: (monitor) => ({
       isOver: monitor.isOver(),
@@ -100,11 +87,9 @@ const ScheduleDropZone: React.FC<ScheduleDropZoneProps> = ({ onScheduleWorkOrder
               <CheckCircle className="w-5 h-5 text-blue-600" />
               <span className="font-semibold text-blue-900">Release to Schedule</span>
             </div>
-            {hoveredItem && (
+            {hoveredWorkOrder && (
               <div className="text-sm text-blue-700">
-                <div className="font-medium">
-                  {hoveredItem.title || `Unit ${hoveredItem.unit} Turn`}
-                </div>
+                <div className="font-medium">{hoveredWorkOrder.title}</div>
                 <div className="flex items-center justify-center gap-1 mt-1">
                   <Clock className="w-3 h-3" />
                   <span>

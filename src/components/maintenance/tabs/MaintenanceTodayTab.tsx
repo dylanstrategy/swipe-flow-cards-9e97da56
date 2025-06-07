@@ -11,15 +11,10 @@ import { useToast } from '@/hooks/use-toast';
 
 interface MaintenanceTodayTabProps {
   todayWorkOrders?: any[];
-  todayUnitTurns?: any[];
   onWorkOrderCompleted?: (workOrderId: string) => void;
 }
 
-const MaintenanceTodayTab = ({ 
-  todayWorkOrders = [], 
-  todayUnitTurns = [],
-  onWorkOrderCompleted 
-}: MaintenanceTodayTabProps) => {
+const MaintenanceTodayTab = ({ todayWorkOrders = [], onWorkOrderCompleted }: MaintenanceTodayTabProps) => {
   const { toast } = useToast();
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
   const [selectedUnitTurn, setSelectedUnitTurn] = useState<any>(null);
@@ -27,9 +22,36 @@ const MaintenanceTodayTab = ({
   const today = new Date();
 
   console.log('MaintenanceTodayTab - received todayWorkOrders:', todayWorkOrders);
-  console.log('MaintenanceTodayTab - received todayUnitTurns:', todayUnitTurns);
 
-  // Convert work orders and unit turns to calendar events format
+  // Sample unit turns data
+  const unitTurns = [
+    {
+      id: 'UT-323-4',
+      unit: '323-4',
+      moveOutDate: '2025-06-01',
+      moveInDate: '2025-06-15',
+      status: 'In Progress',
+      completedSteps: ['Punch', 'Upgrades/Repairs', 'Floors'],
+      pendingSteps: ['Paint', 'Clean', 'Inspection'],
+      daysUntilMoveIn: 13,
+      priority: 'medium',
+      assignedTo: 'Mike Rodriguez'
+    },
+    {
+      id: 'UT-420-3',
+      unit: '420-3',
+      moveOutDate: '2025-06-06',
+      moveInDate: '2025-06-20',
+      status: 'Scheduled',
+      completedSteps: [],
+      pendingSteps: ['Punch', 'Upgrades/Repairs', 'Floors', 'Paint', 'Clean', 'Inspection'],
+      daysUntilMoveIn: 18,
+      priority: 'low',
+      assignedTo: 'James Wilson'
+    }
+  ];
+
+  // Convert work orders to calendar events format
   const calendarEvents = [
     // Add today's scheduled work orders from props
     ...todayWorkOrders.map(workOrder => {
@@ -49,11 +71,11 @@ const MaintenanceTodayTab = ({
         rescheduledCount: 0
       };
     }),
-    // Add today's scheduled unit turns from props
-    ...todayUnitTurns.map(unitTurn => ({
+    // Add unit turns scheduled for today
+    ...unitTurns.filter(turn => turn.status === 'Scheduled').map(unitTurn => ({
       id: unitTurn.id,
       date: today,
-      time: unitTurn.scheduledTime || '10:00',
+      time: '10:00',
       title: `Unit Turn - ${unitTurn.unit}`,
       description: `${unitTurn.pendingSteps.length} steps remaining`,
       category: 'unit-turn',
@@ -129,7 +151,7 @@ const MaintenanceTodayTab = ({
           </Card>
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-blue-600">{todayUnitTurns.length}</div>
+              <div className="text-2xl font-bold text-blue-600">{unitTurns.filter(ut => ut.status === 'Scheduled').length}</div>
               <div className="text-sm text-gray-600">Unit Turns Today</div>
             </CardContent>
           </Card>
