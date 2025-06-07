@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UnitTurnTracker from '../UnitTurnTracker';
@@ -29,7 +30,14 @@ const initialWorkOrders = [
     daysOpen: 3,
     estimatedTime: '2 hours',
     submittedDate: '2025-05-22',
-    photo: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=400'
+    photo: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=400',
+    timeline: [
+      { step: 'submitted', date: '2025-05-22', time: '10:30 AM', status: 'completed' },
+      { step: 'assigned', date: '2025-05-22', time: '11:00 AM', status: 'completed' },
+      { step: 'scheduled', date: '', time: '', status: 'pending' },
+      { step: 'in-progress', date: '', time: '', status: 'pending' },
+      { step: 'completed', date: '', time: '', status: 'pending' }
+    ]
   },
   {
     id: 'WO-548686',
@@ -45,7 +53,14 @@ const initialWorkOrders = [
     daysOpen: 5,
     estimatedTime: '3 hours',
     submittedDate: '2025-05-14',
-    photo: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400'
+    photo: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400',
+    timeline: [
+      { step: 'submitted', date: '2025-05-14', time: '2:15 PM', status: 'completed' },
+      { step: 'assigned', date: '2025-05-14', time: '3:00 PM', status: 'completed' },
+      { step: 'scheduled', date: '', time: '', status: 'pending' },
+      { step: 'in-progress', date: '', time: '', status: 'pending' },
+      { step: 'completed', date: '', time: '', status: 'pending' }
+    ]
   },
   {
     id: 'WO-549321',
@@ -61,7 +76,14 @@ const initialWorkOrders = [
     daysOpen: 12,
     estimatedTime: '4 hours',
     submittedDate: '2025-05-01',
-    photo: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400'
+    photo: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400',
+    timeline: [
+      { step: 'submitted', date: '2025-05-01', time: '9:00 AM', status: 'completed' },
+      { step: 'assigned', date: '2025-05-01', time: '9:30 AM', status: 'completed' },
+      { step: 'scheduled', date: '2025-05-03', time: '10:00 AM', status: 'completed' },
+      { step: 'in-progress', date: '', time: '', status: 'pending' },
+      { step: 'completed', date: '', time: '', status: 'pending' }
+    ]
   },
   {
     id: 'WO-545123',
@@ -79,7 +101,14 @@ const initialWorkOrders = [
     submittedDate: '2025-06-06',
     scheduledDate: '2025-06-10',
     scheduledTime: '10:00 AM',
-    photo: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400'
+    photo: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400',
+    timeline: [
+      { step: 'submitted', date: '2025-06-06', time: '8:15 AM', status: 'completed' },
+      { step: 'assigned', date: '2025-06-06', time: '8:30 AM', status: 'completed' },
+      { step: 'scheduled', date: '2025-06-10', time: '10:00 AM', status: 'completed' },
+      { step: 'in-progress', date: '', time: '', status: 'pending' },
+      { step: 'completed', date: '', time: '', status: 'pending' }
+    ]
   }
 ];
 
@@ -87,24 +116,34 @@ const initialWorkOrders = [
 interface MaintenanceContextType {
   todayWorkOrders: any[];
   addTodayWorkOrder: (workOrder: any) => void;
+  todayUnitTurns: any[];
+  addTodayUnitTurn: (unitTurn: any) => void;
 }
 
 // Simple context provider for this component
 const MaintenanceContext = React.createContext<MaintenanceContextType>({
   todayWorkOrders: [],
-  addTodayWorkOrder: () => {}
+  addTodayWorkOrder: () => {},
+  todayUnitTurns: [],
+  addTodayUnitTurn: () => {}
 });
 
 interface MaintenanceScheduleTabProps {
   onTodayWorkOrdersChange?: (workOrders: any[]) => void;
   todayWorkOrders?: any[];
   onWorkOrderCompleted?: (workOrderId: string) => void;
+  onTodayUnitTurnsChange?: (unitTurns: any[]) => void;
+  todayUnitTurns?: any[];
+  onUnitTurnCompleted?: (unitTurnId: string) => void;
 }
 
 const MaintenanceScheduleTab = ({ 
   onTodayWorkOrdersChange, 
   todayWorkOrders: externalTodayWorkOrders,
-  onWorkOrderCompleted 
+  onWorkOrderCompleted,
+  onTodayUnitTurnsChange,
+  todayUnitTurns: externalTodayUnitTurns,
+  onUnitTurnCompleted
 }: MaintenanceScheduleTabProps) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('queue');
@@ -112,11 +151,40 @@ const MaintenanceScheduleTab = ({
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
   const [showWorkOrderFlow, setShowWorkOrderFlow] = useState(false);
   const [workOrders, setWorkOrders] = useState(initialWorkOrders);
+  const [unitTurns, setUnitTurns] = useState([
+    {
+      id: 'UT-323-4',
+      unit: '323-4',
+      moveOutDate: '2025-06-01',
+      moveInDate: '2025-06-15',
+      status: 'In Progress',
+      completedSteps: ['Punch', 'Upgrades/Repairs', 'Floors'],
+      pendingSteps: ['Paint', 'Clean', 'Inspection'],
+      daysUntilMoveIn: 13,
+      priority: 'medium',
+      assignedTo: 'Mike Rodriguez'
+    },
+    {
+      id: 'UT-420-3',
+      unit: '420-3',
+      moveOutDate: '2025-06-06',
+      moveInDate: '2025-06-20',
+      status: 'Scheduled',
+      completedSteps: [],
+      pendingSteps: ['Punch', 'Upgrades/Repairs', 'Floors', 'Paint', 'Clean', 'Inspection'],
+      daysUntilMoveIn: 18,
+      priority: 'low',
+      assignedTo: 'James Wilson'
+    }
+  ]);
   const [scheduledWorkOrders, setScheduledWorkOrders] = useState<any[]>([]);
   const [internalTodayWorkOrders, setInternalTodayWorkOrders] = useState<any[]>([]);
+  const [internalTodayUnitTurns, setInternalTodayUnitTurns] = useState<any[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Use external state if provided, otherwise use internal state
   const todayWorkOrders = externalTodayWorkOrders || internalTodayWorkOrders;
+  const todayUnitTurns = externalTodayUnitTurns || internalTodayUnitTurns;
 
   // Helper function to update today's work orders
   const updateTodayWorkOrders = (newWorkOrders: any[]) => {
@@ -125,6 +193,16 @@ const MaintenanceScheduleTab = ({
       onTodayWorkOrdersChange(newWorkOrders);
     } else {
       setInternalTodayWorkOrders(newWorkOrders);
+    }
+  };
+
+  // Helper function to update today's unit turns
+  const updateTodayUnitTurns = (newUnitTurns: any[]) => {
+    console.log('Updating today unit turns with:', newUnitTurns);
+    if (onTodayUnitTurnsChange) {
+      onTodayUnitTurnsChange(newUnitTurns);
+    } else {
+      setInternalTodayUnitTurns(newUnitTurns);
     }
   };
 
@@ -149,6 +227,27 @@ const MaintenanceScheduleTab = ({
     });
   };
 
+  const handleUnitTurnCompleted = (unitTurnId: string) => {
+    console.log('Schedule tab - Unit turn completed:', unitTurnId);
+    
+    // Remove from unit turns
+    setUnitTurns(prev => prev.filter(ut => ut.id !== unitTurnId));
+    
+    // Remove from today's unit turns
+    const updatedTodayUnitTurns = todayUnitTurns.filter(ut => ut.id !== unitTurnId);
+    updateTodayUnitTurns(updatedTodayUnitTurns);
+    
+    // Notify parent component
+    if (onUnitTurnCompleted) {
+      onUnitTurnCompleted(unitTurnId);
+    }
+    
+    toast({
+      title: "Unit Turn Completed",
+      description: "The unit turn has been completed and removed from the schedule.",
+    });
+  };
+
   // Helper function to find first available time slot
   const findFirstAvailableTimeSlot = () => {
     const now = new Date();
@@ -168,11 +267,12 @@ const MaintenanceScheduleTab = ({
     // Find next available hour slot (round up to next hour)
     let nextHour = currentMinute > 0 ? currentHour + 1 : currentHour;
     
-    // Check for conflicts with existing scheduled work orders
+    // Check for conflicts with existing scheduled work orders and unit turns
     const timeSlot = `${nextHour.toString().padStart(2, '0')}:00`;
-    const hasConflict = todayWorkOrders.some(wo => wo.scheduledTime === timeSlot);
+    const hasWorkOrderConflict = todayWorkOrders.some(wo => wo.scheduledTime === timeSlot);
+    const hasUnitTurnConflict = todayUnitTurns.some(ut => ut.scheduledTime === timeSlot);
     
-    if (hasConflict) {
+    if (hasWorkOrderConflict || hasUnitTurnConflict) {
       // Try next hour
       nextHour += 1;
       if (nextHour >= 17) {
@@ -220,15 +320,56 @@ const MaintenanceScheduleTab = ({
     });
   };
 
+  const handleScheduleUnitTurn = (unitTurn: any, scheduledTime: string) => {
+    console.log('Scheduling unit turn:', unitTurn, 'for time:', scheduledTime);
+    
+    const isToday = scheduledTime.includes('Today') || !scheduledTime.includes('Tomorrow');
+    const today = new Date().toISOString().split('T')[0];
+    
+    // If scheduling for today, find first available time slot
+    const finalScheduledTime = isToday ? findFirstAvailableTimeSlot() : scheduledTime;
+    
+    // Update the unit turn with scheduled information
+    const updatedUnitTurn = {
+      ...unitTurn,
+      status: 'Scheduled',
+      scheduledDate: isToday ? today : new Date(Date.now() + 86400000).toISOString().split('T')[0],
+      scheduledTime: finalScheduledTime.includes('Tomorrow') ? '09:00' : finalScheduledTime.replace('Tomorrow ', '')
+    };
+
+    // Remove from unit turns queue
+    setUnitTurns(prev => prev.filter(ut => ut.id !== unitTurn.id));
+    
+    // If scheduled for today, add to today's unit turns for the Today tab
+    if (isToday && !finalScheduledTime.includes('Tomorrow')) {
+      console.log('Adding to today unit turns:', updatedUnitTurn);
+      const newTodayUnitTurns = [...todayUnitTurns, updatedUnitTurn];
+      updateTodayUnitTurns(newTodayUnitTurns);
+    }
+    
+    toast({
+      title: "Unit Turn Scheduled",
+      description: `Unit ${unitTurn.unit} turn has been scheduled for ${finalScheduledTime.includes('Tomorrow') ? 'tomorrow at 9:00 AM' : `today at ${finalScheduledTime}`}`,
+    });
+  };
+
   const addTodayWorkOrder = (workOrder: any) => {
     console.log('Adding work order to today context:', workOrder);
     const newTodayWorkOrders = [...todayWorkOrders, workOrder];
     updateTodayWorkOrders(newTodayWorkOrders);
   };
 
+  const addTodayUnitTurn = (unitTurn: any) => {
+    console.log('Adding unit turn to today context:', unitTurn);
+    const newTodayUnitTurns = [...todayUnitTurns, unitTurn];
+    updateTodayUnitTurns(newTodayUnitTurns);
+  };
+
   const contextValue = {
     todayWorkOrders,
-    addTodayWorkOrder
+    addTodayWorkOrder,
+    todayUnitTurns,
+    addTodayUnitTurn
   };
 
   if (showWorkOrderFlow) {
@@ -304,16 +445,29 @@ const MaintenanceScheduleTab = ({
               <div className="w-full">
                 <WorkOrderQueue 
                   workOrders={workOrders}
-                  onSelectWorkOrder={handleWorkOrderDetailsView} 
+                  onSelectWorkOrder={handleWorkOrderDetailsView}
+                  onDragStart={() => setIsDragging(true)}
+                  onDragEnd={() => setIsDragging(false)}
                 />
-                <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
+                <ScheduleDropZone 
+                  onScheduleWorkOrder={handleScheduleWorkOrder}
+                  isVisible={isDragging}
+                />
               </div>
             )}
 
             {activeTab === 'unitturns' && (
               <div className="w-full">
-                <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
-                <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
+                <UnitTurnTracker 
+                  onSelectUnitTurn={setSelectedUnitTurn}
+                  unitTurns={unitTurns}
+                  onDragStart={() => setIsDragging(true)}
+                  onDragEnd={() => setIsDragging(false)}
+                />
+                <ScheduleDropZone 
+                  onScheduleUnitTurn={handleScheduleUnitTurn}
+                  isVisible={isDragging}
+                />
               </div>
             )}
           </div>
