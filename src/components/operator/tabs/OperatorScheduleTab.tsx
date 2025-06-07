@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -527,8 +528,8 @@ const OperatorScheduleTab = () => {
   }
 
   return (
-    <div className="w-full bg-gray-50 h-screen flex flex-col overflow-hidden">
-      <div className="px-4 py-4 flex-shrink-0">
+    <div className="w-full bg-gray-50 min-h-screen pb-20">
+      <div className="px-4 py-4">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold text-gray-900">Schedule</h1>
           
@@ -579,7 +580,7 @@ const OperatorScheduleTab = () => {
         </div>
       </div>
 
-      <div className="flex-1 px-4 overflow-hidden" style={{ height: 'calc(100vh - 260px)' }}>
+      <div className="px-4">
         <HourlyCalendarView
           selectedDate={selectedDate}
           events={getEventsForDate(selectedDate)}
