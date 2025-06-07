@@ -5,6 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar as CalendarIcon, Clock, Users, Wrench, MessageSquare, Home, FileText, DollarSign, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
 import ScheduleMenu from '@/components/schedule/ScheduleMenu';
 import WorkOrderFlow from '@/components/schedule/WorkOrderFlow';
 import MessageModule from '@/components/message/MessageModule';
@@ -270,6 +273,11 @@ const OperatorScheduleTab = () => {
     setShowScheduleMenu(false);
   };
 
+  // Check if selected date has events for the indicator dot
+  const hasEventsOnDate = (date: Date) => {
+    return scheduledItems.some(item => item.date.toDateString() === date.toDateString());
+  };
+
   if (showRescheduleFlow && selectedEventForReschedule) {
     return (
       <RescheduleFlow
@@ -354,9 +362,44 @@ const OperatorScheduleTab = () => {
 
   return (
     <div className="px-4 py-6 pb-24 relative">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Schedule</h1>
-        <p className="text-gray-600">Manage daily operations and appointments</p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Schedule</h1>
+          <p className="text-gray-600">Manage daily operations and appointments</p>
+        </div>
+        
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="justify-center sm:justify-start text-left font-normal shadow-sm w-12 sm:w-[240px]"
+            >
+              <CalendarIcon className="h-4 w-4" />
+              <span className="hidden sm:inline sm:ml-2">
+                {format(selectedDate, "EEEE, MMMM d, yyyy")}
+              </span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="end">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && setSelectedDate(date)}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+              classNames={{
+                day_today: "bg-blue-600 text-white hover:bg-blue-700",
+                day_selected: "bg-blue-600 text-white hover:bg-blue-700"
+              }}
+              modifiers={{
+                hasEvents: (date) => hasEventsOnDate(date)
+              }}
+              modifiersClassNames={{
+                hasEvents: "after:absolute after:bottom-1 after:left-1/2 after:transform after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-orange-500 after:rounded-full after:shadow-sm relative"
+              }}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
 
       <button 
@@ -365,19 +408,6 @@ const OperatorScheduleTab = () => {
       >
         <Plus className="text-white" size={28} />
       </button>
-
-      <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-100">
-        <Calendar
-          mode="single"
-          selected={selectedDate}
-          onSelect={(date) => date && setSelectedDate(date)}
-          className={cn("p-3 pointer-events-auto")}
-          classNames={{
-            day_today: "bg-blue-600 text-white hover:bg-blue-700",
-            day_selected: "bg-blue-600 text-white hover:bg-blue-700"
-          }}
-        />
-      </div>
 
       <div className="mb-6">
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
