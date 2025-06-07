@@ -11,6 +11,7 @@ import ClientIntakeForm from '@/components/forms/ClientIntakeForm';
 import LeadIntakeForm from '@/components/forms/LeadIntakeForm';
 import ContractManager from '@/components/contracts/ContractManager';
 import UserManagement from '@/components/user/UserManagement';
+import PropertyDetailsModal from '@/components/property/PropertyDetailsModal';
 import {
   Building, 
   Users, 
@@ -65,6 +66,8 @@ const SuperAdmin = () => {
   const [activeView, setActiveView] = useState('overview');
   const [showClientForm, setShowClientForm] = useState(false);
   const [showLeadForm, setShowLeadForm] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<any>(null);
+  const [showPropertyDetails, setShowPropertyDetails] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -177,6 +180,11 @@ const SuperAdmin = () => {
 
   const handleAddLead = () => {
     setShowLeadForm(true);
+  };
+
+  const handleViewPropertyDetails = (property: any) => {
+    setSelectedProperty(property);
+    setShowPropertyDetails(true);
   };
 
   const handleClientSubmit = (clientData: any) => {
@@ -320,17 +328,17 @@ const SuperAdmin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 max-w-full overflow-x-hidden">
       {/* Header */}
       <div className="bg-white shadow-sm border-b sticky top-0 z-40">
         <div className="px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Applaud Super Admin</h1>
-              <p className="text-sm text-gray-600 hidden sm:block">Global oversight & client management</p>
+            <div className="flex items-center space-x-4 min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">Applaud Super Admin</h1>
+              <p className="text-sm text-gray-600 hidden lg:block truncate">Global oversight & client management</p>
             </div>
             
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 flex-shrink-0">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="focus:outline-none">
@@ -400,32 +408,34 @@ const SuperAdmin = () => {
       {/* Desktop Navigation */}
       <div className="bg-white border-b hidden md:block">
         <div className="px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-8">
-            {navigationItems.map((view) => {
-              const Icon = view.icon;
-              return (
-                <button
-                  key={view.id}
-                  onClick={() => setActiveView(view.id)}
-                  className={`py-4 px-2 border-b-2 font-medium text-sm whitespace-nowrap flex items-center gap-2 transition-colors ${
-                    activeView === view.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {view.label}
-                </button>
-              );
-            })}
-          </nav>
+          <ScrollArea className="w-full">
+            <nav className="flex space-x-8 min-w-max">
+              {navigationItems.map((view) => {
+                const Icon = view.icon;
+                return (
+                  <button
+                    key={view.id}
+                    onClick={() => setActiveView(view.id)}
+                    className={`py-4 px-2 border-b-2 font-medium text-sm whitespace-nowrap flex items-center gap-2 transition-colors flex-shrink-0 ${
+                      activeView === view.id
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {view.label}
+                  </button>
+                );
+              })}
+            </nav>
+          </ScrollArea>
         </div>
       </div>
 
       {/* Content */}
-      <div className="px-4 sm:px-6 lg:px-8 py-6">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-full">
         {activeView === 'overview' && (
-          <div className="space-y-6">
+          <div className="space-y-6 max-w-full">
             {/* KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
               <Card>
@@ -506,8 +516,8 @@ const SuperAdmin = () => {
             </div>
 
             {/* Recent Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-full">
+              <Card className="min-w-0">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Activity className="w-5 h-5" />
@@ -520,19 +530,19 @@ const SuperAdmin = () => {
                       <p className="text-gray-500 text-center py-8">No clients found. Add some clients to see activity here.</p>
                     ) : (
                       companies.slice(0, 5).map((company) => (
-                        <div key={company.id} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <div key={company.id} className="flex items-center justify-between p-3 border rounded-lg min-w-0">
+                          <div className="flex items-center space-x-3 min-w-0 flex-1">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                               <Building className="w-4 h-4 text-blue-600" />
                             </div>
-                            <div>
-                              <p className="font-medium">{company.name}</p>
-                              <p className="text-sm text-gray-500">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium truncate">{company.name}</p>
+                              <p className="text-sm text-gray-500 truncate">
                                 Created {new Date(company.created_at).toLocaleDateString()}
                               </p>
                             </div>
                           </div>
-                          <Badge className={getStatusColor(company.status || 'active')}>
+                          <Badge className={`${getStatusColor(company.status || 'active')} flex-shrink-0`}>
                             {company.status || 'active'}
                           </Badge>
                         </div>
@@ -542,7 +552,7 @@ const SuperAdmin = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="min-w-0">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <UserPlus className="w-5 h-5" />
@@ -552,12 +562,12 @@ const SuperAdmin = () => {
                 <CardContent>
                   <div className="space-y-4">
                     {leads.map((lead) => (
-                      <div key={lead.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium">{lead.name}</p>
-                          <p className="text-sm text-gray-500">{lead.units} units • {lead.email}</p>
+                      <div key={lead.id} className="flex items-center justify-between p-3 border rounded-lg min-w-0">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium truncate">{lead.name}</p>
+                          <p className="text-sm text-gray-500 truncate">{lead.units} units • {lead.email}</p>
                         </div>
-                        <Badge className={getStatusColor(lead.status)}>
+                        <Badge className={`${getStatusColor(lead.status)} flex-shrink-0 ml-2`}>
                           {lead.status.replace('_', ' ')}
                         </Badge>
                       </div>
@@ -570,17 +580,17 @@ const SuperAdmin = () => {
         )}
 
         {activeView === 'properties' && (
-          <div className="space-y-6">
+          <div className="space-y-6 max-w-full">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">Properties Management</h2>
-              <Button>
+              <Button className="flex-shrink-0">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Property
               </Button>
             </div>
 
-            <div className="flex gap-4">
-              <div className="flex-1 relative">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative min-w-0">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
                   placeholder="Search properties..."
@@ -625,43 +635,47 @@ const SuperAdmin = () => {
               </Card>
             </div>
 
-            <div className="grid gap-4">
+            <div className="space-y-4 max-w-full">
               {properties.filter(property =>
                 property.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 property.address?.toLowerCase().includes(searchTerm.toLowerCase())
               ).map((property) => (
-                <Card key={property.id}>
+                <Card key={property.id} className="max-w-full">
                   <CardContent className="p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="flex items-center space-x-4 flex-1">
-                        <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      <div className="flex items-center space-x-4 flex-1 min-w-0">
+                        <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
                           <Home className="w-6 h-6 text-green-600" />
                         </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg">{property.name}</h3>
-                          <p className="text-gray-600 flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
-                            {property.address}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-lg truncate">{property.name}</h3>
+                          <p className="text-gray-600 flex items-center gap-1 truncate">
+                            <MapPin className="w-4 h-4 flex-shrink-0" />
+                            <span className="truncate">{property.address}</span>
                           </p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge className="bg-blue-100 text-blue-800">
+                          <div className="flex flex-wrap items-center gap-2 mt-2">
+                            <Badge className="bg-blue-100 text-blue-800 flex-shrink-0">
                               {property.units} units
                             </Badge>
-                            <Badge className="bg-green-100 text-green-800">
+                            <Badge className="bg-green-100 text-green-800 flex-shrink-0">
                               {property.occupancy_rate}% occupied
                             </Badge>
-                            <Badge className={property.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                            <Badge className={`${property.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'} flex-shrink-0`}>
                               {property.status}
                             </Badge>
-                            <span className="text-sm text-gray-500">
+                            <span className="text-sm text-gray-500 truncate">
                               Client: {property.client_name}
                             </span>
                           </div>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleViewPropertyDetails(property)}
+                        >
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
                         </Button>
@@ -1382,6 +1396,17 @@ const SuperAdmin = () => {
           </div>
         )}
       </div>
+
+      {/* Property Details Modal */}
+      {showPropertyDetails && selectedProperty && (
+        <PropertyDetailsModal
+          property={selectedProperty}
+          onClose={() => {
+            setShowPropertyDetails(false);
+            setSelectedProperty(null);
+          }}
+        />
+      )}
 
       {/* Intake Forms */}
       {showClientForm && (
