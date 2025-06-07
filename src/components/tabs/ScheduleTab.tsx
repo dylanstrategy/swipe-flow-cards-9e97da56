@@ -466,67 +466,69 @@ const ScheduleTab = () => {
   }
 
   return (
-    <div className="px-4 py-6 pb-24 relative bg-gray-50 min-h-screen">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Schedule</h1>
+    <div className="w-full bg-gray-50">
+      <div className="px-4 py-6 pb-24">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">Schedule</h1>
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="justify-center sm:justify-start text-left font-normal shadow-sm w-12 sm:w-[240px]"
+              >
+                <CalendarIcon className="h-4 w-4" />
+                <span className="hidden sm:inline sm:ml-2">
+                  {format(selectedDate, "EEEE, MMMM d, yyyy")}
+                </span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+                classNames={{
+                  day_today: "bg-blue-600 text-white hover:bg-blue-700",
+                  day_selected: "bg-blue-600 text-white hover:bg-blue-700"
+                }}
+                modifiers={{
+                  hasEvents: (date) => hasEventsOnDate(date)
+                }}
+                modifiersClassNames={{
+                  hasEvents: "after:absolute after:bottom-1 after:left-1/2 after:transform after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-orange-500 after:rounded-full after:shadow-sm relative"
+                }}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
         
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className="justify-center sm:justify-start text-left font-normal shadow-sm w-12 sm:w-[240px]"
-            >
-              <CalendarIcon className="h-4 w-4" />
-              <span className="hidden sm:inline sm:ml-2">
-                {format(selectedDate, "EEEE, MMMM d, yyyy")}
-              </span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="end">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => date && setSelectedDate(date)}
-              initialFocus
-              className={cn("p-3 pointer-events-auto")}
-              classNames={{
-                day_today: "bg-blue-600 text-white hover:bg-blue-700",
-                day_selected: "bg-blue-600 text-white hover:bg-blue-700"
-              }}
-              modifiers={{
-                hasEvents: (date) => hasEventsOnDate(date)
-              }}
-              modifiersClassNames={{
-                hasEvents: "after:absolute after:bottom-1 after:left-1/2 after:transform after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-orange-500 after:rounded-full after:shadow-sm relative"
-              }}
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
-      
-      <button 
-        onClick={() => setShowScheduleMenu(true)}
-        className="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-700 transition-all duration-200 hover:scale-110 z-50"
-      >
-        <Plus className="text-white" size={28} />
-      </button>
+        <button 
+          onClick={() => setShowScheduleMenu(true)}
+          className="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-700 transition-all duration-200 hover:scale-110 z-50"
+        >
+          <Plus className="text-white" size={28} />
+        </button>
 
-      <div className="mb-6">
-        <HourlyCalendarView
+        <div className="mb-6">
+          <HourlyCalendarView
+            selectedDate={selectedDate}
+            events={getEventsForDate(selectedDate)}
+            onDropSuggestion={handleDropSuggestionInTimeline}
+            onEventClick={handleEventClick}
+            onEventHold={handleEventHold}
+          />
+        </div>
+
+        <DraggableSuggestionsSection 
           selectedDate={selectedDate}
-          events={getEventsForDate(selectedDate)}
-          onDropSuggestion={handleDropSuggestionInTimeline}
-          onEventClick={handleEventClick}
-          onEventHold={handleEventHold}
+          onSchedule={startScheduling}
+          onAction={handleAction}
+          scheduledSuggestionIds={scheduledSuggestionIds}
         />
       </div>
-
-      <DraggableSuggestionsSection 
-        selectedDate={selectedDate}
-        onSchedule={startScheduling}
-        onAction={handleAction}
-        scheduledSuggestionIds={scheduledSuggestionIds}
-      />
     </div>
   );
 };
