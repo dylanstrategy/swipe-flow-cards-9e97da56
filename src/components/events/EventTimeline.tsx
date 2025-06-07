@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Clock, User, MessageSquare, Calendar, CheckCircle, AlertTriangle, Bell, X } from 'lucide-react';
@@ -155,7 +154,7 @@ const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
     }
   };
 
-  const timelineItems = getTimelineItems();
+  const timelineItems = getTimelineItems().reverse(); // Reverse to show latest first
 
   const formatTimelineDate = (date: Date) => {
     return format(date, 'MMM d, yyyy at h:mm a');
@@ -216,7 +215,7 @@ const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
           <div className="space-y-6">
             {timelineItems.map((item, index) => {
               const IconComponent = item.icon;
-              const isLatest = index === timelineItems.length - 1;
+              const isLatest = index === 0; // First item is now the latest
 
               return (
                 <div key={item.id} className="relative flex items-start">
