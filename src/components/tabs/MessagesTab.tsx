@@ -98,7 +98,7 @@ const MessagesTab: React.FC<MessagesTabProps> = ({
     }
   ]);
 
-  // Effect to handle unread count changes and ensure initial count is sent
+  // Call the callback immediately when component mounts and whenever messages change
   useEffect(() => {
     const unreadCount = messages.filter(msg => msg.unread).length;
     console.log('MessagesTab: Calculated unread count:', unreadCount);
@@ -107,6 +107,15 @@ const MessagesTab: React.FC<MessagesTabProps> = ({
       onUnreadCountChange(unreadCount);
     }
   }, [messages, onUnreadCountChange]);
+
+  // Also call immediately when onUnreadCountChange prop is first provided
+  useEffect(() => {
+    if (onUnreadCountChange) {
+      const unreadCount = messages.filter(msg => msg.unread).length;
+      console.log('MessagesTab: Initial callback with unread count:', unreadCount);
+      onUnreadCountChange(unreadCount);
+    }
+  }, [onUnreadCountChange]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {

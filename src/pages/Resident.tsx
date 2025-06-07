@@ -22,7 +22,7 @@ const Resident = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('today');
   const [showSettings, setShowSettings] = useState(false);
-  const [messagesUnreadCount, setMessagesUnreadCount] = useState(0);
+  const [messagesUnreadCount, setMessagesUnreadCount] = useState(5); // Initialize with the actual count
 
   // Log the unread count changes for debugging
   useEffect(() => {
