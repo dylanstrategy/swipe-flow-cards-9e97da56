@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
+
+import React, { useState, useContext } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import SwipeCard from '@/components/SwipeCard';
 import WorkOrderFlow from '@/components/maintenance/WorkOrderFlow';
 import UnitTurnDetailTracker from '@/components/maintenance/UnitTurnDetailTracker';
+import { MaintenanceContext } from './MaintenanceScheduleTab';
 
 const MaintenanceTodayTab = () => {
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
   const [selectedUnitTurn, setSelectedUnitTurn] = useState<any>(null);
+  const { todayWorkOrders } = useContext(MaintenanceContext);
 
-  // Sample work orders data
-  const workOrders = [
+  // Sample work orders data (existing ones)
+  const existingWorkOrders = [
     {
       id: 'WO-544857',
       unit: '417',
@@ -53,6 +56,17 @@ const MaintenanceTodayTab = () => {
       status: 'Scheduled',
       daysOpen: 5
     }
+  ];
+
+  // Combine existing work orders with newly scheduled ones for today
+  const allTodayWorkOrders = [
+    ...existingWorkOrders,
+    ...todayWorkOrders.map(wo => ({
+      ...wo,
+      submitted: wo.submittedDate + 'T08:30:00Z',
+      priority: wo.priority.charAt(0).toUpperCase() + wo.priority.slice(1),
+      status: 'Scheduled'
+    }))
   ];
 
   // Sample unit turns data
@@ -136,7 +150,7 @@ const MaintenanceTodayTab = () => {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-orange-600">{workOrders.length}</div>
+            <div className="text-2xl font-bold text-orange-600">{allTodayWorkOrders.length}</div>
             <div className="text-sm text-gray-600">Active Work Orders</div>
           </CardContent>
         </Card>
@@ -151,63 +165,71 @@ const MaintenanceTodayTab = () => {
       {/* Work Orders Section */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Today's Work Orders</h2>
-        {workOrders.map((workOrder) => (
-          <SwipeCard
-            key={workOrder.id}
-            onTap={() => handleWorkOrderAction('Open Work Order', workOrder)}
-            onSwipeRight={{
-              label: "Start Work",
-              action: () => setSelectedWorkOrder(workOrder),
-              color: "#10B981",
-              icon: "🔧"
-            }}
-            onSwipeLeft={{
-              label: "Reschedule",
-              action: () => handleWorkOrderAction('Reschedule', workOrder),
-              color: "#F59E0B",
-              icon: "📅"
-            }}
-            className="mb-4"
-          >
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-start gap-4">
-                  {/* Work Order Photo */}
-                  <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                    <img 
-                      src={workOrder.photo} 
-                      alt="Work order issue"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  
-                  {/* Work Order Details */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-lg">Unit {workOrder.unit}</span>
-                        <Badge className={getPriorityColor(workOrder.priority)}>
-                          {workOrder.priority}
+        {allTodayWorkOrders.length === 0 ? (
+          <Card>
+            <CardContent className="p-6 text-center text-gray-500">
+              No work orders scheduled for today
+            </CardContent>
+          </Card>
+        ) : (
+          allTodayWorkOrders.map((workOrder) => (
+            <SwipeCard
+              key={workOrder.id}
+              onTap={() => handleWorkOrderAction('Open Work Order', workOrder)}
+              onSwipeRight={{
+                label: "Start Work",
+                action: () => setSelectedWorkOrder(workOrder),
+                color: "#10B981",
+                icon: "🔧"
+              }}
+              onSwipeLeft={{
+                label: "Reschedule",
+                action: () => handleWorkOrderAction('Reschedule', workOrder),
+                color: "#F59E0B",
+                icon: "📅"
+              }}
+              className="mb-4"
+            >
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-4">
+                    {/* Work Order Photo */}
+                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      <img 
+                        src={workOrder.photo} 
+                        alt="Work order issue"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    
+                    {/* Work Order Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-lg">Unit {workOrder.unit}</span>
+                          <Badge className={getPriorityColor(workOrder.priority)}>
+                            {workOrder.priority}
+                          </Badge>
+                        </div>
+                        <Badge className={getStatusColor(workOrder.status)}>
+                          {workOrder.status}
                         </Badge>
                       </div>
-                      <Badge className={getStatusColor(workOrder.status)}>
-                        {workOrder.status}
-                      </Badge>
-                    </div>
-                    
-                    <h3 className="font-medium text-gray-900 mb-1">{workOrder.title}</h3>
-                    <p className="text-sm text-gray-600 mb-2 line-clamp-2">{workOrder.description}</p>
-                    
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                      <span>{workOrder.resident}</span>
-                      <span>{workOrder.daysOpen} days open</span>
+                      
+                      <h3 className="font-medium text-gray-900 mb-1">{workOrder.title}</h3>
+                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">{workOrder.description}</p>
+                      
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>{workOrder.resident}</span>
+                        <span>{workOrder.daysOpen} days open</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </SwipeCard>
-        ))}
+                </CardContent>
+              </Card>
+            </SwipeCard>
+          ))
+        )}
       </div>
 
       {/* Unit Turns Section */}

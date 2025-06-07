@@ -84,6 +84,18 @@ const initialWorkOrders = [
   }
 ];
 
+// Context for sharing work orders between tabs
+interface MaintenanceContextType {
+  todayWorkOrders: any[];
+  addTodayWorkOrder: (workOrder: any) => void;
+}
+
+// Simple context provider for this component
+const MaintenanceContext = React.createContext<MaintenanceContextType>({
+  todayWorkOrders: [],
+  addTodayWorkOrder: () => {}
+});
+
 const MaintenanceScheduleTab = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('queue');
@@ -92,28 +104,46 @@ const MaintenanceScheduleTab = () => {
   const [showWorkOrderFlow, setShowWorkOrderFlow] = useState(false);
   const [workOrders, setWorkOrders] = useState(initialWorkOrders);
   const [scheduledWorkOrders, setScheduledWorkOrders] = useState<any[]>([]);
+  const [todayWorkOrders, setTodayWorkOrders] = useState<any[]>([]);
 
   const handleScheduleWorkOrder = (workOrder: any, scheduledTime: string) => {
     console.log('Scheduling work order:', workOrder, 'for time:', scheduledTime);
+    
+    const isToday = scheduledTime.includes('Today') || !scheduledTime.includes('Tomorrow');
+    const today = new Date().toISOString().split('T')[0];
     
     // Update the work order with scheduled information
     const updatedWorkOrder = {
       ...workOrder,
       status: 'scheduled',
-      scheduledDate: new Date().toISOString().split('T')[0],
+      scheduledDate: isToday ? today : new Date(Date.now() + 86400000).toISOString().split('T')[0],
       scheduledTime: scheduledTime.includes('Tomorrow') ? '09:00 AM' : scheduledTime
     };
 
     // Remove from work orders queue
     setWorkOrders(prev => prev.filter(wo => wo.id !== workOrder.id));
     
-    // Add to scheduled work orders for today view
+    // Add to scheduled work orders
     setScheduledWorkOrders(prev => [...prev, updatedWorkOrder]);
+    
+    // If scheduled for today, add to today's work orders for the Today tab
+    if (isToday) {
+      setTodayWorkOrders(prev => [...prev, updatedWorkOrder]);
+    }
     
     toast({
       title: "Work Order Scheduled",
       description: `${workOrder.title} has been scheduled for ${scheduledTime.includes('Tomorrow') ? 'tomorrow at 9:00 AM' : `today at ${scheduledTime}`}`,
     });
+  };
+
+  const addTodayWorkOrder = (workOrder: any) => {
+    setTodayWorkOrders(prev => [...prev, workOrder]);
+  };
+
+  const contextValue = {
+    todayWorkOrders,
+    addTodayWorkOrder
   };
 
   if (showWorkOrderFlow) {
@@ -157,52 +187,56 @@ const MaintenanceScheduleTab = () => {
   };
 
   return (
-    <DragDropProvider>
-      <div className="h-full flex flex-col">
-        <div className="flex-shrink-0 px-4 py-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-              <BarChart3 className="w-6 h-6 text-orange-600" />
-              Maintenance Dashboard
-            </h1>
-            <p className="text-gray-600">Track work orders, unit turns, and maintenance operations</p>
+    <MaintenanceContext.Provider value={contextValue}>
+      <DragDropProvider>
+        <div className="h-full flex flex-col">
+          <div className="flex-shrink-0 px-4 py-6">
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <BarChart3 className="w-6 h-6 text-orange-600" />
+                Maintenance Dashboard
+              </h1>
+              <p className="text-gray-600">Track work orders, unit turns, and maintenance operations</p>
+            </div>
+
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="queue" className="flex items-center gap-2">
+                  <Wrench className="w-4 h-4" />
+                  Queue
+                </TabsTrigger>
+                <TabsTrigger value="unitturns" className="flex items-center gap-2">
+                  <Home className="w-4 h-4" />
+                  Unit Turns
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="queue" className="flex items-center gap-2">
-                <Wrench className="w-4 h-4" />
-                Queue
-              </TabsTrigger>
-              <TabsTrigger value="unitturns" className="flex items-center gap-2">
-                <Home className="w-4 h-4" />
-                Unit Turns
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+          <div className="flex-1 relative overflow-hidden">
+            {activeTab === 'queue' && (
+              <div className="h-full">
+                <WorkOrderQueue 
+                  workOrders={workOrders}
+                  onSelectWorkOrder={handleWorkOrderDetailsView} 
+                />
+                <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
+              </div>
+            )}
 
-        <div className="flex-1 relative overflow-hidden">
-          {activeTab === 'queue' && (
-            <div className="h-full">
-              <WorkOrderQueue 
-                workOrders={workOrders}
-                onSelectWorkOrder={handleWorkOrderDetailsView} 
-              />
-              <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
-            </div>
-          )}
-
-          {activeTab === 'unitturns' && (
-            <div className="h-full">
-              <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
-              <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
-            </div>
-          )}
+            {activeTab === 'unitturns' && (
+              <div className="h-full">
+                <UnitTurnTracker onSelectUnitTurn={setSelectedUnitTurn} />
+                <ScheduleDropZone onScheduleWorkOrder={handleScheduleWorkOrder} />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </DragDropProvider>
+      </DragDropProvider>
+    </MaintenanceContext.Provider>
   );
 };
 
+// Export the context for use in other components
+export { MaintenanceContext };
 export default MaintenanceScheduleTab;
