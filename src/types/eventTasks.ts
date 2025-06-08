@@ -80,6 +80,7 @@ export interface UniversalEvent {
   status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled' | 'overdue';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   category: string; // Added category field
+  estimatedDuration?: number; // Added estimated duration
   tasks: EventTask[];
   assignedUsers: {
     role: Role;

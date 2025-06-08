@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { getEventTypes } from '@/services/eventTypeService';
+import { getAllEventTypes } from '@/services/eventTypeService';
 
 interface EventTypeSelectorProps {
   onSelectEventType: (eventTypeId: string) => void;
@@ -10,7 +10,7 @@ interface EventTypeSelectorProps {
 }
 
 const EventTypeSelector = ({ onSelectEventType, onClose }: EventTypeSelectorProps) => {
-  const eventTypes = getEventTypes();
+  const eventTypes = getAllEventTypes();
 
   const groupedEventTypes = eventTypes.reduce((acc, eventType) => {
     if (!acc[eventType.category]) {

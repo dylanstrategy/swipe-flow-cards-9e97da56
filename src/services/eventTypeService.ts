@@ -715,6 +715,10 @@ export const getAllEventTypes = (): EventType[] => {
   return eventTypes;
 };
 
+export const getEventTypes = (): EventType[] => {
+  return eventTypes;
+};
+
 export const getEventTypesByCategory = (category: string): EventType[] => {
   return eventTypes.filter(type => type.category === category);
 };

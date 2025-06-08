@@ -80,6 +80,7 @@ const TaskModalManager = ({ task, eventType, onClose, onComplete }: TaskModalMan
             eventType === 'move-in' ? 'move-in' : 
             eventType === 'move-out' ? 'move-out' : 
             eventType === 'unit-turn' ? 'unit-turn' :
+            eventType === 'inspection' ? 'inspection' :
             'maintenance'
           }
         />

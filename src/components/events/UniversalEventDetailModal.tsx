@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, MessageSquare, Calendar, AlertTriangle, Clock, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { isPast, isToday } from 'date-fns';
+import { isPast, isToday, format } from 'date-fns';
 import { useTaskCompletionStamps } from '@/hooks/useTaskCompletionStamps';
 import { getEventType } from '@/services/eventTypeService';
 import { getTasksForEventType } from '@/services/eventTaskTemplatesService';

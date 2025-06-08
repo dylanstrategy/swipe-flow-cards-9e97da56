@@ -1,5 +1,6 @@
 import { addDays, subDays, startOfDay, addHours } from 'date-fns';
 import { UniversalEvent } from '@/types/eventTasks';
+import { Role } from '@/types/roles';
 import { format, isSameDay } from 'date-fns';
 
 // Centralized event store that all roles share
@@ -89,8 +90,7 @@ class SharedEventService {
           residentId: 'test-resident-001',
           maintenanceUserId: 'test-maintenance-001',
           unit: 'Unit 417',
-          building: 'Building A',
-          estimatedDuration: 120
+          building: 'Building A'
         },
         taskCompletionStamps: []
       },
@@ -336,256 +336,11 @@ class SharedEventService {
           building: 'Building A'
         },
         taskCompletionStamps: []
-      },
-
-      // Inspection - Today, shared between resident and operator
-      {
-        id: 'inspection-001',
-        type: 'inspection',
-        title: 'Annual Unit Inspection',
-        description: 'Annual safety and maintenance inspection',
-        date: today,
-        time: '11:30',
-        status: 'scheduled',
-        priority: 'medium',
-        category: 'Maintenance',
-        estimatedDuration: 60,
-        tasks: [
-          {
-            id: 'inspection-001-task-1',
-            title: 'Resident: Prepare Unit',
-            description: 'Ensure unit is accessible for inspection',
-            assignedRole: 'resident',
-            isComplete: false,
-            isRequired: true,
-            status: 'available',
-            estimatedDuration: 15
-          },
-          {
-            id: 'inspection-001-task-2',
-            title: 'Operator: Perform Inspection',
-            description: 'Complete thorough unit inspection',
-            assignedRole: 'operator',
-            isComplete: false,
-            isRequired: true,
-            status: 'available',
-            estimatedDuration: 45
-          },
-          {
-            id: 'inspection-001-task-3',
-            title: 'Operator: Generate Report',
-            description: 'Create and submit inspection report',
-            assignedRole: 'operator',
-            isComplete: false,
-            isRequired: true,
-            status: 'available',
-            estimatedDuration: 15
-          }
-        ],
-        assignedUsers: [testResident, testOperator],
-        createdBy: 'system',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        rescheduledCount: 0,
-        followUpHistory: [],
-        metadata: {
-          inspectionType: 'annual',
-          unit: 'Unit 417',
-          building: 'Building A'
-        },
-        taskCompletionStamps: []
-      },
-
-      // Poll - Today, community wide
-      {
-        id: 'poll-001',
-        type: 'poll',
-        title: 'Pool Hours Survey',
-        description: 'Vote on preferred pool operating hours for summer',
-        date: today,
-        time: '12:00',
-        status: 'scheduled',
-        priority: 'low',
-        category: 'Community',
-        estimatedDuration: 15,
-        tasks: [
-          {
-            id: 'poll-001-task-1',
-            title: 'Operator: Create Poll',
-            description: 'Create community poll with options',
-            assignedRole: 'operator',
-            isComplete: true,
-            isRequired: true,
-            status: 'complete',
-            estimatedDuration: 10
-          },
-          {
-            id: 'poll-001-task-2',
-            title: 'Resident: Cast Vote',
-            description: 'Submit vote in community poll',
-            assignedRole: 'resident',
-            isComplete: false,
-            isRequired: false,
-            status: 'available',
-            estimatedDuration: 5
-          }
-        ],
-        assignedUsers: [testResident, testOperator],
-        createdBy: 'system',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        rescheduledCount: 0,
-        followUpHistory: [],
-        metadata: {
-          pollType: 'multiple-choice',
-          options: ['6AM-10PM', '7AM-9PM', '8AM-8PM'],
-          building: 'Building A'
-        },
-        taskCompletionStamps: [
-          {
-            id: 'poll-001-task-1-completion-1703123456789',
-            taskId: 'poll-001-task-1',
-            taskName: 'Operator: Create Poll',
-            eventId: 'poll-001',
-            eventType: 'poll',
-            completedAt: new Date(),
-            completedBy: testOperator,
-            completedByName: 'Lisa Chen',
-            canUndo: true
-          }
-        ]
-      },
-
-      // Promotional Offer - Today
-      {
-        id: 'promo-001',
-        type: 'promotional',
-        title: 'Free Gym Membership',
-        description: '3 months free gym membership for lease renewals',
-        date: today,
-        time: '08:00',
-        status: 'scheduled',
-        priority: 'low',
-        category: 'Marketing',
-        estimatedDuration: 10,
-        tasks: [
-          {
-            id: 'promo-001-task-1',
-            title: 'Resident: Review Offer',
-            description: 'Review promotional offer details',
-            assignedRole: 'resident',
-            isComplete: false,
-            isRequired: false,
-            status: 'available',
-            estimatedDuration: 5
-          },
-          {
-            id: 'promo-001-task-2',
-            title: 'Resident: Redeem Offer',
-            description: 'Redeem promotional offer if interested',
-            assignedRole: 'resident',
-            isComplete: false,
-            isRequired: false,
-            status: 'available',
-            estimatedDuration: 5
-          }
-        ],
-        assignedUsers: [testResident],
-        createdBy: 'system',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        rescheduledCount: 0,
-        followUpHistory: [],
-        metadata: {
-          offerType: 'gym-membership',
-          validUntil: addDays(today, 30).toISOString(),
-          building: 'Building A'
-        },
-        taskCompletionStamps: []
-      },
-
-      // Unit Turn - Today, maintenance only
-      {
-        id: 'unit-turn-001',
-        type: 'unit-turn',
-        title: 'Unit 412 Turnover',
-        description: 'Complete unit turnover for new resident move-in',
-        date: today,
-        time: '08:00',
-        status: 'in-progress',
-        priority: 'high',
-        category: 'Maintenance',
-        estimatedDuration: 480,
-        tasks: [
-          {
-            id: 'unit-turn-001-task-1',
-            title: 'Maintenance: Deep Cleaning',
-            description: 'Complete deep cleaning of unit',
-            assignedRole: 'maintenance',
-            isComplete: true,
-            isRequired: true,
-            status: 'complete',
-            estimatedDuration: 180
-          },
-          {
-            id: 'unit-turn-001-task-2',
-            title: 'Maintenance: Paint Touch-ups',
-            description: 'Complete any necessary painting',
-            assignedRole: 'maintenance',
-            isComplete: false,
-            isRequired: true,
-            status: 'in-progress',
-            estimatedDuration: 120
-          },
-          {
-            id: 'unit-turn-001-task-3',
-            title: 'Maintenance: Final Inspection',
-            description: 'Conduct final quality inspection',
-            assignedRole: 'maintenance',
-            isComplete: false,
-            isRequired: true,
-            status: 'available',
-            estimatedDuration: 30
-          },
-          {
-            id: 'unit-turn-001-task-4',
-            title: 'Operator: Mark Unit Ready',
-            description: 'Update unit status to available',
-            assignedRole: 'operator',
-            isComplete: false,
-            isRequired: true,
-            status: 'available',
-            estimatedDuration: 5
-          }
-        ],
-        assignedUsers: [testMaintenance, testOperator],
-        createdBy: 'system',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        rescheduledCount: 0,
-        followUpHistory: [],
-        metadata: {
-          unit: 'Unit 412',
-          building: 'Building A',
-          nextMoveInDate: addDays(today, 3).toISOString()
-        },
-        taskCompletionStamps: [
-          {
-            id: 'unit-turn-001-task-1-completion-1703123456789',
-            taskId: 'unit-turn-001-task-1',
-            taskName: 'Maintenance: Deep Cleaning',
-            eventId: 'unit-turn-001',
-            eventType: 'unit-turn',
-            completedAt: new Date(),
-            completedBy: testMaintenance,
-            completedByName: 'Mike Rodriguez',
-            canUndo: true
-          }
-        ]
       }
     ];
 
     this.events = seededEvents;
+    console.log(`SharedEventService: Initialized with ${this.events.length} test events`);
   }
 
   // Subscribe to changes
@@ -601,48 +356,16 @@ class SharedEventService {
   }
 
   // Get events for specific role
-  getEventsForRole(role: 'resident' | 'maintenance' | 'operator'): UniversalEvent[] {
-    if (role === 'operator') {
-      // Operators can see all events
-      return [...this.events];
-    }
-    
-    // Filter events based on role assignment or tasks
-    return this.events.filter(event => {
-      // Check if user is directly assigned
-      const hasAssignedRole = event.assignedUsers?.some(user => user.role === role);
-      
-      // Check if event has tasks for this role
-      const hasRoleTasks = event.tasks?.some(task => task.assignedRole === role);
-      
-      return hasAssignedRole || hasRoleTasks;
-    });
+  getEventsForRole(role: Role): UniversalEvent[] {
+    return this.events.filter(event => 
+      event.assignedUsers.some(user => user.role === role)
+    );
   }
 
-  // Get events for specific date
-  getEventsForDate(date: Date): UniversalEvent[] {
-    return this.events.filter(event => {
-      try {
-        const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
-        return isSameDay(eventDate, date);
-      } catch (error) {
-        console.error('Date comparison error:', error);
-        return false;
-      }
-    });
-  }
-
-  // Get events for role and date
-  getEventsForRoleAndDate(role: 'resident' | 'maintenance' | 'operator', date: Date): UniversalEvent[] {
-    const roleEvents = this.getEventsForRole(role);
-    return roleEvents.filter(event => {
-      try {
-        const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
-        return isSameDay(eventDate, date);
-      } catch (error) {
-        console.error('Date comparison error:', error);
-        return false;
-      }
+  getEventsForRoleAndDate(role: Role, date: Date): UniversalEvent[] {
+    return this.getEventsForRole(role).filter(event => {
+      const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+      return isSameDay(eventDate, date);
     });
   }
 
@@ -695,125 +418,65 @@ class SharedEventService {
     }
   }
 
-  // Complete task (syncs across all roles)
-  completeTask(eventId: string, taskId: string, userRole: string): boolean {
-    try {
-      const event = this.getEventById(eventId);
-      if (!event) {
-        console.error('Event not found for task completion:', eventId);
-        return false;
-      }
+  completeTask(eventId: string, taskId: string, completedBy: Role): boolean {
+    const event = this.events.find(e => e.id === eventId);
+    if (!event) return false;
 
-      const task = event.tasks?.find(t => t.id === taskId);
-      if (!task) {
-        console.error('Task not found for completion:', taskId);
-        return false;
-      }
+    const task = event.tasks.find(t => t.id === taskId);
+    if (!task) return false;
 
-      // Check if user has permission to complete this task
-      if (task.assignedRole !== userRole) {
-        console.error('User does not have permission to complete this task');
-        return false;
-      }
-
-      // Mark task as complete
-      task.isComplete = true;
-      task.status = 'complete';
-
-      // Add completion stamp
-      if (!event.taskCompletionStamps) {
-        event.taskCompletionStamps = [];
-      }
-
-      event.taskCompletionStamps.push({
-        id: `${taskId}-completion-${Date.now()}`,
-        taskId,
-        taskName: task.title,
-        eventId,
-        eventType: event.type,
-        completedAt: new Date(),
-        completedBy: userRole as any,
-        completedByName: `Test ${userRole} User`,
-        canUndo: true
-      });
-
-      // Check if all required tasks are complete
-      const allRequiredComplete = event.tasks
-        ?.filter(t => t.isRequired)
-        .every(t => t.isComplete);
-
-      if (allRequiredComplete) {
-        event.status = 'completed';
-      }
-
-      this.updateEvent(eventId, event);
-      return true;
-    } catch (error) {
-      console.error('Error completing task:', error);
+    // Check role permission
+    if (task.assignedRole !== completedBy) {
+      console.warn(`Task ${taskId} is assigned to ${task.assignedRole}, not ${completedBy}`);
       return false;
     }
+
+    // Complete the task
+    task.isComplete = true;
+    task.status = 'complete';
+    task.completedAt = new Date();
+    task.completedBy = completedBy;
+
+    // Add completion stamp
+    const stamp = {
+      id: `${taskId}-completion-${Date.now()}`,
+      taskId,
+      taskName: task.title,
+      eventId,
+      eventType: event.type,
+      completedAt: new Date(),
+      completedBy: completedBy,
+      completedByName: this.getRoleDisplayName(completedBy),
+      canUndo: true
+    };
+
+    event.taskCompletionStamps = event.taskCompletionStamps || [];
+    event.taskCompletionStamps.push(stamp);
+
+    // Check if all required tasks are complete
+    const allRequiredComplete = event.tasks
+      .filter(task => task.isRequired)
+      .every(task => task.isComplete);
+
+    if (allRequiredComplete) {
+      event.status = 'completed';
+      event.completedAt = new Date();
+    }
+
+    event.updatedAt = new Date();
+    this.notifySubscribers();
+    return true;
   }
 
-  // Undo task completion
-  undoTaskCompletion(eventId: string, taskId: string): boolean {
-    try {
-      const event = this.getEventById(eventId);
-      if (!event) {
-        console.error('Event not found for task undo:', eventId);
-        return false;
-      }
-
-      const task = event.tasks?.find(t => t.id === taskId);
-      if (!task) {
-        console.error('Task not found for undo:', taskId);
-        return false;
-      }
-
-      // Mark task as incomplete
-      task.isComplete = false;
-      task.status = 'available';
-
-      // Remove completion stamp
-      if (event.taskCompletionStamps) {
-        event.taskCompletionStamps = event.taskCompletionStamps.filter(
-          stamp => stamp.taskId !== taskId
-        );
-      }
-
-      // Update event status if it was completed
-      if (event.status === 'completed') {
-        event.status = 'scheduled';
-      }
-
-      this.updateEvent(eventId, event);
-      return true;
-    } catch (error) {
-      console.error('Error undoing task completion:', error);
-      return false;
-    }
-  }
-
-  // Reschedule event
-  rescheduleEvent(eventId: string, newDate: Date, newTime: string): boolean {
-    try {
-      const event = this.getEventById(eventId);
-      if (!event) {
-        console.error('Event not found for reschedule:', eventId);
-        return false;
-      }
-
-      const updatedEvent = {
-        ...event,
-        date: newDate,
-        time: newTime,
-        rescheduledCount: (event.rescheduledCount || 0) + 1
-      };
-
-      return this.updateEvent(eventId, updatedEvent);
-    } catch (error) {
-      console.error('Error rescheduling event:', error);
-      return false;
-    }
+  private getRoleDisplayName(role: Role): string {
+    const roleNames = {
+      'resident': 'Sarah Johnson',
+      'operator': 'Lisa Chen', 
+      'maintenance': 'Mike Rodriguez',
+      'prospect': 'Prospect User',
+      'vendor': 'Vendor User'
+    };
+    return roleNames[role] || role;
   }
 
   // Remove event
@@ -841,5 +504,4 @@ class SharedEventService {
   }
 }
 
-// Export singleton instance
 export const sharedEventService = new SharedEventService();
