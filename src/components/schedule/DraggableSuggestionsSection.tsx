@@ -4,26 +4,37 @@ import { format, differenceInDays, isPast, isToday } from 'date-fns';
 import { ChevronDown, ChevronUp, Calendar, MessageSquare, Wrench, Gift, Coffee, Car, AlertTriangle } from 'lucide-react';
 import { sharedEventService } from '@/services/sharedEventService';
 
+export type EventStatus = 
+  | "scheduled"
+  | "in-progress" 
+  | "overdue"
+  | "complete"
+  | "cancelled"
+  | "urgent";
+
+export type Priority = "low" | "medium" | "high";
+
 interface Suggestion {
   id: number;
   title: string;
   description: string;
   type: string;
-  priority: 'high' | 'medium' | 'low';
+  priority: Priority;
+  status?: EventStatus;
   estimatedTime?: string;
   category?: string;
   dueDate?: Date;
   createdDate: Date;
   isCompleted: boolean;
   completedDate?: Date;
-  scheduledCount: number; // How many times it's been scheduled but not completed
+  scheduledCount: number;
 }
 
 interface DraggableSuggestionsSectionProps {
   scheduledSuggestionIds: number[];
   completedSuggestionIds?: number[];
   onDropInTimeline?: (suggestion: any, targetTime?: string) => void;
-  selectedDate: Date; // Added selectedDate prop
+  selectedDate: Date;
 }
 
 const DraggableSuggestionsSection = ({ 
@@ -32,7 +43,7 @@ const DraggableSuggestionsSection = ({
   onDropInTimeline,
   selectedDate
 }: DraggableSuggestionsSectionProps) => {
-  const [isExpanded, setIsExpanded] = useState(false); // Default to collapsed
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Get incomplete events from shared service - filter for incomplete tasks only
   const getIncompleteEventsAsSuggestions = (): Suggestion[] => {
@@ -47,19 +58,54 @@ const DraggableSuggestionsSection = ({
         // Show if there are incomplete required tasks
         return completedRequiredTasks.length < requiredTasks.length;
       })
-      .map(event => ({
-        id: parseInt(event.id as string) || Math.random() * 1000,
-        title: event.title,
-        description: event.description,
-        type: event.type,
-        priority: event.priority,
-        estimatedTime: event.estimatedDuration ? `${event.estimatedDuration} min` : '30 min',
-        category: event.category,
-        dueDate: event.date instanceof Date ? event.date : new Date(event.date),
-        createdDate: event.createdAt,
-        isCompleted: false,
-        scheduledCount: event.rescheduledCount || 0
-      }));
+      .map(event => {
+        // Dynamically assign status based on event state
+        let status: EventStatus = "scheduled";
+        const now = new Date();
+        const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+        
+        // Check if event is overdue
+        if (isPast(eventDate) && !isToday(eventDate)) {
+          status = "overdue";
+        } else if (isToday(eventDate) && event.time) {
+          try {
+            const [hours, minutes] = event.time.split(':').map(Number);
+            const eventDateTime = new Date(eventDate);
+            eventDateTime.setHours(hours, minutes || 0, 0, 0);
+            
+            if (isPast(eventDateTime)) {
+              status = "overdue";
+            } else if (eventDateTime.getTime() - now.getTime() <= 60 * 60 * 1000) { // Within 1 hour
+              status = "urgent";
+            }
+          } catch (error) {
+            console.warn('Error parsing event time:', event.time, error);
+          }
+        }
+        
+        // Check task completion status
+        const completedTasks = event.tasks.filter(task => task.isComplete);
+        if (completedTasks.length > 0 && completedTasks.length < event.tasks.length) {
+          status = "in-progress";
+        } else if (completedTasks.length === event.tasks.length) {
+          status = "complete";
+        }
+
+        return {
+          id: parseInt(event.id as string) || Math.random() * 1000,
+          title: event.title,
+          description: event.description,
+          type: event.type,
+          priority: (event.priority === 'urgent' ? 'high' : event.priority) as Priority,
+          status,
+          estimatedTime: event.estimatedDuration ? `${event.estimatedDuration} min` : '30 min',
+          category: event.category,
+          dueDate: event.date instanceof Date ? event.date : new Date(event.date),
+          createdDate: event.createdAt,
+          isCompleted: false,
+          scheduledCount: event.rescheduledCount || 0
+        };
+      });
   };
 
   // Enhanced suggestions with completion tracking and due dates
@@ -70,9 +116,10 @@ const DraggableSuggestionsSection = ({
       description: 'Fire safety and HVAC inspection overdue',
       type: 'Maintenance',
       priority: 'high',
+      status: 'overdue',
       estimatedTime: '2 hours',
       category: 'safety',
-      dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days overdue
+      dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
       createdDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
       isCompleted: false,
       scheduledCount: 2
@@ -83,9 +130,10 @@ const DraggableSuggestionsSection = ({
       description: 'Monthly updates and announcements pending',
       type: 'Message',
       priority: 'medium',
+      status: 'scheduled',
       estimatedTime: '15 min',
       category: 'communication',
-      dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // Due in 2 days
+      dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
       createdDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
       isCompleted: false,
       scheduledCount: 0
@@ -96,9 +144,10 @@ const DraggableSuggestionsSection = ({
       description: 'Professional pet care request pending',
       type: 'Service',
       priority: 'low',
+      status: 'scheduled',
       estimatedTime: '30 min',
       category: 'pet',
-      dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // Due in 5 days
+      dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
       createdDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
       isCompleted: false,
       scheduledCount: 1
@@ -109,9 +158,10 @@ const DraggableSuggestionsSection = ({
       description: '25% off at ground floor café expires soon',
       type: 'Offer',
       priority: 'low',
+      status: 'urgent',
       estimatedTime: '5 min',
       category: 'dining',
-      dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), // Due tomorrow
+      dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
       createdDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
       isCompleted: false,
       scheduledCount: 0
@@ -122,9 +172,10 @@ const DraggableSuggestionsSection = ({
       description: 'Covered parking now available - respond needed',
       type: 'Service',
       priority: 'medium',
+      status: 'scheduled',
       estimatedTime: '10 min',
       category: 'parking',
-      dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // Due in 3 days
+      dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
       createdDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
       isCompleted: false,
       scheduledCount: 1
@@ -135,9 +186,10 @@ const DraggableSuggestionsSection = ({
       description: 'Review your renewal options - deadline approaching',
       type: 'Message',
       priority: 'high',
+      status: 'overdue',
       estimatedTime: '20 min',
       category: 'lease',
-      dueDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day overdue
+      dueDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
       createdDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
       isCompleted: false,
       scheduledCount: 3
@@ -161,13 +213,17 @@ const DraggableSuggestionsSection = ({
         return true;
       })
       .sort((a, b) => {
-        // Sort by priority and overdue status
-        const aIsOverdue = a.dueDate && isPast(a.dueDate);
-        const bIsOverdue = b.dueDate && isPast(b.dueDate);
-        
-        // Overdue items first
-        if (aIsOverdue && !bIsOverdue) return -1;
-        if (!aIsOverdue && bIsOverdue) return 1;
+        // Sort by status first (overdue > urgent > in-progress > scheduled)
+        const statusOrder = { 
+          'overdue': 4, 
+          'urgent': 3, 
+          'in-progress': 2, 
+          'scheduled': 1,
+          'complete': 0,
+          'cancelled': 0
+        };
+        const statusDiff = (statusOrder[b.status || 'scheduled'] || 1) - (statusOrder[a.status || 'scheduled'] || 1);
+        if (statusDiff !== 0) return statusDiff;
         
         // Then by priority
         const priorityOrder = { high: 3, medium: 2, low: 1 };
@@ -195,30 +251,44 @@ const DraggableSuggestionsSection = ({
     }
   };
 
-  const getPriorityColor = (priority: string, isOverdue: boolean = false) => {
-    if (isOverdue) {
-      return 'bg-red-500 text-white';
-    }
-    
-    switch (priority) {
-      case 'high': return 'bg-red-500 text-white';
-      case 'medium': return 'bg-yellow-500 text-white';
-      case 'low': return 'bg-green-500 text-white';
-      default: return 'bg-gray-500 text-white';
+  const getStatusColor = (status: EventStatus | undefined, priority: Priority) => {
+    switch (status) {
+      case 'overdue': return 'bg-red-500 text-white';
+      case 'urgent': return 'bg-orange-500 text-white';
+      case 'in-progress': return 'bg-blue-500 text-white';
+      case 'complete': return 'bg-green-500 text-white';
+      case 'cancelled': return 'bg-gray-500 text-white';
+      default:
+        // Fallback to priority-based colors for scheduled status
+        switch (priority) {
+          case 'high': return 'bg-red-500 text-white';
+          case 'medium': return 'bg-yellow-500 text-white';
+          case 'low': return 'bg-green-500 text-white';
+          default: return 'bg-gray-500 text-white';
+        }
     }
   };
 
   const getUrgencyIndicator = (suggestion: Suggestion) => {
-    const isOverdue = suggestion.dueDate && isPast(suggestion.dueDate);
+    const isOverdue = suggestion.status === 'overdue' || (suggestion.dueDate && isPast(suggestion.dueDate));
     const daysOverdue = suggestion.dueDate ? Math.abs(differenceInDays(new Date(), suggestion.dueDate)) : 0;
     
-    if (isOverdue) {
+    if (suggestion.status === 'overdue' || isOverdue) {
       return (
         <div className="flex items-center gap-1 text-red-600">
           <AlertTriangle className="w-3 h-3" />
           <span className="text-xs font-medium">
             {daysOverdue === 0 ? 'Due today' : `${daysOverdue}d overdue`}
           </span>
+        </div>
+      );
+    }
+    
+    if (suggestion.status === 'urgent') {
+      return (
+        <div className="flex items-center gap-1 text-orange-600">
+          <AlertTriangle className="w-3 h-3" />
+          <span className="text-xs font-medium">Urgent</span>
         </div>
       );
     }
@@ -248,12 +318,13 @@ const DraggableSuggestionsSection = ({
   const handleDragStart = (e: React.DragEvent, suggestion: Suggestion) => {
     console.log('Suggestion drag start:', suggestion);
     const dragData = {
-      type: 'suggestion', // This identifies it as a dragged suggestion
+      type: 'suggestion',
       id: suggestion.id,
       title: suggestion.title,
       description: suggestion.description,
-      suggestionType: suggestion.type, // This is the actual suggestion type like "Maintenance"
+      suggestionType: suggestion.type,
       priority: suggestion.priority,
+      status: suggestion.status,
       estimatedTime: suggestion.estimatedTime,
       category: suggestion.category,
       dueDate: suggestion.dueDate,
@@ -276,8 +347,8 @@ const DraggableSuggestionsSection = ({
     );
   }
 
-  const overdueCount = availableSuggestions.filter(s => s.dueDate && isPast(s.dueDate)).length;
-  const highPriorityCount = availableSuggestions.filter(s => s.priority === 'high').length;
+  const overdueCount = availableSuggestions.filter(s => s.status === 'overdue').length;
+  const urgentCount = availableSuggestions.filter(s => s.status === 'urgent').length;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
@@ -295,9 +366,9 @@ const DraggableSuggestionsSection = ({
               {overdueCount} overdue
             </span>
           )}
-          {highPriorityCount > 0 && (
+          {urgentCount > 0 && (
             <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">
-              {highPriorityCount} urgent
+              {urgentCount} urgent
             </span>
           )}
         </div>
@@ -308,7 +379,6 @@ const DraggableSuggestionsSection = ({
         <div className="p-4">
           <div className="grid grid-cols-2 gap-3">
             {availableSuggestions.map((suggestion) => {
-              const isOverdue = suggestion.dueDate && isPast(suggestion.dueDate);
               const isScheduled = scheduledSuggestionIds.includes(suggestion.id);
               
               return (
@@ -317,8 +387,10 @@ const DraggableSuggestionsSection = ({
                   draggable={true}
                   onDragStart={(e) => handleDragStart(e, suggestion)}
                   className={`p-3 rounded-lg border cursor-move transition-all duration-200 hover:shadow-md ${
-                    isOverdue 
+                    suggestion.status === 'overdue'
                       ? 'border-red-200 bg-red-50' 
+                      : suggestion.status === 'urgent'
+                      ? 'border-orange-200 bg-orange-50'
                       : isScheduled
                       ? 'border-blue-200 bg-blue-50'
                       : 'border-gray-200 bg-white'
@@ -326,14 +398,16 @@ const DraggableSuggestionsSection = ({
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className={`p-1.5 rounded ${
-                      isOverdue 
+                      suggestion.status === 'overdue'
                         ? 'bg-red-200 text-red-700' 
+                        : suggestion.status === 'urgent'
+                        ? 'bg-orange-200 text-orange-700'
                         : 'bg-blue-100 text-blue-600'
                     }`}>
                       {getIcon(suggestion.type)}
                     </div>
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${getPriorityColor(suggestion.priority, isOverdue)}`}>
-                      {suggestion.priority}
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(suggestion.status, suggestion.priority)}`}>
+                      {suggestion.status || suggestion.priority}
                     </span>
                   </div>
                   
