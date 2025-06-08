@@ -291,11 +291,11 @@ const TodayTab = () => {
     }
   };
 
-  const handleDropSuggestion = (suggestion: any, date: Date) => {
+  const handleDropSuggestion = (suggestion: any, targetTime?: string) => {
     // For TodayTab, we can show a toast or handle the drop
     toast({
       title: "Suggestion Scheduled!",
-      description: `${suggestion.title} scheduled for ${format(date, 'MMM d, yyyy')}`,
+      description: `${suggestion.title} scheduled for ${format(selectedDate, 'MMM d, yyyy')}`,
     });
   };
 
