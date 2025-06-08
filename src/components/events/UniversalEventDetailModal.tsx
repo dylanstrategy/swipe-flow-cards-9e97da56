@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -507,6 +506,7 @@ const UniversalEventDetailModal = ({
                     onTaskUndo={handleTaskUndo}
                     onTaskStart={handleTaskStart}
                     completionStamps={getStampsForEvent(universalEvent.id)}
+                    eventType={universalEvent.type}
                   />
                 </div>
               )}

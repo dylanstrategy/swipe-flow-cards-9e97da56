@@ -14,6 +14,7 @@ import QuickActionsGrid from './today/QuickActionsGrid';
 import TodayMiniCalendar from './today/TodayMiniCalendar';
 import PointOfSale from '../PointOfSale';
 import { useRealtimeOverdueDetection } from '@/hooks/useRealtimeOverdueDetection';
+import { createTestEvents } from '@/data/testEvents';
 
 const TodayTab = () => {
   const { toast } = useToast();
@@ -57,103 +58,20 @@ const TodayTab = () => {
   }, []);
 
   // Enhanced calendar events with realistic examples and times - now as state
-  const [calendarEvents, setCalendarEvents] = useState([
-    {
-      id: 1,
-      date: new Date(),
-      time: '09:00',
-      title: 'Work Order',
-      description: 'Broken outlet - Unit 4B',
-      image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400',
-      category: 'Work Order',
-      priority: 'high' as const, // Fix priority type
-      unit: '4B',
-      building: 'Building A',
-      dueDate: addDays(new Date(), -1),
-      type: 'maintenance'
-    },
-    {
-      id: 2,
-      date: new Date(),
-      time: '10:30',
-      title: 'Message from Management',
-      description: 'Please submit your lease renewal documents by Friday',
-      category: 'Management',
-      priority: 'medium' as const, // Fix priority type
-      type: 'message'
-    },
-    {
-      id: 3,
-      date: new Date(),
-      time: '11:00',
-      title: 'Lease Renewal',
-      description: 'New rent: $1,550/month starting March 1st',
-      image: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=400',
-      category: 'Lease',
-      priority: 'high' as const, // Fix priority type
-      unit: '204',
-      building: 'Building A',
-      dueDate: addDays(new Date(), 2),
-      type: 'lease'
-    },
-    {
-      id: 4,
-      date: new Date(),
-      time: '14:00',
-      title: 'Local Business Offer',
-      description: '20% OFF at Joe\'s Burger Joint - Show this message',
-      image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400',
-      category: 'Point of Sale',
-      priority: 'low' as const, // Fix priority type
-      type: 'message'
-    },
-    {
-      id: 5,
-      date: addDays(new Date(), 1),
-      time: '14:00',
-      title: 'Rooftop BBQ Social',
-      description: 'Community event - RSVP required',
-      category: 'Community Event',
-      priority: 'low' as const, // Fix priority type
-      type: 'tour'
-    },
-    {
-      id: 6,
-      date: addDays(new Date(), 2),
-      time: '09:00',
-      title: 'HVAC Maintenance',
-      description: 'Filter replacement scheduled',
-      image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400',
-      category: 'Work Order',
-      priority: 'medium' as const, // Fix priority type
-      unit: '204',
-      building: 'Building A',
-      type: 'maintenance'
-    }
-  ]);
+  const [calendarEvents, setCalendarEvents] = useState(() => createTestEvents());
 
   // Add pet-specific events if user has pets - also as state
   const [petEvents, setPetEvents] = useState(() => 
     profile.pets.length > 0 ? [
       {
-        id: 101,
+        id: 'pet-101',
         date: new Date(),
         time: '16:00',
         title: `${profile.pets[0].name}'s Special Offer`,
         description: `Exclusive pet grooming discount for ${profile.pets[0].name}!`,
         category: 'Pet Service',
-        priority: 'low' as const, // Fix priority type
+        priority: 'low' as const,
         type: 'message'
-      },
-      {
-        id: 102,
-        date: addDays(new Date(), 1),
-        time: '18:00',
-        title: 'Pet-Friendly Community Event',
-        description: `Bring ${profile.pets.map(pet => pet.name).join(' and ')} to the pet meetup!`,
-        category: 'Community Event',
-        priority: 'low' as const, // Fix priority type
-        type: 'tour'
       }
     ] : []
   );
@@ -162,14 +80,14 @@ const TodayTab = () => {
 
   // Add special event for rent due
   const rentDueEvent = {
-    id: 999,
+    id: 'rent-999',
     date: new Date(),
     time: '14:00',
     title: 'Rent Payment Due',
     description: '$1,550 due in 3 days',
     category: 'Payment',
-    priority: 'high' as const, // Fix priority type
-    dueDate: addDays(new Date(), 3), // Due in 3 days
+    priority: 'high' as const,
+    dueDate: addDays(new Date(), 3),
     type: 'payment'
   };
 
@@ -441,8 +359,11 @@ const TodayTab = () => {
   };
 
   const handleEventUpdate = (updatedEvent: any) => {
-    // For TodayTab, we would typically refresh the events from the source
-    // Since we're using static data, we'll just show a success message
+    // Update the event in the calendar events state
+    setCalendarEvents(prev => prev.map(event => 
+      event.id === updatedEvent.id ? { ...event, ...updatedEvent } : event
+    ));
+    
     toast({
       title: "Event Updated",
       description: `${updatedEvent.title} has been updated successfully.`,
@@ -568,7 +489,7 @@ const TodayTab = () => {
       {renderPersonalizedOffers()}
 
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Today</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Today's Events</h2>
         
         <TodayMiniCalendar 
           selectedDate={selectedDate}
