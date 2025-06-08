@@ -21,12 +21,14 @@ interface DraggableSuggestionsSectionProps {
   scheduledSuggestionIds: number[];
   completedSuggestionIds?: number[];
   onDropInTimeline?: (suggestion: any, targetTime?: string) => void;
+  selectedDate: Date; // Added selectedDate prop
 }
 
 const DraggableSuggestionsSection = ({ 
   scheduledSuggestionIds,
   completedSuggestionIds = [],
-  onDropInTimeline
+  onDropInTimeline,
+  selectedDate
 }: DraggableSuggestionsSectionProps) => {
   const [isExpanded, setIsExpanded] = useState(false); // Default to collapsed
 
@@ -317,7 +319,7 @@ const DraggableSuggestionsSection = ({
                   )}
 
                   <button
-                    onClick={() => onDropInTimeline(suggestion)}
+                    onClick={() => onDropInTimeline && onDropInTimeline(suggestion)}
                     className="w-full mt-2 text-xs text-blue-600 hover:text-blue-800 font-medium"
                   >
                     {isScheduled ? 'Reschedule' : 'Schedule'}

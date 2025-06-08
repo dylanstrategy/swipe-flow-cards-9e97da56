@@ -444,6 +444,7 @@ const OperatorScheduleTab = () => {
               scheduledSuggestionIds={scheduledSuggestionIds}
               completedSuggestionIds={completedSuggestionIds}
               onDropInTimeline={handleDropSuggestionInTimeline}
+              selectedDate={selectedDate}
             />
           </div>
 
