@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { format, addMinutes, startOfDay, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -212,7 +213,7 @@ const HourlyCalendarView = ({
         </p>
       </div>
 
-      <div className="divide-y divide-gray-100 max-h-[600px] overflow-y-auto">
+      <div className="divide-y divide-gray-100">
         {timeSlots.map((timeSlot) => {
           const slotEvents = getEventsForTimeSlot(timeSlot);
           const isDragOver = dragOverSlot === timeSlot;
