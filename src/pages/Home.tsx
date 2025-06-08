@@ -25,6 +25,14 @@ const Home = () => {
       color: 'bg-blue-500'
     },
     {
+      id: 'prospect',
+      title: 'Prospect Portal',
+      description: 'Find your perfect apartment and manage your application process',
+      icon: UserCheck,
+      path: '/prospect',
+      color: 'bg-purple-500'
+    },
+    {
       id: 'discovery',
       title: 'Discovery Flow',
       description: 'Find your perfect apartment with our guided discovery process',

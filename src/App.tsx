@@ -7,6 +7,7 @@ import { ProfileProvider } from "@/contexts/ProfileContext";
 import { ResidentProvider } from "@/contexts/ResidentContext";
 import Home from "./pages/Home";
 import Resident from "./pages/Resident";
+import Prospect from "./pages/Prospect";
 import Discovery from "./pages/Discovery";
 import Matches from "./pages/Matches";
 import MoveIn from "./pages/MoveIn";
@@ -27,6 +28,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/resident" element={<Resident />} />
+              <Route path="/prospect" element={<Prospect />} />
               <Route path="/super-admin" element={<SuperAdmin />} />
               <Route path="/discovery" element={<Discovery />} />
               <Route path="/matches" element={<Matches />} />
