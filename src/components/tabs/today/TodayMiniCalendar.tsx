@@ -7,7 +7,7 @@ import HourlyCalendarView from '../../schedule/HourlyCalendarView';
 interface TodayMiniCalendarProps {
   selectedDate: Date;
   getEventsForDate: (date: Date) => any[];
-  onDropSuggestion: (suggestion: any, date: Date) => void;
+  onDropSuggestion: (suggestion: any, targetTime?: string) => void;
   onDateSelect: (date: Date) => void;
   onEventReschedule: (event: any, newTime: string) => void;
   onEventClick: (event: any) => void;
@@ -33,6 +33,11 @@ const TodayMiniCalendar = ({
     // Could show context menu or options
   };
 
+  const handleDropSuggestion = (suggestion: any, targetTime?: string) => {
+    console.log('TodayMiniCalendar: Drop suggestion called with:', suggestion, targetTime);
+    onDropSuggestion(suggestion, targetTime);
+  };
+
   return (
     <div className="bg-white rounded-lg border border-gray-200">
       <div className="p-4 border-b border-gray-100">
@@ -49,7 +54,7 @@ const TodayMiniCalendar = ({
         <HourlyCalendarView
           selectedDate={selectedDate}
           events={todayEvents}
-          onDropSuggestion={onDropSuggestion}
+          onDropSuggestion={handleDropSuggestion}
           onEventClick={handleEventClick}
           onEventHold={handleEventHold}
           onEventReschedule={onEventReschedule}
