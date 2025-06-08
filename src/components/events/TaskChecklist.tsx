@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Circle, Clock, User, Lock, Undo2 } from 'lucide-react';
 import { EventTask } from '@/types/eventTasks';
 import type { TaskCompletionStamp } from '@/types/taskStamps';
-import { Role } from '@/types/roles';
+import { Role, userHasAccessToTask } from '@/types/roles';
 import { format } from 'date-fns';
 import TaskModalManager from '../tasks/TaskModalManager';
 
@@ -80,10 +80,10 @@ const TaskChecklist = ({
     return 'available';
   };
 
-  // STRICT ROLE ENFORCEMENT - Only assigned role can interact with task
+  // UPDATED: Use role hierarchy instead of strict role enforcement
   const canUserInteractWithTask = (task: EventTask) => {
-    // Only the exact assigned role can interact with the task (no exceptions)
-    return (task.assignedRole === currentUserRole) && !readOnly;
+    // Use the new role hierarchy system
+    return userHasAccessToTask(currentUserRole, task.assignedRole) && !readOnly;
   };
 
   const canUndoTask = (task: EventTask) => {
@@ -230,11 +230,11 @@ const TaskChecklist = ({
                         </p>
                       )}
 
-                      {/* STRICT ROLE ENFORCEMENT MESSAGE */}
+                      {/* UPDATED: Role hierarchy message */}
                       {!canInteract && !readOnly && taskStatus !== 'complete' && taskStatus !== 'locked' && (
                         <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
                           <Lock className="w-3 h-3" />
-                          Only {task.assignedRole} can complete this task
+                          Task assigned to {task.assignedRole} - your role ({currentUserRole}) cannot complete this task
                         </p>
                       )}
                     </div>

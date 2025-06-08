@@ -1,7 +1,7 @@
-
 import { UniversalEvent, EventTask } from '@/types/eventTasks';
 import { Role } from '@/types/roles';
 import { TaskCompletionStamp } from '@/types/taskStamps';
+import { userHasAccessToTask } from '@/types/roles';
 
 class SharedEventService {
   private events: UniversalEvent[] = [
@@ -428,8 +428,9 @@ class SharedEventService {
 
     const task = event.tasks[taskIndex];
 
-    if (task.assignedRole !== userRole) {
-      console.warn(`User role ${userRole} is not authorized to complete task ${taskId}`);
+    // UPDATED: Use role hierarchy instead of strict role check
+    if (!userHasAccessToTask(userRole, task.assignedRole)) {
+      console.warn(`User role ${userRole} is not authorized to complete task ${taskId} (assigned to ${task.assignedRole})`);
       return false;
     }
 
