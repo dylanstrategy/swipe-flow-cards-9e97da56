@@ -166,16 +166,15 @@ const OperatorScheduleTab = () => {
     ));
   };
 
-  if (showCreateFlow) {
+  if (showCreateFlow && selectedEventType) {
     return (
       <UniversalEventCreationFlow
+        eventType={selectedEventType}
         onClose={() => {
           setShowCreateFlow(false);
           setSelectedEventType(null);
         }}
         onEventCreated={handleEventCreated}
-        preselectedEventType={selectedEventType}
-        userRole="operator"
       />
     );
   }
