@@ -1,9 +1,11 @@
 
+import { Role } from './roles';
+
 export interface EventTask {
   id: string;
   title: string;
   description: string;
-  assignedRole: 'resident' | 'operator' | 'maintenance' | 'prospect' | 'vendor';
+  assignedRole: Role;
   isComplete: boolean;
   completedAt?: Date;
   completedBy?: string;
@@ -62,9 +64,10 @@ export interface UniversalEvent {
   time: string;
   status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled' | 'overdue';
   priority: 'low' | 'medium' | 'high' | 'urgent';
+  category: string; // Added category field
   tasks: EventTask[];
   assignedUsers: {
-    role: string;
+    role: Role;
     userId?: string;
     name?: string;
     email?: string;

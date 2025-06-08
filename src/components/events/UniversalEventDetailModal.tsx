@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +7,7 @@ import { isPast, isToday } from 'date-fns';
 import { useUniversalEvent } from '@/hooks/useUniversalEvent';
 import { getEventType } from '@/services/eventTypeService';
 import { UniversalEvent } from '@/types/eventTasks';
+import { Role } from '@/types/roles';
 import UniversalEventTaskList from './UniversalEventTaskList';
 import EventMessaging from './EventMessaging';
 import EventTimeline from './EventTimeline';
@@ -18,7 +18,7 @@ import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 interface UniversalEventDetailModalProps {
   event: any; // Can accept both old format and new UniversalEvent format
   onClose: () => void;
-  userRole?: 'operator' | 'maintenance' | 'resident' | 'prospect' | 'vendor';
+  userRole?: Role;
   onEventUpdate?: (updatedEvent: any) => void;
 }
 
@@ -45,6 +45,7 @@ const UniversalEventDetailModal = ({
     time: currentEvent.time,
     status: currentEvent.status || 'scheduled',
     priority: currentEvent.priority || 'medium',
+    category: currentEvent.category || currentEvent.type || 'General', // Add category
     tasks: [], // Old format doesn't have tasks
     assignedUsers: [],
     createdBy: 'system',
@@ -108,7 +109,7 @@ const UniversalEventDetailModal = ({
 
   const getPriorityColor = (priority: string, status?: string, isOverdue?: boolean) => {
     if (isOverdue) return 'bg-red-100 text-red-800 border-red-200';
-    if (status === 'urgent') return 'bg-red-100 text-red-800 border-red-200';
+    // Fixed: compare priority, not status
     switch (priority) {
       case 'urgent': return 'bg-red-100 text-red-800 border-red-200';
       case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
@@ -151,7 +152,6 @@ const UniversalEventDetailModal = ({
   };
 
   const handleTaskClick = (task: any) => {
-    // Show task details or allow editing
     console.log('Task clicked:', task);
   };
 
@@ -174,13 +174,13 @@ const UniversalEventDetailModal = ({
       time: universalEvent.time,
       title: universalEvent.title,
       description: universalEvent.description,
-      category: universalEvent.type,
+      category: universalEvent.category,
       priority: universalEvent.priority,
       canReschedule: eventType?.allowsReschedule || true,
       canCancel: true,
       estimatedDuration: eventType?.estimatedDuration || 60,
       rescheduledCount: universalEvent.rescheduledCount,
-      assignedTeamMember: teamAvailabilityService.assignTeamMember({ category: universalEvent.type }),
+      assignedTeamMember: teamAvailabilityService.assignTeamMember({ category: universalEvent.category }),
       residentName: 'Resident',
       phone: '(555) 123-4567',
       unit: universalEvent.metadata?.unit,
@@ -236,13 +236,13 @@ const UniversalEventDetailModal = ({
       time: universalEvent.time,
       title: universalEvent.title,
       description: universalEvent.description,
-      category: universalEvent.type,
+      category: universalEvent.category,
       priority: universalEvent.priority,
       canReschedule: true,
       canCancel: true,
       estimatedDuration: eventType?.estimatedDuration || 60,
       rescheduledCount: universalEvent.rescheduledCount,
-      assignedTeamMember: teamAvailabilityService.assignTeamMember({ category: universalEvent.type }),
+      assignedTeamMember: teamAvailabilityService.assignTeamMember({ category: universalEvent.category }),
       residentName: 'Resident',
       phone: '(555) 123-4567',
       unit: universalEvent.metadata?.unit,
@@ -288,7 +288,7 @@ const UniversalEventDetailModal = ({
               {eventType?.name || universalEvent.type}
             </Badge>
             <Badge className={`${getPriorityColor(universalEvent.priority, universalEvent.status, eventIsOverdue)} text-xs whitespace-nowrap`}>
-              {eventIsOverdue ? 'OVERDUE' : universalEvent.status === 'urgent' ? 'URGENT' : universalEvent.priority?.toUpperCase()}
+              {eventIsOverdue ? 'OVERDUE' : universalEvent.priority?.toUpperCase()}
             </Badge>
           </div>
         </div>

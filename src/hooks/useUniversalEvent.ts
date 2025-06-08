@@ -1,6 +1,6 @@
-
 import { useState, useCallback } from 'react';
 import { UniversalEvent, EventTask } from '@/types/eventTasks';
+import { Role } from '@/types/roles';
 import { getEventType } from '@/services/eventTypeService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -35,6 +35,7 @@ export const useUniversalEvent = () => {
         time: eventData.time || '09:00',
         status: 'scheduled',
         priority: eventData.priority || 'medium',
+        category: eventType.category, // Add category from event type
         tasks,
         assignedUsers: eventData.assignedUsers || [],
         createdBy: eventData.createdBy || 'current-user',
@@ -98,7 +99,7 @@ export const useUniversalEvent = () => {
   const completeTask = useCallback(async (
     eventId: string,
     taskId: string,
-    completedBy: string
+    completedBy: Role
   ): Promise<boolean> => {
     return updateEventTask(eventId, taskId, {
       isComplete: true,
@@ -114,7 +115,6 @@ export const useUniversalEvent = () => {
   ): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // In a real app, this would make an API call
       console.log('Rescheduling event:', { eventId, newDate, newTime });
       
       toast({
@@ -142,7 +142,6 @@ export const useUniversalEvent = () => {
   ): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // In a real app, this would make an API call
       console.log('Cancelling event:', { eventId, reason });
       
       toast({

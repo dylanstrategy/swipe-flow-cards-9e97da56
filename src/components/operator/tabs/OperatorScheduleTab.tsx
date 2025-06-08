@@ -48,7 +48,7 @@ const OperatorScheduleTab = () => {
 
   // State for managing scheduled events including dropped suggestions and universal events
   const [scheduledEvents, setScheduledEvents] = useState([
-    // Legacy events for backward compatibility
+    // Legacy events for backward compatibility - ensure all have category
     {
       id: 1,
       date: new Date(),
@@ -209,7 +209,7 @@ const OperatorScheduleTab = () => {
       time: assignedTime,
       title: suggestion.title,
       description: suggestion.description,
-      category: suggestion.suggestionType || suggestion.type, // Use suggestionType from drag data
+      category: suggestion.suggestionType || suggestion.type || 'General', // Ensure category exists
       priority: suggestion.priority,
       isDroppedSuggestion: true,
       type: (suggestion.suggestionType || suggestion.type).toLowerCase(),
@@ -269,7 +269,7 @@ const OperatorScheduleTab = () => {
       time: assignedTime,
       title: suggestion.title,
       description: suggestion.description,
-      category: suggestion.suggestionType || suggestion.type, // Use suggestionType from drag data
+      category: suggestion.suggestionType || suggestion.type || 'General', // Ensure category exists
       priority: suggestion.priority,
       isDroppedSuggestion: true,
       type: (suggestion.suggestionType || suggestion.type).toLowerCase(),
@@ -314,13 +314,13 @@ const OperatorScheduleTab = () => {
       time: event.time,
       title: event.title,
       description: event.description,
-      category: event.category,
+      category: event.category || event.type || 'General',
       priority: event.priority,
       canReschedule: true,
       canCancel: true,
       estimatedDuration: 60,
       rescheduledCount: event.rescheduledCount || 0,
-      assignedTeamMember: teamAvailabilityService.assignTeamMember({ category: event.category }),
+      assignedTeamMember: teamAvailabilityService.assignTeamMember({ category: event.category || event.type }),
       residentName: 'John Doe',
       phone: '(555) 123-4567',
       unit: event.unit,
@@ -449,11 +449,22 @@ const OperatorScheduleTab = () => {
   };
 
   const getEventsForDate = (date: Date) => {
-    // Combine legacy events and universal events
+    // Combine legacy events and universal events, ensuring all have category
     const legacyEvents = scheduledEvents.filter(event => isSameDateSafe(event.date, date));
     const universalEventsForDate = universalEvents.filter(event => isSameDateSafe(event.date, date));
     
-    const allEvents = [...legacyEvents, ...universalEventsForDate].sort((a, b) => {
+    // Normalize all events to ensure they have category
+    const normalizedLegacyEvents = legacyEvents.map(event => ({
+      ...event,
+      category: event.category || event.type || 'General'
+    }));
+    
+    const normalizedUniversalEvents = universalEventsForDate.map(event => ({
+      ...event,
+      category: event.category || event.type || 'General'
+    }));
+    
+    const allEvents = [...normalizedLegacyEvents, ...normalizedUniversalEvents].sort((a, b) => {
       const timeA = convertTimeToMinutes(a.time);
       const timeB = convertTimeToMinutes(b.time);
       return timeA - timeB;
