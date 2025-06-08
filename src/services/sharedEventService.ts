@@ -467,7 +467,7 @@ class SharedEventService {
     task.completedAt = new Date();
     task.completedBy = completedBy;
 
-    // Add completion stamp with formatted display time
+    // Add completion stamp with formatted display time at CURRENT time (not event time)
     const completedAt = new Date();
     const stamp = {
       id: `${taskId}-completion-${Date.now()}`,
@@ -478,6 +478,7 @@ class SharedEventService {
       completedAt,
       completedBy: completedBy,
       completedByName: this.getRoleDisplayName(completedBy),
+      userId: this.getUserIdForRole(completedBy),
       canUndo: true,
       displayTime: format(completedAt, 'h:mm a')
     };
@@ -500,6 +501,23 @@ class SharedEventService {
     if (allRequiredComplete) {
       event.status = 'completed';
       event.completedAt = new Date();
+      
+      // Add final event completion stamp
+      const eventCompletionStamp = {
+        id: `${eventId}-event-completion-${Date.now()}`,
+        taskId: 'event-completion',
+        taskName: `${event.title} Completed`,
+        eventId,
+        eventType: event.type,
+        completedAt: new Date(),
+        completedBy: completedBy,
+        completedByName: this.getRoleDisplayName(completedBy),
+        userId: this.getUserIdForRole(completedBy),
+        canUndo: false,
+        displayTime: format(new Date(), 'h:mm a')
+      };
+      
+      event.taskCompletionStamps.push(eventCompletionStamp);
     }
 
     event.updatedAt = new Date();
@@ -529,9 +547,9 @@ class SharedEventService {
       task.completedAt = undefined;
       task.completedBy = undefined;
 
-      // Remove completion stamp
+      // Remove completion stamp and any event completion stamps
       event.taskCompletionStamps = event.taskCompletionStamps.filter(
-        stamp => stamp.taskId !== taskId
+        stamp => stamp.taskId !== taskId && stamp.taskId !== 'event-completion'
       );
 
       // Reset event status if it was completed
@@ -559,6 +577,17 @@ class SharedEventService {
       'vendor': 'Vendor User'
     };
     return roleNames[role] || role;
+  }
+
+  private getUserIdForRole(role: Role): string {
+    const userIds = {
+      'resident': 'test-resident-001',
+      'operator': 'test-operator-001', 
+      'maintenance': 'test-maintenance-001',
+      'prospect': 'test-prospect-001',
+      'vendor': 'test-vendor-001'
+    };
+    return userIds[role] || 'system';
   }
 
   // Remove event

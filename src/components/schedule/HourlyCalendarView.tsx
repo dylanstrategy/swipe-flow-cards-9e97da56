@@ -4,6 +4,8 @@ import { format, addMinutes, startOfDay, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Clock, Calendar, Plus, CheckCircle } from 'lucide-react';
 import { TaskCompletionStamp } from '@/types/eventTasks';
+import TaskStampLayer from './TaskStampLayer';
+import EventCompletionStamp from './EventCompletionStamp';
 
 interface Event {
   id: number | string;
@@ -22,6 +24,7 @@ interface Event {
   date: Date;
   isOverdue?: boolean;
   taskCompletionStamps?: TaskCompletionStamp[];
+  tasks?: any[];
 }
 
 interface HourlyCalendarViewProps {
@@ -50,25 +53,34 @@ const HourlyCalendarView = ({
     return `${hour}:00`;
   });
 
+  // Get all task completion stamps from all events
+  const getAllTaskStamps = (): TaskCompletionStamp[] => {
+    const allStamps: TaskCompletionStamp[] = [];
+    events.forEach(event => {
+      if (event.taskCompletionStamps) {
+        allStamps.push(...event.taskCompletionStamps);
+      }
+    });
+    return allStamps;
+  };
+
+  const allTaskStamps = getAllTaskStamps();
+
   // Real-time overdue detection logic
   const isEventOverdue = (event: Event): boolean => {
-    // If the event already has isOverdue property, use it
     if (event.hasOwnProperty('isOverdue')) {
       return event.isOverdue || false;
     }
 
-    // Only check if event is not completed
     if (event.status === 'completed' || event.status === 'cancelled') return false;
     
     const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
     const now = new Date();
     
-    // If event date is in the past, it's overdue
     if (isPast(eventDate) && !isToday(eventDate)) {
       return true;
     }
     
-    // If event is today but the time has passed, it's overdue
     if (isToday(eventDate) && event.time) {
       try {
         const [hours, minutes] = event.time.split(':').map(Number);
@@ -80,6 +92,19 @@ const HourlyCalendarView = ({
         console.warn('Error parsing event time:', event.time, error);
         return false;
       }
+    }
+    
+    return false;
+  };
+
+  // Check if event is fully completed
+  const isEventCompleted = (event: Event): boolean => {
+    if (event.status === 'completed') return true;
+    
+    if (event.tasks) {
+      const requiredTasks = event.tasks.filter(task => task.isRequired);
+      const completedRequiredTasks = requiredTasks.filter(task => task.isComplete);
+      return requiredTasks.length > 0 && completedRequiredTasks.length === requiredTasks.length;
     }
     
     return false;
@@ -120,8 +145,12 @@ const HourlyCalendarView = ({
     });
   };
 
-  // Updated color logic: Blue by default, red only when overdue
-  const getEventColors = (event: Event, isOverdue: boolean) => {
+  // Updated color logic: Blue by default, red only when overdue, green when completed
+  const getEventColors = (event: Event, isOverdue: boolean, isCompleted: boolean) => {
+    if (isCompleted) {
+      return 'bg-green-100 border-green-300 text-green-800';
+    }
+    
     if (isOverdue) {
       return 'bg-red-100 border-red-300 text-red-800';
     }
@@ -142,6 +171,12 @@ const HourlyCalendarView = ({
   };
 
   const handleDragStart = (e: React.DragEvent, event: Event) => {
+    // Don't allow dragging completed events
+    if (isEventCompleted(event)) {
+      e.preventDefault();
+      return;
+    }
+    
     setDraggedEvent(event);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', '');
@@ -228,7 +263,7 @@ const HourlyCalendarView = ({
             <div
               key={timeSlot}
               className={cn(
-                "flex min-h-[80px] transition-all duration-200",
+                "flex min-h-[80px] transition-all duration-200 relative",
                 isDragOver && "bg-green-50 border-l-4 border-green-400"
               )}
               onDragOver={(e) => handleDragOver(e, timeSlot)}
@@ -245,9 +280,16 @@ const HourlyCalendarView = ({
 
               {/* Events column - Flexible with proper overflow handling */}
               <div className="flex-1 p-4 min-h-[80px] relative">
+                {/* Task completion stamps layer (background) */}
+                <TaskStampLayer 
+                  stamps={allTaskStamps}
+                  timeSlot={timeSlot}
+                  selectedDate={selectedDate}
+                />
+
                 {slotEvents.length === 0 ? (
                   <div className={cn(
-                    "w-full h-full flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg transition-all duration-200",
+                    "w-full h-full flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg transition-all duration-200 relative z-10",
                     isDragOver && "border-green-400 bg-green-50 text-green-600"
                   )}>
                     {isDragOver ? (
@@ -257,101 +299,93 @@ const HourlyCalendarView = ({
                     )}
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-2 relative z-10">
                     {slotEvents.map((event) => {
                       const isOverdue = isEventOverdue(event);
-                      const overdueClasses = getOverdueClasses(isOverdue);
-                      const eventColors = getEventColors(event, isOverdue);
+                      const isCompleted = isEventCompleted(event);
+                      const overdueClasses = getOverdueClasses(isOverdue && !isCompleted);
+                      const eventColors = getEventColors(event, isOverdue, isCompleted);
                       
                       return (
                         <div key={event.id} className="space-y-2">
-                          {/* Main event card */}
-                          <div
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, event)}
-                            onDragEnd={handleDragEnd}
-                            onClick={() => handleEventClick(event)}
-                            onContextMenu={(e) => {
-                              e.preventDefault();
-                              handleEventHold(event);
-                            }}
-                            className={cn(
-                              "p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md active:scale-95 w-full",
-                              eventColors,
-                              event.isDroppedSuggestion && !isOverdue && "text-white shadow-lg",
-                              !event.isDroppedSuggestion && !isOverdue && "hover:scale-105",
-                              overdueClasses
-                            )}
-                          >
-                            <div className="flex items-start justify-between w-full">
-                              <div className="flex-1 min-w-0">
-                                <h4 className={cn(
-                                  "font-semibold text-sm break-words",
-                                  (event.isDroppedSuggestion && !isOverdue) ? "text-white" : ""
-                                )}>
-                                  {isOverdue && <span className="text-red-700 font-bold mr-1">OVERDUE</span>}
-                                  {event.title}
-                                </h4>
-                                <p className={cn(
-                                  "text-xs mt-1 break-words",
-                                  (event.isDroppedSuggestion && !isOverdue) ? "text-white/90" : isOverdue ? "text-red-700" : "text-blue-700"
-                                )}>
-                                  {event.description}
-                                </p>
-                                {(event.unit || event.building) && (
-                                  <div className="flex flex-wrap items-center gap-2 mt-2">
-                                    {event.building && (
-                                      <span className={cn(
-                                        "text-xs px-2 py-1 rounded-full break-words",
-                                        (event.isDroppedSuggestion && !isOverdue)
-                                          ? "bg-white/20 text-white" 
-                                          : isOverdue
-                                          ? "bg-red-200 text-red-800"
-                                          : "bg-gray-100 text-gray-600"
-                                      )}>
-                                        {event.building}
-                                      </span>
-                                    )}
-                                    {event.unit && (
-                                      <span className={cn(
-                                        "text-xs px-2 py-1 rounded-full break-words",
-                                        (event.isDroppedSuggestion && !isOverdue)
-                                          ? "bg-white/20 text-white" 
-                                          : isOverdue
-                                          ? "bg-red-200 text-red-800"
-                                          : "bg-blue-100 text-blue-700"
-                                      )}>
-                                        Unit {event.unit}
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            
-                            {event.rescheduledCount && event.rescheduledCount > 0 && (
-                              <div className="mt-2 text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded-full inline-block">
-                                Rescheduled {event.rescheduledCount}x
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Task completion stamps */}
-                          {event.taskCompletionStamps && event.taskCompletionStamps.length > 0 && (
-                            <div className="ml-4 space-y-1">
-                              {event.taskCompletionStamps.map((stamp) => (
-                                <div 
-                                  key={stamp.id}
-                                  className="flex items-center gap-2 text-xs text-green-700 bg-green-50 px-2 py-1 rounded-md border border-green-200"
-                                >
-                                  <CheckCircle className="w-3 h-3 text-green-600" />
-                                  <span className="font-medium">{stamp.taskName}</span>
-                                  <span className="text-green-600">completed by</span>
-                                  <span className="font-medium">{stamp.completedByName || stamp.completedBy}</span>
-                                  <span className="text-green-600">–</span>
-                                  <span className="font-medium">{formatCompletionTime(stamp.completedAt)}</span>
+                          {/* Main event card or completion stamp */}
+                          {isCompleted ? (
+                            <EventCompletionStamp
+                              eventTitle={event.title}
+                              eventType={event.category}
+                              completedAt={event.taskCompletionStamps?.[event.taskCompletionStamps.length - 1]?.completedAt || new Date()}
+                              completedBy={event.taskCompletionStamps?.[event.taskCompletionStamps.length - 1]?.completedByName || 'System'}
+                            />
+                          ) : (
+                            <div
+                              draggable={!isCompleted}
+                              onDragStart={(e) => handleDragStart(e, event)}
+                              onDragEnd={handleDragEnd}
+                              onClick={() => handleEventClick(event)}
+                              onContextMenu={(e) => {
+                                e.preventDefault();
+                                handleEventHold(event);
+                              }}
+                              className={cn(
+                                "p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md active:scale-95 w-full",
+                                eventColors,
+                                event.isDroppedSuggestion && !isOverdue && "text-white shadow-lg",
+                                !event.isDroppedSuggestion && !isOverdue && "hover:scale-105",
+                                overdueClasses,
+                                isCompleted && "cursor-default pointer-events-none"
+                              )}
+                            >
+                              <div className="flex items-start justify-between w-full">
+                                <div className="flex-1 min-w-0">
+                                  <h4 className={cn(
+                                    "font-semibold text-sm break-words",
+                                    (event.isDroppedSuggestion && !isOverdue && !isCompleted) ? "text-white" : ""
+                                  )}>
+                                    {isOverdue && !isCompleted && <span className="text-red-700 font-bold mr-1">OVERDUE</span>}
+                                    {event.title}
+                                  </h4>
+                                  <p className={cn(
+                                    "text-xs mt-1 break-words",
+                                    (event.isDroppedSuggestion && !isOverdue && !isCompleted) ? "text-white/90" : isOverdue ? "text-red-700" : "text-blue-700"
+                                  )}>
+                                    {event.description}
+                                  </p>
+                                  {(event.unit || event.building) && (
+                                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                                      {event.building && (
+                                        <span className={cn(
+                                          "text-xs px-2 py-1 rounded-full break-words",
+                                          (event.isDroppedSuggestion && !isOverdue && !isCompleted)
+                                            ? "bg-white/20 text-white" 
+                                            : isOverdue
+                                            ? "bg-red-200 text-red-800"
+                                            : "bg-gray-100 text-gray-600"
+                                        )}>
+                                          {event.building}
+                                        </span>
+                                      )}
+                                      {event.unit && (
+                                        <span className={cn(
+                                          "text-xs px-2 py-1 rounded-full break-words",
+                                          (event.isDroppedSuggestion && !isOverdue && !isCompleted)
+                                            ? "bg-white/20 text-white" 
+                                            : isOverdue
+                                            ? "bg-red-200 text-red-800"
+                                            : "bg-blue-100 text-blue-700"
+                                        )}>
+                                          Unit {event.unit}
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
-                              ))}
+                              </div>
+                              
+                              {event.rescheduledCount && event.rescheduledCount > 0 && !isCompleted && (
+                                <div className="mt-2 text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded-full inline-block">
+                                  Rescheduled {event.rescheduledCount}x
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
