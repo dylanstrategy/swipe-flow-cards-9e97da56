@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { format } from 'date-fns';
-import { CheckCircle, Calendar } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TaskCompletionStamp } from '@/types/taskStamps';
 import { Role } from '@/types/roles';

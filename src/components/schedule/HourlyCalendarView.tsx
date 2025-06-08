@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { format, addMinutes, startOfDay, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -98,7 +99,7 @@ const HourlyCalendarView = ({
     return false;
   };
 
-  // Check if event is fully completed - NEW LOGIC
+  // Check if event is fully completed - all required tasks done
   const isEventCompleted = (event: Event): boolean => {
     if (event.status === 'completed') return true;
     
@@ -251,8 +252,8 @@ const HourlyCalendarView = ({
         </p>
       </div>
 
-      {/* Calendar with full height - NO SCROLL CONTAINER */}
-      <div className="divide-y divide-gray-100 h-[calc(24*80px)]">
+      {/* Calendar with full height - NO SCROLL CONTAINER - Allow page scroll */}
+      <div className="divide-y divide-gray-100">
         {timeSlots.map((timeSlot) => {
           const slotEvents = getEventsForTimeSlot(timeSlot);
           const isDragOver = dragOverSlot === timeSlot;
@@ -261,7 +262,7 @@ const HourlyCalendarView = ({
             <div
               key={timeSlot}
               className={cn(
-                "flex h-[80px] transition-all duration-200 relative",
+                "flex min-h-[80px] transition-all duration-200 relative",
                 isDragOver && "bg-green-50 border-l-4 border-green-400"
               )}
               onDragOver={(e) => handleDragOver(e, timeSlot)}
@@ -277,7 +278,7 @@ const HourlyCalendarView = ({
               </div>
 
               {/* Events column - Flexible with proper overflow handling */}
-              <div className="flex-1 p-4 h-[80px] relative">
+              <div className="flex-1 p-4 min-h-[80px] relative">
                 {/* Task completion stamps layer (background) - PERMANENT STAMPS */}
                 <TaskStampRenderer 
                   stamps={allTaskStamps}
@@ -287,7 +288,7 @@ const HourlyCalendarView = ({
 
                 {slotEvents.length === 0 ? (
                   <div className={cn(
-                    "w-full h-full flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg transition-all duration-200 relative z-10",
+                    "w-full h-full min-h-[48px] flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg transition-all duration-200 relative z-10",
                     isDragOver && "border-green-400 bg-green-50 text-green-600"
                   )}>
                     {isDragOver ? (

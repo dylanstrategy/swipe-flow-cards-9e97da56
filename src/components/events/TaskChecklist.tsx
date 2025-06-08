@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -80,12 +81,9 @@ const TaskChecklist = ({
     return 'available';
   };
 
-  // ROLE ENFORCEMENT - Only assigned role can interact with task
+  // STRICT ROLE ENFORCEMENT - Only assigned role can interact with task
   const canUserInteractWithTask = (task: EventTask) => {
-    // Operators can interact with any task
-    if (currentUserRole === 'operator') return !readOnly;
-    
-    // Other roles can only interact with their assigned tasks
+    // Only the exact assigned role can interact with the task (no exceptions)
     return (task.assignedRole === currentUserRole) && !readOnly;
   };
 
@@ -96,6 +94,7 @@ const TaskChecklist = ({
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
     
+    // Only allow undo before 11:59 PM on same day
     return now <= endOfDay && task.completedAt && task.completedAt.toDateString() === now.toDateString();
   };
 
@@ -104,9 +103,9 @@ const TaskChecklist = ({
   };
 
   const handleTaskAction = (task: EventTask) => {
-    // Check role permissions first
+    // Check role permissions first - STRICT ENFORCEMENT
     if (!canUserInteractWithTask(task)) {
-      console.log('User does not have permission to interact with this task');
+      console.log('User does not have permission to interact with this task - Role mismatch');
       return;
     }
 
@@ -162,7 +161,7 @@ const TaskChecklist = ({
           const canUndo = canUndoTask(task);
           const stamp = getTaskStamp(task.id);
           
-          console.log(`Task ${task.title}: status=${taskStatus}, canInteract=${canInteract}, role=${task.assignedRole}`);
+          console.log(`Task ${task.title}: status=${taskStatus}, canInteract=${canInteract}, role=${task.assignedRole}, currentRole=${currentUserRole}`);
           
           return (
             <div
@@ -223,11 +222,11 @@ const TaskChecklist = ({
                         </p>
                       )}
 
-                      {/* ROLE ENFORCEMENT MESSAGE */}
+                      {/* STRICT ROLE ENFORCEMENT MESSAGE */}
                       {!canInteract && !readOnly && taskStatus !== 'complete' && taskStatus !== 'locked' && (
                         <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
                           <Lock className="w-3 h-3" />
-                          Only {task.assignedRole} may perform this task
+                          Only {task.assignedRole} can complete this task
                         </p>
                       )}
                     </div>
@@ -249,7 +248,7 @@ const TaskChecklist = ({
                   {stamp && (
                     <div className="flex items-center gap-2 mt-2 text-xs text-green-600 bg-green-100 p-2 rounded">
                       <User className="w-3 h-3" />
-                      Completed by {stamp.completedBy} at {format(stamp.completedAt, 'h:mm a')}
+                      Completed by {stamp.completedBy} at {format(stamp.actualCompletionTime, 'h:mm a')}
                     </div>
                   )}
                   
@@ -275,7 +274,7 @@ const TaskChecklist = ({
                         </Button>
                       )}
                       
-                      {taskStatus === 'complete' && canUndo && (
+                      {taskStatus === 'complete' && canUndo && canInteract && (
                         <Button
                           size="sm"
                           variant="outline"

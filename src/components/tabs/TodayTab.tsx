@@ -465,7 +465,7 @@ const TodayTab = () => {
   console.log('TodayTab: Today events loaded:', todayEvents.length, 'events');
 
   return (
-    <div className="overflow-y-auto h-full max-h-screen pb-24">
+    <div className="min-h-screen pb-24">
       <div className="px-4 py-6">
         <TodayHeader 
           selectedDate={selectedDate}

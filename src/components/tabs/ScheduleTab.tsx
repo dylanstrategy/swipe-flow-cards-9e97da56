@@ -413,7 +413,7 @@ const ScheduleTab = () => {
   };
 
   return (
-    <div className="overflow-y-auto h-full max-h-screen pb-20">
+    <div className="min-h-screen pb-20">
       {/* Header with date picker - Fixed at top */}
       <div className="bg-white border-b border-gray-100 p-4 sticky top-0 z-40">
         <div className="flex items-center justify-between mb-4">
@@ -443,7 +443,7 @@ const ScheduleTab = () => {
         </div>
       </div>
 
-      {/* Main content - Scrollable */}
+      {/* Main content - Allow page scroll, no height constraints */}
       <div>
         {/* Suggestions section */}
         <DraggableSuggestionsSection
@@ -453,7 +453,7 @@ const ScheduleTab = () => {
           selectedDate={selectedDate}
         />
 
-        {/* Calendar - Full height without scroll */}
+        {/* Calendar - Full height without scroll container */}
         <div className="bg-white">
           <HourlyCalendarView
             selectedDate={selectedDate}
