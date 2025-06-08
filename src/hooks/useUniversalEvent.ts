@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { UniversalEvent, EventTask } from '@/types/eventTasks';
 import { Role } from '@/types/roles';
@@ -35,7 +36,7 @@ export const useUniversalEvent = () => {
         time: eventData.time || '09:00',
         status: 'scheduled',
         priority: eventData.priority || 'medium',
-        category: eventType.category, // Add category from event type
+        category: eventType.category,
         tasks,
         assignedUsers: eventData.assignedUsers || [],
         createdBy: eventData.createdBy || 'current-user',
@@ -104,7 +105,7 @@ export const useUniversalEvent = () => {
     return updateEventTask(eventId, taskId, {
       isComplete: true,
       completedAt: new Date(),
-      completedBy
+      completedBy: completedBy
     });
   }, [updateEventTask]);
 

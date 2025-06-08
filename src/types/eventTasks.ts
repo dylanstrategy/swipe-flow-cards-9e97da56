@@ -8,7 +8,7 @@ export interface EventTask {
   assignedRole: Role;
   isComplete: boolean;
   completedAt?: Date;
-  completedBy?: string;
+  completedBy?: Role;
   isRequired: boolean;
   dueDate?: Date;
   estimatedDuration?: number; // in minutes
