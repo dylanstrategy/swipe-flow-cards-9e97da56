@@ -1,5 +1,6 @@
 
 import { Role } from './roles';
+import type { TaskCompletionStamp } from './taskStamps';
 
 export interface EventTask {
   id: string;
@@ -58,7 +59,7 @@ export interface EscalationRule {
   notification: string;
 }
 
-// Import and re-export the unified TaskCompletionStamp
+// Re-export the unified TaskCompletionStamp
 export type { TaskCompletionStamp } from './taskStamps';
 
 export interface UniversalEvent {
