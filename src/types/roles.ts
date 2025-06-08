@@ -6,7 +6,8 @@ export type Role =
   | "maintenance"
   | "vendor"
   | "admin"
-  | "super-admin";
+  | "super-admin"
+  | "prospect";
 
 export interface UserRole {
   role: Role;
@@ -18,12 +19,13 @@ export interface UserRole {
 // Role inheritance map - defines which roles can perform tasks assigned to other roles
 export const RoleInheritanceMap: Record<Role, Role[]> = {
   resident: ["resident"],
-  operator: ["operator", "leasing", "maintenance"],
-  leasing: ["leasing"],
+  operator: ["operator", "leasing", "maintenance", "prospect"],
+  leasing: ["leasing", "prospect"],
   maintenance: ["maintenance"],
   vendor: ["vendor"],
-  admin: ["operator", "leasing", "maintenance", "resident"],
-  "super-admin": ["operator", "leasing", "maintenance", "resident", "admin"],
+  admin: ["operator", "leasing", "maintenance", "resident", "prospect"],
+  "super-admin": ["operator", "leasing", "maintenance", "resident", "admin", "prospect"],
+  prospect: ["prospect"],
 };
 
 // Utility function to check if a user role has access to complete a task assigned to a specific role
