@@ -1,5 +1,7 @@
+
 import { UniversalEvent, EventTask } from '@/types/eventTasks';
 import { Role } from '@/types/roles';
+import { TaskCompletionStamp } from '@/types/taskStamps';
 
 class SharedEventService {
   private events: UniversalEvent[] = [
@@ -434,7 +436,28 @@ class SharedEventService {
     const updatedTask: EventTask = {
       ...task,
       isComplete: true,
-      status: 'completed'
+      status: 'complete'
+    };
+
+    const completionTime = new Date();
+    const taskStamp: TaskCompletionStamp = {
+      id: `${taskId}-completed-${Date.now()}`,
+      taskId: task.id,
+      taskName: task.title,
+      eventId: event.id,
+      eventType: event.type,
+      completedAt: completionTime,
+      actualCompletionTime: completionTime,
+      completedBy: userRole,
+      completedByName: userRole, // Replace with actual user name if available
+      userId: 'system', // Replace with actual user ID if available
+      canUndo: true,
+      displayTime: completionTime.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit', 
+        hour12: true 
+      }),
+      permanent: false
     };
 
     const updatedEvent: UniversalEvent = {
@@ -446,14 +469,7 @@ class SharedEventService {
       ],
       taskCompletionStamps: [
         ...(event.taskCompletionStamps || []),
-        {
-          id: `${taskId}-completed-${Date.now()}`,
-          taskId: task.id,
-          taskName: task.title,
-          completedBy: userRole,
-          completedByName: userRole, // Replace with actual user name if available
-          completedAt: new Date()
-        }
+        taskStamp
       ]
     };
 
