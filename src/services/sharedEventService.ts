@@ -1,4 +1,3 @@
-
 import { addDays, subDays, startOfDay, addHours, isSameDay, format } from 'date-fns';
 import { UniversalEvent } from '@/types/eventTasks';
 import { Role } from '@/types/roles';
@@ -798,6 +797,18 @@ class SharedEventService {
     return dateFilteredEvents;
   }
 
+  // Get event by ID
+  getEventById(eventId: string): UniversalEvent | null {
+    return this.events.find(e => e.id === eventId) || null;
+  }
+
+  // Add event to service
+  addEvent(event: UniversalEvent): void {
+    this.events.push(event);
+    this.notifySubscribers();
+    console.log('SharedEventService: Added event', event.id);
+  }
+
   // Add or update event
   updateEvent(eventId: string, updatedEvent: Partial<UniversalEvent>) {
     const index = this.events.findIndex(e => e.id === eventId);
@@ -806,6 +817,68 @@ class SharedEventService {
       this.notifySubscribers();
       console.log('SharedEventService: Updated event', eventId);
     }
+  }
+
+  // Complete a task
+  completeTask(taskId: string, userId: string): boolean {
+    console.log('SharedEventService: Completing task', taskId, 'by user', userId);
+    
+    // Find the event containing this task
+    const event = this.events.find(e => 
+      e.tasks?.some(task => task.id === taskId)
+    );
+    
+    if (!event) {
+      console.warn('SharedEventService: Event not found for task', taskId);
+      return false;
+    }
+    
+    // Find and update the task
+    const task = event.tasks?.find(t => t.id === taskId);
+    if (task) {
+      task.isComplete = true;
+      task.status = 'completed';
+      task.completedAt = new Date();
+      task.completedBy = userId;
+      
+      event.updatedAt = new Date();
+      this.notifySubscribers();
+      console.log('SharedEventService: Task completed', taskId);
+      return true;
+    }
+    
+    return false;
+  }
+
+  // Undo task completion
+  undoTaskCompletion(taskId: string): boolean {
+    console.log('SharedEventService: Undoing task completion', taskId);
+    
+    // Find the event containing this task
+    const event = this.events.find(e => 
+      e.tasks?.some(task => task.id === taskId)
+    );
+    
+    if (!event) {
+      console.warn('SharedEventService: Event not found for task', taskId);
+      return false;
+    }
+    
+    // Find and update the task
+    const task = event.tasks?.find(t => t.id === taskId);
+    if (task) {
+      task.isComplete = false;
+      task.status = 'available';
+      delete task.completedAt;
+      delete task.completedBy;
+      
+      event.updatedAt = new Date();
+      this.notifySubscribers();
+      console.log('SharedEventService: Task completion undone', taskId);
+      return true;
+    }
+    
+    return false;
   }
 
   // Reschedule event

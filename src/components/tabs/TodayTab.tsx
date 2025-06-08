@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
@@ -6,7 +7,7 @@ import WorkOrdersReview from './today/WorkOrdersReview';
 import WorkOrderTimeline from '../maintenance/WorkOrderTimeline';
 import UniversalEventDetailModal from '../events/UniversalEventDetailModal';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { useProfile } from '@/contexts/ProfileContext';
 import ResidentTimeline from '../ResidentTimeline';
 import TodayHeader from './today/TodayHeader';
