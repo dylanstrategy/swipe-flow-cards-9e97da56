@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Plus, Filter, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { getEventTypes, getEventType } from '@/services/eventTypeService';
 import { EventType } from '@/types/eventTasks';
 import UniversalEventCreationFlow from '@/components/events/UniversalEventCreationFlow';
 import UniversalEventDetailModal from '@/components/events/UniversalEventDetailModal';
+import OperatorScheduleMenu from '@/components/schedule/OperatorScheduleMenu';
 import { Role } from '@/types/roles';
 
 interface ScheduledEvent {
@@ -26,6 +28,7 @@ interface ScheduledEvent {
 const OperatorScheduleTab = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [showCreateFlow, setShowCreateFlow] = useState(false);
   const [selectedEventType, setSelectedEventType] = useState<EventType | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<ScheduledEvent | null>(null);
@@ -127,12 +130,14 @@ const OperatorScheduleTab = () => {
   };
 
   const handleCreateEvent = () => {
-    setShowCreateFlow(true);
+    setShowCreateMenu(true);
   };
 
-  const handleEventTypeSelect = (eventTypeId: string) => {
-    const eventType = getEventType(eventTypeId);
-    setSelectedEventType(eventType || null);
+  const handleEventTypeSelect = (eventType: string) => {
+    const selectedType = getEventType(eventType);
+    setSelectedEventType(selectedType || null);
+    setShowCreateMenu(false);
+    setShowCreateFlow(true);
   };
 
   const handleEventCreated = (newEvent: any) => {
@@ -165,6 +170,15 @@ const OperatorScheduleTab = () => {
       event.id === updatedEvent.id ? { ...event, ...updatedEvent } : event
     ));
   };
+
+  if (showCreateMenu) {
+    return (
+      <OperatorScheduleMenu
+        onSelectType={handleEventTypeSelect}
+        onClose={() => setShowCreateMenu(false)}
+      />
+    );
+  }
 
   if (showCreateFlow && selectedEventType) {
     return (
