@@ -321,7 +321,7 @@ const OperatorScheduleTab = () => {
   if (showScheduleMenu) {
     return (
       <ScheduleMenu
-        onBack={() => setShowScheduleMenu(false)}
+        onClose={() => setShowScheduleMenu(false)}
         onScheduleTypeSelect={(type) => {
           setSelectedScheduleType(type);
           setShowScheduleMenu(false);

@@ -1,13 +1,13 @@
-
 import React from 'react';
 import { ArrowLeft, Calendar, Wrench, MessageCircle, Clock, FileText, Users } from 'lucide-react';
 
 interface ScheduleMenuProps {
-  onSelectType: (type: string) => void;
+  onBack?: () => void;
+  onScheduleTypeSelect: (type: string) => void;
   onClose: () => void;
 }
 
-const ScheduleMenu = ({ onSelectType, onClose }: ScheduleMenuProps) => {
+const ScheduleMenu = ({ onBack, onScheduleTypeSelect, onClose }: ScheduleMenuProps) => {
   const scheduleTypes = [
     {
       id: 'Message',
@@ -58,7 +58,7 @@ const ScheduleMenu = ({ onSelectType, onClose }: ScheduleMenuProps) => {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
         <button 
-          onClick={onClose}
+          onClick={onBack || onClose}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
         >
           <ArrowLeft size={24} className="text-gray-700" />
@@ -77,7 +77,7 @@ const ScheduleMenu = ({ onSelectType, onClose }: ScheduleMenuProps) => {
             return (
               <button
                 key={type.id}
-                onClick={() => onSelectType(type.id)}
+                onClick={() => onScheduleTypeSelect(type.id)}
                 className="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors text-left shadow-sm"
               >
                 <div className={`w-10 h-10 ${type.color} rounded-lg flex items-center justify-center mr-3 flex-shrink-0`}>

@@ -284,7 +284,7 @@ class SharedEventService {
         description: 'Follow-up message regarding AC repair completion',
         date: today,
         time: '13:30',
-        status: 'pending',
+        status: 'scheduled', // Fixed: changed from "pending" to "scheduled"
         priority: 'medium',
         category: 'Communication',
         tasks: [
