@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -94,8 +93,17 @@ const TaskChecklist = ({
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
     
-    // Only allow undo before 11:59 PM on same day
-    return now <= endOfDay && task.completedAt && task.completedAt.toDateString() === now.toDateString();
+    // Find the stamp for this task
+    const stamp = getTaskStamp(task.id);
+    if (stamp && stamp.permanent) {
+      return false; // Cannot undo permanent stamps
+    }
+    
+    // Only allow undo if before 11:59 PM on same day and not permanent
+    return now <= endOfDay && 
+           task.completedAt && 
+           task.completedAt.toDateString() === now.toDateString() &&
+           !stamp?.permanent;
   };
 
   const getTaskStamp = (taskId: string) => {
@@ -248,7 +256,10 @@ const TaskChecklist = ({
                   {stamp && (
                     <div className="flex items-center gap-2 mt-2 text-xs text-green-600 bg-green-100 p-2 rounded">
                       <User className="w-3 h-3" />
-                      Completed by {stamp.completedBy} at {format(stamp.actualCompletionTime, 'h:mm a')}
+                      Completed by {stamp.completedByName} at {format(stamp.actualCompletionTime, 'h:mm a')}
+                      {stamp.permanent && (
+                        <span className="text-xs text-gray-500 ml-2">(Locked)</span>
+                      )}
                     </div>
                   )}
                   

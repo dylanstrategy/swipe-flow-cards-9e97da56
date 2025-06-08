@@ -16,6 +16,13 @@ export const useTaskCompletionStamps = () => {
     completedByName?: string
   ) => {
     const actualCompletionTime = new Date();
+    const now = new Date();
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    // Check if it's past 11:59 PM for permanent flag
+    const isPermanent = now > endOfDay;
+    
     const newStamp: TaskCompletionStamp = {
       id: `stamp-${Date.now()}`,
       taskId,
@@ -26,18 +33,19 @@ export const useTaskCompletionStamps = () => {
       completedBy,
       completedByName: completedByName || completedBy,
       userId: `user-${completedBy}-001`,
-      canUndo: true,
+      canUndo: !isPermanent, // Can only undo if not permanent
       displayTime: format(actualCompletionTime, 'h:mm a'),
-      permanent: true, // All stamps are permanent
+      permanent: isPermanent,
       actualCompletionTime // Lock to true completion time
     };
 
     setStamps(prev => {
-      // Remove any existing stamp for this task
+      // Remove any existing stamp for this task (for re-completion)
       const filtered = prev.filter(s => s.taskId !== taskId);
       return [...filtered, newStamp];
     });
 
+    console.log('Task completion stamp added:', newStamp);
     return newStamp;
   }, []);
 
@@ -46,16 +54,20 @@ export const useTaskCompletionStamps = () => {
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
     
-    // Only allow undo if before midnight on same day
     setStamps(prev => prev.filter(s => {
       if (s.taskId !== taskId) return true;
       
-      const stampDate = new Date(s.actualCompletionTime);
-      const canUndo = now <= endOfDay && 
-                     stampDate.toDateString() === now.toDateString() &&
-                     s.canUndo;
+      // Only allow removal if before 11:59 PM and not permanent
+      const canRemove = now <= endOfDay && 
+                       s.actualCompletionTime.toDateString() === now.toDateString() &&
+                       !s.permanent &&
+                       s.canUndo;
       
-      return !canUndo; // Keep stamps that can't be undone
+      if (!canRemove) {
+        console.log('Cannot remove stamp - it is permanent or past undo time');
+      }
+      
+      return !canRemove; // Keep stamps that can't be removed
     }));
   }, []);
 
@@ -83,14 +95,31 @@ export const useTaskCompletionStamps = () => {
 
   const lockStampsForPreviousDays = useCallback(() => {
     const now = new Date();
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+    
     setStamps(prev => prev.map(stamp => {
       const stampDate = new Date(stamp.actualCompletionTime);
-      if (stampDate.toDateString() !== now.toDateString()) {
-        return { ...stamp, canUndo: false };
+      
+      // Lock stamps from previous days or if past 11:59 PM
+      if (stampDate.toDateString() !== now.toDateString() || now > endOfDay) {
+        return { 
+          ...stamp, 
+          canUndo: false, 
+          permanent: true 
+        };
       }
       return stamp;
     }));
   }, []);
+
+  // Check for midnight and lock stamps automatically
+  const checkMidnightLock = useCallback(() => {
+    const now = new Date();
+    if (now.getHours() === 0 && now.getMinutes() === 0) {
+      lockStampsForPreviousDays();
+    }
+  }, [lockStampsForPreviousDays]);
 
   return {
     stamps,
@@ -99,6 +128,7 @@ export const useTaskCompletionStamps = () => {
     getStampsForEvent,
     getStampsForTimeSlot,
     getStampsForToday,
-    lockStampsForPreviousDays
+    lockStampsForPreviousDays,
+    checkMidnightLock
   };
 };

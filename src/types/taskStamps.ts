@@ -13,7 +13,7 @@ export interface TaskCompletionStamp {
   userId: string;
   canUndo: boolean;
   displayTime: string;
-  permanent: boolean; // for 11:59+ retention logic
+  permanent: boolean; // true after 11:59 PM - stamps become locked
   actualCompletionTime: Date; // locked to true completion time
 }
 
