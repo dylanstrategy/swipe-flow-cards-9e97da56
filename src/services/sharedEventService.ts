@@ -837,9 +837,9 @@ class SharedEventService {
     const task = event.tasks?.find(t => t.id === taskId);
     if (task) {
       task.isComplete = true;
-      task.status = 'completed';
+      task.status = 'complete'; // Fix: use 'complete' instead of 'completed'
       task.completedAt = new Date();
-      task.completedBy = userId;
+      task.completedBy = userId as Role; // Fix: cast to Role type
       
       event.updatedAt = new Date();
       this.notifySubscribers();

@@ -190,8 +190,8 @@ const UniversalEventDetailModal = ({
       return;
     }
 
-    // Use shared service to complete task
-    const success = sharedEventService.completeTask(universalEvent.id, taskId, userRole);
+    // Use shared service to complete task - fix: only pass taskId and userId
+    const success = sharedEventService.completeTask(taskId, userRole);
     
     if (success) {
       // Get updated event from shared service
@@ -234,8 +234,8 @@ const UniversalEventDetailModal = ({
       return;
     }
 
-    // Use shared service to undo task completion
-    const success = sharedEventService.undoTaskCompletion(universalEvent.id, taskId);
+    // Use shared service to undo task completion - fix: only pass taskId
+    const success = sharedEventService.undoTaskCompletion(taskId);
     
     if (success) {
       // Get updated event from shared service
