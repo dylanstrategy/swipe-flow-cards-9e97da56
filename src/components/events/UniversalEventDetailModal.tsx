@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +8,8 @@ import { isPast, isToday } from 'date-fns';
 import { useUniversalEvent } from '@/hooks/useUniversalEvent';
 import { useTaskCompletionStamps } from '@/hooks/useTaskCompletionStamps';
 import { getEventType } from '@/services/eventTypeService';
-import { UniversalEvent } from '@/types/eventTasks';
+import { getTasksForEventType } from '@/services/eventTaskTemplatesService';
+import { UniversalEvent, EventTask } from '@/types/eventTasks';
 import { Role } from '@/types/roles';
 import TaskChecklist from './TaskChecklist';
 import EventMessaging from './EventMessaging';
@@ -37,26 +39,34 @@ const UniversalEventDetailModal = ({
   const [currentEvent, setCurrentEvent] = useState(event);
   const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
 
-  // Get event type first
-  const eventType = getEventType(currentEvent.type || 'lease-signing');
+  // Safely get event type - handle both new format and legacy format
+  const eventTypeId = currentEvent.type || 'lease-signing';
+  const eventType = getEventType(eventTypeId);
+  
+  // Get task templates for this event type
+  const taskTemplates = getTasksForEventType(eventTypeId);
 
   // Convert old event format to UniversalEvent if needed
   const universalEvent: UniversalEvent = currentEvent.tasks ? currentEvent : {
     id: currentEvent.id,
-    type: currentEvent.type || 'lease-signing',
+    type: eventTypeId,
     title: currentEvent.title,
     description: currentEvent.description,
     date: currentEvent.date,
     time: currentEvent.time,
     status: currentEvent.status || 'scheduled',
     priority: currentEvent.priority || 'medium',
-    category: currentEvent.category || currentEvent.type || 'Leasing',
-    tasks: eventType?.defaultTasks.map((taskTemplate, index) => ({
+    category: currentEvent.category || eventType?.category || 'Leasing',
+    tasks: taskTemplates.map((taskTemplate, index) => ({
       id: `${Date.now()}-${index}`,
-      ...taskTemplate,
+      title: taskTemplate.name,
+      description: `Complete: ${taskTemplate.name}`,
+      assignedRole: taskTemplate.role,
       isComplete: false,
-      status: 'available' as const
-    })) || [],
+      isRequired: true,
+      status: 'available' as const,
+      estimatedDuration: 15
+    })),
     assignedUsers: [],
     createdBy: 'system',
     createdAt: new Date(),
@@ -69,7 +79,7 @@ const UniversalEventDetailModal = ({
 
   console.log('Universal event with tasks:', universalEvent);
   console.log('Event type:', eventType);
-  console.log('Default tasks:', eventType?.defaultTasks);
+  console.log('Task templates:', taskTemplates);
 
   // Overdue detection logic
   const isEventOverdue = (event: UniversalEvent): boolean => {
@@ -109,6 +119,7 @@ const UniversalEventDetailModal = ({
       case 'move-in': return 'bg-green-100 text-green-800 border-green-200';
       case 'move-out': return 'bg-red-100 text-red-800 border-red-200';
       case 'lease-signing': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'lease': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'message': return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'tour': return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'payment': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
@@ -500,14 +511,13 @@ const UniversalEventDetailModal = ({
                 </div>
               )}
 
-              {/* Debug info to see what's happening */}
+              {/* Debug info if no tasks */}
               {(!universalEvent.tasks || universalEvent.tasks.length === 0) && (
                 <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <p className="text-yellow-800 text-sm">
                     <strong>Debug:</strong> No tasks found for this event.
                     <br />Event Type: {universalEvent.type}
-                    <br />Has eventType: {eventType ? 'Yes' : 'No'}
-                    <br />Default tasks count: {eventType?.defaultTasks?.length || 0}
+                    <br />Task templates count: {taskTemplates.length}
                   </p>
                 </div>
               )}
