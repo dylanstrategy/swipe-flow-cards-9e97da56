@@ -1,6 +1,7 @@
 import { addDays, subDays, startOfDay, addHours, isSameDay, format } from 'date-fns';
 import { UniversalEvent } from '@/types/eventTasks';
 import { Role } from '@/types/roles';
+import { TaskCompletionStamp } from '@/types/taskStamps';
 
 // Centralized event store that all roles share
 class SharedEventService {
