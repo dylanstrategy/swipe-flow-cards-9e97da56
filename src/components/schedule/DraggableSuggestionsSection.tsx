@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import { format, differenceInDays, isPast, isToday } from 'date-fns';
 import { ChevronDown, ChevronUp, Calendar, MessageSquare, Wrench, Gift, Coffee, Car, AlertTriangle } from 'lucide-react';
+import { sharedEventService } from '@/services/sharedEventService';
 
 interface Suggestion {
   id: number;
@@ -32,8 +34,36 @@ const DraggableSuggestionsSection = ({
 }: DraggableSuggestionsSectionProps) => {
   const [isExpanded, setIsExpanded] = useState(false); // Default to collapsed
 
+  // Get incomplete events from shared service - filter for incomplete tasks only
+  const getIncompleteEventsAsSuggestions = (): Suggestion[] => {
+    const todayEvents = sharedEventService.getEventsForRoleAndDate('resident', selectedDate);
+    
+    return todayEvents
+      .filter(event => {
+        // Only show events that have incomplete required tasks
+        const requiredTasks = event.tasks.filter(task => task.isRequired);
+        const completedRequiredTasks = requiredTasks.filter(task => task.isComplete);
+        
+        // Show if there are incomplete required tasks
+        return completedRequiredTasks.length < requiredTasks.length;
+      })
+      .map(event => ({
+        id: parseInt(event.id as string) || Math.random() * 1000,
+        title: event.title,
+        description: event.description,
+        type: event.type,
+        priority: event.priority,
+        estimatedTime: event.estimatedDuration ? `${event.estimatedDuration} min` : '30 min',
+        category: event.category,
+        dueDate: event.date instanceof Date ? event.date : new Date(event.date),
+        createdDate: event.createdAt,
+        isCompleted: false,
+        scheduledCount: event.rescheduledCount || 0
+      }));
+  };
+
   // Enhanced suggestions with completion tracking and due dates
-  const suggestions: Suggestion[] = [
+  const staticSuggestions: Suggestion[] = [
     {
       id: 1,
       title: 'Schedule Annual Inspection',
@@ -114,9 +144,13 @@ const DraggableSuggestionsSection = ({
     }
   ];
 
+  // Combine real incomplete events with static suggestions
+  const incompleteEvents = getIncompleteEventsAsSuggestions();
+  const allSuggestions = [...incompleteEvents, ...staticSuggestions];
+
   // Filter suggestions based on completion status and scheduling
   const getAvailableSuggestions = () => {
-    return suggestions
+    return allSuggestions
       .filter(suggestion => {
         // Don't show completed suggestions
         if (suggestion.isCompleted || completedSuggestionIds.includes(suggestion.id)) {
@@ -280,7 +314,7 @@ const DraggableSuggestionsSection = ({
               return (
                 <div
                   key={suggestion.id}
-                  draggable
+                  draggable={true}
                   onDragStart={(e) => handleDragStart(e, suggestion)}
                   className={`p-3 rounded-lg border cursor-move transition-all duration-200 hover:shadow-md ${
                     isOverdue 

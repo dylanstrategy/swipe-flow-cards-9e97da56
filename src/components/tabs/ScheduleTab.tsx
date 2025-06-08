@@ -443,30 +443,28 @@ const ScheduleTab = () => {
         </div>
       </div>
 
-      {/* Main content area - REVERTED TO ORIGINAL LAYOUT */}
-      <div className="flex-1 overflow-hidden">
-        <div className="flex flex-col h-full">
-          {/* Suggestions ABOVE the calendar - ORIGINAL LAYOUT */}
-          <div className="flex-shrink-0">
-            <DraggableSuggestionsSection
-              scheduledSuggestionIds={scheduledSuggestionIds}
-              completedSuggestionIds={completedSuggestionIds}
-              onDropInTimeline={handleDropSuggestionInTimeline}
-              selectedDate={selectedDate}
-            />
-          </div>
+      {/* Main content area with fixed scroll container */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Suggestions section - fixed height */}
+        <div className="flex-shrink-0">
+          <DraggableSuggestionsSection
+            scheduledSuggestionIds={scheduledSuggestionIds}
+            completedSuggestionIds={completedSuggestionIds}
+            onDropInTimeline={handleDropSuggestionInTimeline}
+            selectedDate={selectedDate}
+          />
+        </div>
 
-          {/* Calendar below suggestions - ORIGINAL LAYOUT */}
-          <div className="flex-1 bg-white">
-            <HourlyCalendarView
-              selectedDate={selectedDate}
-              events={getEventsForDate(selectedDate)}
-              onDropSuggestion={handleDropSuggestionInTimeline}
-              onEventClick={handleEventClick}
-              onEventHold={handleEventHold}
-              onEventReschedule={handleEventReschedule}
-            />
-          </div>
+        {/* Calendar with proper scroll container */}
+        <div className="flex-1 overflow-y-auto bg-white" style={{ maxHeight: 'calc(100vh - 240px)' }}>
+          <HourlyCalendarView
+            selectedDate={selectedDate}
+            events={getEventsForDate(selectedDate)}
+            onDropSuggestion={handleDropSuggestionInTimeline}
+            onEventClick={handleEventClick}
+            onEventHold={handleEventHold}
+            onEventReschedule={handleEventReschedule}
+          />
         </div>
       </div>
 
