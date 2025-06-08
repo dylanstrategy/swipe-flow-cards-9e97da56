@@ -24,7 +24,8 @@ export const useUniversalEvent = () => {
       const tasks: EventTask[] = eventType.defaultTasks.map((taskTemplate, index) => ({
         id: `${Date.now()}-${index}`,
         ...taskTemplate,
-        isComplete: false
+        isComplete: false,
+        status: 'available'
       }));
 
       const newEvent: UniversalEvent = {
@@ -44,7 +45,8 @@ export const useUniversalEvent = () => {
         updatedAt: new Date(),
         rescheduledCount: 0,
         followUpHistory: [],
-        metadata: eventData.metadata || {}
+        metadata: eventData.metadata || {},
+        taskCompletionStamps: []
       };
 
       console.log('Created universal event:', newEvent);
@@ -105,7 +107,8 @@ export const useUniversalEvent = () => {
     return updateEventTask(eventId, taskId, {
       isComplete: true,
       completedAt: new Date(),
-      completedBy: completedBy
+      completedBy: completedBy,
+      status: 'complete'
     });
   }, [updateEventTask]);
 
@@ -130,7 +133,8 @@ export const useUniversalEvent = () => {
     return updateEventTask(eventId, taskId, {
       isComplete: false,
       completedAt: undefined,
-      completedBy: undefined
+      completedBy: undefined,
+      status: 'available'
     });
   }, [updateEventTask, toast]);
 

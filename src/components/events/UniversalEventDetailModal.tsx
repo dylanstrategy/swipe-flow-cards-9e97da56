@@ -331,7 +331,7 @@ const UniversalEventDetailModal = ({
         event={enhancedEvent}
         onClose={() => setShowRescheduleFlow(false)}
         onConfirm={handleRescheduleConfirm}
-        userRole={userRole}
+        userRole={userRole as "resident" | "operator" | "maintenance"}
       />
     );
   }
