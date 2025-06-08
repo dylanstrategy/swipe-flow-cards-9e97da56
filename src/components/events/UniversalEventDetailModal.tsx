@@ -357,11 +357,11 @@ const UniversalEventDetailModal = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-2 sm:p-4">
-      <div className="bg-white rounded-xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-3">
+      <div className="bg-white rounded-xl w-full max-w-2xl max-h-[95vh] overflow-hidden" style={{ maxWidth: 'calc(100% - 24px)', overflowX: 'hidden' }}>
         {/* Header */}
-        <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200" style={{ overflowX: 'hidden' }}>
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             <Button variant="ghost" size="sm" onClick={onClose} className="flex-shrink-0">
               <ArrowLeft className="w-4 h-4" />
             </Button>
@@ -391,8 +391,8 @@ const UniversalEventDetailModal = ({
 
         {/* Progress Bar */}
         {universalEvent.tasks.length > 0 && (
-          <div className="px-3 sm:px-4 py-2 bg-gray-50 border-b border-gray-100">
-            <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+          <div className="px-4 py-3 bg-gray-50 border-b border-gray-100" style={{ overflowX: 'hidden' }}>
+            <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
               <span>Progress</span>
               <span>{getCompletedTasksCount()} of {getTotalTasksCount()} tasks completed</span>
             </div>
@@ -407,7 +407,7 @@ const UniversalEventDetailModal = ({
 
         {/* Overdue Warning */}
         {eventIsOverdue && (
-          <div className="px-3 sm:px-4 py-2 bg-red-50 border-b border-red-200">
+          <div className="px-4 py-3 bg-red-50 border-b border-red-200" style={{ overflowX: 'hidden' }}>
             <div className="flex items-center gap-2 text-red-800">
               <AlertTriangle className="w-4 h-4" />
               <span className="text-sm font-medium">This event is overdue and requires immediate attention</span>
@@ -417,7 +417,7 @@ const UniversalEventDetailModal = ({
 
         {/* Action Buttons */}
         {canReschedule() && (
-          <div className="px-3 sm:px-4 py-2 border-b border-gray-100 bg-gray-50">
+          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50" style={{ overflowX: 'hidden' }}>
             <div className="flex gap-2">
               <Button
                 onClick={handleReschedule}
@@ -444,10 +444,10 @@ const UniversalEventDetailModal = ({
         )}
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-gray-200" style={{ overflowX: 'hidden' }}>
           <button
             onClick={() => setActiveTab('details')}
-            className={`flex-1 py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-medium transition-colors ${
+            className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
               activeTab === 'details'
                 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -457,18 +457,18 @@ const UniversalEventDetailModal = ({
           </button>
           <button
             onClick={() => setActiveTab('message')}
-            className={`flex-1 py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-medium transition-colors ${
+            className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
               activeTab === 'message'
                 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
             }`}
           >
-            <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1 sm:mr-2" />
+            <MessageSquare className="w-4 h-4 inline mr-2" />
             Message
           </button>
           <button
             onClick={() => setActiveTab('timeline')}
-            className={`flex-1 py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-medium transition-colors ${
+            className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
               activeTab === 'timeline'
                 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -479,14 +479,14 @@ const UniversalEventDetailModal = ({
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto" style={{ maxHeight: 'calc(95vh - 200px)' }}>
+        <div className="overflow-y-auto" style={{ maxHeight: 'calc(95vh - 280px)', overflowX: 'hidden' }}>
           {activeTab === 'details' && (
-            <div className="p-4">
+            <div className="p-4 pt-6" style={{ overflowX: 'hidden' }}>
               {/* Event Details */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Event Details</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Event Details</h3>
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-gray-700">{universalEvent.description}</p>
+                  <p className="text-gray-700 break-words">{universalEvent.description}</p>
                   {eventType && (
                     <div className="mt-3 text-sm text-gray-600">
                       <p><strong>Category:</strong> {eventType.category}</p>
@@ -498,7 +498,7 @@ const UniversalEventDetailModal = ({
 
               {/* Task Checklist */}
               {universalEvent.tasks && universalEvent.tasks.length > 0 && (
-                <div className="mb-6">
+                <div className="mb-6 pb-6">
                   <TaskChecklist
                     tasks={universalEvent.tasks}
                     currentUserRole={userRole}
