@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
@@ -44,8 +43,9 @@ const TodayTab = () => {
   // Subscribe to shared event service - UNIFIED DATA SOURCE
   useEffect(() => {
     const updateEvents = () => {
-      // Get events for resident role on today's date - UNIFIED METHOD
-      const residentEvents = sharedEventService.getEventsForRoleAndDate('resident', selectedDate);
+      // Use unified method for today's events
+      const today = new Date();
+      const residentEvents = sharedEventService.getEventsForRoleAndDate('resident', today);
       console.log('TodayTab: Unified resident events loaded:', residentEvents.length, 'events');
       setCalendarEvents(residentEvents);
     };
@@ -56,7 +56,7 @@ const TodayTab = () => {
     // Subscribe to changes
     const unsubscribe = sharedEventService.subscribe(updateEvents);
     return unsubscribe;
-  }, [selectedDate]);
+  }, []); // Remove selectedDate dependency since we always want today
 
   // Use profile pets instead of hardcoded ones
   const userPets = profile.pets;
@@ -141,8 +141,7 @@ const TodayTab = () => {
 
   // UNIFIED METHOD - replaces old getEventsForDate
   const getEventsForDate = (date: Date) => {
-    return sharedEventService.getEventsForRoleAndDate('resident', date)
-      .sort((a, b) => a.time.localeCompare(b.time));
+    return sharedEventService.getEventsForRoleAndDate('resident', date);
   };
 
   const formatTime = (time: string) => {

@@ -410,8 +410,7 @@ const ScheduleTab = () => {
 
   // UNIFIED METHOD - replaces old getEventsForDate
   const getEventsForDate = (date: Date) => {
-    return sharedEventService.getEventsForRoleAndDate('resident', date)
-      .sort((a, b) => a.time.localeCompare(b.time));
+    return sharedEventService.getEventsForRoleAndDate('resident', date);
   };
 
   return (

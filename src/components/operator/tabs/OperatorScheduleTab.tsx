@@ -446,8 +446,11 @@ const OperatorScheduleTab = () => {
 
   // UNIFIED METHOD - operators see all events for the selected date
   const getEventsForDate = (date: Date) => {
-    return sharedEventService.getEventsForDate(date)
-      .sort((a, b) => a.time.localeCompare(b.time));
+    const targetDateString = date.toDateString();
+    return sharedEventService.getAllEvents().filter(event => {
+      const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+      return eventDate.toDateString() === targetDateString;
+    }).sort((a, b) => a.time.localeCompare(b.time));
   };
 
   return (

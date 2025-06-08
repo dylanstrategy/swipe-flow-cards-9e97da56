@@ -25,7 +25,7 @@ const MaintenanceTodayTab = ({ onWorkOrderCompleted }: MaintenanceTodayTabProps)
   // Use shared event service for unified data
   useEffect(() => {
     const updateEvents = () => {
-      // Get events for maintenance role on today's date - UNIFIED METHOD
+      // Use unified method for today's events - ensures sync with ScheduleTab
       const maintenanceEvents = sharedEventService.getEventsForRoleAndDate('maintenance', today);
       console.log('MaintenanceTodayTab - unified maintenance events:', maintenanceEvents.length);
       setCalendarEvents(maintenanceEvents);
@@ -37,7 +37,7 @@ const MaintenanceTodayTab = ({ onWorkOrderCompleted }: MaintenanceTodayTabProps)
     // Subscribe to changes
     const unsubscribe = sharedEventService.subscribe(updateEvents);
     return unsubscribe;
-  }, []);
+  }, []); // Remove today dependency since we always want today
 
   // Sample unit turns data
   const unitTurns = [
