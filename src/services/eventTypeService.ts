@@ -1,257 +1,40 @@
-import { EventType } from '@/types/eventTasks';
+
+import { EventType, EventTask } from '@/types/eventTasks';
+import { Role } from '@/types/roles';
 
 const eventTypes: EventType[] = [
   {
     id: 'move-in',
     name: 'Move-In',
-    category: 'Resident Services',
-    icon: '🏠',
-    description: 'Resident move-in process with checklist',
+    category: 'Moving',
+    icon: '📦',
+    description: 'Move-in process and orientation',
     estimatedDuration: 120,
     allowsReschedule: true,
     defaultTasks: [
       {
-        title: 'Unit Walkthrough',
-        description: 'Complete unit inspection with resident',
+        title: 'Resident: Complete Move-In Checklist',
+        description: 'Review and sign move-in checklist',
         assignedRole: 'resident',
         isRequired: true,
-        estimatedDuration: 30,
-        instructions: 'Check all rooms, fixtures, and document any existing damage',
-        status: 'available'
+        status: 'available',
+        estimatedDuration: 30
       },
       {
-        title: 'Key Handover',
-        description: 'Provide unit keys and access cards',
+        title: 'Operator: Conduct Unit Walkthrough',
+        description: 'Walk through unit with resident',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 45
+      },
+      {
+        title: 'Resident: Upload Renter\'s Insurance',
+        description: 'Provide proof of renter\'s insurance',
         assignedRole: 'resident',
         isRequired: true,
-        estimatedDuration: 10,
-        instructions: 'Test all keys and access cards with resident',
-        status: 'available'
-      },
-      {
-        title: 'Welcome Package',
-        description: 'Deliver welcome materials and property information',
-        assignedRole: 'resident',
-        isRequired: true,
-        estimatedDuration: 15,
-        instructions: 'Include property rules, amenity information, and contact details',
-        status: 'available'
-      },
-      {
-        title: 'Lease Documents Review',
-        description: 'Review signed lease documents with resident',
-        assignedRole: 'resident',
-        isRequired: true,
-        estimatedDuration: 20,
-        instructions: 'Ensure all documents are signed and resident understands terms',
-        status: 'available'
-      },
-      {
-        title: 'Update Property Records',
-        description: 'Update unit status and resident information in system',
-        assignedRole: 'operator',
-        isRequired: true,
-        estimatedDuration: 15,
-        instructions: 'Mark unit as occupied, update resident contact info',
-        status: 'available'
-      },
-      {
-        title: 'Schedule Follow-up',
-        description: 'Schedule 30-day check-in with resident',
-        assignedRole: 'operator',
-        isRequired: false,
-        estimatedDuration: 5,
-        instructions: 'Set reminder for satisfaction survey and any issues',
-        status: 'available'
-      },
-      {
-        title: 'Final Documentation',
-        description: 'Complete all move-in paperwork and file appropriately',
-        assignedRole: 'operator',
-        isRequired: true,
-        estimatedDuration: 10,
-        instructions: 'File inspection forms, update unit records',
-        dependencies: ['unit-walkthrough'],
-        status: 'locked'
-      }
-    ],
-    fallbackRules: [],
-    overdueThreshold: 24,
-    escalationRules: []
-  },
-  {
-    id: 'move-out',
-    name: 'Move-Out',
-    category: 'Resident Services',
-    icon: '📦',
-    description: 'Resident move-out process and unit preparation',
-    estimatedDuration: 90,
-    allowsReschedule: true,
-    defaultTasks: [
-      {
-        title: 'Pre-Move-Out Inspection',
-        description: 'Conduct preliminary unit inspection',
-        assignedRole: 'resident',
-        isRequired: true,
-        estimatedDuration: 30,
-        status: 'available'
-      },
-      {
-        title: 'Key Return',
-        description: 'Collect all unit keys and access cards',
-        assignedRole: 'resident',
-        isRequired: true,
-        estimatedDuration: 10,
-        status: 'available'
-      },
-      {
-        title: 'Final Walkthrough',
-        description: 'Complete final unit inspection',
-        assignedRole: 'resident',
-        isRequired: false,
-        estimatedDuration: 20,
-        status: 'available'
-      },
-      {
-        title: 'Damage Assessment',
-        description: 'Document any unit damage for security deposit',
-        assignedRole: 'operator',
-        isRequired: true,
-        estimatedDuration: 20,
-        status: 'available'
-      },
-      {
-        title: 'Security Deposit Processing',
-        description: 'Calculate and process security deposit return',
-        assignedRole: 'operator',
-        isRequired: true,
-        estimatedDuration: 15,
-        status: 'available'
-      },
-      {
-        title: 'Unit Status Update',
-        description: 'Update unit availability in system',
-        assignedRole: 'operator',
-        isRequired: true,
-        estimatedDuration: 5,
-        status: 'available'
-      }
-    ],
-    fallbackRules: [],
-    overdueThreshold: 48,
-    escalationRules: []
-  },
-  {
-    id: 'tour',
-    name: 'Property Tour',
-    category: 'Leasing',
-    icon: '👁️',
-    description: 'Guided property and unit tour for prospects',
-    estimatedDuration: 45,
-    allowsReschedule: true,
-    defaultTasks: [
-      {
-        title: 'Prospect Check-in',
-        description: 'Welcome prospect and verify appointment',
-        assignedRole: 'prospect',
-        isRequired: true,
-        estimatedDuration: 5,
-        status: 'available'
-      },
-      {
-        title: 'Property Overview',
-        description: 'Present property amenities and features',
-        assignedRole: 'prospect',
-        isRequired: true,
-        estimatedDuration: 15,
-        status: 'available'
-      },
-      {
-        title: 'Unit Viewing',
-        description: 'Show available unit(s)',
-        assignedRole: 'operator',
-        isRequired: true,
-        estimatedDuration: 20,
-        status: 'available'
-      },
-      {
-        title: 'Application Discussion',
-        description: 'Discuss application process and requirements',
-        assignedRole: 'operator',
-        isRequired: true,
-        estimatedDuration: 10,
-        status: 'available'
-      }
-    ],
-    fallbackRules: [],
-    overdueThreshold: 2,
-    escalationRules: []
-  },
-  {
-    id: 'lease-signing',
-    name: 'Lease Signing',
-    category: 'Leasing',
-    icon: '📄',
-    description: 'Lease signing appointment',
-    estimatedDuration: 60,
-    allowsReschedule: true,
-    defaultTasks: [
-      {
-        title: 'Upload Lease Template',
-        description: 'Upload and prepare lease documents',
-        assignedRole: 'operator',
-        isRequired: true,
-        estimatedDuration: 15,
-        instructions: 'Ensure all lease terms are accurate and up to date',
-        status: 'available'
-      },
-      {
-        title: 'Assign Lease to Prospect',
-        description: 'Send lease for digital signature',
-        assignedRole: 'operator',
-        isRequired: true,
-        estimatedDuration: 10,
-        dependencies: ['Upload Lease Template'],
-        status: 'locked'
-      },
-      {
-        title: 'Sign Lease Agreement',
-        description: 'Review and digitally sign the lease',
-        assignedRole: 'prospect',
-        isRequired: true,
-        estimatedDuration: 30,
-        instructions: 'Please review all terms carefully before signing',
-        dependencies: ['Assign Lease to Prospect'],
-        status: 'locked'
-      },
-      {
-        title: 'Pay Initial Deposit',
-        description: 'Submit security deposit and first month rent',
-        assignedRole: 'prospect',
-        isRequired: true,
-        estimatedDuration: 15,
-        instructions: 'Payment can be made via bank transfer or certified check',
-        dependencies: ['Sign Lease Agreement'],
-        status: 'locked'
-      },
-      {
-        title: 'Confirm Renter\'s Insurance',
-        description: 'Upload proof of renter\'s insurance policy',
-        assignedRole: 'prospect',
-        isRequired: true,
-        estimatedDuration: 10,
-        instructions: 'Policy must meet minimum coverage requirements',
-        dependencies: ['Pay Initial Deposit'],
-        status: 'locked'
-      },
-      {
-        title: 'Finalize Lease Processing',
-        description: 'Complete lease setup and schedule move-in',
-        assignedRole: 'operator',
-        isRequired: true,
-        estimatedDuration: 15,
-        dependencies: ['Confirm Renter\'s Insurance'],
-        status: 'locked'
+        status: 'available',
+        estimatedDuration: 15
       }
     ],
     followUpSequence: [],
@@ -260,33 +43,81 @@ const eventTypes: EventType[] = [
     escalationRules: []
   },
   {
-    id: 'payment',
-    name: 'Payment Processing',
-    category: 'Finance',
-    icon: '💳',
-    description: 'Process resident payment',
-    estimatedDuration: 15,
-    allowsReschedule: false,
+    id: 'move-out',
+    name: 'Move-Out',
+    category: 'Moving',
+    icon: '📤',
+    description: 'Move-out process and inspection',
+    estimatedDuration: 90,
+    allowsReschedule: true,
     defaultTasks: [
       {
-        title: 'Payment Acknowledgment',
-        description: 'Acknowledge payment received',
+        title: 'Resident: Schedule Move-Out Inspection',
+        description: 'Schedule final inspection',
         assignedRole: 'resident',
         isRequired: true,
-        estimatedDuration: 5,
-        status: 'available'
+        status: 'available',
+        estimatedDuration: 15
       },
       {
-        title: 'Update Records',
-        description: 'Update payment records in system',
+        title: 'Operator: Conduct Move-Out Inspection',
+        description: 'Perform final unit inspection',
         assignedRole: 'operator',
-        isRequired: false,
-        estimatedDuration: 10,
-        status: 'available'
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 60
+      },
+      {
+        title: 'Operator: Process Security Deposit',
+        description: 'Calculate and process deposit return',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 15
       }
     ],
+    followUpSequence: [],
     fallbackRules: [],
     overdueThreshold: 12,
+    escalationRules: []
+  },
+  {
+    id: 'lease-signing',
+    name: 'Lease Signing',
+    category: 'Leasing',
+    icon: '📝',
+    description: 'Lease document signing process',
+    estimatedDuration: 60,
+    allowsReschedule: true,
+    defaultTasks: [
+      {
+        title: 'Resident: Review Lease Terms',
+        description: 'Review all lease terms and conditions',
+        assignedRole: 'resident',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 20
+      },
+      {
+        title: 'Resident: Sign Lease Documents',
+        description: 'Digitally sign lease agreement',
+        assignedRole: 'resident',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 15
+      },
+      {
+        title: 'Operator: Verify Documents',
+        description: 'Verify all signatures and documentation',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 10
+      }
+    ],
+    followUpSequence: [],
+    fallbackRules: [],
+    overdueThreshold: 24,
     escalationRules: []
   },
   {
@@ -294,113 +125,132 @@ const eventTypes: EventType[] = [
     name: 'Work Order',
     category: 'Maintenance',
     icon: '🔧',
-    description: 'Maintenance work order processing',
+    description: 'Maintenance work order completion',
     estimatedDuration: 120,
     allowsReschedule: true,
     defaultTasks: [
       {
-        title: 'Issue Assessment',
-        description: 'Evaluate maintenance request',
+        title: 'Resident: Grant Access',
+        description: 'Provide access to maintenance team',
         assignedRole: 'resident',
         isRequired: true,
-        estimatedDuration: 15,
-        status: 'available'
+        status: 'available',
+        estimatedDuration: 5
       },
       {
-        title: 'Work Completion',
-        description: 'Complete maintenance work',
+        title: 'Maintenance: Complete Work Order',
+        description: 'Perform requested maintenance work',
         assignedRole: 'maintenance',
         isRequired: true,
-        estimatedDuration: 90,
-        status: 'available'
+        status: 'available',
+        estimatedDuration: 90
       },
       {
-        title: 'Quality Check',
-        description: 'Verify work completion',
-        assignedRole: 'operator',
-        isRequired: true,
-        estimatedDuration: 10,
-        status: 'available'
-      },
-      {
-        title: 'Work Order Closure',
-        description: 'Close work order in system',
+        title: 'Maintenance: Update Status',
+        description: 'Update work order completion status',
         assignedRole: 'maintenance',
         isRequired: true,
-        estimatedDuration: 5,
-        status: 'available'
+        status: 'available',
+        estimatedDuration: 10
       },
       {
-        title: 'Resident Satisfaction',
-        description: 'Confirm resident satisfaction',
+        title: 'Resident: Confirm Completion',
+        description: 'Confirm work has been completed satisfactorily',
         assignedRole: 'resident',
-        isRequired: true,
-        estimatedDuration: 5,
-        status: 'available'
+        isRequired: false,
+        status: 'available',
+        estimatedDuration: 5
       }
     ],
+    followUpSequence: [],
     fallbackRules: [],
-    overdueThreshold: 72,
+    overdueThreshold: 4,
+    escalationRules: []
+  },
+  {
+    id: 'unit-turn',
+    name: 'Unit Turn',
+    category: 'Maintenance',
+    icon: '🏠',
+    description: 'Unit turnover preparation',
+    estimatedDuration: 480,
+    allowsReschedule: true,
+    defaultTasks: [
+      {
+        title: 'Maintenance: Deep Cleaning',
+        description: 'Complete deep cleaning of unit',
+        assignedRole: 'maintenance',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 180
+      },
+      {
+        title: 'Maintenance: Paint Touch-ups',
+        description: 'Complete any necessary painting',
+        assignedRole: 'maintenance',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 120
+      },
+      {
+        title: 'Maintenance: Final Inspection',
+        description: 'Conduct final quality inspection',
+        assignedRole: 'maintenance',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 30
+      },
+      {
+        title: 'Operator: Mark Unit Ready',
+        description: 'Update unit status to available',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 5
+      }
+    ],
+    followUpSequence: [],
+    fallbackRules: [],
+    overdueThreshold: 48,
     escalationRules: []
   },
   {
     id: 'inspection',
-    name: 'Unit Inspection',
+    name: 'Inspection',
     category: 'Maintenance',
     icon: '🔍',
-    description: 'Scheduled unit inspection',
-    estimatedDuration: 45,
+    description: 'Unit inspection process',
+    estimatedDuration: 60,
     allowsReschedule: true,
     defaultTasks: [
       {
-        title: 'Pre-Inspection Notice',
-        description: 'Notify resident of inspection',
+        title: 'Resident: Prepare Unit',
+        description: 'Ensure unit is accessible for inspection',
         assignedRole: 'resident',
         isRequired: true,
-        estimatedDuration: 5,
-        status: 'available'
+        status: 'available',
+        estimatedDuration: 15
       },
       {
-        title: 'Inspection Completion',
-        description: 'Complete unit inspection',
+        title: 'Operator: Perform Inspection',
+        description: 'Complete thorough unit inspection',
         assignedRole: 'operator',
-        isRequired: false,
-        estimatedDuration: 30,
-        status: 'available'
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 45
+      },
+      {
+        title: 'Operator: Generate Report',
+        description: 'Create and submit inspection report',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 15
       }
     ],
+    followUpSequence: [],
     fallbackRules: [],
     overdueThreshold: 24,
-    escalationRules: []
-  },
-  {
-    id: 'amenity-reservation',
-    name: 'Amenity Reservation',
-    category: 'Community',
-    icon: '🏊',
-    description: 'Process amenity reservation request',
-    estimatedDuration: 10,
-    allowsReschedule: true,
-    defaultTasks: [
-      {
-        title: 'Reservation Confirmation',
-        description: 'Confirm amenity availability and book',
-        assignedRole: 'operator',
-        isRequired: true,
-        estimatedDuration: 5,
-        status: 'available'
-      },
-      {
-        title: 'Guidelines Review',
-        description: 'Send amenity usage guidelines',
-        assignedRole: 'operator',
-        isRequired: true,
-        estimatedDuration: 5,
-        status: 'available'
-      }
-    ],
-    fallbackRules: [],
-    overdueThreshold: 4,
     escalationRules: []
   },
   {
@@ -408,31 +258,461 @@ const eventTypes: EventType[] = [
     name: 'Community Event',
     category: 'Community',
     icon: '🎉',
-    description: 'Community event organization and RSVP',
+    description: 'Community gathering or event',
     estimatedDuration: 180,
     allowsReschedule: true,
     defaultTasks: [
       {
-        title: 'RSVP Confirmation',
-        description: 'Confirm resident attendance',
+        title: 'Resident: RSVP for Event',
+        description: 'Confirm attendance for community event',
+        assignedRole: 'resident',
+        isRequired: false,
+        status: 'available',
+        estimatedDuration: 2
+      },
+      {
+        title: 'Operator: Setup Event Space',
+        description: 'Prepare venue and amenities',
         assignedRole: 'operator',
         isRequired: true,
-        estimatedDuration: 5,
-        status: 'available'
+        status: 'available',
+        estimatedDuration: 60
+      },
+      {
+        title: 'Operator: Event Check-in',
+        description: 'Manage event check-in process',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 30
       }
     ],
+    followUpSequence: [],
+    fallbackRules: [],
+    overdueThreshold: 2,
+    escalationRules: []
+  },
+  {
+    id: 'message',
+    name: 'Message',
+    category: 'Communication',
+    icon: '💬',
+    description: 'Important message or communication',
+    estimatedDuration: 15,
+    allowsReschedule: false,
+    defaultTasks: [
+      {
+        title: 'Resident: Read Message',
+        description: 'Review important message from management',
+        assignedRole: 'resident',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 5
+      },
+      {
+        title: 'Resident: Acknowledge Receipt',
+        description: 'Confirm message has been received',
+        assignedRole: 'resident',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 2
+      }
+    ],
+    followUpSequence: [],
     fallbackRules: [],
     overdueThreshold: 48,
+    escalationRules: []
+  },
+  {
+    id: 'collections',
+    name: 'Collections',
+    category: 'Financial',
+    icon: '💰',
+    description: 'Collections and payment reminder',
+    estimatedDuration: 30,
+    allowsReschedule: false,
+    defaultTasks: [
+      {
+        title: 'Resident: Review Outstanding Balance',
+        description: 'Review current balance and charges',
+        assignedRole: 'resident',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 10
+      },
+      {
+        title: 'Resident: Make Payment',
+        description: 'Submit payment for outstanding balance',
+        assignedRole: 'resident',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 15
+      },
+      {
+        title: 'Operator: Confirm Payment',
+        description: 'Verify payment has been received',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 5
+      }
+    ],
+    followUpSequence: [],
+    fallbackRules: [],
+    overdueThreshold: 24,
+    escalationRules: []
+  },
+  {
+    id: 'promotional',
+    name: 'Promotional',
+    category: 'Marketing',
+    icon: '🎁',
+    description: 'Special offer or promotion',
+    estimatedDuration: 10,
+    allowsReschedule: false,
+    defaultTasks: [
+      {
+        title: 'Resident: Review Offer',
+        description: 'Review promotional offer details',
+        assignedRole: 'resident',
+        isRequired: false,
+        status: 'available',
+        estimatedDuration: 5
+      },
+      {
+        title: 'Resident: Redeem Offer',
+        description: 'Redeem promotional offer if interested',
+        assignedRole: 'resident',
+        isRequired: false,
+        status: 'available',
+        estimatedDuration: 5
+      }
+    ],
+    followUpSequence: [],
+    fallbackRules: [],
+    overdueThreshold: 168,
+    escalationRules: []
+  },
+  {
+    id: 'poll',
+    name: 'Poll',
+    category: 'Community',
+    icon: '📊',
+    description: 'Community poll or survey',
+    estimatedDuration: 15,
+    allowsReschedule: false,
+    defaultTasks: [
+      {
+        title: 'Operator: Create Poll',
+        description: 'Create community poll with options',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 10
+      },
+      {
+        title: 'Resident: Cast Vote',
+        description: 'Submit vote in community poll',
+        assignedRole: 'resident',
+        isRequired: false,
+        status: 'available',
+        estimatedDuration: 5
+      }
+    ],
+    followUpSequence: [],
+    fallbackRules: [],
+    overdueThreshold: 168,
+    escalationRules: []
+  },
+  {
+    id: 'pet-registration',
+    name: 'Pet Registration',
+    category: 'Administrative',
+    icon: '🐾',
+    description: 'Pet registration and documentation',
+    estimatedDuration: 45,
+    allowsReschedule: true,
+    defaultTasks: [
+      {
+        title: 'Resident: Upload Pet Photos',
+        description: 'Upload photos of pet for registration',
+        assignedRole: 'resident',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 10
+      },
+      {
+        title: 'Resident: Upload Vaccination Records',
+        description: 'Provide current vaccination documentation',
+        assignedRole: 'resident',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 15
+      },
+      {
+        title: 'Resident: Pay Pet Fee',
+        description: 'Submit pet deposit and monthly fee',
+        assignedRole: 'resident',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 10
+      },
+      {
+        title: 'Operator: Approve Registration',
+        description: 'Review and approve pet registration',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 10
+      }
+    ],
+    followUpSequence: [],
+    fallbackRules: [],
+    overdueThreshold: 72,
+    escalationRules: []
+  },
+  {
+    id: 'tour-appointment',
+    name: 'Tour Appointment',
+    category: 'Leasing',
+    icon: '🚶',
+    description: 'Property tour appointment',
+    estimatedDuration: 45,
+    allowsReschedule: true,
+    defaultTasks: [
+      {
+        title: 'Operator: Prepare for Tour',
+        description: 'Prepare units and materials for showing',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 15
+      },
+      {
+        title: 'Operator: Conduct Tour',
+        description: 'Show units and amenities to prospect',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 30
+      }
+    ],
+    followUpSequence: [],
+    fallbackRules: [],
+    overdueThreshold: 2,
+    escalationRules: []
+  },
+  {
+    id: 'services',
+    name: 'Services',
+    category: 'Services',
+    icon: '🛎️',
+    description: 'Concierge or property services',
+    estimatedDuration: 30,
+    allowsReschedule: true,
+    defaultTasks: [
+      {
+        title: 'Resident: Request Service',
+        description: 'Submit service request details',
+        assignedRole: 'resident',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 10
+      },
+      {
+        title: 'Operator: Coordinate Service',
+        description: 'Arrange service with vendor or staff',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 15
+      },
+      {
+        title: 'Operator: Confirm Completion',
+        description: 'Verify service has been completed',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 5
+      }
+    ],
+    followUpSequence: [],
+    fallbackRules: [],
+    overdueThreshold: 24,
+    escalationRules: []
+  },
+  {
+    id: 'lease-violation',
+    name: 'Lease Violation',
+    category: 'Administrative',
+    icon: '⚠️',
+    description: 'Lease violation notice and resolution',
+    estimatedDuration: 60,
+    allowsReschedule: false,
+    defaultTasks: [
+      {
+        title: 'Operator: Document Violation',
+        description: 'Create formal violation report',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 20
+      },
+      {
+        title: 'Resident: Respond to Notice',
+        description: 'Provide response to violation notice',
+        assignedRole: 'resident',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 30
+      },
+      {
+        title: 'Operator: Review Response',
+        description: 'Review resident response and determine next steps',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 10
+      }
+    ],
+    followUpSequence: [],
+    fallbackRules: [],
+    overdueThreshold: 72,
+    escalationRules: []
+  },
+  {
+    id: 'resident-complaint',
+    name: 'Resident Complaint',
+    category: 'Administrative',
+    icon: '📝',
+    description: 'Resident complaint submission and resolution',
+    estimatedDuration: 45,
+    allowsReschedule: true,
+    defaultTasks: [
+      {
+        title: 'Resident: Submit Complaint',
+        description: 'File formal complaint with details',
+        assignedRole: 'resident',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 20
+      },
+      {
+        title: 'Operator: Acknowledge Complaint',
+        description: 'Acknowledge receipt and begin investigation',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 10
+      },
+      {
+        title: 'Operator: Provide Resolution',
+        description: 'Investigate and provide resolution update',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 15
+      }
+    ],
+    followUpSequence: [],
+    fallbackRules: [],
+    overdueThreshold: 48,
+    escalationRules: []
+  },
+  {
+    id: 'amenity-reservation',
+    name: 'Amenity Reservation',
+    category: 'Amenities',
+    icon: '🏊',
+    description: 'Amenity booking and usage',
+    estimatedDuration: 120,
+    allowsReschedule: true,
+    defaultTasks: [
+      {
+        title: 'Resident: Book Amenity',
+        description: 'Reserve amenity for specified time',
+        assignedRole: 'resident',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 10
+      },
+      {
+        title: 'Operator: Confirm Booking',
+        description: 'Verify amenity availability and confirm',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 5
+      },
+      {
+        title: 'Resident: Check-in for Usage',
+        description: 'Check in when using reserved amenity',
+        assignedRole: 'resident',
+        isRequired: false,
+        status: 'available',
+        estimatedDuration: 2
+      }
+    ],
+    followUpSequence: [],
+    fallbackRules: [],
+    overdueThreshold: 4,
+    escalationRules: []
+  },
+  {
+    id: 'vendor-visit',
+    name: 'Vendor Visit',
+    category: 'Maintenance',
+    icon: '🚚',
+    description: 'Vendor access and service coordination',
+    estimatedDuration: 90,
+    allowsReschedule: true,
+    defaultTasks: [
+      {
+        title: 'Operator: Schedule Vendor',
+        description: 'Coordinate vendor visit and access',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 15
+      },
+      {
+        title: 'Resident: Approve Time Window',
+        description: 'Confirm availability for vendor access',
+        assignedRole: 'resident',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 5
+      },
+      {
+        title: 'Operator: Coordinate Access',
+        description: 'Ensure vendor has proper access',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 10
+      },
+      {
+        title: 'Operator: Verify Completion',
+        description: 'Confirm vendor work has been completed',
+        assignedRole: 'operator',
+        isRequired: true,
+        status: 'available',
+        estimatedDuration: 10
+      }
+    ],
+    followUpSequence: [],
+    fallbackRules: [],
+    overdueThreshold: 24,
     escalationRules: []
   }
 ];
 
-export const getEventTypes = (): EventType[] => {
-  return eventTypes;
+export const getEventType = (typeId: string): EventType | undefined => {
+  return eventTypes.find(type => type.id === typeId);
 };
 
-export const getEventType = (id: string): EventType | undefined => {
-  return eventTypes.find(type => type.id === id);
+export const getAllEventTypes = (): EventType[] => {
+  return eventTypes;
 };
 
 export const getEventTypesByCategory = (category: string): EventType[] => {

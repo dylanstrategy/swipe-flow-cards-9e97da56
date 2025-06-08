@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -56,7 +55,8 @@ const UniversalEventDetailModal = ({
     status: currentEvent.status || 'scheduled',
     priority: currentEvent.priority || 'medium',
     category: currentEvent.category || eventType?.category || 'Leasing',
-    tasks: taskTemplates.map((taskTemplate, index) => ({
+    estimatedDuration: eventType?.estimatedDuration || 60,
+    tasks: currentEvent.tasks || taskTemplates.map((taskTemplate, index) => ({
       id: `${Date.now()}-${index}`,
       title: taskTemplate.name,
       description: `Complete: ${taskTemplate.name}`,
@@ -66,19 +66,19 @@ const UniversalEventDetailModal = ({
       status: 'available' as const,
       estimatedDuration: 15
     })),
-    assignedUsers: [],
+    assignedUsers: currentEvent.assignedUsers || [],
     createdBy: 'system',
     createdAt: new Date(),
     updatedAt: new Date(),
     rescheduledCount: currentEvent.rescheduledCount || 0,
     followUpHistory: [],
-    metadata: currentEvent,
-    taskCompletionStamps: []
+    metadata: currentEvent.metadata || currentEvent,
+    taskCompletionStamps: currentEvent.taskCompletionStamps || []
   };
 
   console.log('Universal event with tasks:', universalEvent);
   console.log('Event type:', eventType);
-  console.log('Task templates:', taskTemplates);
+  console.log('User role:', userRole);
 
   // Overdue detection logic
   const isEventOverdue = (event: UniversalEvent): boolean => {
@@ -142,12 +142,25 @@ const UniversalEventDetailModal = ({
   };
 
   const handleTaskStart = async (taskId: string) => {
+    const task = universalEvent.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    // Check if user has permission to start this task
+    if (task.assignedRole !== userRole) {
+      toast({
+        title: "Access Denied",
+        description: `This task is assigned to ${task.assignedRole} role only.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
     const updatedEvent = {
       ...universalEvent,
-      tasks: universalEvent.tasks.map(task =>
-        task.id === taskId
-          ? { ...task, status: 'in-progress' as const }
-          : task
+      tasks: universalEvent.tasks.map(t =>
+        t.id === taskId
+          ? { ...t, status: 'in-progress' as const }
+          : t
       )
     };
     
@@ -166,6 +179,16 @@ const UniversalEventDetailModal = ({
     const task = universalEvent.tasks.find(t => t.id === taskId);
     if (!task) return;
 
+    // Check if user has permission to complete this task
+    if (task.assignedRole !== userRole) {
+      toast({
+        title: "Access Denied",
+        description: `This task is assigned to ${task.assignedRole} role only.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Use shared service to complete task
     const success = sharedEventService.completeTask(universalEvent.id, taskId, userRole);
     
@@ -175,6 +198,11 @@ const UniversalEventDetailModal = ({
       if (updatedEvent) {
         setCurrentEvent(updatedEvent);
         onEventUpdate?.(updatedEvent);
+
+        toast({
+          title: "Task Completed!",
+          description: `${task.title} has been marked as complete.`,
+        });
 
         // Check if all required tasks are complete
         const allRequiredComplete = updatedEvent.tasks
@@ -192,6 +220,19 @@ const UniversalEventDetailModal = ({
   };
 
   const handleTaskUndo = async (taskId: string) => {
+    const task = universalEvent.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    // Check if user has permission to undo this task
+    if (task.assignedRole !== userRole) {
+      toast({
+        title: "Access Denied",
+        description: `This task is assigned to ${task.assignedRole} role only.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Use shared service to undo task completion
     const success = sharedEventService.undoTaskCompletion(universalEvent.id, taskId);
     
@@ -314,6 +355,117 @@ const UniversalEventDetailModal = ({
       />
     );
   }
+
+  // Render task with role restrictions
+  const renderTaskItem = (task: EventTask, index: number) => {
+    const canInteract = task.assignedRole === userRole;
+    const isLocked = !canInteract;
+    
+    return (
+      <div
+        key={task.id}
+        className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
+          task.isComplete
+            ? 'bg-green-50 border-green-200'
+            : isLocked
+            ? 'bg-gray-50 border-gray-200 opacity-60'
+            : task.status === 'in-progress'
+            ? 'bg-blue-50 border-blue-200'
+            : 'bg-white border-gray-200 hover:border-blue-300'
+        }`}
+      >
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="flex-shrink-0">
+            {task.isComplete ? (
+              <CheckCircle className="w-5 h-5 text-green-600" />
+            ) : isLocked ? (
+              <div className="w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center">
+                <span className="text-xs text-gray-600">🔒</span>
+              </div>
+            ) : task.status === 'in-progress' ? (
+              <Clock className="w-5 h-5 text-blue-600 animate-pulse" />
+            ) : (
+              <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
+            )}
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <h4 className={`font-medium truncate ${
+              isLocked ? 'text-gray-500' : 'text-gray-900'
+            }`}>
+              {task.title}
+            </h4>
+            <p className={`text-sm truncate ${
+              isLocked ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              {task.description}
+            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <Badge variant="outline" className={`text-xs ${
+                isLocked ? 'text-gray-400 border-gray-300' : ''
+              }`}>
+                {task.assignedRole}
+              </Badge>
+              {task.estimatedDuration && (
+                <span className={`text-xs ${
+                  isLocked ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  ~{task.estimatedDuration} min
+                </span>
+              )}
+              {isLocked && (
+                <span className="text-xs text-orange-600 font-medium">
+                  Requires {task.assignedRole} role
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-shrink-0 ml-3">
+          {task.isComplete ? (
+            canInteract && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleTaskUndo(task.id)}
+                className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+              >
+                Undo
+              </Button>
+            )
+          ) : canInteract ? (
+            <Button
+              size="sm"
+              onClick={() => {
+                if (task.status === 'available') {
+                  handleTaskStart(task.id);
+                } else {
+                  handleTaskComplete(task.id);
+                }
+              }}
+              className={
+                task.status === 'in-progress'
+                  ? 'bg-green-600 hover:bg-green-700'
+                  : 'bg-blue-600 hover:bg-blue-700'
+              }
+            >
+              {task.status === 'in-progress' ? 'Complete' : 'Start'}
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled
+              className="text-gray-400 cursor-not-allowed"
+            >
+              Locked
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-3">
@@ -450,6 +602,9 @@ const UniversalEventDetailModal = ({
                     <div className="mt-3 text-sm text-gray-600">
                       <p><strong>Category:</strong> {eventType.category}</p>
                       <p><strong>Estimated Duration:</strong> {eventType.estimatedDuration} minutes</p>
+                      {universalEvent.assignedUsers && universalEvent.assignedUsers.length > 0 && (
+                        <p><strong>Assigned To:</strong> {universalEvent.assignedUsers.map(u => u.name || u.role).join(', ')}</p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -458,15 +613,44 @@ const UniversalEventDetailModal = ({
               {/* Task Checklist */}
               {universalEvent.tasks && universalEvent.tasks.length > 0 && (
                 <div className="mb-6 pb-6">
-                  <TaskChecklist
-                    tasks={universalEvent.tasks}
-                    currentUserRole={userRole}
-                    onTaskComplete={handleTaskComplete}
-                    onTaskUndo={handleTaskUndo}
-                    onTaskStart={handleTaskStart}
-                    completionStamps={getStampsForEvent(universalEvent.id)}
-                    eventType={universalEvent.type}
-                  />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Task Checklist
+                    <span className="ml-2 text-sm font-normal text-gray-600">
+                      ({getCompletedTasksCount()} of {getTotalTasksCount()} completed)
+                    </span>
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    {universalEvent.tasks.map((task, index) => renderTaskItem(task, index))}
+                  </div>
+
+                  {/* Role Legend */}
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <strong>Your Role:</strong> {userRole} • 
+                      You can only interact with tasks assigned to your role.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Completion Stamps */}
+              {universalEvent.taskCompletionStamps && universalEvent.taskCompletionStamps.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Completion History</h3>
+                  <div className="space-y-2">
+                    {universalEvent.taskCompletionStamps.map((stamp) => (
+                      <div key={stamp.id} className="flex items-center gap-3 p-2 bg-green-50 rounded border border-green-200">
+                        <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-green-900 truncate">{stamp.taskName}</p>
+                          <p className="text-xs text-green-700">
+                            Completed by {stamp.completedByName} • {format(stamp.completedAt, 'MMM d, h:mm a')}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 

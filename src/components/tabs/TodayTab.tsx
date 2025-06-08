@@ -292,6 +292,8 @@ const TodayTab = () => {
   };
 
   const handleDropSuggestion = (suggestion: any, targetTime?: string) => {
+    console.log('TodayTab: handleDropSuggestion called with:', suggestion, targetTime);
+    
     // For TodayTab, we can show a toast or handle the drop
     toast({
       title: "Suggestion Scheduled!",
@@ -457,8 +459,10 @@ const TodayTab = () => {
     return <ResidentTimeline onClose={() => setShowTimeline(false)} />;
   }
 
-  // Only show today's events
+  // Only show today's events - this ensures calendar sync
   const todayEvents = getEventsForDate(new Date());
+
+  console.log('TodayTab: Today events loaded:', todayEvents.length, 'events');
 
   return (
     <div className="px-4 py-6 pb-24">
@@ -485,7 +489,12 @@ const TodayTab = () => {
       {renderPersonalizedOffers()}
 
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Today's Events</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          Today's Events 
+          <span className="text-sm font-normal text-gray-600 ml-2">
+            ({todayEvents.length} events)
+          </span>
+        </h2>
         
         <TodayMiniCalendar 
           selectedDate={selectedDate}
