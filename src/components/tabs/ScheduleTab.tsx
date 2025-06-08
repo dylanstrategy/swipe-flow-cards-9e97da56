@@ -443,11 +443,11 @@ const ScheduleTab = () => {
         </div>
       </div>
 
-      {/* Main content area */}
+      {/* Main content area - REVERTED TO ORIGINAL LAYOUT */}
       <div className="flex-1 overflow-hidden">
-        <div className="flex h-full">
-          {/* Left side - Suggestions */}
-          <div className="w-80 border-r border-gray-100 bg-gray-50">
+        <div className="flex flex-col h-full">
+          {/* Suggestions ABOVE the calendar - ORIGINAL LAYOUT */}
+          <div className="flex-shrink-0">
             <DraggableSuggestionsSection
               scheduledSuggestionIds={scheduledSuggestionIds}
               completedSuggestionIds={completedSuggestionIds}
@@ -456,7 +456,7 @@ const ScheduleTab = () => {
             />
           </div>
 
-          {/* Right side - Calendar */}
+          {/* Calendar below suggestions - ORIGINAL LAYOUT */}
           <div className="flex-1 bg-white">
             <HourlyCalendarView
               selectedDate={selectedDate}

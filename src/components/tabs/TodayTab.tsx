@@ -493,6 +493,7 @@ const TodayTab = () => {
           onDropSuggestion={handleDropSuggestion}
           onDateSelect={handleDateSelect}
           onEventReschedule={handleEventReschedule}
+          onEventClick={handleEventClick}
         />
       </div>
     </div>

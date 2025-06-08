@@ -1,74 +1,60 @@
+
 import React from 'react';
-import { format, isPast, isToday } from 'date-fns';
-import HourlyCalendarView from '@/components/schedule/HourlyCalendarView';
+import { format } from 'date-fns';
+import { Clock } from 'lucide-react';
+import HourlyCalendarView from '../../schedule/HourlyCalendarView';
 
 interface TodayMiniCalendarProps {
   selectedDate: Date;
   getEventsForDate: (date: Date) => any[];
-  onDropSuggestion?: (suggestion: any, date: Date) => void;
-  onDateSelect?: (date: Date) => void;
-  onEventReschedule?: (event: any, newTime: string) => void;
+  onDropSuggestion: (suggestion: any, date: Date) => void;
+  onDateSelect: (date: Date) => void;
+  onEventReschedule: (event: any, newTime: string) => void;
+  onEventClick: (event: any) => void;
 }
 
 const TodayMiniCalendar = ({ 
   selectedDate, 
   getEventsForDate, 
-  onDropSuggestion,
-  onDateSelect,
-  onEventReschedule 
+  onDropSuggestion, 
+  onDateSelect, 
+  onEventReschedule,
+  onEventClick
 }: TodayMiniCalendarProps) => {
   const todayEvents = getEventsForDate(selectedDate);
 
-  const handleDropSuggestionWithTime = (suggestion: any, targetTime?: string) => {
-    // When dropping a suggestion with a specific time, we still call the original handler
-    // but we can pass the date (selectedDate) since this is the Today tab
-    if (onDropSuggestion) {
-      onDropSuggestion(suggestion, selectedDate);
-    }
-  };
-
   const handleEventClick = (event: any) => {
-    // Handle event clicks if needed
-    console.log('Event clicked:', event);
+    console.log('TodayMiniCalendar: Event clicked:', event);
+    onEventClick(event);
   };
 
   const handleEventHold = (event: any) => {
-    // Handle event hold for options
-    console.log('Event held:', event);
-  };
-
-  const handleEventReschedule = (event: any, newTime: string) => {
-    // Pass the reschedule request up to TodayTab
-    console.log('Event rescheduled in TodayMiniCalendar:', event, 'to', newTime);
-    if (onEventReschedule) {
-      onEventReschedule(event, newTime);
-    }
+    console.log('TodayMiniCalendar: Event held:', event);
+    // Could show context menu or options
   };
 
   return (
-    <div className="mb-6">
-      {/* Today Section - Keep existing styling */}
-      <div className="text-center mb-6">
-        <h2 className="text-4xl font-bold text-blue-600 mb-2">
-          {format(selectedDate, 'd')}
-        </h2>
-        <p className="text-lg text-gray-900 font-medium">
-          {format(selectedDate, 'EEEE, MMMM yyyy')}
-        </p>
-        <p className="text-blue-600 text-sm font-medium">
-          {todayEvents.length} events today
+    <div className="bg-white rounded-lg border border-gray-200">
+      <div className="p-4 border-b border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Clock className="w-5 h-5" />
+          {format(selectedDate, 'EEEE, MMMM d')}
+        </h3>
+        <p className="text-sm text-gray-600 mt-1">
+          {todayEvents.length} {todayEvents.length === 1 ? 'event' : 'events'} scheduled
         </p>
       </div>
-
-      {/* Hourly Calendar View for Today with real-time overdue detection */}
-      <HourlyCalendarView
-        selectedDate={selectedDate}
-        events={todayEvents}
-        onDropSuggestion={handleDropSuggestionWithTime}
-        onEventClick={handleEventClick}
-        onEventHold={handleEventHold}
-        onEventReschedule={handleEventReschedule}
-      />
+      
+      <div className="h-96">
+        <HourlyCalendarView
+          selectedDate={selectedDate}
+          events={todayEvents}
+          onDropSuggestion={onDropSuggestion}
+          onEventClick={handleEventClick}
+          onEventHold={handleEventHold}
+          onEventReschedule={onEventReschedule}
+        />
+      </div>
     </div>
   );
 };
