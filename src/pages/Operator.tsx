@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TabNavigation from '@/components/TabNavigation';
 import OperatorTodayTab from '@/components/operator/tabs/OperatorTodayTab';
@@ -8,6 +8,7 @@ import OperatorResidentsTab from '@/components/operator/tabs/OperatorResidentsTa
 import PropertySetupModule from '@/components/property/setup/PropertySetupModule';
 import UserManagement from '@/components/user/UserManagement';
 import ContactProfileForm from '@/components/user/ContactProfileForm';
+import { eventMonitoringService } from '@/services/eventMonitoringService';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,6 +52,20 @@ const Operator = () => {
     createdAt: new Date('2025-01-01'),
     lastLogin: new Date('2025-06-05')
   });
+
+  // Initialize event monitoring service
+  useEffect(() => {
+    console.log('Initializing event monitoring service for Operator dashboard');
+    
+    // In a real app, this would fetch events from the API
+    const mockEvents = []; // Empty for now, will be populated by actual events
+    
+    eventMonitoringService.startMonitoring(mockEvents, 60000); // Check every minute
+    
+    return () => {
+      eventMonitoringService.stopMonitoring();
+    };
+  }, []);
 
   const tabs = [
     { id: 'today', label: 'Today', icon: '📊' },

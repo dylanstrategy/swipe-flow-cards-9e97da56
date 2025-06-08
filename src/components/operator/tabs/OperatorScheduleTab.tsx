@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -16,14 +15,22 @@ import PollModule from '@/components/schedule/PollModule';
 import OperatorScheduleMenu from '@/components/schedule/OperatorScheduleMenu';
 import UniversalEventDetailModal from '@/components/events/UniversalEventDetailModal';
 import RescheduleFlow from '@/components/events/RescheduleFlow';
+import EventTypeSelector from '@/components/events/EventTypeSelector';
+import UniversalEventCreationFlow from '@/components/events/UniversalEventCreationFlow';
 import { EnhancedEvent } from '@/types/events';
+import { EventType, UniversalEvent } from '@/types/eventTasks';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 import HourlyCalendarView from '@/components/schedule/HourlyCalendarView';
+import { useUniversalEvent } from '@/hooks/useUniversalEvent';
 
 const OperatorScheduleTab = () => {
   const { toast } = useToast();
+  const { createEvent } = useUniversalEvent();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showScheduleMenu, setShowScheduleMenu] = useState(false);
+  const [showEventTypeSelector, setShowEventTypeSelector] = useState(false);
+  const [showEventCreationFlow, setShowEventCreationFlow] = useState(false);
+  const [selectedEventType, setSelectedEventType] = useState<EventType | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [selectedScheduleType, setSelectedScheduleType] = useState<string>('');
@@ -39,8 +46,9 @@ const OperatorScheduleTab = () => {
     mode: 'compose' as 'compose' | 'reply'
   });
 
-  // State for managing scheduled events including dropped suggestions
+  // State for managing scheduled events including dropped suggestions and universal events
   const [scheduledEvents, setScheduledEvents] = useState([
+    // Legacy events for backward compatibility
     {
       id: 1,
       date: new Date(),
@@ -79,39 +87,14 @@ const OperatorScheduleTab = () => {
       priority: 'medium' as const,
       building: 'Building B',
       unit: '302',
-      type: 'lease',
-      isDroppedSuggestion: false,
-      rescheduledCount: 0
-    },
-    {
-      id: 4,
-      date: addDays(new Date(), 1),
-      time: '15:30',
-      title: 'Delinquency Follow-up',
-      description: 'John Smith - Payment plan discussion',
-      category: 'Delinquency',
-      priority: 'high' as const,
-      building: 'Building A',
-      unit: '108',
-      type: 'payment',
-      isDroppedSuggestion: false,
-      rescheduledCount: 0
-    },
-    {
-      id: 5,
-      date: addDays(new Date(), 2),
-      time: '16:00',
-      title: 'Renewal Notice',
-      description: 'Jennifer Adams - Lease renewal discussion',
-      category: 'Renewals',
-      priority: 'low' as const,
-      building: 'Building C',
-      unit: '225',
-      type: 'message',
+      type: 'lease-signing',
       isDroppedSuggestion: false,
       rescheduledCount: 0
     }
   ]);
+
+  // State for universal events
+  const [universalEvents, setUniversalEvents] = useState<UniversalEvent[]>([]);
 
   // State to track which suggestions have been scheduled and completed
   const [scheduledSuggestionIds, setScheduledSuggestionIds] = useState<number[]>([]);
@@ -129,7 +112,6 @@ const OperatorScheduleTab = () => {
       return totalMinutes;
     }
     
-    // Handle 24-hour format (HH:mm)
     const [hours, minutes] = timeString.split(':').map(Number);
     return hours * 60 + minutes;
   };
@@ -152,15 +134,16 @@ const OperatorScheduleTab = () => {
   };
 
   const findAvailableTimeSlot = (date: Date, duration: number = 60): string => {
-    const eventsForDate = scheduledEvents
+    const allEvents = [...scheduledEvents, ...universalEvents];
+    const eventsForDate = allEvents
       .filter(event => isSameDateSafe(event.date, date))
       .map(event => ({
         start: convertTimeToMinutes(event.time),
-        end: convertTimeToMinutes(event.time) + 60 // Assume 1 hour duration
+        end: convertTimeToMinutes(event.time) + 60
       }))
       .sort((a, b) => a.start - b.start);
 
-    let proposedStart = 0; // Start from midnight (00:00)
+    let proposedStart = 540; // Start from 9:00 AM
     
     for (const event of eventsForDate) {
       if (proposedStart + duration <= event.start) {
@@ -169,12 +152,28 @@ const OperatorScheduleTab = () => {
       proposedStart = Math.max(proposedStart, event.end);
     }
     
-    // If we go past 11:30 PM (1410 minutes), wrap around or place at end
-    if (proposedStart + duration > 1410) {
-      proposedStart = 1410 - duration;
+    if (proposedStart + duration > 1080) { // Past 6 PM
+      proposedStart = 1080 - duration;
     }
     
     return formatTimeFromMinutes(proposedStart);
+  };
+
+  const handleEventTypeSelect = (eventType: EventType) => {
+    setSelectedEventType(eventType);
+    setShowEventTypeSelector(false);
+    setShowEventCreationFlow(true);
+  };
+
+  const handleEventCreated = (event: UniversalEvent) => {
+    setUniversalEvents(prev => [...prev, event]);
+    setShowEventCreationFlow(false);
+    setSelectedEventType(null);
+    
+    toast({
+      title: "Event Created",
+      description: `${event.title} has been created successfully.`,
+    });
   };
 
   const handleDropSuggestionInTimeline = (suggestion: any, targetTime?: string) => {
@@ -342,13 +341,22 @@ const OperatorScheduleTab = () => {
   };
 
   const handleEventReschedule = (event: any, newTime: string) => {
-    const updatedEvents = scheduledEvents.map(e => 
-      e.id === event.id 
-        ? { ...e, time: newTime, rescheduledCount: (e.rescheduledCount || 0) + 1 }
-        : e
-    );
-    
-    setScheduledEvents(updatedEvents);
+    // Handle both legacy events and universal events
+    if (event.tasks) {
+      // Universal event
+      setUniversalEvents(prev => prev.map(e => 
+        e.id === event.id 
+          ? { ...e, time: newTime, rescheduledCount: (e.rescheduledCount || 0) + 1, updatedAt: new Date() }
+          : e
+      ));
+    } else {
+      // Legacy event
+      setScheduledEvents(prev => prev.map(e => 
+        e.id === event.id 
+          ? { ...e, time: newTime, rescheduledCount: (e.rescheduledCount || 0) + 1 }
+          : e
+      ));
+    }
     
     toast({
       title: "Event Rescheduled",
@@ -357,24 +365,16 @@ const OperatorScheduleTab = () => {
   };
 
   const handleEventUpdate = (updatedEvent: any) => {
-    const updatedEvents = scheduledEvents.map(e => 
-      e.id === updatedEvent.id ? updatedEvent : e
-    );
-    setScheduledEvents(updatedEvents);
-
-    // If the event was marked as completed and it was from a suggestion, mark the suggestion as completed
-    if (updatedEvent.status === 'completed' && updatedEvent.originalSuggestionId) {
-      setCompletedSuggestionIds(prev => {
-        if (!prev.includes(updatedEvent.originalSuggestionId)) {
-          return [...prev, updatedEvent.originalSuggestionId];
-        }
-        return prev;
-      });
-      
-      toast({
-        title: "Task Completed!",
-        description: `${updatedEvent.title} has been marked as completed and removed from pending tasks.`,
-      });
+    if (updatedEvent.tasks) {
+      // Universal event
+      setUniversalEvents(prev => prev.map(e => 
+        e.id === updatedEvent.id ? updatedEvent : e
+      ));
+    } else {
+      // Legacy event
+      setScheduledEvents(prev => prev.map(e => 
+        e.id === updatedEvent.id ? updatedEvent : e
+      ));
     }
   };
 
@@ -402,28 +402,33 @@ const OperatorScheduleTab = () => {
   };
 
   const startScheduling = (type: string) => {
-    setSelectedScheduleType(type);
-    if (type === 'Work Order') {
-      setIsCreatingOrder(true);
-      setShowScheduleMenu(false);
-      setCurrentStep(1);
-    } else if (type === 'Message') {
-      setMessageConfig({
-        subject: '',
-        recipientType: 'management',
-        mode: 'compose'
-      });
-      setShowMessageModule(true);
-      setShowScheduleMenu(false);
-    } else if (type === 'Poll') {
-      setShowPollModule(true);
+    if (type === 'Universal Event') {
+      setShowEventTypeSelector(true);
       setShowScheduleMenu(false);
     } else {
-      toast({
-        title: `${type} Selected`,
-        description: `${type} scheduling flow coming soon!`,
-      });
-      setShowScheduleMenu(false);
+      setSelectedScheduleType(type);
+      if (type === 'Work Order') {
+        setIsCreatingOrder(true);
+        setShowScheduleMenu(false);
+        setCurrentStep(1);
+      } else if (type === 'Message') {
+        setMessageConfig({
+          subject: '',
+          recipientType: 'management',
+          mode: 'compose'
+        });
+        setShowMessageModule(true);
+        setShowScheduleMenu(false);
+      } else if (type === 'Poll') {
+        setShowPollModule(true);
+        setShowScheduleMenu(false);
+      } else {
+        toast({
+          title: `${type} Selected`,
+          description: `${type} scheduling flow coming soon!`,
+        });
+        setShowScheduleMenu(false);
+      }
     }
   };
 
@@ -444,19 +449,23 @@ const OperatorScheduleTab = () => {
   };
 
   const getEventsForDate = (date: Date) => {
-    const eventsForDate = scheduledEvents.filter(event => isSameDateSafe(event.date, date))
-      .sort((a, b) => {
-        const timeA = convertTimeToMinutes(a.time);
-        const timeB = convertTimeToMinutes(b.time);
-        return timeA - timeB;
-      });
+    // Combine legacy events and universal events
+    const legacyEvents = scheduledEvents.filter(event => isSameDateSafe(event.date, date));
+    const universalEventsForDate = universalEvents.filter(event => isSameDateSafe(event.date, date));
     
-    console.log(`Events for ${format(date, 'MMM d')}:`, eventsForDate);
-    return eventsForDate;
+    const allEvents = [...legacyEvents, ...universalEventsForDate].sort((a, b) => {
+      const timeA = convertTimeToMinutes(a.time);
+      const timeB = convertTimeToMinutes(b.time);
+      return timeA - timeB;
+    });
+    
+    console.log(`Events for ${format(date, 'MMM d')}:`, allEvents);
+    return allEvents;
   };
 
   const hasEventsOnDate = (date: Date) => {
-    return scheduledEvents.some(event => isSameDateSafe(event.date, date));
+    return scheduledEvents.some(event => isSameDateSafe(event.date, date)) ||
+           universalEvents.some(event => isSameDateSafe(event.date, date));
   };
 
   if (showRescheduleFlow && selectedEvent) {
@@ -506,6 +515,32 @@ const OperatorScheduleTab = () => {
     );
   }
 
+  if (showEventCreationFlow && selectedEventType) {
+    return (
+      <UniversalEventCreationFlow
+        eventType={selectedEventType}
+        onClose={() => {
+          setShowEventCreationFlow(false);
+          setSelectedEventType(null);
+        }}
+        onEventCreated={handleEventCreated}
+        initialData={{
+          date: selectedDate,
+          time: findAvailableTimeSlot(selectedDate)
+        }}
+      />
+    );
+  }
+
+  if (showEventTypeSelector) {
+    return (
+      <EventTypeSelector
+        onSelectEventType={handleEventTypeSelect}
+        onClose={() => setShowEventTypeSelector(false)}
+      />
+    );
+  }
+
   if (isCreatingOrder) {
     return (
       <WorkOrderFlow
@@ -551,7 +586,7 @@ const OperatorScheduleTab = () => {
                 onSelect={setSelectedDate}
                 hasEventsOnDate={hasEventsOnDate}
                 onDropSuggestion={handleDropSuggestion}
-                events={scheduledEvents}
+                events={[...scheduledEvents, ...universalEvents]}
               />
             </PopoverContent>
           </Popover>
@@ -574,8 +609,8 @@ const OperatorScheduleTab = () => {
                 description: `${item} - Action completed`,
               });
             }}
-            scheduledSuggestionIds={scheduledSuggestionIds}
-            completedSuggestionIds={completedSuggestionIds}
+            scheduledSuggestionIds={[]}
+            completedSuggestionIds={[]}
           />
         </div>
       </div>

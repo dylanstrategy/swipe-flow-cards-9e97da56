@@ -2,16 +2,13 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MessageSquare, Calendar, AlertTriangle, Clock } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Calendar, AlertTriangle, Clock, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { isPast, isToday } from 'date-fns';
-import MoveInEventDetails from './event-types/MoveInEventDetails';
-import LeaseSigningEventDetails from './event-types/LeaseSigningEventDetails';
-import ResidentMessageEventDetails from './event-types/ResidentMessageEventDetails';
-import TourEventDetails from './event-types/TourEventDetails';
-import MoveOutEventDetails from './event-types/MoveOutEventDetails';
-import PaymentEventDetails from './event-types/PaymentEventDetails';
-import WorkOrderEventDetails from './event-types/WorkOrderEventDetails';
+import { useUniversalEvent } from '@/hooks/useUniversalEvent';
+import { getEventType } from '@/services/eventTypeService';
+import { UniversalEvent } from '@/types/eventTasks';
+import UniversalEventTaskList from './UniversalEventTaskList';
 import EventMessaging from './EventMessaging';
 import EventTimeline from './EventTimeline';
 import RescheduleFlow from './RescheduleFlow';
@@ -19,33 +16,58 @@ import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 
 interface UniversalEventDetailModalProps {
-  event: any;
+  event: any; // Can accept both old format and new UniversalEvent format
   onClose: () => void;
-  userRole?: 'operator' | 'maintenance' | 'resident';
+  userRole?: 'operator' | 'maintenance' | 'resident' | 'prospect' | 'vendor';
   onEventUpdate?: (updatedEvent: any) => void;
 }
 
-const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator', onEventUpdate }: UniversalEventDetailModalProps) => {
+const UniversalEventDetailModal = ({ 
+  event, 
+  onClose, 
+  userRole = 'operator', 
+  onEventUpdate 
+}: UniversalEventDetailModalProps) => {
   const { toast } = useToast();
+  const { completeTask, rescheduleEvent, cancelEvent, isLoading } = useUniversalEvent();
   const [activeTab, setActiveTab] = useState<'details' | 'message' | 'timeline'>('details');
   const [messageText, setMessageText] = useState('');
   const [currentEvent, setCurrentEvent] = useState(event);
   const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
 
+  // Convert old event format to UniversalEvent if needed
+  const universalEvent: UniversalEvent = currentEvent.tasks ? currentEvent : {
+    id: currentEvent.id,
+    type: currentEvent.type || 'message',
+    title: currentEvent.title,
+    description: currentEvent.description,
+    date: currentEvent.date,
+    time: currentEvent.time,
+    status: currentEvent.status || 'scheduled',
+    priority: currentEvent.priority || 'medium',
+    tasks: [], // Old format doesn't have tasks
+    assignedUsers: [],
+    createdBy: 'system',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    rescheduledCount: currentEvent.rescheduledCount || 0,
+    followUpHistory: [],
+    metadata: currentEvent
+  };
+
+  const eventType = getEventType(universalEvent.type);
+
   // Overdue detection logic
-  const isEventOverdue = (event: any): boolean => {
-    // Only check if event is not completed
+  const isEventOverdue = (event: UniversalEvent): boolean => {
     if (event.status === 'completed' || event.status === 'cancelled') return false;
     
     const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
     const now = new Date();
     
-    // If event date is in the past, it's overdue
     if (isPast(eventDate) && !isToday(eventDate)) {
       return true;
     }
     
-    // If event is today but the time has passed, it's overdue
     if (isToday(eventDate) && event.time) {
       try {
         const [hours, minutes] = event.time.split(':').map(Number);
@@ -62,30 +84,24 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator', onEv
     return false;
   };
 
-  const eventIsOverdue = isEventOverdue(currentEvent);
+  const eventIsOverdue = isEventOverdue(universalEvent);
 
   const getEventTypeIcon = (type: string) => {
-    switch (type) {
-      case 'move-in': return '🏠';
-      case 'move-out': return '📦';
-      case 'lease': return '📄';
-      case 'message': return '💬';
-      case 'tour': return '👀';
-      case 'payment': return '💳';
-      case 'maintenance': return '🔧';
-      default: return '📅';
-    }
+    return eventType?.icon || '📅';
   };
 
   const getEventTypeColor = (type: string) => {
     switch (type) {
       case 'move-in': return 'bg-green-100 text-green-800 border-green-200';
       case 'move-out': return 'bg-red-100 text-red-800 border-red-200';
-      case 'lease': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'lease-signing': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'message': return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'tour': return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'payment': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'maintenance': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'work-order': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'inspection': return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'amenity-reservation': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'community-event': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
@@ -97,9 +113,46 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator', onEv
       case 'urgent': return 'bg-red-100 text-red-800 border-red-200';
       case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'medium': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'normal': return 'bg-green-100 text-green-800 border-green-200';
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
+  };
+
+  const handleTaskComplete = async (taskId: string) => {
+    const success = await completeTask(universalEvent.id, taskId, userRole);
+    if (success) {
+      // Update local state
+      const updatedEvent = {
+        ...universalEvent,
+        tasks: universalEvent.tasks.map(task =>
+          task.id === taskId
+            ? { ...task, isComplete: true, completedAt: new Date(), completedBy: userRole }
+            : task
+        )
+      };
+      
+      setCurrentEvent(updatedEvent);
+      onEventUpdate?.(updatedEvent);
+
+      // Check if all required tasks are complete
+      const allRequiredComplete = updatedEvent.tasks
+        .filter(task => task.isRequired)
+        .every(task => task.isComplete);
+
+      if (allRequiredComplete) {
+        updatedEvent.status = 'completed';
+        updatedEvent.completedAt = new Date();
+        toast({
+          title: "Event Completed!",
+          description: `${updatedEvent.title} has been completed successfully.`,
+        });
+      }
+    }
+  };
+
+  const handleTaskClick = (task: any) => {
+    // Show task details or allow editing
+    console.log('Task clicked:', task);
   };
 
   const handleSendMessage = () => {
@@ -107,129 +160,94 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator', onEv
     
     toast({
       title: "Message Sent",
-      description: `Message sent regarding ${currentEvent.title}`,
+      description: `Message sent regarding ${universalEvent.title}`,
     });
     
     setMessageText('');
     setActiveTab('timeline');
   };
 
-  const handleWorkOrderNudge = (updatedEvent: any) => {
-    setCurrentEvent(updatedEvent);
-    // Switch to timeline tab to show the new entry
-    setActiveTab('timeline');
-  };
-
-  const handleWorkOrderUrgent = (updatedEvent: any) => {
-    setCurrentEvent(updatedEvent);
-    // Switch to timeline tab to show the new entry
-    setActiveTab('timeline');
-  };
-
-  const handleWorkOrderCancel = (updatedEvent: any) => {
-    setCurrentEvent(updatedEvent);
-    // Switch to timeline tab to show the new entry
-    setActiveTab('timeline');
-  };
-
   const handleReschedule = () => {
-    // Convert event to EnhancedEvent format for reschedule flow
     const enhancedEvent: EnhancedEvent = {
-      id: currentEvent.id,
-      date: currentEvent.date,
-      time: currentEvent.time,
-      title: currentEvent.title,
-      description: currentEvent.description,
-      category: currentEvent.category,
-      priority: currentEvent.priority,
-      canReschedule: true,
+      id: universalEvent.id,
+      date: universalEvent.date,
+      time: universalEvent.time,
+      title: universalEvent.title,
+      description: universalEvent.description,
+      category: universalEvent.type,
+      priority: universalEvent.priority,
+      canReschedule: eventType?.allowsReschedule || true,
       canCancel: true,
-      estimatedDuration: 60,
-      rescheduledCount: currentEvent.rescheduledCount || 0,
-      assignedTeamMember: currentEvent.assignedTeamMember || teamAvailabilityService.assignTeamMember({ category: currentEvent.category }),
-      residentName: currentEvent.residentName || 'Resident',
-      phone: currentEvent.phone || '(555) 123-4567',
-      unit: currentEvent.unit,
-      building: currentEvent.building,
-      status: currentEvent.status
+      estimatedDuration: eventType?.estimatedDuration || 60,
+      rescheduledCount: universalEvent.rescheduledCount,
+      assignedTeamMember: teamAvailabilityService.assignTeamMember({ category: universalEvent.type }),
+      residentName: 'Resident',
+      phone: '(555) 123-4567',
+      unit: universalEvent.metadata?.unit,
+      building: universalEvent.metadata?.building,
+      status: universalEvent.status
     };
     
     setShowRescheduleFlow(true);
   };
 
-  const handleRescheduleConfirm = (rescheduleData: any) => {
-    const updatedEvent = {
-      ...currentEvent,
-      date: rescheduleData.newDate,
-      time: rescheduleData.newTime,
-      rescheduledCount: (currentEvent.rescheduledCount || 0) + 1
-    };
+  const handleRescheduleConfirm = async (rescheduleData: any) => {
+    const success = await rescheduleEvent(
+      universalEvent.id, 
+      rescheduleData.newDate, 
+      rescheduleData.newTime
+    );
     
-    setCurrentEvent(updatedEvent);
-    setShowRescheduleFlow(false);
-    
-    // Notify parent component of the update
-    onEventUpdate?.(updatedEvent);
-    
-    toast({
-      title: "Event Rescheduled",
-      description: `${updatedEvent.title} has been rescheduled successfully.`,
-    });
+    if (success) {
+      const updatedEvent = {
+        ...universalEvent,
+        date: rescheduleData.newDate,
+        time: rescheduleData.newTime,
+        rescheduledCount: universalEvent.rescheduledCount + 1
+      };
+      
+      setCurrentEvent(updatedEvent);
+      setShowRescheduleFlow(false);
+      onEventUpdate?.(updatedEvent);
+    }
   };
 
   const canReschedule = () => {
-    // Most event types can be rescheduled, except completed ones
-    return currentEvent.status !== 'completed' && currentEvent.status !== 'cancelled';
+    return universalEvent.status !== 'completed' && universalEvent.status !== 'cancelled' && (eventType?.allowsReschedule !== false);
   };
 
-  const renderEventDetails = () => {
-    switch (currentEvent.type) {
-      case 'move-in':
-        return <MoveInEventDetails event={currentEvent} userRole={userRole} />;
-      case 'lease':
-        return <LeaseSigningEventDetails event={currentEvent} userRole={userRole} />;
-      case 'message':
-        return <ResidentMessageEventDetails event={currentEvent} userRole={userRole} />;
-      case 'tour':
-        return <TourEventDetails event={currentEvent} userRole={userRole} />;
-      case 'move-out':
-        return <MoveOutEventDetails event={currentEvent} userRole={userRole} />;
-      case 'payment':
-        return <PaymentEventDetails event={currentEvent} userRole={userRole} />;
-      case 'maintenance':
-        return (
-          <WorkOrderEventDetails 
-            event={currentEvent} 
-            userRole={userRole}
-            onNudgeSent={handleWorkOrderNudge}
-            onMarkUrgent={handleWorkOrderUrgent}
-            onCancel={handleWorkOrderCancel}
-          />
-        );
-      default:
-        return <div className="p-4 text-gray-500">Event details not available</div>;
-    }
+  const getCompletedTasksCount = () => {
+    return universalEvent.tasks.filter(task => task.isComplete).length;
+  };
+
+  const getTotalTasksCount = () => {
+    return universalEvent.tasks.length;
+  };
+
+  const getProgressPercentage = () => {
+    if (getTotalTasksCount() === 0) return 0;
+    return Math.round((getCompletedTasksCount() / getTotalTasksCount()) * 100);
   };
 
   if (showRescheduleFlow) {
     const enhancedEvent: EnhancedEvent = {
-      id: currentEvent.id,
-      date: currentEvent.date,
-      time: currentEvent.time,
-      title: currentEvent.title,
-      description: currentEvent.description,
-      category: currentEvent.category,
-      priority: currentEvent.priority,
+      id: universalEvent.id,
+      date: universalEvent.date,
+      time: universalEvent.time,
+      title: universalEvent.title,
+      description: universalEvent.description,
+      category: universalEvent.type,
+      priority: universalEvent.priority,
       canReschedule: true,
       canCancel: true,
-      estimatedDuration: 60,
-      rescheduledCount: currentEvent.rescheduledCount || 0,
-      assignedTeamMember: currentEvent.assignedTeamMember || teamAvailabilityService.assignTeamMember({ category: currentEvent.category }),
-      residentName: currentEvent.residentName || 'Resident',
-      phone: currentEvent.phone || '(555) 123-4567',
-      unit: currentEvent.unit,
-      building: currentEvent.building,
-      status: currentEvent.status
+      estimatedDuration: eventType?.estimatedDuration || 60,
+      rescheduledCount: universalEvent.rescheduledCount,
+      assignedTeamMember: teamAvailabilityService.assignTeamMember({ category: universalEvent.type }),
+      residentName: 'Resident',
+      phone: '(555) 123-4567',
+      unit: universalEvent.metadata?.unit,
+      building: universalEvent.metadata?.building,
+      status: universalEvent.status
     };
 
     return (
@@ -252,26 +270,44 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator', onEv
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <span className="text-xl sm:text-2xl flex-shrink-0">{getEventTypeIcon(currentEvent.type)}</span>
+              <span className="text-xl sm:text-2xl flex-shrink-0">{getEventTypeIcon(universalEvent.type)}</span>
               <div className="min-w-0 flex-1">
                 <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
-                  {eventIsOverdue && <span className="text-red-700 font-bold mr-1">OVERDUE</span>}
-                  {currentEvent.title}
+                  {eventIsOverdue && <span className="text-red-700 font-bold mr-1">OVERDUE:</span>}
+                  {universalEvent.title}
                 </h2>
-                <p className="text-xs sm:text-sm text-gray-600 truncate">{currentEvent.time} • {currentEvent.building} {currentEvent.unit}</p>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">
+                  {universalEvent.time} • {eventType?.name || universalEvent.type}
+                </p>
               </div>
             </div>
           </div>
           
           <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-2 flex-shrink-0 ml-2">
-            <Badge className={`${getEventTypeColor(currentEvent.type)} text-xs whitespace-nowrap`}>
-              {currentEvent.type === 'maintenance' ? 'Work Order' : currentEvent.type.replace('-', ' ')}
+            <Badge className={`${getEventTypeColor(universalEvent.type)} text-xs whitespace-nowrap`}>
+              {eventType?.name || universalEvent.type}
             </Badge>
-            <Badge className={`${getPriorityColor(currentEvent.priority, currentEvent.status, eventIsOverdue)} text-xs whitespace-nowrap`}>
-              {eventIsOverdue ? 'OVERDUE' : currentEvent.status === 'urgent' ? 'URGENT' : currentEvent.priority?.toUpperCase()}
+            <Badge className={`${getPriorityColor(universalEvent.priority, universalEvent.status, eventIsOverdue)} text-xs whitespace-nowrap`}>
+              {eventIsOverdue ? 'OVERDUE' : universalEvent.status === 'urgent' ? 'URGENT' : universalEvent.priority?.toUpperCase()}
             </Badge>
           </div>
         </div>
+
+        {/* Progress Bar */}
+        {universalEvent.tasks.length > 0 && (
+          <div className="px-3 sm:px-4 py-2 bg-gray-50 border-b border-gray-100">
+            <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+              <span>Progress</span>
+              <span>{getCompletedTasksCount()} of {getTotalTasksCount()} tasks completed</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${getProgressPercentage()}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Overdue Warning */}
         {eventIsOverdue && (
@@ -286,15 +322,28 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator', onEv
         {/* Action Buttons */}
         {canReschedule() && (
           <div className="px-3 sm:px-4 py-2 border-b border-gray-100 bg-gray-50">
-            <Button
-              onClick={handleReschedule}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <Clock className="w-4 h-4" />
-              Reschedule
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleReschedule}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Clock className="w-4 h-4" />
+                Reschedule
+              </Button>
+              {universalEvent.status === 'completed' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 text-green-700 border-green-300"
+                  disabled
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Completed
+                </Button>
+              )}
+            </div>
           </div>
         )}
 
@@ -334,12 +383,38 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator', onEv
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto" style={{ maxHeight: 'calc(95vh - 120px)' }}>
-          {activeTab === 'details' && renderEventDetails()}
+        <div className="overflow-y-auto" style={{ maxHeight: 'calc(95vh - 200px)' }}>
+          {activeTab === 'details' && (
+            <div className="p-4">
+              {universalEvent.tasks.length > 0 ? (
+                <UniversalEventTaskList
+                  tasks={universalEvent.tasks}
+                  currentUserRole={userRole}
+                  onTaskComplete={handleTaskComplete}
+                  onTaskClick={handleTaskClick}
+                />
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Event Details</h3>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-gray-700">{universalEvent.description}</p>
+                      {eventType && (
+                        <div className="mt-3 text-sm text-gray-600">
+                          <p><strong>Category:</strong> {eventType.category}</p>
+                          <p><strong>Estimated Duration:</strong> {eventType.estimatedDuration} minutes</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           
           {activeTab === 'message' && (
             <EventMessaging
-              event={currentEvent}
+              event={universalEvent}
               messageText={messageText}
               setMessageText={setMessageText}
               onSendMessage={handleSendMessage}
@@ -348,7 +423,7 @@ const UniversalEventDetailModal = ({ event, onClose, userRole = 'operator', onEv
           )}
           
           {activeTab === 'timeline' && (
-            <EventTimeline event={currentEvent} userRole={userRole} />
+            <EventTimeline event={universalEvent} userRole={userRole} />
           )}
         </div>
       </div>
