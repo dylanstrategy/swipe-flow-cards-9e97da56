@@ -465,45 +465,47 @@ const TodayTab = () => {
   console.log('TodayTab: Today events loaded:', todayEvents.length, 'events');
 
   return (
-    <div className="px-4 py-6 pb-24">
-      <TodayHeader 
-        selectedDate={selectedDate}
-        weather={weather}
-        onTimelineClick={() => setShowTimeline(true)}
-      />
-
-      <QuickActionsGrid 
-        onAction={handleAction}
-        onServiceClick={() => setShowServiceModule(true)}
-        onMaintenanceClick={() => setShowWorkOrdersReview(true)}
-        getRentUrgencyClass={() => {
-          const daysUntilRentDue = 3; // Rent due in 3 days
-          if (daysUntilRentDue <= 3) {
-            return 'wiggle-urgent';
-          }
-          return '';
-        }}
-      />
-
-      {/* Personalized offers based on lifestyle tags */}
-      {renderPersonalizedOffers()}
-
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
-          Today's Events 
-          <span className="text-sm font-normal text-gray-600 ml-2">
-            ({todayEvents.length} events)
-          </span>
-        </h2>
-        
-        <TodayMiniCalendar 
+    <div className="overflow-y-auto h-full max-h-screen pb-24">
+      <div className="px-4 py-6">
+        <TodayHeader 
           selectedDate={selectedDate}
-          getEventsForDate={getEventsForDate}
-          onDropSuggestion={handleDropSuggestion}
-          onDateSelect={handleDateSelect}
-          onEventReschedule={handleEventReschedule}
-          onEventClick={handleEventClick}
+          weather={weather}
+          onTimelineClick={() => setShowTimeline(true)}
         />
+
+        <QuickActionsGrid 
+          onAction={handleAction}
+          onServiceClick={() => setShowServiceModule(true)}
+          onMaintenanceClick={() => setShowWorkOrdersReview(true)}
+          getRentUrgencyClass={() => {
+            const daysUntilRentDue = 3; // Rent due in 3 days
+            if (daysUntilRentDue <= 3) {
+              return 'wiggle-urgent';
+            }
+            return '';
+          }}
+        />
+
+        {/* Personalized offers based on lifestyle tags */}
+        {renderPersonalizedOffers()}
+
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            Today's Events 
+            <span className="text-sm font-normal text-gray-600 ml-2">
+              ({todayEvents.length} events)
+            </span>
+          </h2>
+          
+          <TodayMiniCalendar 
+            selectedDate={selectedDate}
+            getEventsForDate={getEventsForDate}
+            onDropSuggestion={handleDropSuggestion}
+            onDateSelect={handleDateSelect}
+            onEventReschedule={handleEventReschedule}
+            onEventClick={handleEventClick}
+          />
+        </div>
       </div>
     </div>
   );

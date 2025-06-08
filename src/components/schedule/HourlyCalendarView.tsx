@@ -1,8 +1,9 @@
+
 import React, { useState, useRef } from 'react';
 import { format, addMinutes, startOfDay, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Clock, Calendar, Plus, CheckCircle } from 'lucide-react';
-import { TaskCompletionStamp } from '@/types/taskStamps';
+import type { TaskCompletionStamp } from '@/types/taskStamps';
 import TaskStampLayer from './TaskStampLayer';
 import EventCompletionStamp from './EventCompletionStamp';
 
@@ -253,7 +254,8 @@ const HourlyCalendarView = ({
         </p>
       </div>
 
-      <div className="divide-y divide-gray-100">
+      {/* Calendar with full height - NO SCROLL CONTAINER */}
+      <div className="divide-y divide-gray-100 h-[calc(24*80px)]">
         {timeSlots.map((timeSlot) => {
           const slotEvents = getEventsForTimeSlot(timeSlot);
           const isDragOver = dragOverSlot === timeSlot;
@@ -262,7 +264,7 @@ const HourlyCalendarView = ({
             <div
               key={timeSlot}
               className={cn(
-                "flex min-h-[80px] transition-all duration-200 relative",
+                "flex h-[80px] transition-all duration-200 relative",
                 isDragOver && "bg-green-50 border-l-4 border-green-400"
               )}
               onDragOver={(e) => handleDragOver(e, timeSlot)}
@@ -278,7 +280,7 @@ const HourlyCalendarView = ({
               </div>
 
               {/* Events column - Flexible with proper overflow handling */}
-              <div className="flex-1 p-4 min-h-[80px] relative">
+              <div className="flex-1 p-4 h-[80px] relative">
                 {/* Task completion stamps layer (background) */}
                 <TaskStampLayer 
                   stamps={allTaskStamps}

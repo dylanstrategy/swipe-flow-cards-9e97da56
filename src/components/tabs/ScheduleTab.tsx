@@ -413,9 +413,9 @@ const ScheduleTab = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen pb-20">
-      {/* Header with date picker */}
-      <div className="flex-shrink-0 p-4 bg-white border-b border-gray-100">
+    <div className="overflow-y-auto h-full max-h-screen pb-20">
+      {/* Header with date picker - Fixed at top */}
+      <div className="bg-white border-b border-gray-100 p-4 sticky top-0 z-40">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold text-gray-900">Schedule</h1>
           <Popover>
@@ -443,20 +443,18 @@ const ScheduleTab = () => {
         </div>
       </div>
 
-      {/* Main content area with fixed scroll container */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Suggestions section - fixed height */}
-        <div className="flex-shrink-0">
-          <DraggableSuggestionsSection
-            scheduledSuggestionIds={scheduledSuggestionIds}
-            completedSuggestionIds={completedSuggestionIds}
-            onDropInTimeline={handleDropSuggestionInTimeline}
-            selectedDate={selectedDate}
-          />
-        </div>
+      {/* Main content - Scrollable */}
+      <div>
+        {/* Suggestions section */}
+        <DraggableSuggestionsSection
+          scheduledSuggestionIds={scheduledSuggestionIds}
+          completedSuggestionIds={completedSuggestionIds}
+          onDropInTimeline={handleDropSuggestionInTimeline}
+          selectedDate={selectedDate}
+        />
 
-        {/* Calendar with proper scroll container */}
-        <div className="flex-1 overflow-y-auto bg-white" style={{ maxHeight: 'calc(100vh - 240px)' }}>
+        {/* Calendar - Full height without scroll */}
+        <div className="bg-white">
           <HourlyCalendarView
             selectedDate={selectedDate}
             events={getEventsForDate(selectedDate)}

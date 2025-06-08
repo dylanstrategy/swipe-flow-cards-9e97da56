@@ -50,7 +50,8 @@ const TodayMiniCalendar = ({
         </p>
       </div>
       
-      <div className="h-96 overflow-y-auto">
+      {/* Remove height constraint and overflow to allow full calendar display */}
+      <div>
         <HourlyCalendarView
           selectedDate={selectedDate}
           events={todayEvents}
