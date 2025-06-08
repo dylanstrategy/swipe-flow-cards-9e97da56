@@ -33,6 +33,22 @@ const Home = () => {
       color: 'bg-purple-500'
     },
     {
+      id: 'leasing',
+      title: 'Leasing Manager',
+      description: 'Manage prospects, schedule tours, and oversee the leasing process',
+      icon: Users,
+      path: '/leasing',
+      color: 'bg-orange-500'
+    },
+    {
+      id: 'vendor',
+      title: 'Vendor Portal',
+      description: 'View assigned work orders and manage maintenance tasks',
+      icon: Wrench,
+      path: '/vendor',
+      color: 'bg-gray-600'
+    },
+    {
       id: 'discovery',
       title: 'Discovery Flow',
       description: 'Find your perfect apartment with our guided discovery process',
