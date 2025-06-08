@@ -13,6 +13,8 @@ export interface TaskCompletionStamp {
   userId: string;
   canUndo: boolean;
   displayTime: string;
+  permanent: boolean; // for 11:59+ retention logic
+  actualCompletionTime: Date; // locked to true completion time
 }
 
 export interface CalendarStamp {
@@ -25,4 +27,6 @@ export interface CalendarStamp {
   eventType: string;
   timeSlot: string; // HH:MM format for positioning
   isEventCompletion?: boolean; // true if this represents full event completion
+  permanent: boolean;
+  actualCompletionTime: Date;
 }

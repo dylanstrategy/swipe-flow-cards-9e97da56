@@ -1,11 +1,10 @@
-
 import React, { useState, useRef } from 'react';
 import { format, addMinutes, startOfDay, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Clock, Calendar, Plus, CheckCircle } from 'lucide-react';
 import type { TaskCompletionStamp } from '@/types/taskStamps';
-import TaskStampLayer from './TaskStampLayer';
-import EventCompletionStamp from './EventCompletionStamp';
+import TaskStampRenderer from './TaskStampRenderer';
+import EventCompletionRenderer from './EventCompletionRenderer';
 
 interface Event {
   id: number | string;
@@ -34,6 +33,7 @@ interface HourlyCalendarViewProps {
   onEventClick?: (event: Event) => void;
   onEventHold?: (event: Event) => void;
   onEventReschedule?: (event: Event, newTime: string) => void;
+  currentUserRole?: string;
 }
 
 const HourlyCalendarView = ({
@@ -42,7 +42,8 @@ const HourlyCalendarView = ({
   onDropSuggestion,
   onEventClick,
   onEventHold,
-  onEventReschedule
+  onEventReschedule,
+  currentUserRole = 'resident'
 }: HourlyCalendarViewProps) => {
   const [dragOverSlot, setDragOverSlot] = useState<string | null>(null);
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
@@ -97,7 +98,7 @@ const HourlyCalendarView = ({
     return false;
   };
 
-  // Check if event is fully completed
+  // Check if event is fully completed - NEW LOGIC
   const isEventCompleted = (event: Event): boolean => {
     if (event.status === 'completed') return true;
     
@@ -131,10 +132,6 @@ const HourlyCalendarView = ({
     const period = hours >= 12 ? 'PM' : 'AM';
     const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
     return `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
-  };
-
-  const formatCompletionTime = (date: Date): string => {
-    return format(date, 'h:mm a');
   };
 
   const getEventsForTimeSlot = (timeSlot: string) => {
@@ -171,7 +168,7 @@ const HourlyCalendarView = ({
   };
 
   const handleDragStart = (e: React.DragEvent, event: Event) => {
-    // Don't allow dragging completed events
+    // Don't allow dragging completed events (LOCK COMPLETED EVENTS)
     if (isEventCompleted(event)) {
       e.preventDefault();
       return;
@@ -281,8 +278,8 @@ const HourlyCalendarView = ({
 
               {/* Events column - Flexible with proper overflow handling */}
               <div className="flex-1 p-4 h-[80px] relative">
-                {/* Task completion stamps layer (background) */}
-                <TaskStampLayer 
+                {/* Task completion stamps layer (background) - PERMANENT STAMPS */}
+                <TaskStampRenderer 
                   stamps={allTaskStamps}
                   timeSlot={timeSlot}
                   selectedDate={selectedDate}
@@ -309,13 +306,14 @@ const HourlyCalendarView = ({
                       
                       return (
                         <div key={event.id} className="space-y-2">
-                          {/* Main event card or completion stamp */}
+                          {/* Main event card or completion renderer */}
                           {isCompleted ? (
-                            <EventCompletionStamp
+                            <EventCompletionRenderer
                               eventTitle={event.title}
                               eventType={event.category}
                               completedAt={event.taskCompletionStamps?.[event.taskCompletionStamps.length - 1]?.completedAt || new Date()}
                               completedBy={event.taskCompletionStamps?.[event.taskCompletionStamps.length - 1]?.completedByName || 'System'}
+                              isLocked={true}
                             />
                           ) : (
                             <div
@@ -333,7 +331,7 @@ const HourlyCalendarView = ({
                                 event.isDroppedSuggestion && !isOverdue && "text-white shadow-lg",
                                 !event.isDroppedSuggestion && !isOverdue && "hover:scale-105",
                                 overdueClasses,
-                                isCompleted && "cursor-default pointer-events-none"
+                                isCompleted && "cursor-not-allowed pointer-events-none"
                               )}
                             >
                               <div className="flex items-start justify-between w-full">

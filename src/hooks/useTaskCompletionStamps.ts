@@ -15,19 +15,21 @@ export const useTaskCompletionStamps = () => {
     completedBy: Role,
     completedByName?: string
   ) => {
-    const completedAt = new Date();
+    const actualCompletionTime = new Date();
     const newStamp: TaskCompletionStamp = {
       id: `stamp-${Date.now()}`,
       taskId,
       taskName,
       eventId,
       eventType,
-      completedAt,
+      completedAt: actualCompletionTime,
       completedBy,
       completedByName: completedByName || completedBy,
-      userId: `user-${completedBy}-001`, // Generate userId based on role
+      userId: `user-${completedBy}-001`,
       canUndo: true,
-      displayTime: format(completedAt, 'h:mm a') // Add required displayTime field
+      displayTime: format(actualCompletionTime, 'h:mm a'),
+      permanent: true, // All stamps are permanent
+      actualCompletionTime // Lock to true completion time
     };
 
     setStamps(prev => {
@@ -40,17 +42,41 @@ export const useTaskCompletionStamps = () => {
   }, []);
 
   const removeStamp = useCallback((taskId: string) => {
-    setStamps(prev => prev.filter(s => s.taskId !== taskId));
+    const now = new Date();
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    // Only allow undo if before midnight on same day
+    setStamps(prev => prev.filter(s => {
+      if (s.taskId !== taskId) return true;
+      
+      const stampDate = new Date(s.actualCompletionTime);
+      const canUndo = now <= endOfDay && 
+                     stampDate.toDateString() === now.toDateString() &&
+                     s.canUndo;
+      
+      return !canUndo; // Keep stamps that can't be undone
+    }));
   }, []);
 
   const getStampsForEvent = useCallback((eventId: string) => {
     return stamps.filter(s => s.eventId === eventId);
   }, [stamps]);
 
+  const getStampsForTimeSlot = useCallback((timeSlot: string, date: Date) => {
+    return stamps.filter(s => {
+      const stampTime = format(s.actualCompletionTime, 'HH:mm');
+      const stampDate = format(s.actualCompletionTime, 'yyyy-MM-dd');
+      const targetDate = format(date, 'yyyy-MM-dd');
+      
+      return stampTime === timeSlot && stampDate === targetDate;
+    });
+  }, [stamps]);
+
   const getStampsForToday = useCallback(() => {
     const today = new Date();
     return stamps.filter(s => {
-      const stampDate = new Date(s.completedAt);
+      const stampDate = new Date(s.actualCompletionTime);
       return stampDate.toDateString() === today.toDateString();
     });
   }, [stamps]);
@@ -58,7 +84,7 @@ export const useTaskCompletionStamps = () => {
   const lockStampsForPreviousDays = useCallback(() => {
     const now = new Date();
     setStamps(prev => prev.map(stamp => {
-      const stampDate = new Date(stamp.completedAt);
+      const stampDate = new Date(stamp.actualCompletionTime);
       if (stampDate.toDateString() !== now.toDateString()) {
         return { ...stamp, canUndo: false };
       }
@@ -71,6 +97,7 @@ export const useTaskCompletionStamps = () => {
     addStamp,
     removeStamp,
     getStampsForEvent,
+    getStampsForTimeSlot,
     getStampsForToday,
     lockStampsForPreviousDays
   };

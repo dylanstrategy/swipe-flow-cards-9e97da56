@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -81,8 +80,13 @@ const TaskChecklist = ({
     return 'available';
   };
 
+  // ROLE ENFORCEMENT - Only assigned role can interact with task
   const canUserInteractWithTask = (task: EventTask) => {
-    return (task.assignedRole === currentUserRole || currentUserRole === 'operator') && !readOnly;
+    // Operators can interact with any task
+    if (currentUserRole === 'operator') return !readOnly;
+    
+    // Other roles can only interact with their assigned tasks
+    return (task.assignedRole === currentUserRole) && !readOnly;
   };
 
   const canUndoTask = (task: EventTask) => {
@@ -100,6 +104,12 @@ const TaskChecklist = ({
   };
 
   const handleTaskAction = (task: EventTask) => {
+    // Check role permissions first
+    if (!canUserInteractWithTask(task)) {
+      console.log('User does not have permission to interact with this task');
+      return;
+    }
+
     const taskStatus = getTaskStatus(task);
     
     if (taskStatus === 'available') {
@@ -210,6 +220,14 @@ const TaskChecklist = ({
                       {task.unlockCondition && taskStatus === 'locked' && (
                         <p className="text-xs text-gray-500 mt-2">
                           Unlocks after: {task.unlockCondition}
+                        </p>
+                      )}
+
+                      {/* ROLE ENFORCEMENT MESSAGE */}
+                      {!canInteract && !readOnly && taskStatus !== 'complete' && taskStatus !== 'locked' && (
+                        <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
+                          <Lock className="w-3 h-3" />
+                          Only {task.assignedRole} may perform this task
                         </p>
                       )}
                     </div>
