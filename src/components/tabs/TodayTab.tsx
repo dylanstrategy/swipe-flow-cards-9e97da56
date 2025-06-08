@@ -14,7 +14,7 @@ import QuickActionsGrid from './today/QuickActionsGrid';
 import TodayMiniCalendar from './today/TodayMiniCalendar';
 import PointOfSale from '../PointOfSale';
 import { useRealtimeOverdueDetection } from '@/hooks/useRealtimeOverdueDetection';
-import { createTestEvents } from '@/data/testEvents';
+import { createTestEvents, getEventsForRole } from '@/data/testEvents';
 
 const TodayTab = () => {
   const { toast } = useToast();
@@ -57,26 +57,14 @@ const TodayTab = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Enhanced calendar events with realistic examples and times - now as state
-  const [calendarEvents, setCalendarEvents] = useState(() => createTestEvents());
+  // Get shared events and filter by resident role
+  const [calendarEvents, setCalendarEvents] = useState(() => {
+    const allEvents = createTestEvents();
+    return getEventsForRole(allEvents, 'resident');
+  });
 
-  // Add pet-specific events if user has pets - also as state
-  const [petEvents, setPetEvents] = useState(() => 
-    profile.pets.length > 0 ? [
-      {
-        id: 'pet-101',
-        date: new Date(),
-        time: '16:00',
-        title: `${profile.pets[0].name}'s Special Offer`,
-        description: `Exclusive pet grooming discount for ${profile.pets[0].name}!`,
-        category: 'Pet Service',
-        priority: 'low' as const,
-        type: 'message'
-      }
-    ] : []
-  );
-
-  const allEvents = [...calendarEvents, ...petEvents];
+  // Remove pet events - use shared events only
+  const allEvents = calendarEvents;
 
   // Add special event for rent due
   const rentDueEvent = {

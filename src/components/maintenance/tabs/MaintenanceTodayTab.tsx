@@ -1,4 +1,3 @@
-
 import React, { useState, useContext } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,13 +7,14 @@ import UnitTurnDetailTracker from '@/components/maintenance/UnitTurnDetailTracke
 import HourlyCalendarView from '@/components/schedule/HourlyCalendarView';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { createTestEvents, getEventsForRole } from '@/data/testEvents';
 
 interface MaintenanceTodayTabProps {
   todayWorkOrders?: any[];
   onWorkOrderCompleted?: (workOrderId: string) => void;
 }
 
-const MaintenanceTodayTab = ({ todayWorkOrders = [], onWorkOrderCompleted }: MaintenanceTodayTabProps) => {
+const MaintenanceTodayTab = ({ onWorkOrderCompleted }: MaintenanceTodayTabProps) => {
   const { toast } = useToast();
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
   const [selectedUnitTurn, setSelectedUnitTurn] = useState<any>(null);
@@ -22,7 +22,13 @@ const MaintenanceTodayTab = ({ todayWorkOrders = [], onWorkOrderCompleted }: Mai
 
   const today = new Date();
 
-  console.log('MaintenanceTodayTab - received todayWorkOrders:', todayWorkOrders);
+  // Get shared events filtered for maintenance role
+  const maintenanceEvents = React.useMemo(() => {
+    const allEvents = createTestEvents();
+    return getEventsForRole(allEvents, 'maintenance');
+  }, []);
+
+  console.log('MaintenanceTodayTab - maintenance events:', maintenanceEvents);
 
   // Sample unit turns data
   const unitTurns = [
@@ -52,28 +58,28 @@ const MaintenanceTodayTab = ({ todayWorkOrders = [], onWorkOrderCompleted }: Mai
     }
   ];
 
-  // Convert work orders to calendar events format and update state when needed
+  // Convert maintenance events to calendar events format
   React.useEffect(() => {
     const events = [
-      // Add today's scheduled work orders from props - without pre-calculating overdue
-      ...todayWorkOrders.map(workOrder => {
-        console.log('Converting work order to calendar event:', workOrder);
+      // Add maintenance events from shared data
+      ...maintenanceEvents.map(event => {
+        console.log('Converting maintenance event to calendar event:', event);
         return {
-          id: workOrder.id,
+          id: event.id,
           date: today,
-          time: workOrder.scheduledTime || '09:00',
-          title: `Work Order - Unit ${workOrder.unit}`,
-          description: workOrder.title,
-          category: 'work-order',
-          priority: workOrder.priority,
-          workOrderData: workOrder,
+          time: event.time,
+          title: event.title,
+          description: event.description,
+          category: event.type,
+          priority: event.priority,
+          workOrderData: event.type === 'work-order' ? event : null,
           canReschedule: true,
           canCancel: false,
           estimatedDuration: 120,
-          rescheduledCount: 0
+          rescheduledCount: event.rescheduledCount || 0
         };
       }),
-      // Add unit turns scheduled for today - without pre-calculating overdue
+      // Add unit turns scheduled for today
       ...unitTurns.filter(turn => turn.status === 'Scheduled').map(unitTurn => ({
         id: unitTurn.id,
         date: today,
@@ -91,8 +97,8 @@ const MaintenanceTodayTab = ({ todayWorkOrders = [], onWorkOrderCompleted }: Mai
     ];
     
     setCalendarEvents(events);
-    console.log('Calendar events generated:', events);
-  }, [todayWorkOrders]);
+    console.log('Maintenance calendar events generated:', events);
+  }, [maintenanceEvents]);
 
   const handleEventClick = (event: any) => {
     console.log('Event clicked:', event);
@@ -168,7 +174,7 @@ const MaintenanceTodayTab = ({ todayWorkOrders = [], onWorkOrderCompleted }: Mai
         <div className="grid grid-cols-2 gap-4 mb-6">
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-orange-600">{todayWorkOrders.length}</div>
+              <div className="text-2xl font-bold text-orange-600">{maintenanceEvents.length}</div>
               <div className="text-sm text-gray-600">Work Orders Today</div>
             </CardContent>
           </Card>

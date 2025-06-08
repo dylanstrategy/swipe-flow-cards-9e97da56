@@ -18,6 +18,7 @@ import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 import { useResident } from '@/contexts/ResidentContext';
 import { format, addDays, isPast, isToday } from 'date-fns';
+import { createTestEvents, getEventsForRole } from '@/data/testEvents';
 
 const OperatorTodayTab = () => {
   const { toast } = useToast();
@@ -45,87 +46,23 @@ const OperatorTodayTab = () => {
   const [showUniversalEventDetail, setShowUniversalEventDetail] = useState(false);
   const [selectedUniversalEvent, setSelectedUniversalEvent] = useState<any>(null);
 
-  // Today's events - make them stateful for drag/drop updates without pre-calculating overdue
-  const [todayEvents, setTodayEvents] = useState([
-    {
-      id: 1,
+  // Today's events - use shared events filtered for operator role
+  const [todayEvents, setTodayEvents] = useState(() => {
+    const allEvents = createTestEvents();
+    return getEventsForRole(allEvents, 'operator').map(event => ({
+      id: event.id,
       date: new Date(),
-      time: '09:00',
-      title: 'Move-In Inspection',
-      description: 'Unit 4B - Sarah Johnson',
-      type: 'move-in',
-      priority: 'high' as const,
-      status: 'scheduled',
-      building: 'Building A',
-      unit: '4B',
-      category: 'Community Management'
-    },
-    {
-      id: 2,
-      date: new Date(),
-      time: '10:30',
-      title: 'Lease Signing',
-      description: 'Unit 2C - Mike Chen renewal',
-      type: 'lease',
-      priority: 'medium' as const,
-      status: 'confirmed',
-      building: 'Building B',
-      unit: '2C',
-      category: 'Leasing'
-    },
-    {
-      id: 3,
-      date: new Date(),
-      time: '11:15',
-      title: 'Resident Message',
-      description: 'Unit 5A - HVAC repair follow-up',
-      type: 'message',
-      priority: 'low' as const,
-      status: 'pending',
-      building: 'Building C',
-      unit: '5A',
-      category: 'Property Services'
-    },
-    {
-      id: 4,
-      date: new Date(),
-      time: '14:00',
-      title: 'Tour Scheduled',
-      description: 'Studio unit - Alex Rodriguez',
-      type: 'tour',
-      priority: 'low' as const,
-      status: 'confirmed',
-      building: 'Building A',
-      unit: 'Studio-12',
-      category: 'Leasing'
-    },
-    {
-      id: 5,
-      date: new Date(),
-      time: '15:30',
-      title: 'Move-Out Notice',
-      description: 'Unit 1A - Notice processing',
-      type: 'move-out',
-      priority: 'medium' as const,
-      status: 'processing',
-      building: 'Building A',
-      unit: '1A',
-      category: 'Community Management'
-    },
-    {
-      id: 6,
-      date: new Date(),
-      time: '16:15',
-      title: 'Payment Follow-up',
-      description: 'Unit 3D - Late rent discussion',
-      type: 'payment',
-      priority: 'urgent' as const,
-      status: 'urgent',
-      building: 'Building B',
-      unit: '3D',
-      category: 'Collections'
-    }
-  ]);
+      time: event.time,
+      title: event.title,
+      description: event.description,
+      type: event.type,
+      priority: event.priority,
+      status: event.status,
+      building: event.building,
+      unit: event.unit,
+      category: event.category
+    }));
+  });
 
   // Calculate real data from resident context
   const currentResidents = getCurrentResidents();
@@ -568,23 +505,12 @@ const OperatorTodayTab = () => {
             <div 
               key={index} 
               className={`bg-gray-50 rounded-lg p-4 text-center ${
-                item.module ? 'cursor-pointer hover:bg-gray-100 transition-colors' : ''
+                item.module ? 'cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors border border-transparent' : ''
               }`}
               onClick={() => item.module && handleModuleClick(item.module, item.filter)}
             >
               <div className="text-2xl font-bold text-gray-900">{item.count}</div>
               <div className="text-sm text-gray-600">{item.title}</div>
-              <div className={`text-xs mt-1 ${
-                item.status === 'total' ? 'text-blue-600' :
-                item.status === 'occupied' ? 'text-green-600' :
-                item.status === 'pending' ? 'text-yellow-600' :
-                'text-red-600'
-              }`}>
-                {item.status === 'total' ? 'Total Units' :
-                 item.status === 'occupied' ? 'Occupied' :
-                 item.status === 'pending' ? 'Pending' :
-                 'Due Soon'}
-              </div>
             </div>
           ))}
         </div>
@@ -600,16 +526,11 @@ const OperatorTodayTab = () => {
           {movement.map((item, index) => (
             <div 
               key={index} 
-              className="bg-gray-50 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-100 transition-colors"
+              className="bg-gray-50 rounded-lg p-4 text-center cursor-pointer hover:bg-blue-50 transition-colors"
               onClick={() => handleModuleClick(item.module)}
             >
               <div className="text-2xl font-bold text-gray-900">{item.count}</div>
               <div className="text-sm text-gray-600">{item.title}</div>
-              <div className={`text-xs mt-1 ${
-                item.status === 'incoming' ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {item.status === 'incoming' ? 'Scheduled' : 'Planned'}
-              </div>
             </div>
           ))}
         </div>
@@ -646,7 +567,7 @@ const OperatorTodayTab = () => {
             <div 
               key={index} 
               className={`bg-gray-50 rounded-lg p-4 text-center ${
-                item.module ? 'cursor-pointer hover:bg-gray-100 transition-colors' : ''
+                item.module ? 'cursor-pointer hover:bg-blue-50 transition-colors' : ''
               }`}
               onClick={() => {
                 console.log('Leasing item clicked:', item.title, item.module, item.filter);
