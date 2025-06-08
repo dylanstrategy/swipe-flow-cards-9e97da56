@@ -1,7 +1,6 @@
-import { addDays, subDays, startOfDay, addHours, isSameDay } from 'date-fns';
+import { addDays, subDays, startOfDay, addHours, isSameDay, format } from 'date-fns';
 import { UniversalEvent } from '@/types/eventTasks';
 import { Role } from '@/types/roles';
-import { format } from 'date-fns';
 
 // Centralized event store that all roles share
 class SharedEventService {
@@ -468,20 +467,29 @@ class SharedEventService {
     task.completedAt = new Date();
     task.completedBy = completedBy;
 
-    // Add completion stamp
+    // Add completion stamp with formatted display time
+    const completedAt = new Date();
     const stamp = {
       id: `${taskId}-completion-${Date.now()}`,
       taskId,
       taskName: task.title,
       eventId,
       eventType: event.type,
-      completedAt: new Date(),
+      completedAt,
       completedBy: completedBy,
       completedByName: this.getRoleDisplayName(completedBy),
-      canUndo: true
+      canUndo: true,
+      displayTime: format(completedAt, 'h:mm a')
     };
 
     event.taskCompletionStamps = event.taskCompletionStamps || [];
+    
+    // Remove any existing stamp for this task (for re-completion)
+    event.taskCompletionStamps = event.taskCompletionStamps.filter(
+      existingStamp => existingStamp.taskId !== taskId
+    );
+    
+    // Add the new stamp
     event.taskCompletionStamps.push(stamp);
 
     // Check if all required tasks are complete
@@ -496,6 +504,7 @@ class SharedEventService {
 
     event.updatedAt = new Date();
     this.notifySubscribers();
+    console.log('Task completed with timestamp:', stamp);
     return true;
   }
 
@@ -533,7 +542,7 @@ class SharedEventService {
 
       event.updatedAt = new Date();
       this.notifySubscribers();
-      console.log('Task completion undone in shared service:', taskId);
+      console.log('Task completion undone and timestamp removed:', taskId);
       return true;
     } catch (error) {
       console.error('Error undoing task completion:', error);

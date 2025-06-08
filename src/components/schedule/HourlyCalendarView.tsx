@@ -1,8 +1,7 @@
-
 import React, { useState, useRef } from 'react';
 import { format, addMinutes, startOfDay, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Clock, Calendar, Plus } from 'lucide-react';
+import { Clock, Calendar, Plus, CheckCircle } from 'lucide-react';
 
 interface Event {
   id: number | string;
@@ -104,6 +103,10 @@ const HourlyCalendarView = ({
     const period = hours >= 12 ? 'PM' : 'AM';
     const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
     return `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
+  };
+
+  const formatCompletionTime = (date: Date): string => {
+    return format(date, 'h:mm a');
   };
 
   const getEventsForTimeSlot = (timeSlot: string) => {
@@ -258,73 +261,94 @@ const HourlyCalendarView = ({
                       const eventColors = getEventColors(event, isOverdue);
                       
                       return (
-                        <div
-                          key={event.id}
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, event)}
-                          onDragEnd={handleDragEnd}
-                          onClick={() => handleEventClick(event)}
-                          onContextMenu={(e) => {
-                            e.preventDefault();
-                            handleEventHold(event);
-                          }}
-                          className={cn(
-                            "p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md active:scale-95 w-full",
-                            eventColors,
-                            event.isDroppedSuggestion && !isOverdue && "text-white shadow-lg",
-                            !event.isDroppedSuggestion && !isOverdue && "hover:scale-105",
-                            overdueClasses
-                          )}
-                        >
-                          <div className="flex items-start justify-between w-full">
-                            <div className="flex-1 min-w-0">
-                              <h4 className={cn(
-                                "font-semibold text-sm break-words",
-                                (event.isDroppedSuggestion && !isOverdue) ? "text-white" : ""
-                              )}>
-                                {isOverdue && <span className="text-red-700 font-bold mr-1">OVERDUE</span>}
-                                {event.title}
-                              </h4>
-                              <p className={cn(
-                                "text-xs mt-1 break-words",
-                                (event.isDroppedSuggestion && !isOverdue) ? "text-white/90" : isOverdue ? "text-red-700" : "text-blue-700"
-                              )}>
-                                {event.description}
-                              </p>
-                              {(event.unit || event.building) && (
-                                <div className="flex flex-wrap items-center gap-2 mt-2">
-                                  {event.building && (
-                                    <span className={cn(
-                                      "text-xs px-2 py-1 rounded-full break-words",
-                                      (event.isDroppedSuggestion && !isOverdue)
-                                        ? "bg-white/20 text-white" 
-                                        : isOverdue
-                                        ? "bg-red-200 text-red-800"
-                                        : "bg-gray-100 text-gray-600"
-                                    )}>
-                                      {event.building}
-                                    </span>
-                                  )}
-                                  {event.unit && (
-                                    <span className={cn(
-                                      "text-xs px-2 py-1 rounded-full break-words",
-                                      (event.isDroppedSuggestion && !isOverdue)
-                                        ? "bg-white/20 text-white" 
-                                        : isOverdue
-                                        ? "bg-red-200 text-red-800"
-                                        : "bg-blue-100 text-blue-700"
-                                    )}>
-                                      Unit {event.unit}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
+                        <div key={event.id} className="space-y-2">
+                          {/* Main event card */}
+                          <div
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, event)}
+                            onDragEnd={handleDragEnd}
+                            onClick={() => handleEventClick(event)}
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              handleEventHold(event);
+                            }}
+                            className={cn(
+                              "p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md active:scale-95 w-full",
+                              eventColors,
+                              event.isDroppedSuggestion && !isOverdue && "text-white shadow-lg",
+                              !event.isDroppedSuggestion && !isOverdue && "hover:scale-105",
+                              overdueClasses
+                            )}
+                          >
+                            <div className="flex items-start justify-between w-full">
+                              <div className="flex-1 min-w-0">
+                                <h4 className={cn(
+                                  "font-semibold text-sm break-words",
+                                  (event.isDroppedSuggestion && !isOverdue) ? "text-white" : ""
+                                )}>
+                                  {isOverdue && <span className="text-red-700 font-bold mr-1">OVERDUE</span>}
+                                  {event.title}
+                                </h4>
+                                <p className={cn(
+                                  "text-xs mt-1 break-words",
+                                  (event.isDroppedSuggestion && !isOverdue) ? "text-white/90" : isOverdue ? "text-red-700" : "text-blue-700"
+                                )}>
+                                  {event.description}
+                                </p>
+                                {(event.unit || event.building) && (
+                                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                                    {event.building && (
+                                      <span className={cn(
+                                        "text-xs px-2 py-1 rounded-full break-words",
+                                        (event.isDroppedSuggestion && !isOverdue)
+                                          ? "bg-white/20 text-white" 
+                                          : isOverdue
+                                          ? "bg-red-200 text-red-800"
+                                          : "bg-gray-100 text-gray-600"
+                                      )}>
+                                        {event.building}
+                                      </span>
+                                    )}
+                                    {event.unit && (
+                                      <span className={cn(
+                                        "text-xs px-2 py-1 rounded-full break-words",
+                                        (event.isDroppedSuggestion && !isOverdue)
+                                          ? "bg-white/20 text-white" 
+                                          : isOverdue
+                                          ? "bg-red-200 text-red-800"
+                                          : "bg-blue-100 text-blue-700"
+                                      )}>
+                                        Unit {event.unit}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </div>
+                            
+                            {event.rescheduledCount && event.rescheduledCount > 0 && (
+                              <div className="mt-2 text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded-full inline-block">
+                                Rescheduled {event.rescheduledCount}x
+                              </div>
+                            )}
                           </div>
-                          
-                          {event.rescheduledCount && event.rescheduledCount > 0 && (
-                            <div className="mt-2 text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded-full inline-block">
-                              Rescheduled {event.rescheduledCount}x
+
+                          {/* Task completion stamps */}
+                          {event.taskCompletionStamps && event.taskCompletionStamps.length > 0 && (
+                            <div className="ml-4 space-y-1">
+                              {event.taskCompletionStamps.map((stamp) => (
+                                <div 
+                                  key={stamp.id}
+                                  className="flex items-center gap-2 text-xs text-green-700 bg-green-50 px-2 py-1 rounded-md border border-green-200"
+                                >
+                                  <CheckCircle className="w-3 h-3 text-green-600" />
+                                  <span className="font-medium">{stamp.taskName}</span>
+                                  <span className="text-green-600">completed by</span>
+                                  <span className="font-medium">{stamp.completedByName || stamp.completedBy}</span>
+                                  <span className="text-green-600">–</span>
+                                  <span className="font-medium">{formatCompletionTime(stamp.completedAt)}</span>
+                                </div>
+                              ))}
                             </div>
                           )}
                         </div>

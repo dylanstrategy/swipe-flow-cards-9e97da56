@@ -1,4 +1,3 @@
-
 import { Role } from './roles';
 
 export interface EventTask {
@@ -68,6 +67,7 @@ export interface TaskCompletionStamp {
   completedBy: Role;
   completedByName?: string;
   canUndo: boolean;
+  displayTime?: string; // formatted time for display
 }
 
 export interface UniversalEvent {
