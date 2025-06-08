@@ -59,7 +59,7 @@ export interface EscalationRule {
 }
 
 // Import and re-export the unified TaskCompletionStamp
-export { TaskCompletionStamp } from './taskStamps';
+export type { TaskCompletionStamp } from './taskStamps';
 
 export interface UniversalEvent {
   id: string;

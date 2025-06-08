@@ -1,6 +1,7 @@
 
 import { useState, useCallback } from 'react';
-import { TaskCompletionStamp } from '@/types/eventTasks';
+import { format } from 'date-fns';
+import type { TaskCompletionStamp } from '@/types/taskStamps';
 import { Role } from '@/types/roles';
 
 export const useTaskCompletionStamps = () => {
@@ -14,16 +15,19 @@ export const useTaskCompletionStamps = () => {
     completedBy: Role,
     completedByName?: string
   ) => {
+    const completedAt = new Date();
     const newStamp: TaskCompletionStamp = {
       id: `stamp-${Date.now()}`,
       taskId,
       taskName,
       eventId,
       eventType,
-      completedAt: new Date(),
+      completedAt,
       completedBy,
-      completedByName,
-      canUndo: true
+      completedByName: completedByName || completedBy,
+      userId: `user-${completedBy}-001`, // Generate userId based on role
+      canUndo: true,
+      displayTime: format(completedAt, 'h:mm a') // Add required displayTime field
     };
 
     setStamps(prev => {

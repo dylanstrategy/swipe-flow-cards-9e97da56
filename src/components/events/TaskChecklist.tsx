@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Circle, Clock, User, Lock, Undo2 } from 'lucide-react';
-import { EventTask, TaskCompletionStamp } from '@/types/eventTasks';
+import { EventTask } from '@/types/eventTasks';
+import type { TaskCompletionStamp } from '@/types/taskStamps';
 import { Role } from '@/types/roles';
 import { format } from 'date-fns';
 import TaskModalManager from '../tasks/TaskModalManager';
