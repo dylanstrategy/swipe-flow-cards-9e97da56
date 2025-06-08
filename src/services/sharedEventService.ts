@@ -1,7 +1,7 @@
-import { addDays, subDays, startOfDay, addHours } from 'date-fns';
+import { addDays, subDays, startOfDay, addHours, isSameDay } from 'date-fns';
 import { UniversalEvent } from '@/types/eventTasks';
 import { Role } from '@/types/roles';
-import { format, isSameDay } from 'date-fns';
+import { format } from 'date-fns';
 
 // Centralized event store that all roles share
 class SharedEventService {
@@ -369,6 +369,14 @@ class SharedEventService {
     });
   }
 
+  // Get events for a specific date (all roles)
+  getEventsForDate(date: Date): UniversalEvent[] {
+    return this.events.filter(event => {
+      const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+      return isSameDay(eventDate, date);
+    });
+  }
+
   // Get all events
   getAllEvents(): UniversalEvent[] {
     return [...this.events];
@@ -414,6 +422,29 @@ class SharedEventService {
       return true;
     } catch (error) {
       console.error('Error updating event:', error);
+      return false;
+    }
+  }
+
+  // Reschedule event
+  rescheduleEvent(eventId: string, newDate: Date, newTime: string): boolean {
+    try {
+      const event = this.events.find(e => e.id === eventId);
+      if (!event) {
+        console.error('Event not found for reschedule:', eventId);
+        return false;
+      }
+
+      event.date = newDate;
+      event.time = newTime;
+      event.rescheduledCount = (event.rescheduledCount || 0) + 1;
+      event.updatedAt = new Date();
+
+      this.notifySubscribers();
+      console.log('Event rescheduled in shared service:', eventId);
+      return true;
+    } catch (error) {
+      console.error('Error rescheduling event:', error);
       return false;
     }
   }
@@ -466,6 +497,48 @@ class SharedEventService {
     event.updatedAt = new Date();
     this.notifySubscribers();
     return true;
+  }
+
+  // Undo task completion
+  undoTaskCompletion(eventId: string, taskId: string): boolean {
+    try {
+      const event = this.events.find(e => e.id === eventId);
+      if (!event) {
+        console.error('Event not found for task undo:', eventId);
+        return false;
+      }
+
+      const task = event.tasks.find(t => t.id === taskId);
+      if (!task) {
+        console.error('Task not found for undo:', taskId);
+        return false;
+      }
+
+      // Reset task status
+      task.isComplete = false;
+      task.status = 'available';
+      task.completedAt = undefined;
+      task.completedBy = undefined;
+
+      // Remove completion stamp
+      event.taskCompletionStamps = event.taskCompletionStamps.filter(
+        stamp => stamp.taskId !== taskId
+      );
+
+      // Reset event status if it was completed
+      if (event.status === 'completed') {
+        event.status = 'in-progress';
+        event.completedAt = undefined;
+      }
+
+      event.updatedAt = new Date();
+      this.notifySubscribers();
+      console.log('Task completion undone in shared service:', taskId);
+      return true;
+    } catch (error) {
+      console.error('Error undoing task completion:', error);
+      return false;
+    }
   }
 
   private getRoleDisplayName(role: Role): string {
