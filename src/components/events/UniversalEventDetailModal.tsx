@@ -1,10 +1,10 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, MessageSquare, Calendar, AlertTriangle, Clock, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { isPast, isToday } from 'date-fns';
-import { useUniversalEvent } from '@/hooks/useUniversalEvent';
 import { useTaskCompletionStamps } from '@/hooks/useTaskCompletionStamps';
 import { getEventType } from '@/services/eventTypeService';
 import { getTasksForEventType } from '@/services/eventTaskTemplatesService';
@@ -16,6 +16,7 @@ import EventTimeline from './EventTimeline';
 import RescheduleFlow from './RescheduleFlow';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
+import { sharedEventService } from '@/services/sharedEventService';
 
 interface UniversalEventDetailModalProps {
   event: any;
@@ -31,7 +32,6 @@ const UniversalEventDetailModal = ({
   onEventUpdate 
 }: UniversalEventDetailModalProps) => {
   const { toast } = useToast();
-  const { completeTask, undoTaskCompletion, rescheduleEvent, cancelEvent, isLoading } = useUniversalEvent();
   const { stamps, addStamp, removeStamp, getStampsForEvent } = useTaskCompletionStamps();
   const [activeTab, setActiveTab] = useState<'details' | 'message' | 'timeline'>('details');
   const [messageText, setMessageText] = useState('');
@@ -151,6 +151,8 @@ const UniversalEventDetailModal = ({
       )
     };
     
+    // Update through shared service
+    sharedEventService.updateEvent(universalEvent.id, updatedEvent);
     setCurrentEvent(updatedEvent);
     onEventUpdate?.(updatedEvent);
     
@@ -164,86 +166,47 @@ const UniversalEventDetailModal = ({
     const task = universalEvent.tasks.find(t => t.id === taskId);
     if (!task) return;
 
-    const success = await completeTask(universalEvent.id, taskId, userRole);
+    // Use shared service to complete task
+    const success = sharedEventService.completeTask(universalEvent.id, taskId, userRole);
+    
     if (success) {
-      // Add completion stamp
-      const stamp = addStamp(
-        taskId,
-        task.title,
-        universalEvent.id,
-        universalEvent.type,
-        userRole,
-        `${userRole} User`
-      );
+      // Get updated event from shared service
+      const updatedEvent = sharedEventService.getEventById(universalEvent.id);
+      if (updatedEvent) {
+        setCurrentEvent(updatedEvent);
+        onEventUpdate?.(updatedEvent);
 
-      // Update local state
-      const updatedEvent = {
-        ...universalEvent,
-        tasks: universalEvent.tasks.map(t =>
-          t.id === taskId
-            ? { 
-                ...t, 
-                isComplete: true, 
-                completedAt: new Date(), 
-                completedBy: userRole,
-                status: 'complete' as const,
-                canUndo: true
-              }
-            : t
-        ),
-        taskCompletionStamps: [...universalEvent.taskCompletionStamps, stamp]
-      };
-      
-      setCurrentEvent(updatedEvent);
-      onEventUpdate?.(updatedEvent);
+        // Check if all required tasks are complete
+        const allRequiredComplete = updatedEvent.tasks
+          .filter(task => task.isRequired)
+          .every(task => task.isComplete);
 
-      // Check if all required tasks are complete
-      const allRequiredComplete = updatedEvent.tasks
-        .filter(task => task.isRequired)
-        .every(task => task.isComplete);
-
-      if (allRequiredComplete) {
-        updatedEvent.status = 'completed';
-        updatedEvent.completedAt = new Date();
-        toast({
-          title: "Event Completed!",
-          description: `${updatedEvent.title} has been completed successfully.`,
-        });
+        if (allRequiredComplete) {
+          toast({
+            title: "Event Completed!",
+            description: `${updatedEvent.title} has been completed successfully.`,
+          });
+        }
       }
     }
   };
 
   const handleTaskUndo = async (taskId: string) => {
-    const success = await undoTaskCompletion(universalEvent.id, taskId);
+    // Use shared service to undo task completion
+    const success = sharedEventService.undoTaskCompletion(universalEvent.id, taskId);
+    
     if (success) {
-      // Remove completion stamp
-      removeStamp(taskId);
+      // Get updated event from shared service
+      const updatedEvent = sharedEventService.getEventById(universalEvent.id);
+      if (updatedEvent) {
+        setCurrentEvent(updatedEvent);
+        onEventUpdate?.(updatedEvent);
 
-      // Update local state
-      const updatedEvent = {
-        ...universalEvent,
-        tasks: universalEvent.tasks.map(task =>
-          task.id === taskId
-            ? { 
-                ...task, 
-                isComplete: false, 
-                completedAt: undefined, 
-                completedBy: undefined,
-                status: 'available' as const,
-                canUndo: false
-              }
-            : task
-        ),
-        taskCompletionStamps: universalEvent.taskCompletionStamps.filter(s => s.taskId !== taskId)
-      };
-      
-      setCurrentEvent(updatedEvent);
-      onEventUpdate?.(updatedEvent);
-
-      toast({
-        title: "Task Undone",
-        description: "Task completion has been undone.",
-      });
+        toast({
+          title: "Task Undone",
+          description: "Task completion has been undone.",
+        });
+      }
     }
   };
 
@@ -288,23 +251,19 @@ const UniversalEventDetailModal = ({
   };
 
   const handleRescheduleConfirm = async (rescheduleData: any) => {
-    const success = await rescheduleEvent(
+    const success = sharedEventService.rescheduleEvent(
       universalEvent.id, 
       rescheduleData.newDate, 
       rescheduleData.newTime
     );
     
     if (success) {
-      const updatedEvent = {
-        ...universalEvent,
-        date: rescheduleData.newDate,
-        time: rescheduleData.newTime,
-        rescheduledCount: universalEvent.rescheduledCount + 1
-      };
-      
-      setCurrentEvent(updatedEvent);
-      setShowRescheduleFlow(false);
-      onEventUpdate?.(updatedEvent);
+      const updatedEvent = sharedEventService.getEventById(universalEvent.id);
+      if (updatedEvent) {
+        setCurrentEvent(updatedEvent);
+        setShowRescheduleFlow(false);
+        onEventUpdate?.(updatedEvent);
+      }
     }
   };
 
@@ -358,9 +317,9 @@ const UniversalEventDetailModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-3">
-      <div className="bg-white rounded-xl w-full max-w-2xl max-h-[95vh] overflow-hidden" style={{ maxWidth: 'calc(100% - 24px)', overflowX: 'hidden' }}>
+      <div className="bg-white rounded-xl w-full max-w-2xl max-h-[95vh] flex flex-col" style={{ maxWidth: 'calc(100% - 24px)' }}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200" style={{ overflowX: 'hidden' }}>
+        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <Button variant="ghost" size="sm" onClick={onClose} className="flex-shrink-0">
               <ArrowLeft className="w-4 h-4" />
@@ -391,7 +350,7 @@ const UniversalEventDetailModal = ({
 
         {/* Progress Bar */}
         {universalEvent.tasks.length > 0 && (
-          <div className="px-4 py-3 bg-gray-50 border-b border-gray-100" style={{ overflowX: 'hidden' }}>
+          <div className="flex-shrink-0 px-4 py-3 bg-gray-50 border-b border-gray-100">
             <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
               <span>Progress</span>
               <span>{getCompletedTasksCount()} of {getTotalTasksCount()} tasks completed</span>
@@ -407,7 +366,7 @@ const UniversalEventDetailModal = ({
 
         {/* Overdue Warning */}
         {eventIsOverdue && (
-          <div className="px-4 py-3 bg-red-50 border-b border-red-200" style={{ overflowX: 'hidden' }}>
+          <div className="flex-shrink-0 px-4 py-3 bg-red-50 border-b border-red-200">
             <div className="flex items-center gap-2 text-red-800">
               <AlertTriangle className="w-4 h-4" />
               <span className="text-sm font-medium">This event is overdue and requires immediate attention</span>
@@ -417,7 +376,7 @@ const UniversalEventDetailModal = ({
 
         {/* Action Buttons */}
         {canReschedule() && (
-          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50" style={{ overflowX: 'hidden' }}>
+          <div className="flex-shrink-0 px-4 py-3 border-b border-gray-100 bg-gray-50">
             <div className="flex gap-2">
               <Button
                 onClick={handleReschedule}
@@ -444,7 +403,7 @@ const UniversalEventDetailModal = ({
         )}
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-gray-200" style={{ overflowX: 'hidden' }}>
+        <div className="flex-shrink-0 flex border-b border-gray-200">
           <button
             onClick={() => setActiveTab('details')}
             className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
@@ -479,9 +438,9 @@ const UniversalEventDetailModal = ({
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto" style={{ maxHeight: 'calc(95vh - 280px)', overflowX: 'hidden' }}>
+        <div className="flex-1 overflow-y-auto">
           {activeTab === 'details' && (
-            <div className="p-4 pt-6" style={{ overflowX: 'hidden' }}>
+            <div className="p-4 pt-6 pb-6">
               {/* Event Details */}
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Event Details</h3>

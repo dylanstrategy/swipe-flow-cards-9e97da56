@@ -14,9 +14,8 @@ import QuickActionsGrid from './today/QuickActionsGrid';
 import TodayMiniCalendar from './today/TodayMiniCalendar';
 import PointOfSale from '../PointOfSale';
 import { useRealtimeOverdueDetection } from '@/hooks/useRealtimeOverdueDetection';
-import { createTestEvents, getEventsForRole } from '@/data/testEvents';
-import { generatePromotionalEventsForProfile, handlePromoEventAction } from '@/services/promotionalEventService';
-import { getTasksForEventType } from '@/services/eventTaskTemplatesService';
+import { sharedEventService } from '@/services/sharedEventService';
+import { UniversalEvent } from '@/types/eventTasks';
 
 const TodayTab = () => {
   const { toast } = useToast();
@@ -39,6 +38,22 @@ const TodayTab = () => {
   });
   const [selectedDate] = useState<Date>(new Date()); // Always today for this tab
   const [weather, setWeather] = useState({ temp: 72, condition: 'Sunny' });
+  const [calendarEvents, setCalendarEvents] = useState<UniversalEvent[]>([]);
+
+  // Subscribe to shared event service
+  useEffect(() => {
+    const updateEvents = () => {
+      const residentEvents = sharedEventService.getEventsForRole('resident');
+      setCalendarEvents(residentEvents);
+    };
+
+    // Initial load
+    updateEvents();
+
+    // Subscribe to changes
+    const unsubscribe = sharedEventService.subscribe(updateEvents);
+    return unsubscribe;
+  }, []);
 
   // Use profile pets instead of hardcoded ones
   const userPets = profile.pets;
@@ -58,34 +73,6 @@ const TodayTab = () => {
     const interval = setInterval(updateWeather, 30000);
     return () => clearInterval(interval);
   }, []);
-
-  // Get shared events and promotional events based on profile
-  const [calendarEvents, setCalendarEvents] = useState(() => {
-    const baseEvents = createTestEvents();
-    const residentEvents = getEventsForRole(baseEvents, 'resident');
-    
-    // Add promotional events based on lifestyle tags
-    const promoEvents = generatePromotionalEventsForProfile(profile);
-    console.log('Generated promotional events:', promoEvents);
-    
-    return [...residentEvents, ...promoEvents];
-  });
-
-  // Use combined events (base + promotional)
-  const allEvents = calendarEvents;
-
-  // Add special event for rent due
-  const rentDueEvent = {
-    id: 'rent-999',
-    date: new Date(),
-    time: '14:00',
-    title: 'Rent Payment Due',
-    description: '$1,550 due in 3 days',
-    category: 'Payment',
-    priority: 'high' as const,
-    dueDate: addDays(new Date(), 3),
-    type: 'payment'
-  };
 
   const handleAction = (action: string, item: string) => {
     toast({
@@ -115,85 +102,9 @@ const TodayTab = () => {
     setShowWorkOrderTimeline(true);
   };
 
-  // Enhanced event click handler that handles promotional events
   const handleEventClick = (event: any) => {
     console.log('Event clicked in TodayTab:', event);
-    
-    // Handle promotional events differently
-    if (event.type === 'promotional') {
-      const actionResult = handlePromoEventAction(event, 'view');
-      
-      // Create enhanced promotional event for the modal
-      const enhancedPromoEvent = {
-        ...event,
-        tasks: [
-          {
-            id: `${event.id}-view`,
-            title: 'View Promotional Offer',
-            description: `Review details for ${event.title}`,
-            assignedRole: 'resident',
-            isComplete: false,
-            isRequired: true,
-            status: 'available' as const,
-            estimatedDuration: 5
-          },
-          {
-            id: `${event.id}-redeem`,
-            title: 'Redeem Offer',
-            description: `Claim your discount: ${event.metadata?.originalPrice} → ${event.metadata?.discountPrice}`,
-            assignedRole: 'resident',
-            isComplete: false,
-            isRequired: false,
-            status: 'available' as const,
-            estimatedDuration: 10
-          },
-          {
-            id: `${event.id}-schedule`,
-            title: 'Schedule Service',
-            description: `Book appointment with ${event.metadata?.vendor}`,
-            assignedRole: 'resident',
-            isComplete: false,
-            isRequired: false,
-            status: 'available' as const,
-            estimatedDuration: 15
-          }
-        ],
-        assignedUsers: [{ role: 'resident', name: `${profile.firstName} ${profile.lastName}` }],
-        createdBy: 'system',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        followUpHistory: [],
-        taskCompletionStamps: []
-      };
-      
-      setSelectedUniversalEvent(enhancedPromoEvent);
-      setShowUniversalEventDetail(true);
-      return;
-    }
-    
-    // Convert regular events to include tasks if they don't exist
-    const enhancedEvent = {
-      ...event,
-      tasks: event.tasks || getTasksForEventType(event.type).map((taskTemplate, index) => ({
-        id: `${event.id}-task-${index}`,
-        title: taskTemplate.name,
-        description: `Complete: ${taskTemplate.name}`,
-        assignedRole: taskTemplate.role,
-        isComplete: false,
-        isRequired: true,
-        status: 'available' as const,
-        estimatedDuration: 15
-      })),
-      assignedUsers: event.assignedUsers || [],
-      createdBy: event.createdBy || 'system',
-      createdAt: event.createdAt || new Date(),
-      updatedAt: event.updatedAt || new Date(),
-      followUpHistory: event.followUpHistory || [],
-      taskCompletionStamps: event.taskCompletionStamps || []
-    };
-
-    console.log('Enhanced event for modal:', enhancedEvent);
-    setSelectedUniversalEvent(enhancedEvent);
+    setSelectedUniversalEvent(event);
     setShowUniversalEventDetail(true);
   };
 
@@ -226,7 +137,7 @@ const TodayTab = () => {
   };
 
   const getEventsForDate = (date: Date) => {
-    return allEvents.filter(event => isSameDay(event.date, date))
+    return sharedEventService.getEventsForRoleAndDate('resident', date)
       .sort((a, b) => a.time.localeCompare(b.time));
   };
 
@@ -239,7 +150,7 @@ const TodayTab = () => {
   };
 
   // Use real-time overdue detection for events
-  const { isEventOverdue } = useRealtimeOverdueDetection(allEvents);
+  const { isEventOverdue } = useRealtimeOverdueDetection(calendarEvents);
 
   const getUrgencyClass = (event: any) => {
     const isOverdue = isEventOverdue(event);
@@ -275,15 +186,7 @@ const TodayTab = () => {
         onSwipeRight: {
           label: "Redeem Offer",
           action: () => {
-            const actionResult = handlePromoEventAction(event, 'redeem');
             handleAction("Redeemed promotional offer", event.title);
-            
-            // Update event as redeemed
-            setCalendarEvents(prev => prev.map(e => 
-              e.id === event.id 
-                ? { ...e, metadata: { ...e.metadata, isRedeemed: true, redeemedAt: new Date() } }
-                : e
-            ));
           },
           color: "#10B981",
           icon: "🎉"
@@ -291,7 +194,6 @@ const TodayTab = () => {
         onSwipeLeft: {
           label: "Schedule Service",
           action: () => {
-            handlePromoEventAction(event, 'schedule');
             handleAction("Scheduled service booking", event.title);
           },
           color: "#3B82F6",
@@ -409,17 +311,15 @@ const TodayTab = () => {
   const handleEventReschedule = (event: any, newTime: string) => {
     console.log('Handling event reschedule in TodayTab:', event, 'to', newTime);
     
-    // Update the event time in calendar events
-    setCalendarEvents(prevEvents => 
-      prevEvents.map(e => 
-        e.id === event.id ? { ...e, time: newTime } : e
-      )
-    );
-
-    toast({
-      title: "Event Rescheduled",
-      description: `${event.title} moved to ${formatTime(newTime)}`,
-    });
+    // Use shared service to reschedule
+    const success = sharedEventService.rescheduleEvent(event.id, event.date, newTime);
+    
+    if (success) {
+      toast({
+        title: "Event Rescheduled",
+        description: `${event.title} moved to ${formatTime(newTime)}`,
+      });
+    }
   };
 
   const renderPersonalizedOffers = () => {
@@ -457,10 +357,8 @@ const TodayTab = () => {
   };
 
   const handleEventUpdate = (updatedEvent: any) => {
-    // Update the event in the calendar events state
-    setCalendarEvents(prev => prev.map(event => 
-      event.id === updatedEvent.id ? { ...event, ...updatedEvent } : event
-    ));
+    // Update through shared service
+    sharedEventService.updateEvent(updatedEvent.id, updatedEvent);
     
     toast({
       title: "Event Updated",

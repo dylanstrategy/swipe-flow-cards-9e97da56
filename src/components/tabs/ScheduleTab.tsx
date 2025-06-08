@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Plus, Calendar as CalendarIcon } from 'lucide-react';
@@ -17,25 +17,8 @@ import RescheduleFlow from '../events/RescheduleFlow';
 import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 import HourlyCalendarView from '../schedule/HourlyCalendarView';
-
-// Define a unified event type
-interface ScheduleEvent {
-  id: number | string;
-  date: Date;
-  time: string;
-  title: string;
-  description: string;
-  image?: string;
-  category: string;
-  priority: 'high' | 'medium' | 'low' | 'urgent';
-  unit?: string;
-  building?: string;
-  dueDate?: Date;
-  isDroppedSuggestion: boolean;
-  type: string;
-  rescheduledCount: number;
-  originalSuggestionId?: number;
-}
+import { sharedEventService } from '@/services/sharedEventService';
+import { UniversalEvent } from '@/types/eventTasks';
 
 const ScheduleTab = () => {
   const { toast } = useToast();
@@ -56,80 +39,23 @@ const ScheduleTab = () => {
     mode: 'compose' as 'compose' | 'reply'
   });
 
-  // State for managing scheduled events including dropped suggestions
-  const [scheduledEvents, setScheduledEvents] = useState<ScheduleEvent[]>([
-    {
-      id: 1,
-      date: new Date(),
-      time: '09:00',
-      title: 'Work Order',
-      description: 'Broken outlet - Unit 4B',
-      image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400',
-      category: 'Work Order',
-      priority: 'high',
-      unit: '4B',
-      building: 'Building A',
-      dueDate: addDays(new Date(), -1),
-      isDroppedSuggestion: false,
-      type: 'maintenance',
-      rescheduledCount: 0
-    },
-    {
-      id: 2,
-      date: new Date(),
-      time: '10:30',
-      title: 'Message from Management',
-      description: 'Please submit your lease renewal documents by Friday',
-      category: 'Management',
-      priority: 'medium',
-      isDroppedSuggestion: false,
-      type: 'message',
-      rescheduledCount: 0
-    },
-    {
-      id: 3,
-      date: new Date(),
-      time: '11:00',
-      title: 'Lease Renewal',
-      description: 'New rent: $1,550/month starting March 1st',
-      image: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=400',
-      category: 'Lease',
-      priority: 'high',
-      unit: '204',
-      building: 'Building A',
-      dueDate: addDays(new Date(), 2),
-      isDroppedSuggestion: false,
-      type: 'lease',
-      rescheduledCount: 0
-    },
-    {
-      id: 4,
-      date: addDays(new Date(), 1),
-      time: '14:00',
-      title: 'Rooftop BBQ Social',
-      description: 'Community event - RSVP required',
-      category: 'Community Event',
-      priority: 'low',
-      isDroppedSuggestion: false,
-      type: 'tour',
-      rescheduledCount: 0
-    },
-    {
-      id: 5,
-      date: addDays(new Date(), 2),
-      time: '09:00',
-      title: 'HVAC Maintenance',
-      description: 'Filter replacement scheduled',
-      image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400',
-      category: 'Work Order',
-      priority: 'medium',
-      unit: '204',
-      building: 'Building A',
-      isDroppedSuggestion: false,
-      type: 'maintenance',
-      rescheduledCount: 0
-    }
-  ]);
+  // State for managing scheduled events using shared service
+  const [scheduledEvents, setScheduledEvents] = useState<UniversalEvent[]>([]);
+
+  // Subscribe to shared event service
+  useEffect(() => {
+    const updateEvents = () => {
+      const residentEvents = sharedEventService.getEventsForRole('resident');
+      setScheduledEvents(residentEvents);
+    };
+
+    // Initial load
+    updateEvents();
+
+    // Subscribe to changes
+    const unsubscribe = sharedEventService.subscribe(updateEvents);
+    return unsubscribe;
+  }, []);
 
   // State to track which suggestions have been scheduled and completed
   const [scheduledSuggestionIds, setScheduledSuggestionIds] = useState<number[]>([]);
@@ -229,30 +155,7 @@ const ScheduleTab = () => {
       return;
     }
 
-    // Create event with proper structure to match existing events
-    const newEvent: ScheduleEvent = {
-      id: Date.now() + Math.random(),
-      date: new Date(selectedDate),
-      time: assignedTime,
-      title: suggestion.title || '',
-      description: suggestion.description || '',
-      category: suggestion.suggestionType || suggestion.type || 'General',
-      priority: normalizePriority(suggestion.priority),
-      isDroppedSuggestion: true,
-      type: (suggestion.suggestionType || suggestion.type || 'general').toLowerCase(),
-      rescheduledCount: 0,
-      unit: suggestion.unit || undefined,
-      building: suggestion.building || undefined,
-      dueDate: suggestion.dueDate || undefined,
-      image: suggestion.image || undefined,
-      originalSuggestionId: suggestion.id
-    };
-
-    console.log('ScheduleTab: Adding new event from timeline drop:', newEvent);
-    
-    setScheduledEvents(prev => [...prev, newEvent]);
-    
-    // Mark suggestion as scheduled (but not completed yet)
+    // Mark suggestion as scheduled
     setScheduledSuggestionIds(prev => {
       const updated = [...prev, suggestion.id];
       console.log('ScheduleTab: Updated scheduled suggestion IDs:', updated);
@@ -285,30 +188,7 @@ const ScheduleTab = () => {
       return;
     }
     
-    // Create event with proper structure to match existing events
-    const newEvent: ScheduleEvent = {
-      id: Date.now() + Math.random(),
-      date: new Date(date),
-      time: assignedTime,
-      title: suggestion.title || '',
-      description: suggestion.description || '',
-      category: suggestion.suggestionType || suggestion.type || 'General',
-      priority: normalizePriority(suggestion.priority),
-      isDroppedSuggestion: true,
-      type: (suggestion.suggestionType || suggestion.type || 'general').toLowerCase(),
-      rescheduledCount: 0,
-      unit: suggestion.unit || undefined,
-      building: suggestion.building || undefined,
-      dueDate: suggestion.dueDate || undefined,
-      image: suggestion.image || undefined,
-      originalSuggestionId: suggestion.id
-    };
-
-    console.log('ScheduleTab: Adding calendar drop event:', newEvent);
-
-    setScheduledEvents(prev => [...prev, newEvent]);
-    
-    // Mark suggestion as scheduled (but not completed yet)
+    // Mark suggestion as scheduled
     setScheduledSuggestionIds(prev => {
       const updated = [...prev, suggestion.id];
       console.log('ScheduleTab: Updated scheduled suggestion IDs from calendar:', updated);
@@ -332,180 +212,91 @@ const ScheduleTab = () => {
     setMessageConfig({
       subject: `Re: ${subject}`,
       recipientType,
-      mode: 'reply'
+      mode: 'compose'
     });
     setShowMessageModule(true);
   };
 
   const handleEventClick = (event: any) => {
+    console.log('Event clicked in ScheduleTab:', event);
     setSelectedUniversalEvent(event);
     setShowUniversalEventDetail(true);
   };
 
   const handleEventHold = (event: any) => {
+    console.log('Event held for options:', event);
+    // Could show context menu or options
+  };
+
+  const handleEventReschedule = (event: any, newTime: string) => {
+    console.log('Handling event reschedule in ScheduleTab:', event, 'to', newTime);
+    
+    // Use shared service to reschedule
+    const success = sharedEventService.rescheduleEvent(event.id, event.date, newTime);
+    
+    if (success) {
+      toast({
+        title: "Event Rescheduled",
+        description: `${event.title} moved to ${newTime}`,
+      });
+    }
+  };
+
+  const handleReschedule = () => {
+    if (!selectedUniversalEvent) return;
+    
     const enhancedEvent: EnhancedEvent = {
-      id: event.id,
-      date: event.date,
-      time: event.time,
-      title: event.title,
-      description: event.description,
-      category: event.category,
-      priority: event.priority,
+      id: selectedUniversalEvent.id,
+      date: selectedUniversalEvent.date,
+      time: selectedUniversalEvent.time,
+      title: selectedUniversalEvent.title,
+      description: selectedUniversalEvent.description,
+      category: selectedUniversalEvent.category,
+      priority: selectedUniversalEvent.priority,
       canReschedule: true,
       canCancel: true,
       estimatedDuration: 60,
-      rescheduledCount: event.rescheduledCount || 0,
-      assignedTeamMember: teamAvailabilityService.assignTeamMember({ category: event.category }),
-      residentName: 'John Doe',
+      rescheduledCount: selectedUniversalEvent.rescheduledCount,
+      assignedTeamMember: teamAvailabilityService.assignTeamMember({ category: selectedUniversalEvent.category }),
+      residentName: 'Resident',
       phone: '(555) 123-4567',
-      unit: event.unit,
-      building: event.building
+      unit: selectedUniversalEvent.metadata?.unit,
+      building: selectedUniversalEvent.metadata?.building,
+      status: selectedUniversalEvent.status
     };
     
     setSelectedEvent(enhancedEvent);
     setShowRescheduleFlow(true);
   };
 
-  const handleRescheduleConfirm = () => {
-    toast({
-      title: "Event Rescheduled",
-      description: `${selectedEvent?.title} has been rescheduled successfully.`,
-    });
-    setShowRescheduleFlow(false);
-    setSelectedEvent(null);
-  };
-
-  const handleEventReschedule = (event: any, newTime: string) => {
-    const updatedEvents = scheduledEvents.map(e => 
-      e.id === event.id 
-        ? { ...e, time: newTime, rescheduledCount: (e.rescheduledCount || 0) + 1 }
-        : e
+  const handleRescheduleConfirm = async (rescheduleData: any) => {
+    if (!selectedEvent) return;
+    
+    const success = sharedEventService.rescheduleEvent(
+      selectedEvent.id.toString(),
+      rescheduleData.newDate,
+      rescheduleData.newTime
     );
     
-    setScheduledEvents(updatedEvents);
-    
-    toast({
-      title: "Event Rescheduled",
-      description: `${event.title} moved to ${newTime}`,
-    });
+    if (success) {
+      setShowRescheduleFlow(false);
+      setSelectedEvent(null);
+      toast({
+        title: "Event Rescheduled",
+        description: `${selectedEvent.title} has been rescheduled successfully.`,
+      });
+    }
   };
 
   const handleEventUpdate = (updatedEvent: any) => {
-    const updatedEvents = scheduledEvents.map(e => 
-      e.id === updatedEvent.id ? updatedEvent : e
-    );
-    setScheduledEvents(updatedEvents);
-
-    // If the event was marked as completed and it was from a suggestion, mark the suggestion as completed
-    if (updatedEvent.status === 'completed' && updatedEvent.originalSuggestionId) {
-      setCompletedSuggestionIds(prev => {
-        if (!prev.includes(updatedEvent.originalSuggestionId)) {
-          return [...prev, updatedEvent.originalSuggestionId];
-        }
-        return prev;
-      });
-      
-      toast({
-        title: "Task Completed!",
-        description: `${updatedEvent.title} has been marked as completed and removed from pending tasks.`,
-      });
-    }
-  };
-
-  const nextStep = () => {
-    if (currentStep < 4) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      setIsCreatingOrder(false);
-      setCurrentStep(1);
-      setShowScheduleMenu(false);
-      toast({
-        title: "Work Order Submitted",
-        description: "Your work order has been successfully submitted. You'll receive a confirmation email shortly.",
-      });
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    } else {
-      setIsCreatingOrder(false);
-      setShowScheduleMenu(true);
-    }
-  };
-
-  const startScheduling = (type: string) => {
-    setSelectedScheduleType(type);
-    if (type === 'Work Order') {
-      setIsCreatingOrder(true);
-      setShowScheduleMenu(false);
-      setCurrentStep(1);
-    } else if (type === 'Message') {
-      setMessageConfig({
-        subject: '',
-        recipientType: 'management',
-        mode: 'compose'
-      });
-      setShowMessageModule(true);
-      setShowScheduleMenu(false);
-    } else if (type === 'Service') {
-      setShowServiceModule(true);
-      setShowScheduleMenu(false);
-    } else {
-      toast({
-        title: `${type} Selected`,
-        description: `${type} flow coming soon!`,
-      });
-      setShowScheduleMenu(false);
-    }
-  };
-
-  const handleCloseWorkOrder = () => {
-    setIsCreatingOrder(false);
-    setCurrentStep(1);
-    setShowScheduleMenu(false);
-  };
-
-  const handleCloseMessage = () => {
-    setShowMessageModule(false);
-    setShowScheduleMenu(false);
-  };
-
-  const handleCloseService = () => {
-    setShowServiceModule(false);
-    setShowScheduleMenu(false);
-  };
-
-  const getEventsForDate = (date: Date) => {
-    const eventsForDate = scheduledEvents.filter(event => isSameDateSafe(event.date, date))
-      .sort((a, b) => {
-        const timeA = convertTimeToMinutes(a.time);
-        const timeB = convertTimeToMinutes(b.time);
-        return timeA - timeB;
-      });
+    // Update through shared service
+    sharedEventService.updateEvent(updatedEvent.id, updatedEvent);
     
-    console.log(`Events for ${format(date, 'MMM d')}:`, eventsForDate);
-    return eventsForDate;
+    toast({
+      title: "Event Updated",
+      description: `${updatedEvent.title} has been updated successfully.`,
+    });
   };
-
-  const hasEventsOnDate = (date: Date) => {
-    return scheduledEvents.some(event => isSameDateSafe(event.date, date));
-  };
-
-  if (showRescheduleFlow && selectedEvent) {
-    return (
-      <RescheduleFlow
-        event={selectedEvent}
-        onClose={() => {
-          setShowRescheduleFlow(false);
-          setSelectedEvent(null);
-        }}
-        onConfirm={handleRescheduleConfirm}
-        userRole="resident"
-      />
-    );
-  }
 
   if (showUniversalEventDetail && selectedUniversalEvent) {
     return (
@@ -521,29 +312,16 @@ const ScheduleTab = () => {
     );
   }
 
-  if (showServiceModule) {
-    return <ServiceModule onClose={handleCloseService} />;
-  }
-
-  if (showMessageModule) {
+  if (showRescheduleFlow && selectedEvent) {
     return (
-      <MessageModule
-        onClose={handleCloseMessage}
-        initialSubject={messageConfig.subject}
-        recipientType={messageConfig.recipientType}
-        mode={messageConfig.mode}
-      />
-    );
-  }
-
-  if (isCreatingOrder) {
-    return (
-      <WorkOrderFlow
-        selectedScheduleType={selectedScheduleType}
-        currentStep={currentStep}
-        onNextStep={nextStep}
-        onPrevStep={prevStep}
-        onClose={handleCloseWorkOrder}
+      <RescheduleFlow
+        event={selectedEvent}
+        onClose={() => {
+          setShowRescheduleFlow(false);
+          setSelectedEvent(null);
+        }}
+        onConfirm={handleRescheduleConfirm}
+        userRole="resident"
       />
     );
   }
@@ -551,70 +329,153 @@ const ScheduleTab = () => {
   if (showScheduleMenu) {
     return (
       <ScheduleMenu
-        onSelectType={startScheduling}
-        onClose={() => setShowScheduleMenu(false)}
+        onBack={() => setShowScheduleMenu(false)}
+        onScheduleTypeSelect={(type) => {
+          setSelectedScheduleType(type);
+          setShowScheduleMenu(false);
+          if (type === 'Work Order') {
+            setIsCreatingOrder(true);
+            setCurrentStep(1);
+          } else if (type === 'Message') {
+            setShowMessageModule(true);
+          } else if (type === 'Service Request') {
+            setShowServiceModule(true);
+          }
+        }}
       />
     );
   }
 
+  if (isCreatingOrder && selectedScheduleType === 'Work Order') {
+    return (
+      <WorkOrderFlow
+        selectedScheduleType={selectedScheduleType}
+        currentStep={currentStep}
+        onNextStep={() => {
+          if (currentStep < 4) {
+            setCurrentStep(currentStep + 1);
+          } else {
+            setIsCreatingOrder(false);
+            setCurrentStep(1);
+            setSelectedScheduleType('');
+            toast({
+              title: "Work Order Submitted",
+              description: "Your work order has been successfully submitted.",
+            });
+          }
+        }}
+        onPrevStep={() => {
+          if (currentStep > 1) {
+            setCurrentStep(currentStep - 1);
+          } else {
+            setIsCreatingOrder(false);
+            setCurrentStep(1);
+            setSelectedScheduleType('');
+          }
+        }}
+        onClose={() => {
+          setIsCreatingOrder(false);
+          setCurrentStep(1);
+          setSelectedScheduleType('');
+        }}
+      />
+    );
+  }
+
+  if (showMessageModule) {
+    return (
+      <MessageModule
+        onClose={() => {
+          setShowMessageModule(false);
+          setSelectedScheduleType('');
+        }}
+        initialSubject={messageConfig.subject}
+        recipientType={messageConfig.recipientType}
+        mode={messageConfig.mode}
+      />
+    );
+  }
+
+  if (showServiceModule) {
+    return (
+      <ServiceModule
+        onClose={() => {
+          setShowServiceModule(false);
+          setSelectedScheduleType('');
+        }}
+      />
+    );
+  }
+
+  const getEventsForDate = (date: Date) => {
+    return sharedEventService.getEventsForRoleAndDate('resident', date)
+      .sort((a, b) => a.time.localeCompare(b.time));
+  };
+
   return (
-    <div className="w-full bg-gray-50 min-h-screen pb-20">
-      <div className="px-4 py-4">
+    <div className="flex flex-col h-screen pb-20">
+      {/* Header with date picker */}
+      <div className="flex-shrink-0 p-4 bg-white border-b border-gray-100">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold text-gray-900">Schedule</h1>
-          
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="justify-center sm:justify-start text-left font-normal shadow-sm w-12 sm:w-[240px]"
+                className={cn(
+                  "w-[280px] justify-start text-left font-normal",
+                  !selectedDate && "text-muted-foreground"
+                )}
               >
-                <CalendarIcon className="h-4 w-4" />
-                <span className="hidden sm:inline sm:ml-2">
-                  {format(selectedDate, "EEEE, MMMM d, yyyy")}
-                </span>
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <DroppableCalendar
-                selectedDate={selectedDate}
-                onSelect={setSelectedDate}
-                hasEventsOnDate={hasEventsOnDate}
-                onDropSuggestion={handleDropSuggestion}
-                events={scheduledEvents}
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                initialFocus
               />
             </PopoverContent>
           </Popover>
         </div>
-        
-        <button 
-          onClick={() => setShowScheduleMenu(true)}
-          className="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-700 transition-all duration-200 hover:scale-110 z-50"
-        >
-          <Plus className="text-white" size={28} />
-        </button>
+      </div>
 
-        <div className="mb-3">
-          <DraggableSuggestionsSection 
-            selectedDate={selectedDate}
-            onSchedule={startScheduling}
-            onAction={handleAction}
-            scheduledSuggestionIds={scheduledSuggestionIds}
-            completedSuggestionIds={completedSuggestionIds}
-          />
+      {/* Main content area */}
+      <div className="flex-1 overflow-hidden">
+        <div className="flex h-full">
+          {/* Left side - Suggestions */}
+          <div className="w-80 border-r border-gray-100 bg-gray-50">
+            <DraggableSuggestionsSection
+              scheduledSuggestionIds={scheduledSuggestionIds}
+              completedSuggestionIds={completedSuggestionIds}
+              onDropInTimeline={handleDropSuggestionInTimeline}
+            />
+          </div>
+
+          {/* Right side - Calendar */}
+          <div className="flex-1 bg-white">
+            <HourlyCalendarView
+              selectedDate={selectedDate}
+              events={getEventsForDate(selectedDate)}
+              onDropSuggestion={handleDropSuggestionInTimeline}
+              onEventClick={handleEventClick}
+              onEventHold={handleEventHold}
+              onEventReschedule={handleEventReschedule}
+            />
+          </div>
         </div>
       </div>
 
-      <div className="px-4">
-        <HourlyCalendarView
-          selectedDate={selectedDate}
-          events={getEventsForDate(selectedDate)}
-          onDropSuggestion={handleDropSuggestionInTimeline}
-          onEventClick={handleEventClick}
-          onEventHold={handleEventHold}
-          onEventReschedule={handleEventReschedule}
-        />
-      </div>
+      {/* Floating Add Button */}
+      <button
+        onClick={() => setShowScheduleMenu(true)}
+        className="fixed bottom-24 right-6 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg transition-all duration-200 hover:scale-105 z-50"
+      >
+        <Plus size={24} />
+      </button>
     </div>
   );
 };
