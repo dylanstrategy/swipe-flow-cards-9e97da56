@@ -1,15 +1,18 @@
+
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Clock, User, MessageSquare, Calendar, CheckCircle, AlertTriangle, Bell, X } from 'lucide-react';
 import { format } from 'date-fns';
+import { UniversalEvent, TaskCompletionStamp } from '@/types/eventTasks';
+import { Role } from '@/types/roles';
 
 interface EventTimelineProps {
-  event: any;
-  userRole: string;
+  event: UniversalEvent;
+  userRole: Role;
 }
 
 interface TimelineItem {
-  id: number;
+  id: string;
   timestamp: Date;
   type: string;
   title: string;
@@ -27,136 +30,89 @@ interface TimelineItem {
 const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
   const [selectedAttachment, setSelectedAttachment] = useState<{type: string; url: string; description: string} | null>(null);
 
-  // Generate timeline items based on event type
+  // Generate timeline items based on event type and task completion stamps
   const getTimelineItems = (): TimelineItem[] => {
     const baseItems: TimelineItem[] = [
       {
-        id: 1,
-        timestamp: new Date('2025-05-21T08:30:00'),
+        id: 'creation',
+        timestamp: event.createdAt,
         type: 'creation',
         title: 'Event Created',
         description: `${event.type.replace('-', ' ')} scheduled`,
         icon: Calendar,
-        user: 'System',
-        color: 'text-blue-600 bg-blue-100',
-        attachments: event.type === 'maintenance' && event.image ? [
-          {
-            type: 'image' as const,
-            url: event.image,
-            description: 'Work order photo'
-          }
-        ] : undefined
+        user: event.createdBy || 'System',
+        color: 'text-blue-600 bg-blue-100'
       }
     ];
 
+    // Add task completion stamps to timeline
+    const taskCompletionItems: TimelineItem[] = event.taskCompletionStamps.map((stamp) => ({
+      id: stamp.id,
+      timestamp: stamp.completedAt,
+      type: 'task-completion',
+      title: `Task Completed: ${stamp.taskName}`,
+      description: `Completed by ${stamp.completedByName || stamp.completedBy}`,
+      icon: CheckCircle,
+      user: stamp.completedByName || stamp.completedBy,
+      color: 'text-green-600 bg-green-100'
+    }));
+
     // Add type-specific timeline items
+    let typeSpecificItems: TimelineItem[] = [];
+    
     switch (event.type) {
-      case 'maintenance':
-        return [
-          ...baseItems,
+      case 'move-in':
+        typeSpecificItems = [
           {
-            id: 2,
-            timestamp: new Date('2025-05-21T09:15:00'),
+            id: 'assignment',
+            timestamp: new Date(event.createdAt.getTime() + 15 * 60000), // 15 mins after creation
+            type: 'assignment',
+            title: 'Assigned to Move-In Coordinator',
+            description: 'Move-in inspection coordinator assigned',
+            icon: User,
+            user: 'System',
+            color: 'text-green-600 bg-green-100'
+          }
+        ];
+        break;
+
+      case 'work-order':
+        typeSpecificItems = [
+          {
+            id: 'assignment',
+            timestamp: new Date(event.createdAt.getTime() + 15 * 60000),
             type: 'assignment',
             title: 'Assigned to Maintenance Team',
             description: 'Work order assigned to maintenance staff',
             icon: User,
             user: 'System',
             color: 'text-green-600 bg-green-100'
-          },
-          {
-            id: 3,
-            timestamp: new Date('2025-05-22T10:00:00'),
-            type: 'nudge',
-            title: 'Gentle reminder sent',
-            description: 'Nudge sent to maintenance team',
-            icon: Bell,
-            user: 'Resident',
-            color: 'text-yellow-600 bg-yellow-100'
           }
         ];
+        break;
 
-      case 'move-in':
-        return [
-          ...baseItems,
+      case 'lease-signing':
+        typeSpecificItems = [
           {
-            id: 2,
-            timestamp: new Date('2025-05-21T09:15:00'),
-            type: 'assignment',
-            title: 'Assigned to Mike Rodriguez',
-            description: 'Move-in inspection coordinator assigned',
-            icon: User,
-            user: 'System',
-            color: 'text-green-600 bg-green-100'
-          },
-          {
-            id: 3,
-            timestamp: new Date('2025-05-22T10:00:00'),
-            type: 'update',
-            title: 'Pre-inspection completed',
-            description: 'Unit ready for move-in inspection',
-            icon: CheckCircle,
-            user: 'Mike Rodriguez',
-            color: 'text-green-600 bg-green-100'
-          }
-        ];
-
-      case 'lease':
-        return [
-          ...baseItems,
-          {
-            id: 2,
-            timestamp: new Date('2025-05-21T14:30:00'),
+            id: 'preparation',
+            timestamp: new Date(event.createdAt.getTime() + 30 * 60000),
             type: 'preparation',
             title: 'Documents prepared',
-            description: 'Lease renewal documents ready for signing',
+            description: 'Lease documents ready for signing',
             icon: CheckCircle,
             user: 'Leasing Office',
             color: 'text-blue-600 bg-blue-100'
-          },
-          {
-            id: 3,
-            timestamp: new Date('2025-05-22T09:00:00'),
-            type: 'reminder',
-            title: 'Reminder sent',
-            description: 'Email reminder sent to resident',
-            icon: MessageSquare,
-            user: 'System',
-            color: 'text-purple-600 bg-purple-100'
           }
         ];
-
-      case 'payment':
-        return [
-          ...baseItems,
-          {
-            id: 2,
-            timestamp: new Date('2025-05-20T16:00:00'),
-            type: 'escalation',
-            title: 'Payment overdue',
-            description: 'Rent payment is now 3 days overdue',
-            icon: AlertTriangle,
-            user: 'System',
-            color: 'text-red-600 bg-red-100'
-          },
-          {
-            id: 3,
-            timestamp: new Date('2025-05-21T10:30:00'),
-            type: 'contact',
-            title: 'Initial contact made',
-            description: 'Phone call made to discuss payment',
-            icon: MessageSquare,
-            user: 'Property Manager',
-            color: 'text-orange-600 bg-orange-100'
-          }
-        ];
-
-      default:
-        return baseItems;
+        break;
     }
+
+    // Combine and sort all items by timestamp (newest first)
+    return [...baseItems, ...typeSpecificItems, ...taskCompletionItems]
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   };
 
-  const timelineItems = getTimelineItems().reverse(); // Reverse to show latest first
+  const timelineItems = getTimelineItems();
 
   const formatTimelineDate = (date: Date) => {
     return format(date, 'MMM d, yyyy at h:mm a');
@@ -179,23 +135,6 @@ const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
                 />
                 <div>
                   <p className="text-sm font-medium text-gray-900">Photo Attachment</p>
-                  <p className="text-xs text-gray-500">{attachment.description}</p>
-                  <p className="text-xs text-blue-600">Click to view full size</p>
-                </div>
-              </div>
-            )}
-            {attachment.type === 'video' && (
-              <div 
-                className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors rounded"
-                onClick={() => setSelectedAttachment(attachment)}
-              >
-                <video 
-                  src={attachment.url} 
-                  className="w-16 h-16 rounded object-cover"
-                  controls={false}
-                />
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Video Attachment</p>
                   <p className="text-xs text-gray-500">{attachment.description}</p>
                   <p className="text-xs text-blue-600">Click to view full size</p>
                 </div>
@@ -225,7 +164,7 @@ const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
           <div className="space-y-6">
             {timelineItems.map((item, index) => {
               const IconComponent = item.icon;
-              const isLatest = index === 0; // First item is now the latest
+              const isLatest = index === 0;
 
               return (
                 <div key={item.id} className="relative flex items-start">
@@ -259,13 +198,18 @@ const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
             })}
           </div>
         </div>
+
+        {timelineItems.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No timeline entries yet.
+          </div>
+        )}
       </div>
 
       {/* Attachment Modal */}
       {selectedAttachment && (
         <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
           <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
-            {/* Close button */}
             <button
               onClick={() => setSelectedAttachment(null)}
               className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 hover:bg-gray-100 transition-colors"
@@ -273,7 +217,6 @@ const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
               <X className="w-6 h-6" />
             </button>
 
-            {/* Content */}
             <div className="w-full h-full flex items-center justify-center">
               {selectedAttachment.type === 'image' && (
                 <img
@@ -282,17 +225,8 @@ const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
                   className="max-w-full max-h-full object-contain rounded-lg"
                 />
               )}
-              {selectedAttachment.type === 'video' && (
-                <video
-                  src={selectedAttachment.url}
-                  controls
-                  className="max-w-full max-h-full rounded-lg"
-                  autoPlay
-                />
-              )}
             </div>
 
-            {/* Description */}
             <div className="absolute bottom-4 left-4 right-4 bg-black bg-opacity-75 text-white p-3 rounded-lg">
               <p className="text-sm">{selectedAttachment.description}</p>
             </div>

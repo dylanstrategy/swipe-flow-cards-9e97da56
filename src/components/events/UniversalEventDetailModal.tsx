@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +18,7 @@ import { EnhancedEvent } from '@/types/events';
 import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 
 interface UniversalEventDetailModalProps {
-  event: any; // Can accept both old format and new UniversalEvent format
+  event: any;
   onClose: () => void;
   userRole?: Role;
   onEventUpdate?: (updatedEvent: any) => void;
@@ -462,7 +463,22 @@ const UniversalEventDetailModal = ({
         <div className="overflow-y-auto" style={{ maxHeight: 'calc(95vh - 200px)' }}>
           {activeTab === 'details' && (
             <div className="p-4">
-              {universalEvent.tasks.length > 0 ? (
+              {/* Event Details */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Event Details</h3>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-gray-700">{universalEvent.description}</p>
+                  {eventType && (
+                    <div className="mt-3 text-sm text-gray-600">
+                      <p><strong>Category:</strong> {eventType.category}</p>
+                      <p><strong>Estimated Duration:</strong> {eventType.estimatedDuration} minutes</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Task Checklist */}
+              {universalEvent.tasks.length > 0 && (
                 <TaskChecklist
                   tasks={universalEvent.tasks}
                   currentUserRole={userRole}
@@ -471,21 +487,6 @@ const UniversalEventDetailModal = ({
                   onTaskStart={handleTaskStart}
                   completionStamps={getStampsForEvent(universalEvent.id)}
                 />
-              ) : (
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Event Details</h3>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <p className="text-gray-700">{universalEvent.description}</p>
-                      {eventType && (
-                        <div className="mt-3 text-sm text-gray-600">
-                          <p><strong>Category:</strong> {eventType.category}</p>
-                          <p><strong>Estimated Duration:</strong> {eventType.estimatedDuration} minutes</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
               )}
             </div>
           )}
