@@ -1,3 +1,4 @@
+
 import { addDays, subDays, startOfDay, addHours } from 'date-fns';
 import { UniversalEvent } from '@/types/eventTasks';
 import { format, isSameDay } from 'date-fns';
@@ -59,7 +60,10 @@ class SharedEventService {
             estimatedDuration: 10
           }
         ],
-        assignedUsers: ['test-resident-001', 'test-maintenance-001'],
+        assignedUsers: [
+          { role: 'resident', userId: 'test-resident-001', name: 'Test Resident' },
+          { role: 'maintenance', userId: 'test-maintenance-001', name: 'Test Maintenance User' }
+        ],
         createdBy: 'system',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -102,7 +106,7 @@ class SharedEventService {
     // Filter events based on role assignment or tasks
     return this.events.filter(event => {
       // Check if user is directly assigned
-      const hasAssignedRole = event.assignedUsers?.includes(`test-${role}-001`);
+      const hasAssignedRole = event.assignedUsers?.some(user => user.role === role);
       
       // Check if event has tasks for this role
       const hasRoleTasks = event.tasks?.some(task => task.assignedRole === role);
@@ -210,7 +214,7 @@ class SharedEventService {
 
       // Mark task as complete
       task.isComplete = true;
-      task.status = 'completed';
+      task.status = 'complete';
 
       // Add completion stamp
       if (!event.taskCompletionStamps) {
@@ -218,10 +222,15 @@ class SharedEventService {
       }
 
       event.taskCompletionStamps.push({
+        id: `${taskId}-completion-${Date.now()}`,
         taskId,
-        role: userRole,
-        timestamp: new Date(),
-        userId: `test-${userRole}-001`
+        taskName: task.title,
+        eventId,
+        eventType: event.type,
+        completedAt: new Date(),
+        completedBy: userRole as any,
+        completedByName: `Test ${userRole} User`,
+        canUndo: true
       });
 
       // Check if all required tasks are complete

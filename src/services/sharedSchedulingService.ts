@@ -108,7 +108,9 @@ class SharedSchedulingService {
 
     return !existingEvents.some(event => {
       const eventStart = this.timeToMinutes(event.time);
-      const eventEnd = eventStart + (event.estimatedDuration || 60);
+      // Use metadata.estimatedDuration if available, otherwise default to 60 minutes
+      const eventDuration = event.metadata?.estimatedDuration || 60;
+      const eventEnd = eventStart + eventDuration;
       
       // Check for overlap
       return (slotStart < eventEnd && slotEnd > eventStart);
@@ -224,8 +226,8 @@ class SharedSchedulingService {
         }
       ],
       assignedUsers: [
-        this.SHARED_TEST_RESIDENT_ID,
-        this.SHARED_TEST_MAINTENANCE_ID
+        { role: 'resident', userId: this.SHARED_TEST_RESIDENT_ID, name: 'Test Resident' },
+        { role: 'maintenance', userId: this.SHARED_TEST_MAINTENANCE_ID, name: 'Test Maintenance User' }
       ],
       createdBy: 'system',
       createdAt: new Date(),
@@ -237,7 +239,7 @@ class SharedSchedulingService {
         residentId: this.SHARED_TEST_RESIDENT_ID,
         maintenanceUserId: this.SHARED_TEST_MAINTENANCE_ID,
         estimatedDuration: workOrderData.estimatedDuration,
-        unit: 'Test Unit 417', // Using shared test unit
+        unit: 'Test Unit 417',
         building: 'Test Building A'
       },
       taskCompletionStamps: []
