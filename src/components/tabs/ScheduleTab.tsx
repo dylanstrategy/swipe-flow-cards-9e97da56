@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Plus, Calendar as CalendarIcon } from 'lucide-react';
-import { format, addDays, isSameDay } from 'date-fns';
+import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import ScheduleMenu from '../schedule/ScheduleMenu';
 import WorkOrderFlow from '../schedule/WorkOrderFlow';
 import DraggableSuggestionsSection from '../schedule/DraggableSuggestionsSection';
-import DroppableCalendar from '../schedule/DroppableCalendar';
 import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
 import UniversalEventDetailModal from '../events/UniversalEventDetailModal';
@@ -42,10 +41,12 @@ const ScheduleTab = () => {
   // State for managing scheduled events using shared service
   const [scheduledEvents, setScheduledEvents] = useState<UniversalEvent[]>([]);
 
-  // Subscribe to shared event service
+  // Subscribe to shared event service - UNIFIED DATA SOURCE
   useEffect(() => {
     const updateEvents = () => {
+      // Get events for resident role - UNIFIED METHOD
       const residentEvents = sharedEventService.getEventsForRole('resident');
+      console.log('ScheduleTab: Unified resident events loaded:', residentEvents.length, 'events');
       setScheduledEvents(residentEvents);
     };
 
@@ -407,6 +408,7 @@ const ScheduleTab = () => {
     );
   }
 
+  // UNIFIED METHOD - replaces old getEventsForDate
   const getEventsForDate = (date: Date) => {
     return sharedEventService.getEventsForRoleAndDate('resident', date)
       .sort((a, b) => a.time.localeCompare(b.time));

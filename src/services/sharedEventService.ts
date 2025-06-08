@@ -1,3 +1,4 @@
+
 import { addDays, subDays, startOfDay, addHours, isSameDay, format } from 'date-fns';
 import { UniversalEvent } from '@/types/eventTasks';
 import { Role } from '@/types/roles';
@@ -18,14 +19,156 @@ class SharedEventService {
     const tomorrow = addDays(today, 1);
     const yesterday = subDays(today, 1);
     
-    // Shared test resident and maintenance user
+    // Shared test users
     const testResident = { role: 'resident' as const, userId: 'test-resident-001', name: 'Sarah Johnson' };
     const testMaintenance = { role: 'maintenance' as const, userId: 'test-maintenance-001', name: 'Mike Rodriguez' };
     const testOperator = { role: 'operator' as const, userId: 'test-operator-001', name: 'Lisa Chen' };
     
-    // Create comprehensive seeded events for testing all workflows
+    // Create all 17 event types for comprehensive testing
     const seededEvents: UniversalEvent[] = [
-      // Work Order - Today, shared between resident and maintenance
+      // 1. Move-In Event
+      {
+        id: 'move-in-001',
+        type: 'move-in',
+        title: 'Move-In: Unit 417',
+        description: 'Resident move-in process for Sarah Johnson',
+        date: today,
+        time: '09:00',
+        status: 'scheduled',
+        priority: 'high',
+        category: 'Move-In',
+        estimatedDuration: 180,
+        tasks: [
+          {
+            id: 'move-in-001-task-1',
+            title: 'Resident: Complete Move-In Inspection',
+            description: 'Walk through unit and document any pre-existing conditions',
+            assignedRole: 'resident',
+            isComplete: false,
+            isRequired: true,
+            status: 'available',
+            estimatedDuration: 30
+          },
+          {
+            id: 'move-in-001-task-2',
+            title: 'Operator: Process Move-In Documentation',
+            description: 'Review and file all move-in paperwork',
+            assignedRole: 'operator',
+            isComplete: false,
+            isRequired: true,
+            status: 'available',
+            estimatedDuration: 20
+          }
+        ],
+        assignedUsers: [testResident, testOperator],
+        createdBy: 'system',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        rescheduledCount: 0,
+        followUpHistory: [],
+        metadata: { unit: 'Unit 417', building: 'Building A' },
+        taskCompletionStamps: []
+      },
+
+      // 2. Move-Out Event
+      {
+        id: 'move-out-001',
+        type: 'move-out',
+        title: 'Move-Out: Unit 305',
+        description: 'Final move-out inspection and key return',
+        date: today,
+        time: '10:30',
+        status: 'scheduled',
+        priority: 'medium',
+        category: 'Move-Out',
+        estimatedDuration: 120,
+        tasks: [
+          {
+            id: 'move-out-001-task-1',
+            title: 'Resident: Return Keys and Access Cards',
+            description: 'Return all keys, fobs, and access cards',
+            assignedRole: 'resident',
+            isComplete: false,
+            isRequired: true,
+            status: 'available',
+            estimatedDuration: 10
+          },
+          {
+            id: 'move-out-001-task-2',
+            title: 'Operator: Conduct Final Inspection',
+            description: 'Document unit condition and damages',
+            assignedRole: 'operator',
+            isComplete: false,
+            isRequired: true,
+            status: 'available',
+            estimatedDuration: 45
+          }
+        ],
+        assignedUsers: [testResident, testOperator],
+        createdBy: 'system',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        rescheduledCount: 0,
+        followUpHistory: [],
+        metadata: { unit: 'Unit 305', building: 'Building B' },
+        taskCompletionStamps: []
+      },
+
+      // 3. Lease Signing Event
+      {
+        id: 'lease-sign-001',
+        type: 'lease-signing',
+        title: 'Lease Renewal Signing',
+        description: 'Sign lease renewal documents for Unit 417',
+        date: today,
+        time: '14:00',
+        status: 'scheduled',
+        priority: 'high',
+        category: 'Leasing',
+        estimatedDuration: 60,
+        tasks: [
+          {
+            id: 'lease-sign-001-task-1',
+            title: 'Resident: Review Lease Terms',
+            description: 'Review all lease terms and conditions',
+            assignedRole: 'resident',
+            isComplete: false,
+            isRequired: true,
+            status: 'available',
+            estimatedDuration: 20
+          },
+          {
+            id: 'lease-sign-001-task-2',
+            title: 'Resident: Sign Lease Documents',
+            description: 'Digitally sign lease agreement',
+            assignedRole: 'resident',
+            isComplete: false,
+            isRequired: true,
+            status: 'available',
+            estimatedDuration: 15
+          },
+          {
+            id: 'lease-sign-001-task-3',
+            title: 'Operator: Verify Documents',
+            description: 'Verify all signatures and documentation',
+            assignedRole: 'operator',
+            isComplete: false,
+            isRequired: true,
+            status: 'available',
+            estimatedDuration: 10
+          }
+        ],
+        assignedUsers: [testResident, testOperator],
+        createdBy: 'system',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        rescheduledCount: 0,
+        followUpHistory: [],
+        metadata: { unit: 'Unit 417', leaseType: 'renewal' },
+        taskCompletionStamps: []
+      },
+
+      // 4. Work Order Event
       {
         id: 'shared-wo-001',
         type: 'work-order',
@@ -94,44 +237,146 @@ class SharedEventService {
         },
         taskCompletionStamps: []
       },
-      
-      // Lease Signing - Today, shared between resident and operator
+
+      // 5. Inspection Event
       {
-        id: 'lease-sign-001',
-        type: 'lease-signing',
-        title: 'Lease Renewal Signing',
-        description: 'Sign lease renewal documents for Unit 417',
+        id: 'inspection-001',
+        type: 'inspection',
+        title: 'Annual Unit Inspection',
+        description: 'Routine annual inspection of Unit 420',
         date: today,
-        time: '14:00',
+        time: '11:00',
         status: 'scheduled',
-        priority: 'high',
-        category: 'Leasing',
-        estimatedDuration: 60,
+        priority: 'medium',
+        category: 'Inspection',
+        estimatedDuration: 90,
         tasks: [
           {
-            id: 'lease-sign-001-task-1',
-            title: 'Resident: Review Lease Terms',
-            description: 'Review all lease terms and conditions',
+            id: 'inspection-001-task-1',
+            title: 'Resident: Prepare Unit for Inspection',
+            description: 'Ensure unit is accessible for inspection',
             assignedRole: 'resident',
+            isComplete: false,
+            isRequired: true,
+            status: 'available',
+            estimatedDuration: 15
+          },
+          {
+            id: 'inspection-001-task-2',
+            title: 'Maintenance: Conduct Inspection',
+            description: 'Complete thorough unit inspection checklist',
+            assignedRole: 'maintenance',
+            isComplete: false,
+            isRequired: true,
+            status: 'available',
+            estimatedDuration: 60
+          }
+        ],
+        assignedUsers: [testResident, testMaintenance],
+        createdBy: 'system',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        rescheduledCount: 0,
+        followUpHistory: [],
+        metadata: { unit: 'Unit 420', inspectionType: 'annual' },
+        taskCompletionStamps: []
+      },
+
+      // 6. Community Event
+      {
+        id: 'community-001',
+        type: 'community-event',
+        title: 'Summer BBQ & Pool Party',
+        description: 'Community gathering at the pool area',
+        date: today,
+        time: '17:00',
+        status: 'scheduled',
+        priority: 'low',
+        category: 'Community Event',
+        estimatedDuration: 180,
+        tasks: [
+          {
+            id: 'community-001-task-1',
+            title: 'Operator: Set Up Event Space',
+            description: 'Arrange tables, chairs, and decorations',
+            assignedRole: 'operator',
+            isComplete: false,
+            isRequired: true,
+            status: 'available',
+            estimatedDuration: 60
+          }
+        ],
+        assignedUsers: [testOperator],
+        createdBy: 'system',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        rescheduledCount: 0,
+        followUpHistory: [],
+        metadata: { location: 'Pool Area', capacity: 50 },
+        taskCompletionStamps: []
+      },
+
+      // 7. Message Event
+      {
+        id: 'message-001',
+        type: 'message',
+        title: 'Urgent: Water Shutoff Notice',
+        description: 'Building-wide water maintenance scheduled',
+        date: today,
+        time: '08:00',
+        status: 'scheduled',
+        priority: 'urgent',
+        category: 'Management',
+        estimatedDuration: 30,
+        tasks: [
+          {
+            id: 'message-001-task-1',
+            title: 'Operator: Send Building Notice',
+            description: 'Distribute water shutoff notice to all residents',
+            assignedRole: 'operator',
             isComplete: false,
             isRequired: true,
             status: 'available',
             estimatedDuration: 20
-          },
+          }
+        ],
+        assignedUsers: [testOperator],
+        createdBy: 'system',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        rescheduledCount: 0,
+        followUpHistory: [],
+        metadata: { messageType: 'building-notice', urgency: 'high' },
+        taskCompletionStamps: []
+      },
+
+      // 8. Collections Event
+      {
+        id: 'collections-001',
+        type: 'collections',
+        title: 'Late Rent Follow-Up',
+        description: 'Follow up on overdue rent payment',
+        date: today,
+        time: '13:00',
+        status: 'scheduled',
+        priority: 'high',
+        category: 'Collections',
+        estimatedDuration: 45,
+        tasks: [
           {
-            id: 'lease-sign-001-task-2',
-            title: 'Resident: Sign Lease Documents',
-            description: 'Digitally sign lease agreement',
-            assignedRole: 'resident',
+            id: 'collections-001-task-1',
+            title: 'Operator: Contact Resident',
+            description: 'Call resident regarding overdue payment',
+            assignedRole: 'operator',
             isComplete: false,
             isRequired: true,
             status: 'available',
             estimatedDuration: 15
           },
           {
-            id: 'lease-sign-001-task-3',
-            title: 'Operator: Verify Documents',
-            description: 'Verify all signatures and documentation',
+            id: 'collections-001-task-2',
+            title: 'Operator: Document Contact Attempt',
+            description: 'Log contact attempt and response',
             assignedRole: 'operator',
             isComplete: false,
             isRequired: true,
@@ -139,105 +384,101 @@ class SharedEventService {
             estimatedDuration: 10
           }
         ],
-        assignedUsers: [testResident, testOperator],
+        assignedUsers: [testOperator],
         createdBy: 'system',
         createdAt: new Date(),
         updatedAt: new Date(),
         rescheduledCount: 0,
         followUpHistory: [],
-        metadata: {
-          leaseId: 'LEASE-2024-417',
-          unit: 'Unit 417',
-          building: 'Building A'
-        },
+        metadata: { amountDue: 1850, daysPastDue: 7 },
         taskCompletionStamps: []
       },
 
-      // Collections - Overdue (yesterday), urgent priority
+      // 9. Promotional Event
       {
-        id: 'collections-001',
-        type: 'collections',
-        title: 'Outstanding Rent Payment',
-        description: 'Rent payment is overdue - immediate action required',
-        date: yesterday,
-        time: '09:00',
-        status: 'overdue',
-        priority: 'urgent',
-        category: 'Financial',
-        estimatedDuration: 30,
+        id: 'promotional-001',
+        type: 'promotional',
+        title: 'Pet Grooming Special Offer',
+        description: '20% off mobile pet grooming services',
+        date: today,
+        time: '12:00',
+        status: 'scheduled',
+        priority: 'low',
+        category: 'Promotional',
+        estimatedDuration: 60,
         tasks: [
           {
-            id: 'collections-001-task-1',
-            title: 'Resident: Review Outstanding Balance',
-            description: 'Review current balance and charges',
+            id: 'promotional-001-task-1',
+            title: 'Resident: Review Offer Details',
+            description: 'Check promotional offer and terms',
             assignedRole: 'resident',
             isComplete: false,
-            isRequired: true,
-            status: 'available',
-            estimatedDuration: 10
-          },
-          {
-            id: 'collections-001-task-2',
-            title: 'Resident: Make Payment',
-            description: 'Submit payment for outstanding balance',
-            assignedRole: 'resident',
-            isComplete: false,
-            isRequired: true,
-            status: 'available',
-            estimatedDuration: 15
-          },
-          {
-            id: 'collections-001-task-3',
-            title: 'Operator: Confirm Payment',
-            description: 'Verify payment has been received',
-            assignedRole: 'operator',
-            isComplete: false,
-            isRequired: true,
+            isRequired: false,
             status: 'available',
             estimatedDuration: 5
           }
         ],
-        assignedUsers: [testResident, testOperator],
+        assignedUsers: [testResident],
         createdBy: 'system',
         createdAt: new Date(),
         updatedAt: new Date(),
         rescheduledCount: 0,
         followUpHistory: [],
-        metadata: {
-          amount: 1550,
-          unit: 'Unit 417',
-          paymentType: 'rent'
-        },
+        metadata: { discount: 20, validUntil: '2025-06-15' },
         taskCompletionStamps: []
       },
 
-      // Pet Registration - Today
+      // 10. Poll Event
+      {
+        id: 'poll-001',
+        type: 'poll',
+        title: 'Community Amenity Preferences',
+        description: 'Vote on new amenity priorities',
+        date: today,
+        time: '15:00',
+        status: 'scheduled',
+        priority: 'low',
+        category: 'Poll',
+        estimatedDuration: 15,
+        tasks: [
+          {
+            id: 'poll-001-task-1',
+            title: 'Resident: Submit Vote',
+            description: 'Vote on preferred amenity improvements',
+            assignedRole: 'resident',
+            isComplete: false,
+            isRequired: false,
+            status: 'available',
+            estimatedDuration: 10
+          }
+        ],
+        assignedUsers: [testResident],
+        createdBy: 'system',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        rescheduledCount: 0,
+        followUpHistory: [],
+        metadata: { pollType: 'amenity-preference', deadline: '2025-06-20' },
+        taskCompletionStamps: []
+      },
+
+      // 11. Pet Registration Event
       {
         id: 'pet-reg-001',
         type: 'pet-registration',
-        title: 'Register New Pet: Luna',
-        description: 'Complete pet registration for Luna (Golden Retriever)',
+        title: 'Pet Registration: Buddy',
+        description: 'Register new pet with building management',
         date: today,
         time: '16:00',
         status: 'scheduled',
         priority: 'medium',
-        category: 'Administrative',
-        estimatedDuration: 45,
+        category: 'Pet Registration',
+        estimatedDuration: 30,
         tasks: [
           {
             id: 'pet-reg-001-task-1',
-            title: 'Resident: Upload Pet Photos',
-            description: 'Upload photos of pet for registration',
-            assignedRole: 'resident',
-            isComplete: false,
-            isRequired: true,
-            status: 'available',
-            estimatedDuration: 10
-          },
-          {
-            id: 'pet-reg-001-task-2',
-            title: 'Resident: Upload Vaccination Records',
-            description: 'Provide current vaccination documentation',
+            title: 'Resident: Submit Pet Documents',
+            description: 'Provide vaccination records and registration',
             assignedRole: 'resident',
             isComplete: false,
             isRequired: true,
@@ -245,18 +486,8 @@ class SharedEventService {
             estimatedDuration: 15
           },
           {
-            id: 'pet-reg-001-task-3',
-            title: 'Resident: Pay Pet Fee',
-            description: 'Submit pet deposit and monthly fee',
-            assignedRole: 'resident',
-            isComplete: false,
-            isRequired: true,
-            status: 'available',
-            estimatedDuration: 10
-          },
-          {
-            id: 'pet-reg-001-task-4',
-            title: 'Operator: Approve Registration',
+            id: 'pet-reg-001-task-2',
+            title: 'Operator: Process Registration',
             description: 'Review and approve pet registration',
             assignedRole: 'operator',
             isComplete: false,
@@ -271,57 +502,242 @@ class SharedEventService {
         updatedAt: new Date(),
         rescheduledCount: 0,
         followUpHistory: [],
-        metadata: {
-          petName: 'Luna',
-          petType: 'Dog',
-          breed: 'Golden Retriever',
-          unit: 'Unit 417'
-        },
+        metadata: { petName: 'Buddy', petType: 'dog', breed: 'Golden Retriever' },
         taskCompletionStamps: []
       },
 
-      // Community Event - Tomorrow
+      // 12. Tour Appointment Event
       {
-        id: 'community-001',
-        type: 'community-event',
-        title: 'Rooftop BBQ & Social',
-        description: 'Monthly community BBQ on the rooftop terrace',
-        date: tomorrow,
+        id: 'tour-001',
+        type: 'tour-appointment',
+        title: 'Unit Tour: Unit 523',
+        description: 'Show available unit to prospective tenant',
+        date: today,
         time: '18:00',
         status: 'scheduled',
-        priority: 'low',
-        category: 'Community Event',
-        estimatedDuration: 180,
+        priority: 'medium',
+        category: 'Tour Appointment',
+        estimatedDuration: 45,
         tasks: [
           {
-            id: 'community-001-task-1',
-            title: 'Resident: RSVP for Event',
-            description: 'Confirm attendance for community event',
-            assignedRole: 'resident',
-            isComplete: false,
-            isRequired: false,
-            status: 'available',
-            estimatedDuration: 2
-          },
-          {
-            id: 'community-001-task-2',
-            title: 'Operator: Setup Event Space',
-            description: 'Prepare venue and amenities',
+            id: 'tour-001-task-1',
+            title: 'Operator: Prepare Unit for Tour',
+            description: 'Ensure unit is clean and ready for showing',
             assignedRole: 'operator',
             isComplete: false,
             isRequired: true,
             status: 'available',
-            estimatedDuration: 60
+            estimatedDuration: 15
           },
           {
-            id: 'community-001-task-3',
-            title: 'Operator: Event Check-in',
-            description: 'Manage event check-in process',
+            id: 'tour-001-task-2',
+            title: 'Operator: Conduct Tour',
+            description: 'Show unit and answer prospect questions',
             assignedRole: 'operator',
             isComplete: false,
             isRequired: true,
             status: 'available',
             estimatedDuration: 30
+          }
+        ],
+        assignedUsers: [testOperator],
+        createdBy: 'system',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        rescheduledCount: 0,
+        followUpHistory: [],
+        metadata: { unit: 'Unit 523', prospectName: 'John Smith' },
+        taskCompletionStamps: []
+      },
+
+      // 13. Services Event
+      {
+        id: 'services-001',
+        type: 'services',
+        title: 'Package Delivery Assistance',
+        description: 'Large package delivery coordination',
+        date: today,
+        time: '14:30',
+        status: 'scheduled',
+        priority: 'medium',
+        category: 'Services',
+        estimatedDuration: 30,
+        tasks: [
+          {
+            id: 'services-001-task-1',
+            title: 'Operator: Coordinate Delivery',
+            description: 'Arrange package delivery to resident unit',
+            assignedRole: 'operator',
+            isComplete: false,
+            isRequired: true,
+            status: 'available',
+            estimatedDuration: 20
+          }
+        ],
+        assignedUsers: [testOperator],
+        createdBy: 'system',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        rescheduledCount: 0,
+        followUpHistory: [],
+        metadata: { packageSize: 'large', carrier: 'FedEx' },
+        taskCompletionStamps: []
+      },
+
+      // 14. Lease Violation Event
+      {
+        id: 'violation-001',
+        type: 'lease-violation',
+        title: 'Noise Complaint Follow-Up',
+        description: 'Address reported noise violation',
+        date: today,
+        time: '19:00',
+        status: 'scheduled',
+        priority: 'high',
+        category: 'Lease Violation',
+        estimatedDuration: 45,
+        tasks: [
+          {
+            id: 'violation-001-task-1',
+            title: 'Operator: Document Violation',
+            description: 'Record violation details and evidence',
+            assignedRole: 'operator',
+            isComplete: false,
+            isRequired: true,
+            status: 'available',
+            estimatedDuration: 20
+          },
+          {
+            id: 'violation-001-task-2',
+            title: 'Operator: Issue Warning Notice',
+            description: 'Prepare and deliver violation notice',
+            assignedRole: 'operator',
+            isComplete: false,
+            isRequired: true,
+            status: 'available',
+            estimatedDuration: 15
+          }
+        ],
+        assignedUsers: [testOperator],
+        createdBy: 'system',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        rescheduledCount: 0,
+        followUpHistory: [],
+        metadata: { violationType: 'noise', reportedBy: 'Unit 418' },
+        taskCompletionStamps: []
+      },
+
+      // 15. Resident Complaint Event
+      {
+        id: 'complaint-001',
+        type: 'resident-complaint',
+        title: 'AC Not Working Properly',
+        description: 'Resident complaint about air conditioning issues',
+        date: today,
+        time: '15:30',
+        status: 'scheduled',
+        priority: 'high',
+        category: 'Resident Complaint',
+        estimatedDuration: 60,
+        tasks: [
+          {
+            id: 'complaint-001-task-1',
+            title: 'Operator: Log Complaint',
+            description: 'Document complaint details and urgency',
+            assignedRole: 'operator',
+            isComplete: false,
+            isRequired: true,
+            status: 'available',
+            estimatedDuration: 10
+          },
+          {
+            id: 'complaint-001-task-2',
+            title: 'Maintenance: Assess Issue',
+            description: 'Investigate AC problem and determine solution',
+            assignedRole: 'maintenance',
+            isComplete: false,
+            isRequired: true,
+            status: 'available',
+            estimatedDuration: 45
+          }
+        ],
+        assignedUsers: [testOperator, testMaintenance],
+        createdBy: 'system',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        rescheduledCount: 0,
+        followUpHistory: [],
+        metadata: { complaintType: 'HVAC', unit: 'Unit 417' },
+        taskCompletionStamps: []
+      },
+
+      // 16. Amenity Reservation Event
+      {
+        id: 'amenity-001',
+        type: 'amenity-reservation',
+        title: 'Gym Room Reservation',
+        description: 'Private gym reservation for workout session',
+        date: today,
+        time: '07:00',
+        status: 'scheduled',
+        priority: 'low',
+        category: 'Amenity Reservation',
+        estimatedDuration: 90,
+        tasks: [
+          {
+            id: 'amenity-001-task-1',
+            title: 'Resident: Check-In for Reservation',
+            description: 'Confirm arrival and access amenity',
+            assignedRole: 'resident',
+            isComplete: false,
+            isRequired: false,
+            status: 'available',
+            estimatedDuration: 5
+          }
+        ],
+        assignedUsers: [testResident],
+        createdBy: 'system',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        rescheduledCount: 0,
+        followUpHistory: [],
+        metadata: { amenity: 'Gym', reservationTime: '07:00-08:30' },
+        taskCompletionStamps: []
+      },
+
+      // 17. Vendor Visit Event
+      {
+        id: 'vendor-001',
+        type: 'vendor-visit',
+        title: 'Internet Installation',
+        description: 'Comcast technician visit for internet setup',
+        date: today,
+        time: '13:30',
+        status: 'scheduled',
+        priority: 'medium',
+        category: 'Vendor Visit',
+        estimatedDuration: 120,
+        tasks: [
+          {
+            id: 'vendor-001-task-1',
+            title: 'Resident: Grant Vendor Access',
+            description: 'Provide access to vendor for installation',
+            assignedRole: 'resident',
+            isComplete: false,
+            isRequired: true,
+            status: 'available',
+            estimatedDuration: 10
+          },
+          {
+            id: 'vendor-001-task-2',
+            title: 'Operator: Monitor Vendor Visit',
+            description: 'Ensure vendor follows building protocols',
+            assignedRole: 'operator',
+            isComplete: false,
+            isRequired: true,
+            status: 'available',
+            estimatedDuration: 15
           }
         ],
         assignedUsers: [testResident, testOperator],
@@ -330,51 +746,26 @@ class SharedEventService {
         updatedAt: new Date(),
         rescheduledCount: 0,
         followUpHistory: [],
-        metadata: {
-          location: 'Rooftop Terrace',
-          maxAttendees: 50,
-          building: 'Building A'
-        },
+        metadata: { vendor: 'Comcast', serviceType: 'Internet Installation' },
         taskCompletionStamps: []
       }
     ];
 
     this.events = seededEvents;
-    console.log(`SharedEventService: Initialized with ${this.events.length} test events`);
+    console.log('SharedEventService: Initialized with', this.events.length, 'comprehensive test events for all 17 types');
   }
 
-  // Subscribe to changes
+  // Subscribe to event changes
   subscribe(callback: () => void): () => void {
     this.subscribers.push(callback);
     return () => {
-      this.subscribers = this.subscribers.filter(l => l !== callback);
+      this.subscribers = this.subscribers.filter(sub => sub !== callback);
     };
   }
 
+  // Notify all subscribers of changes
   private notifySubscribers() {
-    this.subscribers.forEach(listener => listener());
-  }
-
-  // Get events for specific role
-  getEventsForRole(role: Role): UniversalEvent[] {
-    return this.events.filter(event => 
-      event.assignedUsers.some(user => user.role === role)
-    );
-  }
-
-  getEventsForRoleAndDate(role: Role, date: Date): UniversalEvent[] {
-    return this.getEventsForRole(role).filter(event => {
-      const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
-      return isSameDay(eventDate, date);
-    });
-  }
-
-  // Get events for a specific date (all roles)
-  getEventsForDate(date: Date): UniversalEvent[] {
-    return this.events.filter(event => {
-      const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
-      return isSameDay(eventDate, date);
-    });
+    this.subscribers.forEach(callback => callback());
   }
 
   // Get all events
@@ -382,242 +773,82 @@ class SharedEventService {
     return [...this.events];
   }
 
-  // Add event
-  addEvent(event: UniversalEvent): boolean {
-    try {
-      // Check for duplicates
-      const exists = this.events.some(e => e.id === event.id);
-      if (exists) {
-        console.warn('Event with this ID already exists:', event.id);
-        return false;
-      }
-      
-      this.events.push(event);
-      this.notifySubscribers();
-      console.log('Event added to shared service:', event.id);
-      return true;
-    } catch (error) {
-      console.error('Error adding event:', error);
-      return false;
-    }
+  // Get events for a specific role
+  getEventsForRole(role: Role): UniversalEvent[] {
+    return this.events.filter(event => 
+      event.assignedUsers.some(user => user.role === role)
+    );
   }
 
-  // Update event (maintains cross-role sync)
-  updateEvent(eventId: string, updatedEvent: Partial<UniversalEvent>): boolean {
-    try {
-      const index = this.events.findIndex(event => event.id === eventId);
-      if (index === -1) {
-        console.error('Event not found for update:', eventId);
-        return false;
-      }
-      
-      this.events[index] = { 
-        ...this.events[index], 
-        ...updatedEvent,
-        updatedAt: new Date()
-      };
-      
+  // Get events for a specific date
+  getEventsForDate(date: Date): UniversalEvent[] {
+    return this.events.filter(event => 
+      isSameDay(event.date, date)
+    );
+  }
+
+  // Get events for a specific role and date - UNIFIED METHOD FOR SYNC
+  getEventsForRoleAndDate(role: Role, date: Date): UniversalEvent[] {
+    console.log(`SharedEventService: Getting events for role ${role} on ${format(date, 'yyyy-MM-dd')}`);
+    const roleEvents = this.getEventsForRole(role);
+    const dateFilteredEvents = roleEvents.filter(event => 
+      isSameDay(event.date, date)
+    );
+    console.log(`SharedEventService: Found ${dateFilteredEvents.length} events for ${role} on ${format(date, 'yyyy-MM-dd')}`);
+    return dateFilteredEvents;
+  }
+
+  // Add or update event
+  updateEvent(eventId: string, updatedEvent: Partial<UniversalEvent>) {
+    const index = this.events.findIndex(e => e.id === eventId);
+    if (index !== -1) {
+      this.events[index] = { ...this.events[index], ...updatedEvent };
       this.notifySubscribers();
-      console.log('Event updated in shared service:', eventId);
-      return true;
-    } catch (error) {
-      console.error('Error updating event:', error);
-      return false;
+      console.log('SharedEventService: Updated event', eventId);
     }
   }
 
   // Reschedule event
   rescheduleEvent(eventId: string, newDate: Date, newTime: string): boolean {
-    try {
-      const event = this.events.find(e => e.id === eventId);
-      if (!event) {
-        console.error('Event not found for reschedule:', eventId);
-        return false;
-      }
-
+    const event = this.events.find(e => e.id === eventId);
+    if (event) {
       event.date = newDate;
       event.time = newTime;
       event.rescheduledCount = (event.rescheduledCount || 0) + 1;
       event.updatedAt = new Date();
-
       this.notifySubscribers();
-      console.log('Event rescheduled in shared service:', eventId);
+      console.log('SharedEventService: Rescheduled event', eventId, 'to', newTime);
       return true;
-    } catch (error) {
-      console.error('Error rescheduling event:', error);
-      return false;
     }
+    return false;
   }
 
-  completeTask(eventId: string, taskId: string, completedBy: Role): boolean {
+  // Add task completion stamp to event
+  addTaskCompletionStamp(eventId: string, stamp: TaskCompletionStamp) {
     const event = this.events.find(e => e.id === eventId);
-    if (!event) return false;
-
-    const task = event.tasks.find(t => t.id === taskId);
-    if (!task) return false;
-
-    // Check role permission
-    if (task.assignedRole !== completedBy) {
-      console.warn(`Task ${taskId} is assigned to ${task.assignedRole}, not ${completedBy}`);
-      return false;
-    }
-
-    // Complete the task
-    task.isComplete = true;
-    task.status = 'complete';
-    task.completedAt = new Date();
-    task.completedBy = completedBy;
-
-    // Add completion stamp with formatted display time at CURRENT time (not event time)
-    const completedAt = new Date();
-    const stamp: TaskCompletionStamp = {
-      id: `${taskId}-completion-${Date.now()}`,
-      taskId,
-      taskName: task.title,
-      eventId,
-      eventType: event.type,
-      completedAt,
-      actualCompletionTime: completedAt, // Lock to true completion time
-      completedBy: completedBy,
-      completedByName: this.getRoleDisplayName(completedBy),
-      userId: this.getUserIdForRole(completedBy),
-      canUndo: true,
-      displayTime: format(completedAt, 'h:mm a'),
-      permanent: true // Initially set as permanent
-    };
-
-    event.taskCompletionStamps = event.taskCompletionStamps || [];
-    
-    // Remove any existing stamp for this task (for re-completion)
-    event.taskCompletionStamps = event.taskCompletionStamps.filter(
-      existingStamp => existingStamp.taskId !== taskId
-    );
-    
-    // Add the new stamp
-    event.taskCompletionStamps.push(stamp);
-
-    // Check if all required tasks are complete
-    const allRequiredComplete = event.tasks
-      .filter(task => task.isRequired)
-      .every(task => task.isComplete);
-
-    if (allRequiredComplete) {
-      event.status = 'completed';
-      event.completedAt = new Date();
-      
-      // Add final event completion stamp
-      const eventCompletionStamp: TaskCompletionStamp = {
-        id: `${eventId}-event-completion-${Date.now()}`,
-        taskId: 'event-completion',
-        taskName: `${event.title} Completed`,
-        eventId,
-        eventType: event.type,
-        completedAt: new Date(),
-        actualCompletionTime: new Date(), // Lock to true completion time
-        completedBy: completedBy,
-        completedByName: this.getRoleDisplayName(completedBy),
-        userId: this.getUserIdForRole(completedBy),
-        canUndo: false,
-        displayTime: format(new Date(), 'h:mm a'),
-        permanent: true // Event completion stamps are always permanent
-      };
-      
-      event.taskCompletionStamps.push(eventCompletionStamp);
-    }
-
-    event.updatedAt = new Date();
-    this.notifySubscribers();
-    console.log('Task completed with timestamp:', stamp);
-    return true;
-  }
-
-  // Undo task completion
-  undoTaskCompletion(eventId: string, taskId: string): boolean {
-    try {
-      const event = this.events.find(e => e.id === eventId);
-      if (!event) {
-        console.error('Event not found for task undo:', eventId);
-        return false;
+    if (event) {
+      if (!event.taskCompletionStamps) {
+        event.taskCompletionStamps = [];
       }
-
-      const task = event.tasks.find(t => t.id === taskId);
-      if (!task) {
-        console.error('Task not found for undo:', taskId);
-        return false;
-      }
-
-      // Reset task status
-      task.isComplete = false;
-      task.status = 'available';
-      task.completedAt = undefined;
-      task.completedBy = undefined;
-
-      // Remove completion stamp and any event completion stamps
-      event.taskCompletionStamps = event.taskCompletionStamps.filter(
-        stamp => stamp.taskId !== taskId && stamp.taskId !== 'event-completion'
-      );
-
-      // Reset event status if it was completed
-      if (event.status === 'completed') {
-        event.status = 'in-progress';
-        event.completedAt = undefined;
-      }
-
-      event.updatedAt = new Date();
+      // Remove any existing stamp for the same task
+      event.taskCompletionStamps = event.taskCompletionStamps.filter(s => s.taskId !== stamp.taskId);
+      // Add the new stamp
+      event.taskCompletionStamps.push(stamp);
       this.notifySubscribers();
-      console.log('Task completion undone and timestamp removed:', taskId);
-      return true;
-    } catch (error) {
-      console.error('Error undoing task completion:', error);
-      return false;
+      console.log('SharedEventService: Added task completion stamp to event', eventId);
     }
   }
 
-  private getRoleDisplayName(role: Role): string {
-    const roleNames = {
-      'resident': 'Sarah Johnson',
-      'operator': 'Lisa Chen', 
-      'maintenance': 'Mike Rodriguez',
-      'prospect': 'Prospect User',
-      'vendor': 'Vendor User'
-    };
-    return roleNames[role] || role;
-  }
-
-  private getUserIdForRole(role: Role): string {
-    const userIds = {
-      'resident': 'test-resident-001',
-      'operator': 'test-operator-001', 
-      'maintenance': 'test-maintenance-001',
-      'prospect': 'test-prospect-001',
-      'vendor': 'test-vendor-001'
-    };
-    return userIds[role] || 'system';
-  }
-
-  // Remove event
-  removeEvent(eventId: string): boolean {
-    try {
-      const index = this.events.findIndex(event => event.id === eventId);
-      if (index === -1) {
-        console.error('Event not found for removal:', eventId);
-        return false;
-      }
-      
-      this.events.splice(index, 1);
+  // Remove task completion stamp from event
+  removeTaskCompletionStamp(eventId: string, taskId: string) {
+    const event = this.events.find(e => e.id === eventId);
+    if (event && event.taskCompletionStamps) {
+      event.taskCompletionStamps = event.taskCompletionStamps.filter(s => s.taskId !== taskId);
       this.notifySubscribers();
-      console.log('Event removed from shared service:', eventId);
-      return true;
-    } catch (error) {
-      console.error('Error removing event:', error);
-      return false;
+      console.log('SharedEventService: Removed task completion stamp from event', eventId);
     }
-  }
-
-  // Get event by ID
-  getEventById(eventId: string): UniversalEvent | undefined {
-    return this.events.find(event => event.id === eventId);
   }
 }
 
+// Export singleton instance
 export const sharedEventService = new SharedEventService();

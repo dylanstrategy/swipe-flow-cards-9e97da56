@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import SwipeCard from '@/components/SwipeCard';
@@ -7,7 +7,7 @@ import UnitTurnDetailTracker from '@/components/maintenance/UnitTurnDetailTracke
 import HourlyCalendarView from '@/components/schedule/HourlyCalendarView';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { createTestEvents, getEventsForRole } from '@/data/testEvents';
+import { sharedEventService } from '@/services/sharedEventService';
 
 interface MaintenanceTodayTabProps {
   todayWorkOrders?: any[];
@@ -22,13 +22,22 @@ const MaintenanceTodayTab = ({ onWorkOrderCompleted }: MaintenanceTodayTabProps)
 
   const today = new Date();
 
-  // Get shared events filtered for maintenance role
-  const maintenanceEvents = React.useMemo(() => {
-    const allEvents = createTestEvents();
-    return getEventsForRole(allEvents, 'maintenance');
-  }, []);
+  // Use shared event service for unified data
+  useEffect(() => {
+    const updateEvents = () => {
+      // Get events for maintenance role on today's date - UNIFIED METHOD
+      const maintenanceEvents = sharedEventService.getEventsForRoleAndDate('maintenance', today);
+      console.log('MaintenanceTodayTab - unified maintenance events:', maintenanceEvents.length);
+      setCalendarEvents(maintenanceEvents);
+    };
 
-  console.log('MaintenanceTodayTab - maintenance events:', maintenanceEvents);
+    // Initial load
+    updateEvents();
+
+    // Subscribe to changes
+    const unsubscribe = sharedEventService.subscribe(updateEvents);
+    return unsubscribe;
+  }, []);
 
   // Sample unit turns data
   const unitTurns = [
@@ -58,85 +67,36 @@ const MaintenanceTodayTab = ({ onWorkOrderCompleted }: MaintenanceTodayTabProps)
     }
   ];
 
-  // Convert maintenance events to calendar events format
-  React.useEffect(() => {
-    const events = [
-      // Add maintenance events from shared data
-      ...maintenanceEvents.map(event => {
-        console.log('Converting maintenance event to calendar event:', event);
-        return {
-          id: event.id,
-          date: today,
-          time: event.time,
-          title: event.title,
-          description: event.description,
-          category: event.type,
-          priority: event.priority,
-          workOrderData: event.type === 'work-order' ? event : null,
-          canReschedule: true,
-          canCancel: false,
-          estimatedDuration: 120,
-          rescheduledCount: event.rescheduledCount || 0
-        };
-      }),
-      // Add unit turns scheduled for today
-      ...unitTurns.filter(turn => turn.status === 'Scheduled').map(unitTurn => ({
-        id: unitTurn.id,
-        date: today,
-        time: '10:00',
-        title: `Unit Turn - ${unitTurn.unit}`,
-        description: `${unitTurn.pendingSteps.length} steps remaining`,
-        category: 'unit-turn',
-        priority: unitTurn.priority,
-        unitTurnData: unitTurn,
-        canReschedule: true,
-        canCancel: false,
-        estimatedDuration: 240,
-        rescheduledCount: 0
-      }))
-    ];
-    
-    setCalendarEvents(events);
-    console.log('Maintenance calendar events generated:', events);
-  }, [maintenanceEvents]);
-
   const handleEventClick = (event: any) => {
     console.log('Event clicked:', event);
-    if (event.category === 'work-order') {
-      setSelectedWorkOrder(event.workOrderData);
+    if (event.category === 'work-order' || event.type === 'work-order') {
+      setSelectedWorkOrder(event);
     } else if (event.category === 'unit-turn') {
-      setSelectedUnitTurn(event.unitTurnData);
+      setSelectedUnitTurn(event);
     }
   };
 
   const handleEventHold = (event: any) => {
-    // Handle hold/reschedule if needed
     console.log('Event held:', event);
   };
 
   const handleEventReschedule = (event: any, newTime: string) => {
     console.log('Event rescheduled:', event, 'to', newTime);
     
-    // Update the calendar events state
-    setCalendarEvents(prev => prev.map(e => 
-      e.id === event.id 
-        ? { ...e, time: newTime, rescheduledCount: (e.rescheduledCount || 0) + 1 }
-        : e
-    ));
+    // Use shared service to reschedule
+    const success = sharedEventService.rescheduleEvent(event.id, event.date, newTime);
     
-    toast({
-      title: "Event Rescheduled",
-      description: `${event.title} moved to ${newTime}`,
-    });
+    if (success) {
+      toast({
+        title: "Event Rescheduled",
+        description: `${event.title} moved to ${newTime}`,
+      });
+    }
   };
 
   const handleWorkOrderCompleted = (workOrderId: string) => {
     console.log('Work order completed in Today tab:', workOrderId);
     
-    // Remove from calendar events
-    setCalendarEvents(prev => prev.filter(e => e.workOrderData?.id !== workOrderId));
-    
-    // Notify parent component if callback provided
     if (onWorkOrderCompleted) {
       onWorkOrderCompleted(workOrderId);
     }
@@ -174,7 +134,7 @@ const MaintenanceTodayTab = ({ onWorkOrderCompleted }: MaintenanceTodayTabProps)
         <div className="grid grid-cols-2 gap-4 mb-6">
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-orange-600">{maintenanceEvents.length}</div>
+              <div className="text-2xl font-bold text-orange-600">{calendarEvents.length}</div>
               <div className="text-sm text-gray-600">Work Orders Today</div>
             </CardContent>
           </Card>
