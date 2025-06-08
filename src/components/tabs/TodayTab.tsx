@@ -63,7 +63,7 @@ const TodayTab = () => {
     return getEventsForRole(allEvents, 'resident');
   });
 
-  // Remove pet events - use shared events only
+  // Use shared events only
   const allEvents = calendarEvents;
 
   // Add special event for rent due
@@ -289,18 +289,12 @@ const TodayTab = () => {
     });
   };
 
-  // NEW: Handle event rescheduling
+  // Handle event rescheduling
   const handleEventReschedule = (event: any, newTime: string) => {
     console.log('Handling event reschedule in TodayTab:', event, 'to', newTime);
     
-    // Update the event time in both calendar events and pet events
+    // Update the event time in calendar events
     setCalendarEvents(prevEvents => 
-      prevEvents.map(e => 
-        e.id === event.id ? { ...e, time: newTime } : e
-      )
-    );
-    
-    setPetEvents(prevEvents => 
       prevEvents.map(e => 
         e.id === event.id ? { ...e, time: newTime } : e
       )
