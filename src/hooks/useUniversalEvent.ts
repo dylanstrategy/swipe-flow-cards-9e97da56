@@ -109,6 +109,31 @@ export const useUniversalEvent = () => {
     });
   }, [updateEventTask]);
 
+  const undoTaskCompletion = useCallback(async (
+    eventId: string,
+    taskId: string
+  ): Promise<boolean> => {
+    const now = new Date();
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    // Check if it's before 11:59 PM on the same day
+    if (now > endOfDay) {
+      toast({
+        title: "Cannot Undo",
+        description: "Tasks cannot be undone after 11:59 PM.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    return updateEventTask(eventId, taskId, {
+      isComplete: false,
+      completedAt: undefined,
+      completedBy: undefined
+    });
+  }, [updateEventTask, toast]);
+
   const rescheduleEvent = useCallback(async (
     eventId: string,
     newDate: Date,
@@ -169,6 +194,7 @@ export const useUniversalEvent = () => {
     createEvent,
     updateEventTask,
     completeTask,
+    undoTaskCompletion,
     rescheduleEvent,
     cancelEvent
   };

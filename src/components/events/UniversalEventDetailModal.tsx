@@ -5,10 +5,11 @@ import { ArrowLeft, MessageSquare, Calendar, AlertTriangle, Clock, CheckCircle }
 import { useToast } from '@/hooks/use-toast';
 import { isPast, isToday } from 'date-fns';
 import { useUniversalEvent } from '@/hooks/useUniversalEvent';
+import { useTaskCompletionStamps } from '@/hooks/useTaskCompletionStamps';
 import { getEventType } from '@/services/eventTypeService';
 import { UniversalEvent } from '@/types/eventTasks';
 import { Role } from '@/types/roles';
-import UniversalEventTaskList from './UniversalEventTaskList';
+import TaskChecklist from './TaskChecklist';
 import EventMessaging from './EventMessaging';
 import EventTimeline from './EventTimeline';
 import RescheduleFlow from './RescheduleFlow';
@@ -29,7 +30,8 @@ const UniversalEventDetailModal = ({
   onEventUpdate 
 }: UniversalEventDetailModalProps) => {
   const { toast } = useToast();
-  const { completeTask, rescheduleEvent, cancelEvent, isLoading } = useUniversalEvent();
+  const { completeTask, undoTaskCompletion, rescheduleEvent, cancelEvent, isLoading } = useUniversalEvent();
+  const { stamps, addStamp, removeStamp, getStampsForEvent } = useTaskCompletionStamps();
   const [activeTab, setActiveTab] = useState<'details' | 'message' | 'timeline'>('details');
   const [messageText, setMessageText] = useState('');
   const [currentEvent, setCurrentEvent] = useState(event);
@@ -45,7 +47,7 @@ const UniversalEventDetailModal = ({
     time: currentEvent.time,
     status: currentEvent.status || 'scheduled',
     priority: currentEvent.priority || 'medium',
-    category: currentEvent.category || currentEvent.type || 'General', // Add category
+    category: currentEvent.category || currentEvent.type || 'General',
     tasks: [], // Old format doesn't have tasks
     assignedUsers: [],
     createdBy: 'system',
@@ -53,7 +55,8 @@ const UniversalEventDetailModal = ({
     updatedAt: new Date(),
     rescheduledCount: currentEvent.rescheduledCount || 0,
     followUpHistory: [],
-    metadata: currentEvent
+    metadata: currentEvent,
+    taskCompletionStamps: []
   };
 
   const eventType = getEventType(universalEvent.type);
@@ -109,7 +112,6 @@ const UniversalEventDetailModal = ({
 
   const getPriorityColor = (priority: string, status?: string, isOverdue?: boolean) => {
     if (isOverdue) return 'bg-red-100 text-red-800 border-red-200';
-    // Fixed: compare priority, not status
     switch (priority) {
       case 'urgent': return 'bg-red-100 text-red-800 border-red-200';
       case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
@@ -119,17 +121,57 @@ const UniversalEventDetailModal = ({
     }
   };
 
+  const handleTaskStart = async (taskId: string) => {
+    const updatedEvent = {
+      ...universalEvent,
+      tasks: universalEvent.tasks.map(task =>
+        task.id === taskId
+          ? { ...task, status: 'in-progress' as const }
+          : task
+      )
+    };
+    
+    setCurrentEvent(updatedEvent);
+    onEventUpdate?.(updatedEvent);
+    
+    toast({
+      title: "Task Started",
+      description: "Task has been started.",
+    });
+  };
+
   const handleTaskComplete = async (taskId: string) => {
+    const task = universalEvent.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
     const success = await completeTask(universalEvent.id, taskId, userRole);
     if (success) {
+      // Add completion stamp
+      const stamp = addStamp(
+        taskId,
+        task.title,
+        universalEvent.id,
+        universalEvent.type,
+        userRole,
+        `${userRole} User`
+      );
+
       // Update local state
       const updatedEvent = {
         ...universalEvent,
-        tasks: universalEvent.tasks.map(task =>
-          task.id === taskId
-            ? { ...task, isComplete: true, completedAt: new Date(), completedBy: userRole }
-            : task
-        )
+        tasks: universalEvent.tasks.map(t =>
+          t.id === taskId
+            ? { 
+                ...t, 
+                isComplete: true, 
+                completedAt: new Date(), 
+                completedBy: userRole,
+                status: 'complete' as const,
+                canUndo: true
+              }
+            : t
+        ),
+        taskCompletionStamps: [...universalEvent.taskCompletionStamps, stamp]
       };
       
       setCurrentEvent(updatedEvent);
@@ -148,6 +190,40 @@ const UniversalEventDetailModal = ({
           description: `${updatedEvent.title} has been completed successfully.`,
         });
       }
+    }
+  };
+
+  const handleTaskUndo = async (taskId: string) => {
+    const success = await undoTaskCompletion(universalEvent.id, taskId);
+    if (success) {
+      // Remove completion stamp
+      removeStamp(taskId);
+
+      // Update local state
+      const updatedEvent = {
+        ...universalEvent,
+        tasks: universalEvent.tasks.map(task =>
+          task.id === taskId
+            ? { 
+                ...task, 
+                isComplete: false, 
+                completedAt: undefined, 
+                completedBy: undefined,
+                status: 'available' as const,
+                canUndo: false
+              }
+            : task
+        ),
+        taskCompletionStamps: universalEvent.taskCompletionStamps.filter(s => s.taskId !== taskId)
+      };
+      
+      setCurrentEvent(updatedEvent);
+      onEventUpdate?.(updatedEvent);
+
+      toast({
+        title: "Task Undone",
+        description: "Task completion has been undone.",
+      });
     }
   };
 
@@ -387,11 +463,13 @@ const UniversalEventDetailModal = ({
           {activeTab === 'details' && (
             <div className="p-4">
               {universalEvent.tasks.length > 0 ? (
-                <UniversalEventTaskList
+                <TaskChecklist
                   tasks={universalEvent.tasks}
                   currentUserRole={userRole}
                   onTaskComplete={handleTaskComplete}
-                  onTaskClick={handleTaskClick}
+                  onTaskUndo={handleTaskUndo}
+                  onTaskStart={handleTaskStart}
+                  completionStamps={getStampsForEvent(universalEvent.id)}
                 />
               ) : (
                 <div className="space-y-4">

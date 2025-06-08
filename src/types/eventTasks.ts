@@ -14,6 +14,9 @@ export interface EventTask {
   estimatedDuration?: number; // in minutes
   instructions?: string;
   dependencies?: string[]; // task IDs that must be completed first
+  status: 'locked' | 'available' | 'in-progress' | 'complete';
+  unlockCondition?: string; // optional unlock condition
+  canUndo?: boolean; // whether task can be undone before 11:59 PM
 }
 
 export interface EventType {
@@ -55,6 +58,18 @@ export interface EscalationRule {
   notification: string;
 }
 
+export interface TaskCompletionStamp {
+  id: string;
+  taskId: string;
+  taskName: string;
+  eventId: string;
+  eventType: string;
+  completedAt: Date;
+  completedBy: Role;
+  completedByName?: string;
+  canUndo: boolean;
+}
+
 export interface UniversalEvent {
   id: string;
   type: string;
@@ -79,4 +94,5 @@ export interface UniversalEvent {
   rescheduledCount: number;
   followUpHistory: EmailFollowUp[];
   metadata: Record<string, any>; // event-specific data
+  taskCompletionStamps: TaskCompletionStamp[]; // Track all task completions
 }
