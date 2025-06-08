@@ -1,646 +1,333 @@
-import React, { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
-import { Plus, Calendar as CalendarIcon } from 'lucide-react';
-import { format, addDays, isSameDay } from 'date-fns';
+import React, { useState, useEffect } from 'react';
+import { Calendar, Clock, Plus, Filter, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import ScheduleMenu from '@/components/schedule/ScheduleMenu';
-import WorkOrderFlow from '@/components/schedule/WorkOrderFlow';
-import DraggableSuggestionsSection from '@/components/schedule/DraggableSuggestionsSection';
-import DroppableCalendar from '@/components/schedule/DroppableCalendar';
-import MessageModule from '@/components/message/MessageModule';
-import PollModule from '@/components/schedule/PollModule';
-import OperatorScheduleMenu from '@/components/schedule/OperatorScheduleMenu';
-import UniversalEventDetailModal from '@/components/events/UniversalEventDetailModal';
-import RescheduleFlow from '@/components/events/RescheduleFlow';
-import EventTypeSelector from '@/components/events/EventTypeSelector';
+import { Badge } from '@/components/ui/badge';
+import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
+import { getEventTypes, getEventType } from '@/services/eventTypeService';
+import { EventType } from '@/types/eventTasks';
 import UniversalEventCreationFlow from '@/components/events/UniversalEventCreationFlow';
-import { EnhancedEvent } from '@/types/events';
-import { EventType, UniversalEvent } from '@/types/eventTasks';
-import { teamAvailabilityService } from '@/services/teamAvailabilityService';
-import HourlyCalendarView from '@/components/schedule/HourlyCalendarView';
-import { useUniversalEvent } from '@/hooks/useUniversalEvent';
+import UniversalEventDetailModal from '@/components/events/UniversalEventDetailModal';
+import { Role } from '@/types/roles';
+
+interface ScheduledEvent {
+  id: string | number;
+  date: Date;
+  time: string;
+  title: string;
+  description: string;
+  type: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: string;
+  category: string;
+  building?: string;
+  unit?: string;
+}
 
 const OperatorScheduleTab = () => {
-  const { toast } = useToast();
-  const { createEvent } = useUniversalEvent();
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [showScheduleMenu, setShowScheduleMenu] = useState(false);
-  const [showEventTypeSelector, setShowEventTypeSelector] = useState(false);
-  const [showEventCreationFlow, setShowEventCreationFlow] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showCreateFlow, setShowCreateFlow] = useState(false);
   const [selectedEventType, setSelectedEventType] = useState<EventType | null>(null);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
-  const [selectedScheduleType, setSelectedScheduleType] = useState<string>('');
-  const [showMessageModule, setShowMessageModule] = useState(false);
-  const [showPollModule, setShowPollModule] = useState(false);
-  const [showUniversalEventDetail, setShowUniversalEventDetail] = useState(false);
-  const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
-  const [selectedUniversalEvent, setSelectedUniversalEvent] = useState<any>(null);
-  const [selectedEvent, setSelectedEvent] = useState<EnhancedEvent | null>(null);
-  const [messageConfig, setMessageConfig] = useState({
-    subject: '',
-    recipientType: 'management' as 'management' | 'maintenance' | 'leasing',
-    mode: 'compose' as 'compose' | 'reply'
-  });
+  const [selectedEvent, setSelectedEvent] = useState<ScheduledEvent | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('all');
+  const [events, setEvents] = useState<ScheduledEvent[]>([]);
 
-  // State for managing scheduled events including dropped suggestions and universal events
-  const [scheduledEvents, setScheduledEvents] = useState([
-    // Legacy events for backward compatibility - ensure all have category
-    {
-      id: 1,
-      date: new Date(),
-      time: '09:00',
-      title: 'Unit 204 - HVAC Repair',
-      description: 'Unit 204 - Scheduled maintenance for reported AC issue',
-      category: 'Property Services',
-      priority: 'urgent' as const,
-      building: 'Building A',
-      unit: '204',
-      type: 'maintenance',
-      isDroppedSuggestion: false,
-      rescheduledCount: 0
-    },
-    {
-      id: 2,
-      date: new Date(),
-      time: '10:30',
-      title: 'Move-In Inspection',
-      description: 'Sarah Johnson - New resident move-in inspection',
-      category: 'Community Management',
-      priority: 'high' as const,
-      building: 'Building A',
-      unit: '156',
-      type: 'move-in',
-      isDroppedSuggestion: false,
-      rescheduledCount: 0
-    },
-    {
-      id: 3,
-      date: new Date(),
-      time: '14:00',
-      title: 'Lease Signing',
-      description: 'Mike Chen - Lease renewal signing appointment',
-      category: 'Leasing',
-      priority: 'medium' as const,
-      building: 'Building B',
-      unit: '302',
-      type: 'lease-signing',
-      isDroppedSuggestion: false,
-      rescheduledCount: 0
-    }
-  ]);
+  const eventTypes = getEventTypes();
 
-  // State for universal events
-  const [universalEvents, setUniversalEvents] = useState<UniversalEvent[]>([]);
+  useEffect(() => {
+    document.title = 'Operator Schedule | CRM';
+  }, []);
 
-  // State to track which suggestions have been scheduled and completed
-  const [scheduledSuggestionIds, setScheduledSuggestionIds] = useState<number[]>([]);
-  const [completedSuggestionIds, setCompletedSuggestionIds] = useState<number[]>([]);
-
-  const convertTimeToMinutes = (timeString: string): number => {
-    if (!timeString) return 0;
-    
-    if (timeString.includes('AM') || timeString.includes('PM')) {
-      const [time, period] = timeString.split(' ');
-      const [hours, minutes] = time.split(':').map(Number);
-      let totalMinutes = (hours % 12) * 60 + minutes;
-      if (period === 'PM' && hours !== 12) totalMinutes += 12 * 60;
-      if (period === 'AM' && hours === 12) totalMinutes = minutes;
-      return totalMinutes;
-    }
-    
-    const [hours, minutes] = timeString.split(':').map(Number);
-    return hours * 60 + minutes;
-  };
-
-  const formatTimeFromMinutes = (minutes: number): string => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-  };
-
-  const isSameDateSafe = (date1: any, date2: Date): boolean => {
-    try {
-      const d1 = date1 instanceof Date ? date1 : new Date(date1);
-      const d2 = date2 instanceof Date ? date2 : new Date(date2);
-      return format(d1, 'yyyy-MM-dd') === format(d2, 'yyyy-MM-dd');
-    } catch (error) {
-      console.error('Date comparison error:', error);
-      return false;
-    }
-  };
-
-  const findAvailableTimeSlot = (date: Date, duration: number = 60): string => {
-    const allEvents = [...scheduledEvents, ...universalEvents];
-    const eventsForDate = allEvents
-      .filter(event => isSameDateSafe(event.date, date))
-      .map(event => ({
-        start: convertTimeToMinutes(event.time),
-        end: convertTimeToMinutes(event.time) + 60
-      }))
-      .sort((a, b) => a.start - b.start);
-
-    let proposedStart = 540; // Start from 9:00 AM
-    
-    for (const event of eventsForDate) {
-      if (proposedStart + duration <= event.start) {
-        break;
+  useEffect(() => {
+    // Sample events for demonstration
+    const sampleEvents: ScheduledEvent[] = [
+      {
+        id: 1,
+        date: new Date(),
+        time: "09:00",
+        title: "Move-In Process",
+        description: "Unit 1A - Sarah Johnson",
+        type: "move-in",
+        priority: "high",
+        status: "confirmed",
+        category: "Resident Services",
+        building: "Building A",
+        unit: "1A"
+      },
+      {
+        id: 2,
+        date: new Date(),
+        time: "10:30",
+        title: "Lease Signing",
+        description: "Unit 2C - Mike Chen renewal",
+        type: "lease-signing",
+        priority: "medium",
+        status: "confirmed",
+        category: "Leasing",
+        building: "Building B",
+        unit: "2C"
+      },
+      {
+        id: 3,
+        date: addDays(new Date(), 1),
+        time: "14:00",
+        title: "Property Tour",
+        description: "Prospect: Emily Davis",
+        type: "tour",
+        priority: "medium",
+        status: "confirmed",
+        category: "Leasing",
+        building: "Building A",
+        unit: "3B"
+      },
+      {
+        id: 4,
+        date: addDays(new Date(), 2),
+        time: "11:00",
+        title: "Work Order",
+        description: "Kitchen faucet repair - Unit 4D",
+        type: "work-order",
+        priority: "urgent",
+        status: "confirmed",
+        category: "Maintenance",
+        building: "Building C",
+        unit: "4D"
       }
-      proposedStart = Math.max(proposedStart, event.end);
+    ];
+    setEvents(sampleEvents);
+  }, []);
+
+  const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+  const getEventsForDate = (date: Date) => {
+    return events.filter(event => 
+      isSameDay(event.date, date) &&
+      (filterType === 'all' || event.category.toLowerCase() === filterType) &&
+      (searchTerm === '' || 
+       event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       event.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent': return 'bg-red-100 text-red-800 border-red-200';
+      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'medium': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
-    
-    if (proposedStart + duration > 1080) { // Past 6 PM
-      proposedStart = 1080 - duration;
-    }
-    
-    return formatTimeFromMinutes(proposedStart);
   };
 
-  const handleCreateEvent = (eventTypeId: string) => {
-    setSelectedEventType(eventTypeId);
-    setShowEventCreationFlow(true);
+  const getEventTypeIcon = (type: string) => {
+    const eventType = getEventType(type);
+    return eventType?.icon || '📅';
   };
 
-  const handleEventTypeSelect = (eventType: EventType) => {
-    setSelectedEventType(eventType);
-    setShowEventTypeSelector(false);
-    setShowEventCreationFlow(true);
+  const handleCreateEvent = () => {
+    setShowCreateFlow(true);
   };
 
-  const handleEventCreated = (event: UniversalEvent) => {
-    setUniversalEvents(prev => [...prev, event]);
-    setShowEventCreationFlow(false);
+  const handleEventTypeSelect = (eventTypeId: string) => {
+    const eventType = getEventType(eventTypeId);
+    setSelectedEventType(eventType || null);
+  };
+
+  const handleEventCreated = (newEvent: any) => {
+    console.log('New event created:', newEvent);
+    // Add the new event to the events list
+    const scheduledEvent: ScheduledEvent = {
+      id: newEvent.id,
+      date: newEvent.date,
+      time: newEvent.time,
+      title: newEvent.title,
+      description: newEvent.description,
+      type: newEvent.type,
+      priority: newEvent.priority,
+      status: newEvent.status,
+      category: newEvent.category,
+      building: newEvent.metadata?.building,
+      unit: newEvent.metadata?.unit
+    };
+    setEvents(prev => [...prev, scheduledEvent]);
+    setShowCreateFlow(false);
     setSelectedEventType(null);
-    
-    toast({
-      title: "Event Created",
-      description: `${event.title} has been created successfully.`,
-    });
   };
 
-  const handleDropSuggestionInTimeline = (suggestion: any, targetTime?: string) => {
-    console.log('OperatorScheduleTab: handleDropSuggestionInTimeline called with:', suggestion, targetTime);
-    
-    let assignedTime: string;
-    
-    if (targetTime) {
-      assignedTime = targetTime;
-    } else {
-      assignedTime = findAvailableTimeSlot(selectedDate);
-    }
-
-    const isDuplicate = scheduledEvents.some(event => 
-      isSameDateSafe(event.date, selectedDate) && 
-      event.time === assignedTime && 
-      event.title === suggestion.title
-    );
-
-    if (isDuplicate) {
-      toast({
-        title: "Event Already Exists",
-        description: `${suggestion.title} is already scheduled at ${assignedTime}`,
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Create event with proper structure to match existing events
-    const newEvent = {
-      id: Date.now() + Math.random(),
-      date: new Date(selectedDate),
-      time: assignedTime,
-      title: suggestion.title,
-      description: suggestion.description,
-      category: suggestion.suggestionType || suggestion.type || 'General', // Ensure category exists
-      priority: suggestion.priority,
-      isDroppedSuggestion: true,
-      type: (suggestion.suggestionType || suggestion.type).toLowerCase(),
-      rescheduledCount: 0,
-      unit: suggestion.unit || undefined,
-      building: suggestion.building || undefined,
-      dueDate: suggestion.dueDate || undefined,
-      image: suggestion.image || undefined,
-      originalSuggestionId: suggestion.id // Track which suggestion this came from
-    };
-
-    console.log('OperatorScheduleTab: Adding new event from timeline drop:', newEvent);
-    
-    setScheduledEvents(prev => {
-      const updated = [...prev, newEvent];
-      console.log('OperatorScheduleTab: Updated scheduled events:', updated);
-      return updated;
-    });
-    
-    // Mark suggestion as scheduled (but not completed yet)
-    setScheduledSuggestionIds(prev => {
-      const updated = [...prev, suggestion.id];
-      console.log('OperatorScheduleTab: Updated scheduled suggestion IDs:', updated);
-      return updated;
-    });
-
-    toast({
-      title: "Task Scheduled!",
-      description: `${suggestion.title} scheduled at ${assignedTime} on ${format(selectedDate, 'MMM d, yyyy')}`,
-    });
-  };
-
-  const handleDropSuggestion = (suggestion: any, date: Date) => {
-    console.log('OperatorScheduleTab: handleDropSuggestion called with:', suggestion, date);
-    
-    const assignedTime = findAvailableTimeSlot(date);
-    
-    const isDuplicate = scheduledEvents.some(event => 
-      isSameDateSafe(event.date, date) && 
-      event.time === assignedTime && 
-      event.title === suggestion.title
-    );
-
-    if (isDuplicate) {
-      toast({
-        title: "Event Already Exists",
-        description: `${suggestion.title} is already scheduled at ${assignedTime}`,
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Create event with proper structure to match existing events
-    const newEvent = {
-      id: Date.now() + Math.random(),
-      date: new Date(date),
-      time: assignedTime,
-      title: suggestion.title,
-      description: suggestion.description,
-      category: suggestion.suggestionType || suggestion.type || 'General', // Ensure category exists
-      priority: suggestion.priority,
-      isDroppedSuggestion: true,
-      type: (suggestion.suggestionType || suggestion.type).toLowerCase(),
-      rescheduledCount: 0,
-      unit: suggestion.unit || undefined,
-      building: suggestion.building || undefined,
-      dueDate: suggestion.dueDate || undefined,
-      image: suggestion.image || undefined,
-      originalSuggestionId: suggestion.id // Track which suggestion this came from
-    };
-
-    console.log('OperatorScheduleTab: Adding calendar drop event:', newEvent);
-
-    setScheduledEvents(prev => {
-      const updated = [...prev, newEvent];
-      console.log('OperatorScheduleTab: Updated scheduled events from calendar:', updated);
-      return updated;
-    });
-    
-    // Mark suggestion as scheduled (but not completed yet)
-    setScheduledSuggestionIds(prev => {
-      const updated = [...prev, suggestion.id];
-      console.log('OperatorScheduleTab: Updated scheduled suggestion IDs from calendar:', updated);
-      return updated;
-    });
-
-    toast({
-      title: "Task Scheduled!",
-      description: `${suggestion.title} scheduled for ${format(date, 'MMM d, yyyy')}`,
-    });
-  };
-
-  const handleEventClick = (event: any) => {
-    setSelectedUniversalEvent(event);
-    setShowUniversalEventDetail(true);
-  };
-
-  const handleEventHold = (event: any) => {
-    const enhancedEvent: EnhancedEvent = {
-      id: event.id,
-      date: event.date,
-      time: event.time,
-      title: event.title,
-      description: event.description,
-      category: event.category || event.type || 'General',
-      priority: event.priority,
-      canReschedule: true,
-      canCancel: true,
-      estimatedDuration: 60,
-      rescheduledCount: event.rescheduledCount || 0,
-      assignedTeamMember: teamAvailabilityService.assignTeamMember({ category: event.category || event.type }),
-      residentName: 'John Doe',
-      phone: '(555) 123-4567',
-      unit: event.unit,
-      building: event.building
-    };
-    
-    setSelectedEvent(enhancedEvent);
-    setShowRescheduleFlow(true);
-  };
-
-  const handleRescheduleConfirm = () => {
-    toast({
-      title: "Event Rescheduled",
-      description: `${selectedEvent?.title} has been rescheduled successfully.`,
-    });
-    setShowRescheduleFlow(false);
-    setSelectedEvent(null);
-  };
-
-  const handleEventReschedule = (event: any, newTime: string) => {
-    // Handle both legacy events and universal events
-    if (event.tasks) {
-      // Universal event
-      setUniversalEvents(prev => prev.map(e => 
-        e.id === event.id 
-          ? { ...e, time: newTime, rescheduledCount: (e.rescheduledCount || 0) + 1, updatedAt: new Date() }
-          : e
-      ));
-    } else {
-      // Legacy event
-      setScheduledEvents(prev => prev.map(e => 
-        e.id === event.id 
-          ? { ...e, time: newTime, rescheduledCount: (e.rescheduledCount || 0) + 1 }
-          : e
-      ));
-    }
-    
-    toast({
-      title: "Event Rescheduled",
-      description: `${event.title} moved to ${newTime}`,
-    });
+  const handleEventClick = (event: ScheduledEvent) => {
+    setSelectedEvent(event);
   };
 
   const handleEventUpdate = (updatedEvent: any) => {
-    if (updatedEvent.tasks) {
-      // Universal event
-      setUniversalEvents(prev => prev.map(e => 
-        e.id === updatedEvent.id ? updatedEvent : e
-      ));
-    } else {
-      // Legacy event
-      setScheduledEvents(prev => prev.map(e => 
-        e.id === updatedEvent.id ? updatedEvent : e
-      ));
-    }
+    setEvents(prev => prev.map(event => 
+      event.id === updatedEvent.id ? { ...event, ...updatedEvent } : event
+    ));
   };
 
-  const nextStep = () => {
-    if (currentStep < 4) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      setIsCreatingOrder(false);
-      setCurrentStep(1);
-      setShowScheduleMenu(false);
-      toast({
-        title: "Work Order Submitted",
-        description: "Your work order has been successfully submitted. You'll receive a confirmation email shortly.",
-      });
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    } else {
-      setIsCreatingOrder(false);
-      setShowScheduleMenu(true);
-    }
-  };
-
-  const startScheduling = (type: string) => {
-    if (type === 'Universal Event') {
-      setShowEventTypeSelector(true);
-      setShowScheduleMenu(false);
-    } else {
-      setSelectedScheduleType(type);
-      if (type === 'Work Order') {
-        setIsCreatingOrder(true);
-        setShowScheduleMenu(false);
-        setCurrentStep(1);
-      } else if (type === 'Message') {
-        setMessageConfig({
-          subject: '',
-          recipientType: 'management',
-          mode: 'compose'
-        });
-        setShowMessageModule(true);
-        setShowScheduleMenu(false);
-      } else if (type === 'Poll') {
-        setShowPollModule(true);
-        setShowScheduleMenu(false);
-      } else {
-        toast({
-          title: `${type} Selected`,
-          description: `${type} scheduling flow coming soon!`,
-        });
-        setShowScheduleMenu(false);
-      }
-    }
-  };
-
-  const handleCloseWorkOrder = () => {
-    setIsCreatingOrder(false);
-    setCurrentStep(1);
-    setShowScheduleMenu(false);
-  };
-
-  const handleCloseMessage = () => {
-    setShowMessageModule(false);
-    setShowScheduleMenu(false);
-  };
-
-  const handleClosePoll = () => {
-    setShowPollModule(false);
-    setShowScheduleMenu(false);
-  };
-
-  const getEventsForDate = (date: Date) => {
-    // Combine legacy events and universal events, ensuring all have category
-    const legacyEvents = scheduledEvents.filter(event => isSameDateSafe(event.date, date));
-    const universalEventsForDate = universalEvents.filter(event => isSameDateSafe(event.date, date));
-    
-    // Normalize all events to ensure they have category
-    const normalizedLegacyEvents = legacyEvents.map(event => ({
-      ...event,
-      category: event.category || event.type || 'General'
-    }));
-    
-    const normalizedUniversalEvents = universalEventsForDate.map(event => ({
-      ...event,
-      category: event.category || event.type || 'General'
-    }));
-    
-    const allEvents = [...normalizedLegacyEvents, ...normalizedUniversalEvents].sort((a, b) => {
-      const timeA = convertTimeToMinutes(a.time);
-      const timeB = convertTimeToMinutes(b.time);
-      return timeA - timeB;
-    });
-    
-    console.log(`Events for ${format(date, 'MMM d')}:`, allEvents);
-    return allEvents;
-  };
-
-  const hasEventsOnDate = (date: Date) => {
-    return scheduledEvents.some(event => isSameDateSafe(event.date, date)) ||
-           universalEvents.some(event => isSameDateSafe(event.date, date));
-  };
-
-  if (showRescheduleFlow && selectedEvent) {
-    return (
-      <RescheduleFlow
-        event={selectedEvent}
-        onClose={() => {
-          setShowRescheduleFlow(false);
-          setSelectedEvent(null);
-        }}
-        onConfirm={handleRescheduleConfirm}
-        userRole="operator"
-      />
-    );
-  }
-
-  if (showUniversalEventDetail && selectedUniversalEvent) {
-    return (
-      <UniversalEventDetailModal
-        event={selectedUniversalEvent}
-        onClose={() => {
-          setShowUniversalEventDetail(false);
-          setSelectedUniversalEvent(null);
-        }}
-        userRole="operator"
-        onEventUpdate={handleEventUpdate}
-      />
-    );
-  }
-
-  if (showPollModule) {
-    return (
-      <PollModule
-        onClose={handleClosePoll}
-      />
-    );
-  }
-
-  if (showMessageModule) {
-    return (
-      <MessageModule
-        onClose={handleCloseMessage}
-        initialSubject={messageConfig.subject}
-        recipientType={messageConfig.recipientType}
-        mode={messageConfig.mode}
-      />
-    );
-  }
-
-  if (showEventCreationFlow && selectedEventType) {
+  if (showCreateFlow) {
     return (
       <UniversalEventCreationFlow
-        eventType={selectedEventType}
         onClose={() => {
-          setShowEventCreationFlow(false);
+          setShowCreateFlow(false);
           setSelectedEventType(null);
         }}
         onEventCreated={handleEventCreated}
-        initialData={{
-          date: selectedDate,
-          time: findAvailableTimeSlot(selectedDate)
-        }}
-      />
-    );
-  }
-
-  if (showEventTypeSelector) {
-    return (
-      <EventTypeSelector
-        onSelectEventType={handleCreateEvent}
-        onClose={() => setShowEventTypeSelector(false)}
-      />
-    );
-  }
-
-  if (isCreatingOrder) {
-    return (
-      <WorkOrderFlow
-        selectedScheduleType={selectedScheduleType}
-        currentStep={currentStep}
-        onNextStep={nextStep}
-        onPrevStep={prevStep}
-        onClose={handleCloseWorkOrder}
-      />
-    );
-  }
-
-  if (showScheduleMenu) {
-    return (
-      <OperatorScheduleMenu
-        onSelectType={startScheduling}
-        onClose={() => setShowScheduleMenu(false)}
+        preselectedEventType={selectedEventType}
+        userRole="operator"
       />
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-50">
-      <div className="px-4 py-4">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Schedule</h1>
-          
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="justify-center sm:justify-start text-left font-normal shadow-sm w-12 sm:w-[240px]"
-              >
-                <CalendarIcon className="h-4 w-4" />
-                <span className="hidden sm:inline sm:ml-2">
-                  {format(selectedDate, "EEEE, MMMM d, yyyy")}
-                </span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <DroppableCalendar
-                selectedDate={selectedDate}
-                onSelect={setSelectedDate}
-                hasEventsOnDate={hasEventsOnDate}
-                onDropSuggestion={handleDropSuggestion}
-                events={[...scheduledEvents, ...universalEvents]}
-              />
-            </PopoverContent>
-          </Popover>
+    <div className="p-4 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Schedule Management</h2>
+          <p className="text-gray-600">Manage events, appointments, and tasks</p>
         </div>
-        
-        <button 
-          onClick={() => setShowScheduleMenu(true)}
-          className="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-700 transition-all duration-200 hover:scale-110 z-50"
-        >
-          <Plus className="text-white" size={28} />
-        </button>
+        <Button onClick={handleCreateEvent} className="bg-blue-600 hover:bg-blue-700">
+          <Plus className="w-4 h-4 mr-2" />
+          Create Event
+        </Button>
+      </div>
 
-        <div className="mb-3">
-          <DraggableSuggestionsSection 
-            selectedDate={selectedDate}
-            onSchedule={startScheduling}
-            onAction={(action, item) => {
-              toast({
-                title: `${action}`,
-                description: `${item} - Action completed`,
-              });
-            }}
-            scheduledSuggestionIds={[]}
-            completedSuggestionIds={[]}
+      {/* Filters */}
+      <div className="flex gap-4 items-center">
+        <div className="flex-1 relative">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search events..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
+        <select
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="all">All Categories</option>
+          <option value="leasing">Leasing</option>
+          <option value="resident services">Resident Services</option>
+          <option value="maintenance">Maintenance</option>
+          <option value="community">Community</option>
+          <option value="finance">Finance</option>
+        </select>
       </div>
 
-      <div className="px-4">
-        <HourlyCalendarView
-          selectedDate={selectedDate}
-          events={getEventsForDate(selectedDate)}
-          onDropSuggestion={handleDropSuggestionInTimeline}
-          onEventClick={handleEventClick}
-          onEventHold={handleEventHold}
-          onEventReschedule={handleEventReschedule}
-        />
+      {/* Calendar Grid */}
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        {/* Calendar Header */}
+        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">
+              {format(currentDate, 'MMMM yyyy')}
+            </h3>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentDate(addDays(currentDate, -7))}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentDate(new Date())}
+              >
+                Today
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentDate(addDays(currentDate, 7))}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Week Days Header */}
+        <div className="grid grid-cols-7 border-b border-gray-200">
+          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+            <div key={day} className="p-4 text-center font-medium text-gray-600 bg-gray-50">
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar Days */}
+        <div className="grid grid-cols-7">
+          {weekDays.map((day, index) => {
+            const dayEvents = getEventsForDate(day);
+            const isToday = isSameDay(day, new Date());
+            const isSelected = isSameDay(day, selectedDate);
+
+            return (
+              <div
+                key={index}
+                className={`min-h-[120px] p-2 border-r border-b border-gray-200 cursor-pointer hover:bg-gray-50 ${
+                  isSelected ? 'bg-blue-50' : ''
+                }`}
+                onClick={() => setSelectedDate(day)}
+              >
+                <div className={`text-sm font-medium mb-2 ${
+                  isToday ? 'text-blue-600' : 'text-gray-900'
+                }`}>
+                  {format(day, 'd')}
+                  {isToday && (
+                    <span className="ml-1 px-1.5 py-0.5 bg-blue-600 text-white text-xs rounded-full">
+                      Today
+                    </span>
+                  )}
+                </div>
+                
+                <div className="space-y-1">
+                  {dayEvents.slice(0, 3).map((event) => (
+                    <div
+                      key={event.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEventClick(event);
+                      }}
+                      className="p-1 rounded text-xs cursor-pointer hover:opacity-80 transition-opacity"
+                      style={{ backgroundColor: getPriorityColor(event.priority).split(' ')[0] }}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span>{getEventTypeIcon(event.type)}</span>
+                        <span className="font-medium truncate">{event.time}</span>
+                      </div>
+                      <div className="truncate">{event.title}</div>
+                    </div>
+                  ))}
+                  {dayEvents.length > 3 && (
+                    <div className="text-xs text-gray-500 px-1">
+                      +{dayEvents.length - 3} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
+
+      {/* Event Detail Modal */}
+      {selectedEvent && (
+        <UniversalEventDetailModal
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+          userRole="operator"
+          onEventUpdate={handleEventUpdate}
+        />
+      )}
     </div>
   );
 };

@@ -37,6 +37,9 @@ const UniversalEventDetailModal = ({
   const [currentEvent, setCurrentEvent] = useState(event);
   const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
 
+  // Get event type first
+  const eventType = getEventType(currentEvent.type || 'lease-signing');
+
   // Convert old event format to UniversalEvent if needed
   const universalEvent: UniversalEvent = currentEvent.tasks ? currentEvent : {
     id: currentEvent.id,
@@ -67,8 +70,6 @@ const UniversalEventDetailModal = ({
   console.log('Universal event with tasks:', universalEvent);
   console.log('Event type:', eventType);
   console.log('Default tasks:', eventType?.defaultTasks);
-
-  const eventType = getEventType(universalEvent.type);
 
   // Overdue detection logic
   const isEventOverdue = (event: UniversalEvent): boolean => {
