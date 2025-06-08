@@ -18,13 +18,15 @@ interface MessageModuleProps {
   initialSubject?: string;
   recipientType?: 'management' | 'maintenance' | 'leasing';
   mode?: 'compose' | 'reply';
+  onMessageSent?: () => void;
 }
 
 const MessageModule = ({ 
   onClose, 
   initialSubject = '', 
   recipientType = 'management',
-  mode = 'compose'
+  mode = 'compose',
+  onMessageSent
 }: MessageModuleProps) => {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [showPrompt, setShowPrompt] = useState(false);
@@ -84,6 +86,10 @@ const MessageModule = ({
   };
 
   const handleDone = () => {
+    // Call the onMessageSent callback if provided
+    if (onMessageSent) {
+      onMessageSent();
+    }
     onClose();
   };
 
@@ -105,7 +111,7 @@ const MessageModule = ({
       setCurrentStep(currentStep + 1);
       setShowPrompt(false);
     } else {
-      onClose();
+      handleDone();
     }
   };
 

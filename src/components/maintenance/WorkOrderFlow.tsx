@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import SwipeableScreen from '@/components/schedule/SwipeableScreen';
 import WorkOrderDetailsStep from './steps/WorkOrderDetailsStep';
@@ -10,14 +9,26 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
 interface WorkOrderFlowProps {
-  workOrder: any;
+  selectedScheduleType?: string;
+  currentStep?: number;
+  onNextStep?: () => void;
+  onPrevStep?: () => void;
   onClose: () => void;
+  workOrder: any;
   onWorkOrderCompleted?: (workOrderId: string) => void;
 }
 
-const WorkOrderFlow = ({ workOrder, onClose, onWorkOrderCompleted }: WorkOrderFlowProps) => {
+const WorkOrderFlow = ({ 
+  selectedScheduleType, 
+  currentStep: externalCurrentStep, 
+  onNextStep: externalOnNextStep, 
+  onPrevStep: externalOnPrevStep, 
+  workOrder, 
+  onClose, 
+  onWorkOrderCompleted 
+}: WorkOrderFlowProps) => {
   const { toast } = useToast();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [internalCurrentStep, setInternalCurrentStep] = useState(1);
   const [showPrompt, setShowPrompt] = useState(false);
   const [diagnosisNotes, setDiagnosisNotes] = useState('');
   const [completionPhoto, setCompletionPhoto] = useState<string>('');
@@ -27,6 +38,11 @@ const WorkOrderFlow = ({ workOrder, onClose, onWorkOrderCompleted }: WorkOrderFl
   const [showReschedule, setShowReschedule] = useState(false);
   const [rescheduleDate, setRescheduleDate] = useState<Date | undefined>();
   const [rescheduleTime, setRescheduleTime] = useState('');
+
+  // Use external step control if provided, otherwise use internal
+  const currentStep = externalCurrentStep ?? internalCurrentStep;
+  const onNextStep = externalOnNextStep ?? (() => setInternalCurrentStep(prev => prev + 1));
+  const onPrevStep = externalOnPrevStep ?? (() => setInternalCurrentStep(prev => prev - 1));
 
   const canProceedFromCurrentStep = (): boolean => {
     if (showReschedule) {
@@ -59,20 +75,20 @@ const WorkOrderFlow = ({ workOrder, onClose, onWorkOrderCompleted }: WorkOrderFl
 
     if (canProceedFromCurrentStep()) {
       if (currentStep < 3) {
-        setCurrentStep(currentStep + 1);
+        onNextStep();
         setShowPrompt(false);
       } else {
         // Complete work order
-        console.log('Work order completed:', workOrder.id);
+        console.log('Work order completed:', workOrder?.id);
         
         // Notify parent that work order is completed
-        if (onWorkOrderCompleted) {
+        if (onWorkOrderCompleted && workOrder?.id) {
           onWorkOrderCompleted(workOrder.id);
         }
         
         toast({
           title: "Work Order Completed",
-          description: `Work order ${workOrder.id} has been completed successfully.`,
+          description: `Work order ${workOrder?.id || 'N/A'} has been completed successfully.`,
         });
         
         onClose();
@@ -88,7 +104,7 @@ const WorkOrderFlow = ({ workOrder, onClose, onWorkOrderCompleted }: WorkOrderFl
     }
     
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      onPrevStep();
       setShowPrompt(false);
     }
   };
