@@ -469,18 +469,20 @@ class SharedEventService {
 
     // Add completion stamp with formatted display time at CURRENT time (not event time)
     const completedAt = new Date();
-    const stamp = {
+    const stamp: TaskCompletionStamp = {
       id: `${taskId}-completion-${Date.now()}`,
       taskId,
       taskName: task.title,
       eventId,
       eventType: event.type,
       completedAt,
+      actualCompletionTime: completedAt, // Lock to true completion time
       completedBy: completedBy,
       completedByName: this.getRoleDisplayName(completedBy),
       userId: this.getUserIdForRole(completedBy),
       canUndo: true,
-      displayTime: format(completedAt, 'h:mm a')
+      displayTime: format(completedAt, 'h:mm a'),
+      permanent: true // Initially set as permanent
     };
 
     event.taskCompletionStamps = event.taskCompletionStamps || [];
@@ -503,18 +505,20 @@ class SharedEventService {
       event.completedAt = new Date();
       
       // Add final event completion stamp
-      const eventCompletionStamp = {
+      const eventCompletionStamp: TaskCompletionStamp = {
         id: `${eventId}-event-completion-${Date.now()}`,
         taskId: 'event-completion',
         taskName: `${event.title} Completed`,
         eventId,
         eventType: event.type,
         completedAt: new Date(),
+        actualCompletionTime: new Date(), // Lock to true completion time
         completedBy: completedBy,
         completedByName: this.getRoleDisplayName(completedBy),
         userId: this.getUserIdForRole(completedBy),
         canUndo: false,
-        displayTime: format(new Date(), 'h:mm a')
+        displayTime: format(new Date(), 'h:mm a'),
+        permanent: true // Event completion stamps are always permanent
       };
       
       event.taskCompletionStamps.push(eventCompletionStamp);
