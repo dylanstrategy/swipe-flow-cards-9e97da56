@@ -74,6 +74,11 @@ const Home = () => {
     }
   ];
 
+  const handleNavigate = (path: string) => {
+    console.log('Navigating to:', path);
+    navigate(path);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
@@ -87,7 +92,7 @@ const Home = () => {
             <Card 
               key={interface_.id} 
               className="hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => navigate(interface_.path)}
+              onClick={() => handleNavigate(interface_.path)}
             >
               <CardHeader className="text-center">
                 <div className={`w-16 h-16 ${interface_.color} rounded-full flex items-center justify-center mx-auto mb-4`}>
@@ -103,7 +108,7 @@ const Home = () => {
                   className="w-full"
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigate(interface_.path);
+                    handleNavigate(interface_.path);
                   }}
                 >
                   Launch Interface
