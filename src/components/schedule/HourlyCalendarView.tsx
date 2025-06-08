@@ -1,9 +1,8 @@
-
 import React, { useState, useRef } from 'react';
 import { format, addMinutes, startOfDay, isPast, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Clock, Calendar, Plus, CheckCircle } from 'lucide-react';
-import { TaskCompletionStamp } from '@/types/eventTasks';
+import { TaskCompletionStamp } from '@/types/taskStamps';
 import TaskStampLayer from './TaskStampLayer';
 import EventCompletionStamp from './EventCompletionStamp';
 

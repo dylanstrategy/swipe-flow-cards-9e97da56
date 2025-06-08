@@ -1,3 +1,4 @@
+
 import { Role } from './roles';
 
 export interface EventTask {
@@ -57,18 +58,8 @@ export interface EscalationRule {
   notification: string;
 }
 
-export interface TaskCompletionStamp {
-  id: string;
-  taskId: string;
-  taskName: string;
-  eventId: string;
-  eventType: string;
-  completedAt: Date;
-  completedBy: Role;
-  completedByName?: string;
-  canUndo: boolean;
-  displayTime?: string; // formatted time for display
-}
+// Import and re-export the unified TaskCompletionStamp
+export { TaskCompletionStamp } from './taskStamps';
 
 export interface UniversalEvent {
   id: string;
