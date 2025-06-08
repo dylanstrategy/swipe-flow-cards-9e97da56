@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { EventTask } from '@/types/eventTasks';
 import LeaseSigningModal from './modals/LeaseSigningModal';
@@ -82,7 +81,9 @@ const TaskModalManager = ({ task, eventType, onClose, onComplete }: TaskModalMan
             eventType === 'move-out' ? 'move-out' : 
             eventType === 'unit-turn' ? 'unit-turn' :
             eventType === 'inspection' ? 'inspection' :
-            'maintenance' as 'move-in' | 'move-out' | 'unit-turn' | 'inspection' | 'maintenance'
+            eventType === 'vendor-visit' ? 'maintenance' :
+            eventType === 'lease-violation' ? 'maintenance' :
+            'maintenance'
           }
         />
       );
