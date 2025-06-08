@@ -226,6 +226,114 @@ export const createTestEvents = () => {
   ];
 };
 
+// Promotional events based on lifestyle tags
+export const createPromotionalEvents = (lifestyleTags: string[]) => {
+  const today = new Date();
+  const promoEvents = [];
+
+  const lifestyleToPromos = {
+    "wellness": [
+      {
+        id: 'promo-yoga-001',
+        title: 'Morning Yoga Class - Special Rate',
+        description: 'Start your day with mindful movement - 50% off first class',
+        promoType: 'fitness',
+        originalPrice: '$30',
+        discountPrice: '$15',
+        vendor: 'Zen Studio Downtown',
+        validUntil: addDays(today, 7)
+      },
+      {
+        id: 'promo-gym-002',
+        title: 'Gym Membership Credit',
+        description: 'Get $50 credit toward annual membership',
+        promoType: 'fitness',
+        originalPrice: '$100',
+        discountPrice: '$50',
+        vendor: 'FitLife Gym',
+        validUntil: addDays(today, 14)
+      }
+    ],
+    "foodAndDrinks": [
+      {
+        id: 'promo-tasting-003',
+        title: 'Local Tasting Tour',
+        description: 'Explore 3 neighborhood restaurants with guided tour',
+        promoType: 'food',
+        originalPrice: '$75',
+        discountPrice: '$45',
+        vendor: 'Neighborhood Eats',
+        validUntil: addDays(today, 10)
+      },
+      {
+        id: 'promo-restaurant-004',
+        title: 'Fine Dining Discount',
+        description: '25% off dinner at award-winning restaurant',
+        promoType: 'food',
+        originalPrice: '$120',
+        discountPrice: '$90',
+        vendor: 'Bistro Excellence',
+        validUntil: addDays(today, 5)
+      }
+    ],
+    "creativity": [
+      {
+        id: 'promo-art-005',
+        title: 'Pottery Workshop',
+        description: 'Create your own ceramic pieces in 2-hour session',
+        promoType: 'creative',
+        originalPrice: '$60',
+        discountPrice: '$35',
+        vendor: 'Clay & Create Studio',
+        validUntil: addDays(today, 12)
+      },
+      {
+        id: 'promo-studio-006',
+        title: 'Photography Studio Rental',
+        description: 'Professional studio space for your creative projects',
+        promoType: 'creative',
+        originalPrice: '$150',
+        discountPrice: '$90',
+        vendor: 'Light Box Studios',
+        validUntil: addDays(today, 21)
+      }
+    ]
+  };
+
+  // Generate promo events based on user's lifestyle tags
+  lifestyleTags.forEach(tag => {
+    if (lifestyleToPromos[tag]) {
+      lifestyleToPromos[tag].forEach((promo, index) => {
+        promoEvents.push({
+          id: promo.id,
+          date: addDays(today, index), // Spread them across different days
+          time: '15:00', // Afternoon time slot
+          title: promo.title,
+          description: promo.description,
+          type: 'promotional',
+          category: 'Promotional',
+          priority: 'medium' as const,
+          status: 'scheduled',
+          rescheduledCount: 0,
+          assignedRoles: ['resident'],
+          metadata: {
+            promoType: promo.promoType,
+            originalPrice: promo.originalPrice,
+            discountPrice: promo.discountPrice,
+            vendor: promo.vendor,
+            validUntil: promo.validUntil,
+            lifestyleTag: tag,
+            canRedeem: true,
+            isRedeemed: false
+          }
+        });
+      });
+    }
+  });
+
+  return promoEvents;
+};
+
 // Helper function to filter events by role
 export const getEventsForRole = (events: any[], userRole: string) => {
   return events.filter(event => 

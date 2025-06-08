@@ -15,6 +15,8 @@ import TodayMiniCalendar from './today/TodayMiniCalendar';
 import PointOfSale from '../PointOfSale';
 import { useRealtimeOverdueDetection } from '@/hooks/useRealtimeOverdueDetection';
 import { createTestEvents, getEventsForRole } from '@/data/testEvents';
+import { generatePromotionalEventsForProfile, handlePromoEventAction } from '@/services/promotionalEventService';
+import { getTasksForEventType } from '@/services/eventTaskTemplatesService';
 
 const TodayTab = () => {
   const { toast } = useToast();
@@ -57,13 +59,19 @@ const TodayTab = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Get shared events and filter by resident role
+  // Get shared events and promotional events based on profile
   const [calendarEvents, setCalendarEvents] = useState(() => {
-    const allEvents = createTestEvents();
-    return getEventsForRole(allEvents, 'resident');
+    const baseEvents = createTestEvents();
+    const residentEvents = getEventsForRole(baseEvents, 'resident');
+    
+    // Add promotional events based on lifestyle tags
+    const promoEvents = generatePromotionalEventsForProfile(profile);
+    console.log('Generated promotional events:', promoEvents);
+    
+    return [...residentEvents, ...promoEvents];
   });
 
-  // Use shared events only
+  // Use combined events (base + promotional)
   const allEvents = calendarEvents;
 
   // Add special event for rent due
@@ -107,8 +115,85 @@ const TodayTab = () => {
     setShowWorkOrderTimeline(true);
   };
 
+  // Enhanced event click handler that handles promotional events
   const handleEventClick = (event: any) => {
-    setSelectedUniversalEvent(event);
+    console.log('Event clicked in TodayTab:', event);
+    
+    // Handle promotional events differently
+    if (event.type === 'promotional') {
+      const actionResult = handlePromoEventAction(event, 'view');
+      
+      // Create enhanced promotional event for the modal
+      const enhancedPromoEvent = {
+        ...event,
+        tasks: [
+          {
+            id: `${event.id}-view`,
+            title: 'View Promotional Offer',
+            description: `Review details for ${event.title}`,
+            assignedRole: 'resident',
+            isComplete: false,
+            isRequired: true,
+            status: 'available' as const,
+            estimatedDuration: 5
+          },
+          {
+            id: `${event.id}-redeem`,
+            title: 'Redeem Offer',
+            description: `Claim your discount: ${event.metadata?.originalPrice} → ${event.metadata?.discountPrice}`,
+            assignedRole: 'resident',
+            isComplete: false,
+            isRequired: false,
+            status: 'available' as const,
+            estimatedDuration: 10
+          },
+          {
+            id: `${event.id}-schedule`,
+            title: 'Schedule Service',
+            description: `Book appointment with ${event.metadata?.vendor}`,
+            assignedRole: 'resident',
+            isComplete: false,
+            isRequired: false,
+            status: 'available' as const,
+            estimatedDuration: 15
+          }
+        ],
+        assignedUsers: [{ role: 'resident', name: `${profile.firstName} ${profile.lastName}` }],
+        createdBy: 'system',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        followUpHistory: [],
+        taskCompletionStamps: []
+      };
+      
+      setSelectedUniversalEvent(enhancedPromoEvent);
+      setShowUniversalEventDetail(true);
+      return;
+    }
+    
+    // Convert regular events to include tasks if they don't exist
+    const enhancedEvent = {
+      ...event,
+      tasks: event.tasks || getTasksForEventType(event.type).map((taskTemplate, index) => ({
+        id: `${event.id}-task-${index}`,
+        title: taskTemplate.name,
+        description: `Complete: ${taskTemplate.name}`,
+        assignedRole: taskTemplate.role,
+        isComplete: false,
+        isRequired: true,
+        status: 'available' as const,
+        estimatedDuration: 15
+      })),
+      assignedUsers: event.assignedUsers || [],
+      createdBy: event.createdBy || 'system',
+      createdAt: event.createdAt || new Date(),
+      updatedAt: event.updatedAt || new Date(),
+      followUpHistory: event.followUpHistory || [],
+      taskCompletionStamps: event.taskCompletionStamps || []
+    };
+
+    console.log('Enhanced event for modal:', enhancedEvent);
+    setSelectedUniversalEvent(enhancedEvent);
     setShowUniversalEventDetail(true);
   };
 
@@ -184,6 +269,37 @@ const TodayTab = () => {
   };
 
   const getSwipeActionsForEvent = (event: any) => {
+    // Special handling for promotional events
+    if (event.type === 'promotional') {
+      return {
+        onSwipeRight: {
+          label: "Redeem Offer",
+          action: () => {
+            const actionResult = handlePromoEventAction(event, 'redeem');
+            handleAction("Redeemed promotional offer", event.title);
+            
+            // Update event as redeemed
+            setCalendarEvents(prev => prev.map(e => 
+              e.id === event.id 
+                ? { ...e, metadata: { ...e.metadata, isRedeemed: true, redeemedAt: new Date() } }
+                : e
+            ));
+          },
+          color: "#10B981",
+          icon: "🎉"
+        },
+        onSwipeLeft: {
+          label: "Schedule Service",
+          action: () => {
+            handlePromoEventAction(event, 'schedule');
+            handleAction("Scheduled service booking", event.title);
+          },
+          color: "#3B82F6",
+          icon: "📅"
+        }
+      };
+    }
+
     switch (event.category) {
       case 'Work Order':
         return {
