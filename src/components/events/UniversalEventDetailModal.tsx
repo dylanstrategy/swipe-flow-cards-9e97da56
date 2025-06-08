@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,15 +40,20 @@ const UniversalEventDetailModal = ({
   // Convert old event format to UniversalEvent if needed
   const universalEvent: UniversalEvent = currentEvent.tasks ? currentEvent : {
     id: currentEvent.id,
-    type: currentEvent.type || 'message',
+    type: currentEvent.type || 'lease-signing',
     title: currentEvent.title,
     description: currentEvent.description,
     date: currentEvent.date,
     time: currentEvent.time,
     status: currentEvent.status || 'scheduled',
     priority: currentEvent.priority || 'medium',
-    category: currentEvent.category || currentEvent.type || 'General',
-    tasks: [], // Old format doesn't have tasks
+    category: currentEvent.category || currentEvent.type || 'Leasing',
+    tasks: eventType?.defaultTasks.map((taskTemplate, index) => ({
+      id: `${Date.now()}-${index}`,
+      ...taskTemplate,
+      isComplete: false,
+      status: 'available' as const
+    })) || [],
     assignedUsers: [],
     createdBy: 'system',
     createdAt: new Date(),
@@ -59,6 +63,10 @@ const UniversalEventDetailModal = ({
     metadata: currentEvent,
     taskCompletionStamps: []
   };
+
+  console.log('Universal event with tasks:', universalEvent);
+  console.log('Event type:', eventType);
+  console.log('Default tasks:', eventType?.defaultTasks);
 
   const eventType = getEventType(universalEvent.type);
 
@@ -478,15 +486,29 @@ const UniversalEventDetailModal = ({
               </div>
 
               {/* Task Checklist */}
-              {universalEvent.tasks.length > 0 && (
-                <TaskChecklist
-                  tasks={universalEvent.tasks}
-                  currentUserRole={userRole}
-                  onTaskComplete={handleTaskComplete}
-                  onTaskUndo={handleTaskUndo}
-                  onTaskStart={handleTaskStart}
-                  completionStamps={getStampsForEvent(universalEvent.id)}
-                />
+              {universalEvent.tasks && universalEvent.tasks.length > 0 && (
+                <div className="mb-6">
+                  <TaskChecklist
+                    tasks={universalEvent.tasks}
+                    currentUserRole={userRole}
+                    onTaskComplete={handleTaskComplete}
+                    onTaskUndo={handleTaskUndo}
+                    onTaskStart={handleTaskStart}
+                    completionStamps={getStampsForEvent(universalEvent.id)}
+                  />
+                </div>
+              )}
+
+              {/* Debug info to see what's happening */}
+              {(!universalEvent.tasks || universalEvent.tasks.length === 0) && (
+                <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-800 text-sm">
+                    <strong>Debug:</strong> No tasks found for this event.
+                    <br />Event Type: {universalEvent.type}
+                    <br />Has eventType: {eventType ? 'Yes' : 'No'}
+                    <br />Default tasks count: {eventType?.defaultTasks?.length || 0}
+                  </p>
+                </div>
               )}
             </div>
           )}

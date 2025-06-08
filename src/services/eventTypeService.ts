@@ -1,4 +1,3 @@
-
 import { EventType } from '@/types/eventTasks';
 
 const eventTypes: EventType[] = [
@@ -192,36 +191,70 @@ const eventTypes: EventType[] = [
     id: 'lease-signing',
     name: 'Lease Signing',
     category: 'Leasing',
-    icon: '📝',
-    description: 'Execute lease agreement with approved applicant',
+    icon: '📄',
+    description: 'Lease signing appointment',
     estimatedDuration: 60,
     allowsReschedule: true,
     defaultTasks: [
       {
-        title: 'Document Review',
-        description: 'Review all lease documents with applicant',
+        title: 'Upload Lease Template',
+        description: 'Upload and prepare lease documents',
+        assignedRole: 'operator',
+        isRequired: true,
+        estimatedDuration: 15,
+        instructions: 'Ensure all lease terms are accurate and up to date',
+        status: 'available'
+      },
+      {
+        title: 'Assign Lease to Prospect',
+        description: 'Send lease for digital signature',
+        assignedRole: 'operator',
+        isRequired: true,
+        estimatedDuration: 10,
+        dependencies: ['Upload Lease Template'],
+        status: 'locked'
+      },
+      {
+        title: 'Sign Lease Agreement',
+        description: 'Review and digitally sign the lease',
         assignedRole: 'prospect',
         isRequired: true,
-        estimatedDuration: 20,
-        status: 'available'
+        estimatedDuration: 30,
+        instructions: 'Please review all terms carefully before signing',
+        dependencies: ['Assign Lease to Prospect'],
+        status: 'locked'
       },
       {
-        title: 'Payment Collection',
-        description: 'Collect security deposit and first month rent',
+        title: 'Pay Initial Deposit',
+        description: 'Submit security deposit and first month rent',
+        assignedRole: 'prospect',
+        isRequired: true,
+        estimatedDuration: 15,
+        instructions: 'Payment can be made via bank transfer or certified check',
+        dependencies: ['Sign Lease Agreement'],
+        status: 'locked'
+      },
+      {
+        title: 'Confirm Renter\'s Insurance',
+        description: 'Upload proof of renter\'s insurance policy',
+        assignedRole: 'prospect',
+        isRequired: true,
+        estimatedDuration: 10,
+        instructions: 'Policy must meet minimum coverage requirements',
+        dependencies: ['Pay Initial Deposit'],
+        status: 'locked'
+      },
+      {
+        title: 'Finalize Lease Processing',
+        description: 'Complete lease setup and schedule move-in',
         assignedRole: 'operator',
         isRequired: true,
         estimatedDuration: 15,
-        status: 'available'
-      },
-      {
-        title: 'Lease Execution',
-        description: 'Sign lease agreement',
-        assignedRole: 'operator',
-        isRequired: true,
-        estimatedDuration: 15,
-        status: 'available'
+        dependencies: ['Confirm Renter\'s Insurance'],
+        status: 'locked'
       }
     ],
+    followUpSequence: [],
     fallbackRules: [],
     overdueThreshold: 24,
     escalationRules: []

@@ -66,8 +66,8 @@ const TaskChecklist = ({
     
     // Check dependencies
     if (task.dependencies && task.dependencies.length > 0) {
-      const dependenciesMet = task.dependencies.every(depId => 
-        tasks.find(t => t.id === depId)?.isComplete
+      const dependenciesMet = task.dependencies.every(depTitle => 
+        tasks.find(t => t.title === depTitle)?.isComplete
       );
       if (!dependenciesMet) return 'locked';
     }
@@ -109,6 +109,9 @@ const TaskChecklist = ({
     return 0;
   });
 
+  console.log('TaskChecklist rendered with tasks:', tasks);
+  console.log('Current user role:', currentUserRole);
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between mb-4">
@@ -123,6 +126,8 @@ const TaskChecklist = ({
         const canInteract = canUserInteractWithTask(task);
         const canUndo = canUndoTask(task);
         const stamp = getTaskStamp(task.id);
+        
+        console.log(`Task ${task.title}: status=${taskStatus}, canInteract=${canInteract}, role=${task.assignedRole}`);
         
         return (
           <div

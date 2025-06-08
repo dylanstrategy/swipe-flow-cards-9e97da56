@@ -159,6 +159,11 @@ const OperatorScheduleTab = () => {
     return formatTimeFromMinutes(proposedStart);
   };
 
+  const handleCreateEvent = (eventTypeId: string) => {
+    setSelectedEventType(eventTypeId);
+    setShowEventCreationFlow(true);
+  };
+
   const handleEventTypeSelect = (eventType: EventType) => {
     setSelectedEventType(eventType);
     setShowEventTypeSelector(false);
@@ -546,7 +551,7 @@ const OperatorScheduleTab = () => {
   if (showEventTypeSelector) {
     return (
       <EventTypeSelector
-        onSelectEventType={handleEventTypeSelect}
+        onSelectEventType={handleCreateEvent}
         onClose={() => setShowEventTypeSelector(false)}
       />
     );
@@ -574,7 +579,7 @@ const OperatorScheduleTab = () => {
   }
 
   return (
-    <div className="w-full bg-gray-50 min-h-screen pb-20">
+    <div className="flex flex-col h-full bg-gray-50">
       <div className="px-4 py-4">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold text-gray-900">Schedule</h1>
