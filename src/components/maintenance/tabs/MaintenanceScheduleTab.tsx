@@ -13,6 +13,7 @@ import { Calendar, Home, Wrench, BarChart3, Clock, CheckCircle, AlertCircle } fr
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { sharedSchedulingService, WorkOrderScheduleData } from '@/services/sharedSchedulingService';
 
 // Mock work orders data - this would normally come from a state management solution or API
 const initialWorkOrders = [
@@ -197,45 +198,84 @@ const MaintenanceScheduleTab = ({
   };
 
   const handleScheduleWorkOrder = (workOrder: any, scheduledTime: string) => {
-    console.log('Scheduling work order:', workOrder, 'for time:', scheduledTime);
+    console.log('Scheduling work order with shared scheduling service:', workOrder, 'for time:', scheduledTime);
     
-    const isToday = scheduledTime.includes('Today') || !scheduledTime.includes('Tomorrow');
-    const today = new Date().toISOString().split('T')[0];
-    
-    // If scheduling for today, find first available time slot
-    const finalScheduledTime = isToday ? findFirstAvailableTimeSlot() : scheduledTime;
-    
-    // Update the work order with scheduled information
-    const updatedWorkOrder = {
-      ...workOrder,
-      status: 'scheduled',
-      scheduledDate: isToday ? today : new Date(Date.now() + 86400000).toISOString().split('T')[0],
-      scheduledTime: finalScheduledTime.includes('Tomorrow') ? '09:00' : finalScheduledTime.replace('Tomorrow ', '')
+    // Convert work order to the format expected by shared scheduling service
+    const workOrderData: WorkOrderScheduleData = {
+      workOrderId: workOrder.id,
+      title: workOrder.title,
+      description: workOrder.description,
+      category: workOrder.category,
+      priority: workOrder.priority,
+      assignedResidentId: sharedSchedulingService.getSharedTestResidentId(),
+      assignedMaintenanceUserId: sharedSchedulingService.getSharedTestMaintenanceId(),
+      estimatedDuration: 120 // 2 hours default for work orders
     };
 
-    // If it's a unit turn step, add to scheduled step IDs
-    if (workOrder.unitTurnStep) {
-      console.log('Scheduling unit turn step:', workOrder.id);
-      setScheduledStepIds(prev => [...prev, workOrder.id]);
+    const targetDate = new Date();
+    let targetTime: string | undefined;
+
+    // Parse the scheduled time if it's not "Tomorrow"
+    if (!scheduledTime.includes('Tomorrow')) {
+      targetTime = scheduledTime.replace('Today ', '').replace(' AM', '').replace(' PM', '');
+      // Convert to 24-hour format if needed
+      if (scheduledTime.includes('AM') || scheduledTime.includes('PM')) {
+        const [time, period] = scheduledTime.split(' ');
+        const [hours, minutes] = time.split(':').map(Number);
+        let hour24 = hours;
+        if (period === 'PM' && hours !== 12) hour24 += 12;
+        if (period === 'AM' && hours === 12) hour24 = 0;
+        targetTime = `${hour24.toString().padStart(2, '0')}:${(minutes || 0).toString().padStart(2, '0')}`;
+      }
     } else {
-      // Remove from work orders queue for regular work orders
-      setWorkOrders(prev => prev.filter(wo => wo.id !== workOrder.id));
+      // Schedule for tomorrow
+      targetDate.setDate(targetDate.getDate() + 1);
+      targetTime = '09:00';
     }
-    
-    // Add to scheduled work orders
-    setScheduledWorkOrders(prev => [...prev, updatedWorkOrder]);
-    
-    // Always add to today's work orders if scheduled for today
-    if (isToday && !finalScheduledTime.includes('Tomorrow')) {
-      console.log('Adding to today work orders:', updatedWorkOrder);
-      const newTodayWorkOrders = [...todayWorkOrders, updatedWorkOrder];
-      updateTodayWorkOrders(newTodayWorkOrders);
+
+    const result = sharedSchedulingService.scheduleWorkOrder(workOrderData, targetDate, targetTime);
+
+    if (result.success) {
+      // Update the work order with scheduled information
+      const updatedWorkOrder = {
+        ...workOrder,
+        status: 'scheduled',
+        scheduledDate: targetDate.toISOString().split('T')[0],
+        scheduledTime: result.scheduledTime,
+        eventId: result.eventId
+      };
+
+      // If it's a unit turn step, add to scheduled step IDs
+      if (workOrder.unitTurnStep) {
+        console.log('Scheduling unit turn step:', workOrder.id);
+        setScheduledStepIds(prev => [...prev, workOrder.id]);
+      } else {
+        // Remove from work orders queue for regular work orders
+        setWorkOrders(prev => prev.filter(wo => wo.id !== workOrder.id));
+      }
+      
+      // Add to scheduled work orders
+      setScheduledWorkOrders(prev => [...prev, updatedWorkOrder]);
+      
+      // Add to today's work orders if scheduled for today
+      const isToday = targetDate.toDateString() === new Date().toDateString();
+      if (isToday) {
+        console.log('Adding to today work orders:', updatedWorkOrder);
+        const newTodayWorkOrders = [...todayWorkOrders, updatedWorkOrder];
+        updateTodayWorkOrders(newTodayWorkOrders);
+      }
+      
+      toast({
+        title: "Work Order Scheduled",
+        description: `${workOrder.title} has been scheduled for ${result.scheduledTime} with mutual availability confirmed`,
+      });
+    } else {
+      toast({
+        title: "Scheduling Failed",
+        description: `Could not find mutual availability for ${workOrder.title}. Please try a different time.`,
+        variant: "destructive"
+      });
     }
-    
-    toast({
-      title: "Work Order Scheduled",
-      description: `${workOrder.title} has been scheduled for ${finalScheduledTime.includes('Tomorrow') ? 'tomorrow at 9:00 AM' : `today at ${finalScheduledTime}`}`,
-    });
   };
 
   const addTodayWorkOrder = (workOrder: any) => {

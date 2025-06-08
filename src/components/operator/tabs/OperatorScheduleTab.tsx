@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Plus, Calendar as CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, addDays, isSameDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -18,6 +19,7 @@ import { teamAvailabilityService } from '@/services/teamAvailabilityService';
 import HourlyCalendarView from '../../schedule/HourlyCalendarView';
 import { sharedEventService } from '@/services/sharedEventService';
 import { UniversalEvent } from '@/types/eventTasks';
+import { sharedSchedulingService } from '@/services/sharedSchedulingService';
 
 const OperatorScheduleTab = () => {
   const { toast } = useToast();
@@ -124,6 +126,49 @@ const OperatorScheduleTab = () => {
   const handleDropSuggestionInTimeline = (suggestion: any, targetTime?: string) => {
     console.log('OperatorScheduleTab: handleDropSuggestionInTimeline called with:', suggestion, targetTime);
     
+    // Check if this is a work order suggestion
+    if (suggestion.type === 'work-order' || suggestion.category === 'Maintenance') {
+      // Use shared scheduling service for work orders
+      const workOrderData = {
+        workOrderId: `suggestion-${suggestion.id}`,
+        title: suggestion.title,
+        description: suggestion.description || 'Maintenance work order',
+        category: 'Maintenance',
+        priority: suggestion.priority || 'medium',
+        assignedResidentId: sharedSchedulingService.getSharedTestResidentId(),
+        assignedMaintenanceUserId: sharedSchedulingService.getSharedTestMaintenanceId(),
+        estimatedDuration: 120
+      };
+
+      const result = sharedSchedulingService.scheduleWorkOrder(
+        workOrderData,
+        selectedDate,
+        targetTime
+      );
+
+      if (result.success) {
+        // Mark suggestion as scheduled
+        setScheduledSuggestionIds(prev => {
+          const updated = [...prev, suggestion.id];
+          console.log('OperatorScheduleTab: Updated scheduled suggestion IDs:', updated);
+          return updated;
+        });
+
+        toast({
+          title: "Work Order Scheduled!",
+          description: `${suggestion.title} scheduled at ${result.scheduledTime} with mutual availability confirmed`,
+        });
+      } else {
+        toast({
+          title: "Scheduling Failed",
+          description: `Could not find mutual availability for ${suggestion.title}. Please try a different time.`,
+          variant: "destructive"
+        });
+      }
+      return;
+    }
+
+    // Handle non-work-order suggestions with original logic
     let assignedTime: string;
     
     if (targetTime) {
