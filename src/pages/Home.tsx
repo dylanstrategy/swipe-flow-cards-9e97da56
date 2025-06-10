@@ -25,30 +25,6 @@ const Home = () => {
       color: 'bg-blue-500'
     },
     {
-      id: 'prospect',
-      title: 'Prospect Portal',
-      description: 'Find your perfect apartment and manage your application process',
-      icon: UserCheck,
-      path: '/prospect',
-      color: 'bg-purple-500'
-    },
-    {
-      id: 'leasing',
-      title: 'Leasing Manager',
-      description: 'Manage prospects, schedule tours, and oversee the leasing process',
-      icon: Users,
-      path: '/leasing',
-      color: 'bg-orange-500'
-    },
-    {
-      id: 'vendor',
-      title: 'Vendor Portal',
-      description: 'View assigned work orders and manage maintenance tasks',
-      icon: Wrench,
-      path: '/vendor',
-      color: 'bg-gray-600'
-    },
-    {
       id: 'discovery',
       title: 'Discovery Flow',
       description: 'Find your perfect apartment with our guided discovery process',
@@ -90,11 +66,6 @@ const Home = () => {
     }
   ];
 
-  const handleNavigate = (path: string) => {
-    console.log('Navigating to:', path);
-    navigate(path);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
@@ -108,7 +79,7 @@ const Home = () => {
             <Card 
               key={interface_.id} 
               className="hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => handleNavigate(interface_.path)}
+              onClick={() => navigate(interface_.path)}
             >
               <CardHeader className="text-center">
                 <div className={`w-16 h-16 ${interface_.color} rounded-full flex items-center justify-center mx-auto mb-4`}>
@@ -124,7 +95,7 @@ const Home = () => {
                   className="w-full"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleNavigate(interface_.path);
+                    navigate(interface_.path);
                   }}
                 >
                   Launch Interface

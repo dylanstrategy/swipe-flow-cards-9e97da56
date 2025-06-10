@@ -6,7 +6,7 @@ import WorkOrdersReview from './today/WorkOrdersReview';
 import WorkOrderTimeline from '../maintenance/WorkOrderTimeline';
 import UniversalEventDetailModal from '../events/UniversalEventDetailModal';
 import { useToast } from '@/hooks/use-toast';
-import { format, differenceInDays } from 'date-fns';
+import { format, addDays, isSameDay, differenceInDays, isPast, isToday } from 'date-fns';
 import { useProfile } from '@/contexts/ProfileContext';
 import ResidentTimeline from '../ResidentTimeline';
 import TodayHeader from './today/TodayHeader';
@@ -40,13 +40,10 @@ const TodayTab = () => {
   const [weather, setWeather] = useState({ temp: 72, condition: 'Sunny' });
   const [calendarEvents, setCalendarEvents] = useState<UniversalEvent[]>([]);
 
-  // Subscribe to shared event service - UNIFIED DATA SOURCE
+  // Subscribe to shared event service
   useEffect(() => {
     const updateEvents = () => {
-      // Use unified method for today's events
-      const today = new Date();
-      const residentEvents = sharedEventService.getEventsForRoleAndDate('resident', today);
-      console.log('TodayTab: Unified resident events loaded:', residentEvents.length, 'events');
+      const residentEvents = sharedEventService.getEventsForRole('resident');
       setCalendarEvents(residentEvents);
     };
 
@@ -56,7 +53,7 @@ const TodayTab = () => {
     // Subscribe to changes
     const unsubscribe = sharedEventService.subscribe(updateEvents);
     return unsubscribe;
-  }, []); // Remove selectedDate dependency since we always want today
+  }, []);
 
   // Use profile pets instead of hardcoded ones
   const userPets = profile.pets;
@@ -139,9 +136,9 @@ const TodayTab = () => {
     setCurrentStep(1);
   };
 
-  // UNIFIED METHOD - replaces old getEventsForDate
   const getEventsForDate = (date: Date) => {
-    return sharedEventService.getEventsForRoleAndDate('resident', date);
+    return sharedEventService.getEventsForRoleAndDate('resident', date)
+      .sort((a, b) => a.time.localeCompare(b.time));
   };
 
   const formatTime = (time: string) => {
@@ -462,10 +459,10 @@ const TodayTab = () => {
     return <ResidentTimeline onClose={() => setShowTimeline(false)} />;
   }
 
-  // Only show today's events - this ensures calendar sync with UNIFIED DATA
+  // Only show today's events - this ensures calendar sync
   const todayEvents = getEventsForDate(new Date());
 
-  console.log('TodayTab: Today events loaded via unified service:', todayEvents.length, 'events');
+  console.log('TodayTab: Today events loaded:', todayEvents.length, 'events');
 
   return (
     <div className="min-h-screen pb-24">

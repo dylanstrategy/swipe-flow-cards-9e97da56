@@ -4,10 +4,9 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Circle, Clock, User, Lock, Undo2 } from 'lucide-react';
 import { EventTask } from '@/types/eventTasks';
 import type { TaskCompletionStamp } from '@/types/taskStamps';
-import { Role, userHasAccessToTask } from '@/types/roles';
+import { Role } from '@/types/roles';
 import { format } from 'date-fns';
 import TaskModalManager from '../tasks/TaskModalManager';
-import { sharedEventService } from '@/services/sharedEventService';
 
 interface TaskChecklistProps {
   tasks: EventTask[];
@@ -18,7 +17,6 @@ interface TaskChecklistProps {
   readOnly?: boolean;
   completionStamps: TaskCompletionStamp[];
   eventType: string;
-  eventId?: string;
 }
 
 const TaskChecklist = ({
@@ -29,8 +27,7 @@ const TaskChecklist = ({
   onTaskStart,
   readOnly = false,
   completionStamps,
-  eventType,
-  eventId
+  eventType
 }: TaskChecklistProps) => {
   const [activeTaskModal, setActiveTaskModal] = useState<EventTask | null>(null);
 
@@ -46,8 +43,6 @@ const TaskChecklist = ({
         return 'bg-purple-100 text-purple-800';
       case 'vendor':
         return 'bg-gray-100 text-gray-800';
-      case 'leasing':
-        return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -65,8 +60,6 @@ const TaskChecklist = ({
         return '👤';
       case 'vendor':
         return '🏢';
-      case 'leasing':
-        return '📋';
       default:
         return '👤';
     }
@@ -87,12 +80,10 @@ const TaskChecklist = ({
     return 'available';
   };
 
+  // STRICT ROLE ENFORCEMENT - Only assigned role can interact with task
   const canUserInteractWithTask = (task: EventTask) => {
-    const canInteract = currentUserRole === task.assignedRole || 
-      (currentUserRole === 'operator' && 
-        (task.assignedRole === 'maintenance' || task.assignedRole === 'leasing'));
-    
-    return canInteract && !readOnly;
+    // Only the exact assigned role can interact with the task (no exceptions)
+    return (task.assignedRole === currentUserRole) && !readOnly;
   };
 
   const canUndoTask = (task: EventTask) => {
@@ -102,11 +93,13 @@ const TaskChecklist = ({
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
     
+    // Find the stamp for this task
     const stamp = getTaskStamp(task.id);
     if (stamp && stamp.permanent) {
-      return false;
+      return false; // Cannot undo permanent stamps
     }
     
+    // Only allow undo if before 11:59 PM on same day and not permanent
     return now <= endOfDay && 
            task.completedAt && 
            task.completedAt.toDateString() === now.toDateString() &&
@@ -117,30 +110,8 @@ const TaskChecklist = ({
     return completionStamps.find(stamp => stamp.taskId === taskId);
   };
 
-  const handleCompleteTask = async (task: EventTask) => {
-    const canInteract = canUserInteractWithTask(task);
-    
-    if (!canInteract) {
-      console.log('User cannot complete task - insufficient permissions');
-      return;
-    }
-
-    console.log('Completing task:', task.id, 'for role:', currentUserRole);
-    
-    try {
-      const success = sharedEventService.completeTask(task.id, currentUserRole);
-      if (success) {
-        onTaskComplete(task.id);
-        console.log('Task completed successfully');
-      } else {
-        console.error('Task completion failed');
-      }
-    } catch (err) {
-      console.error("Task completion failed:", err);
-    }
-  };
-
   const handleTaskAction = (task: EventTask) => {
+    // Check role permissions first - STRICT ENFORCEMENT
     if (!canUserInteractWithTask(task)) {
       console.log('User does not have permission to interact with this task - Role mismatch');
       return;
@@ -149,27 +120,16 @@ const TaskChecklist = ({
     const taskStatus = getTaskStatus(task);
     
     if (taskStatus === 'available') {
-      console.log('Starting task:', task.id);
       onTaskStart(task.id);
     } else if (taskStatus === 'in-progress') {
-      console.log('Opening modal for task:', task.id);
+      // Open the appropriate modal for this task
       setActiveTaskModal(task);
     }
   };
 
-  const handleUndoTask = (task: EventTask) => {
-    if (!canUserInteractWithTask(task) || !canUndoTask(task)) {
-      console.log('User cannot undo task');
-      return;
-    }
-
-    console.log('Undoing task:', task.id);
-    onTaskUndo(task.id);
-  };
-
   const handleModalComplete = () => {
     if (activeTaskModal) {
-      handleCompleteTask(activeTaskModal);
+      onTaskComplete(activeTaskModal.id);
       setActiveTaskModal(null);
     }
   };
@@ -270,10 +230,11 @@ const TaskChecklist = ({
                         </p>
                       )}
 
+                      {/* STRICT ROLE ENFORCEMENT MESSAGE */}
                       {!canInteract && !readOnly && taskStatus !== 'complete' && taskStatus !== 'locked' && (
                         <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
                           <Lock className="w-3 h-3" />
-                          Task assigned to {task.assignedRole} - your role ({currentUserRole}) cannot complete this task
+                          Only {task.assignedRole} can complete this task
                         </p>
                       )}
                     </div>
@@ -304,37 +265,31 @@ const TaskChecklist = ({
                   
                   {canInteract && (
                     <div className="mt-3 flex gap-2">
-                      {taskStatus === 'available' && (
+                      {(taskStatus === 'available' || taskStatus === 'in-progress') && (
                         <Button
                           size="sm"
                           onClick={() => handleTaskAction(task)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          className={taskStatus === 'available' ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-green-600 hover:bg-green-700 text-white"}
                         >
-                          <Clock className="w-4 h-4 mr-2" />
-                          Start Task
+                          {taskStatus === 'available' ? (
+                            <>
+                              <Clock className="w-4 h-4 mr-2" />
+                              Start Task
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Complete Task
+                            </>
+                          )}
                         </Button>
                       )}
                       
-                      {taskStatus === 'in-progress' && (
-                        <Button
-                          size="sm"
-                          disabled={!canInteract}
-                          onClick={() => {
-                            if (!canInteract) return;
-                            handleCompleteTask(task);
-                          }}
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                        >
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          Complete Task
-                        </Button>
-                      )}
-                      
-                      {taskStatus === 'complete' && canUndo && (
+                      {taskStatus === 'complete' && canUndo && canInteract && (
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleUndoTask(task)}
+                          onClick={() => onTaskUndo(task.id)}
                           className="border-orange-300 text-orange-700 hover:bg-orange-50"
                         >
                           <Undo2 className="w-4 h-4 mr-2" />
@@ -356,6 +311,7 @@ const TaskChecklist = ({
         )}
       </div>
 
+      {/* Task Modal */}
       {activeTaskModal && (
         <TaskModalManager
           task={activeTaskModal}

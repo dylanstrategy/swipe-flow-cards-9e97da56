@@ -39,7 +39,7 @@ const Resident = () => {
   const handleRoleSwitch = (role: string) => {
     switch (role) {
       case 'prospect':
-        navigate('/prospect');
+        navigate('/discovery');
         break;
       case 'resident':
         // Already in resident view
@@ -107,7 +107,7 @@ const Resident = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent 
               align="end" 
-              className="w-56 bg-white border shadow-lg z-[100]"
+              className="w-56 bg-white border shadow-lg z-[100] max-h-[calc(100vh-200px)] overflow-y-auto mb-32"
               sideOffset={8}
             >
               <DropdownMenuLabel className="font-normal">
@@ -128,27 +128,29 @@ const Resident = () => {
                 <span>Setup</span>
               </DropdownMenuItem>
               
-              <DropdownMenuItem className="cursor-pointer">
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Role</span>
+              <DropdownMenuItem className="cursor-pointer focus:bg-accent">
+                <div className="flex items-center w-full">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Role</span>
+                </div>
               </DropdownMenuItem>
               
               {/* Role submenu items */}
-              <div className="ml-6 space-y-1 border-l border-gray-200 pl-2">
+              <div className="ml-6 space-y-1">
                 <DropdownMenuItem 
-                  className="cursor-pointer text-sm py-1"
+                  className="cursor-pointer text-sm"
                   onClick={() => handleRoleSwitch('prospect')}
                 >
                   Prospect View
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  className="cursor-pointer text-sm py-1 bg-blue-50 text-blue-700"
+                  className="cursor-pointer text-sm bg-blue-50"
                   onClick={() => handleRoleSwitch('resident')}
                 >
                   Resident View (Current)
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  className="cursor-pointer text-sm py-1"
+                  className="cursor-pointer text-sm"
                   onClick={() => handleRoleSwitch('operator')}
                 >
                   Operator View

@@ -1,3 +1,4 @@
+
 import { format, addMinutes, isSameDay, parse } from 'date-fns';
 import { sharedEventService } from './sharedEventService';
 import { UniversalEvent } from '@/types/eventTasks';
@@ -245,19 +246,23 @@ class SharedSchedulingService {
     };
 
     // Add the event to shared service (it will be visible to all roles)
-    sharedEventService.addEvent(sharedEvent);
+    const success = sharedEventService.addEvent(sharedEvent);
     
-    console.log('Work order scheduled successfully:', {
-      eventId,
-      time: finalTime,
-      date: format(targetDate, 'yyyy-MM-dd')
-    });
+    if (success) {
+      console.log('Work order scheduled successfully:', {
+        eventId,
+        time: finalTime,
+        date: format(targetDate, 'yyyy-MM-dd')
+      });
+      
+      return {
+        success: true,
+        scheduledTime: finalTime,
+        eventId
+      };
+    }
     
-    return {
-      success: true,
-      scheduledTime: finalTime,
-      eventId
-    };
+    return { success: false };
   }
 
   /**

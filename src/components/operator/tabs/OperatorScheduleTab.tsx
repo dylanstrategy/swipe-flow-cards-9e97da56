@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Plus, Calendar as CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, addDays, isSameDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -42,12 +43,11 @@ const OperatorScheduleTab = () => {
   // State for managing scheduled events using shared service
   const [scheduledEvents, setScheduledEvents] = useState<UniversalEvent[]>([]);
 
-  // Subscribe to shared event service - Operators see ALL events - UNIFIED DATA SOURCE
+  // Subscribe to shared event service - Operators see ALL events
   useEffect(() => {
     const updateEvents = () => {
       // Operators can see all events since they coordinate everything
       const allEvents = sharedEventService.getAllEvents();
-      console.log('OperatorScheduleTab: Unified all events loaded:', allEvents.length, 'events');
       setScheduledEvents(allEvents);
     };
 
@@ -444,13 +444,9 @@ const OperatorScheduleTab = () => {
     );
   }
 
-  // UNIFIED METHOD - operators see all events for the selected date
   const getEventsForDate = (date: Date) => {
-    const targetDateString = date.toDateString();
-    return sharedEventService.getAllEvents().filter(event => {
-      const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
-      return eventDate.toDateString() === targetDateString;
-    }).sort((a, b) => a.time.localeCompare(b.time));
+    return sharedEventService.getEventsForDate(date)
+      .sort((a, b) => a.time.localeCompare(b.time));
   };
 
   return (
