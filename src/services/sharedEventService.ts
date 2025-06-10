@@ -3,6 +3,19 @@ import { UniversalEvent } from '@/types/eventTasks';
 import { Role } from '@/types/roles';
 import { TaskCompletionStamp } from '@/types/taskStamps';
 
+// Utility function to check if a user role is authorized to complete a task
+const isRoleAuthorizedToComplete = (userRole: Role, taskRole: Role): boolean => {
+  if (userRole === taskRole) return true;
+  if (userRole === 'operator' && (taskRole === 'leasing' || taskRole === 'maintenance')) return true;
+  return false;
+};
+
+// Utility function to check if it's past midnight
+const isPastMidnight = (): boolean => {
+  const now = new Date();
+  return now.getHours() >= 23 && now.getMinutes() >= 59;
+};
+
 // Centralized event store that all roles share
 class SharedEventService {
   private events: UniversalEvent[] = [];
@@ -130,9 +143,9 @@ class SharedEventService {
           },
           {
             id: 'lease-sign-001-task-3',
-            title: 'Operator: Verify Documents',
+            title: 'Leasing: Verify Documents',
             description: 'Verify all signatures and documentation',
-            assignedRole: 'operator',
+            assignedRole: 'leasing',
             isComplete: false,
             isRequired: true,
             status: 'available',
@@ -456,9 +469,9 @@ class SharedEventService {
     const task = event.tasks.find(t => t.id === taskId);
     if (!task) return false;
 
-    // Check role permission
-    if (task.assignedRole !== completedBy) {
-      console.warn(`Task ${taskId} is assigned to ${task.assignedRole}, not ${completedBy}`);
+    // Check role permission using the authorization utility
+    if (!isRoleAuthorizedToComplete(completedBy, task.assignedRole)) {
+      console.warn(`User role ${completedBy} is not authorized to complete task assigned to ${task.assignedRole}`);
       return false;
     }
 
@@ -468,7 +481,7 @@ class SharedEventService {
     task.completedAt = new Date();
     task.completedBy = completedBy;
 
-    // Add completion stamp with formatted display time at CURRENT time (not event time)
+    // Add completion stamp with improved logic
     const completedAt = new Date();
     const stamp: TaskCompletionStamp = {
       id: `${taskId}-completion-${Date.now()}`,
@@ -477,13 +490,13 @@ class SharedEventService {
       eventId,
       eventType: event.type,
       completedAt,
-      actualCompletionTime: completedAt, // Lock to true completion time
+      actualCompletionTime: completedAt,
       completedBy: completedBy,
       completedByName: this.getRoleDisplayName(completedBy),
       userId: this.getUserIdForRole(completedBy),
-      canUndo: true,
+      canUndo: !isPastMidnight(),
       displayTime: format(completedAt, 'h:mm a'),
-      permanent: true // Initially set as permanent
+      permanent: isPastMidnight()
     };
 
     event.taskCompletionStamps = event.taskCompletionStamps || [];
@@ -513,13 +526,13 @@ class SharedEventService {
         eventId,
         eventType: event.type,
         completedAt: new Date(),
-        actualCompletionTime: new Date(), // Lock to true completion time
+        actualCompletionTime: new Date(),
         completedBy: completedBy,
         completedByName: this.getRoleDisplayName(completedBy),
         userId: this.getUserIdForRole(completedBy),
         canUndo: false,
         displayTime: format(new Date(), 'h:mm a'),
-        permanent: true // Event completion stamps are always permanent
+        permanent: true
       };
       
       event.taskCompletionStamps.push(eventCompletionStamp);
@@ -543,6 +556,13 @@ class SharedEventService {
       const task = event.tasks.find(t => t.id === taskId);
       if (!task) {
         console.error('Task not found for undo:', taskId);
+        return false;
+      }
+
+      // Check if undo is allowed (not past midnight and not permanent)
+      const stamp = event.taskCompletionStamps.find(s => s.taskId === taskId);
+      if (stamp && (stamp.permanent || isPastMidnight())) {
+        console.log('Cannot undo task - it is permanent or past midnight');
         return false;
       }
 
@@ -579,7 +599,8 @@ class SharedEventService {
       'operator': 'Lisa Chen', 
       'maintenance': 'Mike Rodriguez',
       'prospect': 'Prospect User',
-      'vendor': 'Vendor User'
+      'vendor': 'Vendor User',
+      'leasing': 'Leasing Agent'
     };
     return roleNames[role] || role;
   }
@@ -590,7 +611,8 @@ class SharedEventService {
       'operator': 'test-operator-001', 
       'maintenance': 'test-maintenance-001',
       'prospect': 'test-prospect-001',
-      'vendor': 'test-vendor-001'
+      'vendor': 'test-vendor-001',
+      'leasing': 'test-leasing-001'
     };
     return userIds[role] || 'system';
   }
@@ -621,3 +643,4 @@ class SharedEventService {
 }
 
 export const sharedEventService = new SharedEventService();
+export { isRoleAuthorizedToComplete };

@@ -7,7 +7,7 @@ import UnitTurnDetailTracker from '@/components/maintenance/UnitTurnDetailTracke
 import HourlyCalendarView from '@/components/schedule/HourlyCalendarView';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { createTestEvents, getEventsForRole } from '@/data/testEvents';
+import { sharedEventService } from '@/services/sharedEventService';
 
 interface MaintenanceTodayTabProps {
   todayWorkOrders?: any[];
@@ -24,8 +24,7 @@ const MaintenanceTodayTab = ({ onWorkOrderCompleted }: MaintenanceTodayTabProps)
 
   // Get shared events filtered for maintenance role
   const maintenanceEvents = React.useMemo(() => {
-    const allEvents = createTestEvents();
-    return getEventsForRole(allEvents, 'maintenance');
+    return sharedEventService.getEventsForRole('maintenance');
   }, []);
 
   console.log('MaintenanceTodayTab - maintenance events:', maintenanceEvents);

@@ -1,9 +1,9 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Circle, Clock, User } from 'lucide-react';
 import { EventTask } from '@/types/eventTasks';
+import { isRoleAuthorizedToComplete } from '@/services/sharedEventService';
 
 interface UniversalEventTaskListProps {
   tasks: EventTask[];
@@ -20,6 +20,8 @@ const UniversalEventTaskList = ({
   onTaskClick,
   readOnly = false
 }: UniversalEventTaskListProps) => {
+  const [, forceRender] = useState(0);
+
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'resident':
@@ -32,6 +34,8 @@ const UniversalEventTaskList = ({
         return 'bg-purple-100 text-purple-800';
       case 'vendor':
         return 'bg-gray-100 text-gray-800';
+      case 'leasing':
+        return 'bg-teal-100 text-teal-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -49,17 +53,24 @@ const UniversalEventTaskList = ({
         return '👤';
       case 'vendor':
         return '🏢';
+      case 'leasing':
+        return '📄';
       default:
         return '👤';
     }
   };
 
   const canCompleteTask = (task: EventTask) => {
-    return task.assignedRole === currentUserRole && !task.isComplete && !readOnly;
+    return isRoleAuthorizedToComplete(currentUserRole as any, task.assignedRole as any) && !task.isComplete && !readOnly;
   };
 
   const isTaskRelevantToUser = (task: EventTask) => {
-    return task.assignedRole === currentUserRole || currentUserRole === 'operator';
+    return isRoleAuthorizedToComplete(currentUserRole as any, task.assignedRole as any) || currentUserRole === 'operator';
+  };
+
+  const handleCompleteTask = async (taskId: string) => {
+    await onTaskComplete(taskId);
+    forceRender(x => x + 1); // trigger UI update
   };
 
   const sortedTasks = tasks.sort((a, b) => {
@@ -115,7 +126,7 @@ const UniversalEventTaskList = ({
                     className={`focus:outline-none ${canComplete ? 'text-blue-600' : 'text-gray-400 cursor-not-allowed'}`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (canComplete) onTaskComplete(task.id);
+                      if (canComplete) handleCompleteTask(task.id);
                     }}
                     disabled={!canComplete}
                   >
@@ -175,7 +186,7 @@ const UniversalEventTaskList = ({
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onTaskComplete(task.id);
+                        handleCompleteTask(task.id);
                       }}
                       className="bg-green-600 hover:bg-green-700 text-white"
                     >
