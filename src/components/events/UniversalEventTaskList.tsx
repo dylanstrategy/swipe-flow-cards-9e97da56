@@ -111,7 +111,16 @@ const UniversalEventTaskList = ({
                 {task.isComplete ? (
                   <CheckCircle className="w-5 h-5 text-green-600" />
                 ) : (
-                  <Circle className={`w-5 h-5 ${isRelevant ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <button
+                    className={`focus:outline-none ${canComplete ? 'text-blue-600' : 'text-gray-400 cursor-not-allowed'}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (canComplete) onTaskComplete(task.id);
+                    }}
+                    disabled={!canComplete}
+                  >
+                    <Circle className="w-5 h-5" />
+                  </button>
                 )}
               </div>
               
