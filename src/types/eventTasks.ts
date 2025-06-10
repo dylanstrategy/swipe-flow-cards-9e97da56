@@ -1,4 +1,3 @@
-
 import { Role } from './roles';
 import type { TaskCompletionStamp } from './taskStamps';
 
@@ -15,6 +14,7 @@ export interface EventTask {
   estimatedDuration?: number; // in minutes
   instructions?: string;
   dependencies?: string[]; // task IDs that must be completed first
+  dependsOnTaskId?: string; // single task dependency - Add this line to fix TS errors
   status: 'locked' | 'available' | 'in-progress' | 'complete';
   unlockCondition?: string; // optional unlock condition
   canUndo?: boolean; // whether task can be undone before 11:59 PM
