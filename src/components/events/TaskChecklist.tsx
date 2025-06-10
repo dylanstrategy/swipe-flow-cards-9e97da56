@@ -8,6 +8,7 @@ import type { TaskCompletionStamp } from '@/types/taskStamps';
 import { Role, userHasAccessToTask } from '@/types/roles';
 import { format } from 'date-fns';
 import TaskModalManager from '../tasks/TaskModalManager';
+import { sharedEventService } from '@/services/sharedEventService';
 
 interface TaskChecklistProps {
   tasks: EventTask[];
@@ -18,6 +19,7 @@ interface TaskChecklistProps {
   readOnly?: boolean;
   completionStamps: TaskCompletionStamp[];
   eventType: string;
+  eventId?: string;
 }
 
 const TaskChecklist = ({
@@ -28,7 +30,8 @@ const TaskChecklist = ({
   onTaskStart,
   readOnly = false,
   completionStamps,
-  eventType
+  eventType,
+  eventId
 }: TaskChecklistProps) => {
   const [activeTaskModal, setActiveTaskModal] = useState<EventTask | null>(null);
 
@@ -44,6 +47,8 @@ const TaskChecklist = ({
         return 'bg-purple-100 text-purple-800';
       case 'vendor':
         return 'bg-gray-100 text-gray-800';
+      case 'leasing':
+        return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -61,6 +66,8 @@ const TaskChecklist = ({
         return '👤';
       case 'vendor':
         return '🏢';
+      case 'leasing':
+        return '📋';
       default:
         return '👤';
     }
@@ -107,6 +114,29 @@ const TaskChecklist = ({
     return completionStamps.find(stamp => stamp.taskId === taskId);
   };
 
+  const handleCompleteTask = async (task: EventTask) => {
+    const canInteract = userHasAccessToTask(currentUserRole, task.assignedRole);
+    
+    if (!canInteract) {
+      console.log('User cannot complete task - insufficient permissions');
+      return;
+    }
+
+    console.log('Completing task:', task.id, 'for role:', currentUserRole);
+    
+    try {
+      const success = sharedEventService.completeTask(task.id, currentUserRole);
+      if (success) {
+        onTaskComplete(task.id);
+        console.log('Task completed successfully');
+      } else {
+        console.error('Task completion failed');
+      }
+    } catch (err) {
+      console.error("Task completion failed:", err);
+    }
+  };
+
   const handleTaskAction = (task: EventTask) => {
     if (!canUserInteractWithTask(task)) {
       console.log('User does not have permission to interact with this task - Role mismatch');
@@ -122,16 +152,6 @@ const TaskChecklist = ({
       console.log('Opening modal for task:', task.id);
       setActiveTaskModal(task);
     }
-  };
-
-  const handleCompleteTask = (task: EventTask) => {
-    if (!canUserInteractWithTask(task)) {
-      console.log('User cannot complete task - insufficient permissions');
-      return;
-    }
-
-    console.log('Completing task:', task.id, 'for role:', currentUserRole);
-    onTaskComplete(task.id);
   };
 
   const handleUndoTask = (task: EventTask) => {
@@ -297,6 +317,7 @@ const TaskChecklist = ({
                           size="sm"
                           onClick={() => handleCompleteTask(task)}
                           className="bg-green-600 hover:bg-green-700 text-white"
+                          disabled={!canInteract}
                         >
                           <CheckCircle className="w-4 h-4 mr-2" />
                           Complete Task
