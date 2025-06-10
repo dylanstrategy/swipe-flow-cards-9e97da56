@@ -355,13 +355,9 @@ class SharedEventService {
   }
 
   private isEventRelevantForRole(event: UniversalEvent, role: Role): boolean {
-    // Check if the event has assigned users
     if (event.assignedUsers && event.assignedUsers.length > 0) {
-      // Check if the role is assigned to the event
       return event.assignedUsers.some(user => user.role === role);
     }
-
-    // If no assigned users, consider the event relevant for all roles
     return true;
   }
 
@@ -409,6 +405,8 @@ class SharedEventService {
   }
 
   completeTask(taskId: string, userRole: Role): boolean {
+    console.log('SharedEventService.completeTask called with:', { taskId, userRole });
+    
     const eventIndex = this.events.findIndex(event =>
       event.tasks.some(task => task.id === taskId)
     );
@@ -428,19 +426,22 @@ class SharedEventService {
 
     const task = event.tasks[taskIndex];
 
-    // UPDATED: Use role hierarchy instead of strict role check
     if (!userHasAccessToTask(userRole, task.assignedRole)) {
       console.warn(`User role ${userRole} is not authorized to complete task ${taskId} (assigned to ${task.assignedRole})`);
       return false;
     }
 
+    console.log('Completing task:', task.title);
+
+    const completionTime = new Date();
     const updatedTask: EventTask = {
       ...task,
       isComplete: true,
-      status: 'complete'
+      status: 'complete',
+      completedAt: completionTime,
+      completedBy: userRole
     };
 
-    const completionTime = new Date();
     const taskStamp: TaskCompletionStamp = {
       id: `${taskId}-completed-${Date.now()}`,
       taskId: task.id,
@@ -450,8 +451,8 @@ class SharedEventService {
       completedAt: completionTime,
       actualCompletionTime: completionTime,
       completedBy: userRole,
-      completedByName: userRole, // Replace with actual user name if available
-      userId: 'system', // Replace with actual user ID if available
+      completedByName: userRole,
+      userId: 'system',
       canUndo: true,
       displayTime: completionTime.toLocaleTimeString('en-US', { 
         hour: 'numeric', 
@@ -475,11 +476,68 @@ class SharedEventService {
     };
 
     this.events[eventIndex] = updatedEvent;
+    console.log('Task completed successfully, notifying listeners');
+    this.notifyListeners();
+    return true;
+  }
+
+  startTask(taskId: string, userRole: Role): boolean {
+    console.log('SharedEventService.startTask called with:', { taskId, userRole });
+    
+    const eventIndex = this.events.findIndex(event =>
+      event.tasks.some(task => task.id === taskId)
+    );
+
+    if (eventIndex === -1) {
+      console.warn(`No event found with task ID ${taskId}`);
+      return false;
+    }
+
+    const event = this.events[eventIndex];
+    const taskIndex = event.tasks.findIndex(task => task.id === taskId);
+
+    if (taskIndex === -1) {
+      console.warn(`Task with ID ${taskId} not found in event ${event.id}`);
+      return false;
+    }
+
+    const task = event.tasks[taskIndex];
+
+    if (!userHasAccessToTask(userRole, task.assignedRole)) {
+      console.warn(`User role ${userRole} is not authorized to start task ${taskId} (assigned to ${task.assignedRole})`);
+      return false;
+    }
+
+    if (task.status !== 'available') {
+      console.warn(`Task ${taskId} is not available for starting (current status: ${task.status})`);
+      return false;
+    }
+
+    console.log('Starting task:', task.title);
+
+    const updatedTask: EventTask = {
+      ...task,
+      status: 'in-progress'
+    };
+
+    const updatedEvent: UniversalEvent = {
+      ...event,
+      tasks: [
+        ...event.tasks.slice(0, taskIndex),
+        updatedTask,
+        ...event.tasks.slice(taskIndex + 1)
+      ]
+    };
+
+    this.events[eventIndex] = updatedEvent;
+    console.log('Task started successfully, notifying listeners');
     this.notifyListeners();
     return true;
   }
 
   undoTaskCompletion(taskId: string): boolean {
+    console.log('SharedEventService.undoTaskCompletion called with:', { taskId });
+    
     const eventIndex = this.events.findIndex(event =>
       event.tasks.some(task => task.id === taskId)
     );
@@ -502,7 +560,9 @@ class SharedEventService {
     const updatedTask: EventTask = {
       ...task,
       isComplete: false,
-      status: 'available'
+      status: 'available',
+      completedAt: undefined,
+      completedBy: undefined
     };
 
     const updatedEvent: UniversalEvent = {
@@ -516,6 +576,7 @@ class SharedEventService {
     };
 
     this.events[eventIndex] = updatedEvent;
+    console.log('Task completion undone successfully, notifying listeners');
     this.notifyListeners();
     return true;
   }
@@ -533,15 +594,10 @@ class SharedEventService {
     this.listeners.forEach(listener => listener());
   }
 
-  /**
-   * Unified method to get events for a specific date and role
-   * This ensures TodayTab and ScheduleTab always show the same events
-   */
   getEventsForRoleAndDate(role: Role, date: Date): UniversalEvent[] {
     const targetDateString = date.toDateString();
     
     return this.events.filter(event => {
-      // Check if event is for the target date
       const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
       const eventDateString = eventDate.toDateString();
       
@@ -549,14 +605,10 @@ class SharedEventService {
         return false;
       }
       
-      // Check if event is relevant for the role
       return this.isEventRelevantForRole(event, role);
     }).sort((a, b) => a.time.localeCompare(b.time));
   }
 
-  /**
-   * Get today's events specifically for a role
-   */
   getTodaysEventsForRole(role: Role): UniversalEvent[] {
     const today = new Date();
     return this.getEventsForRoleAndDate(role, today);

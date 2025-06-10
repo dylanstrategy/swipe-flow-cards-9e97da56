@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -80,9 +81,7 @@ const TaskChecklist = ({
     return 'available';
   };
 
-  // UPDATED: Use role hierarchy instead of strict role enforcement
   const canUserInteractWithTask = (task: EventTask) => {
-    // Use the new role hierarchy system
     return userHasAccessToTask(currentUserRole, task.assignedRole) && !readOnly;
   };
 
@@ -93,13 +92,11 @@ const TaskChecklist = ({
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
     
-    // Find the stamp for this task
     const stamp = getTaskStamp(task.id);
     if (stamp && stamp.permanent) {
-      return false; // Cannot undo permanent stamps
+      return false;
     }
     
-    // Only allow undo if before 11:59 PM on same day and not permanent
     return now <= endOfDay && 
            task.completedAt && 
            task.completedAt.toDateString() === now.toDateString() &&
@@ -111,7 +108,6 @@ const TaskChecklist = ({
   };
 
   const handleTaskAction = (task: EventTask) => {
-    // Check role permissions first - STRICT ENFORCEMENT
     if (!canUserInteractWithTask(task)) {
       console.log('User does not have permission to interact with this task - Role mismatch');
       return;
@@ -120,16 +116,37 @@ const TaskChecklist = ({
     const taskStatus = getTaskStatus(task);
     
     if (taskStatus === 'available') {
+      console.log('Starting task:', task.id);
       onTaskStart(task.id);
     } else if (taskStatus === 'in-progress') {
-      // Open the appropriate modal for this task
+      console.log('Opening modal for task:', task.id);
       setActiveTaskModal(task);
     }
   };
 
+  const handleCompleteTask = (task: EventTask) => {
+    if (!canUserInteractWithTask(task)) {
+      console.log('User cannot complete task - insufficient permissions');
+      return;
+    }
+
+    console.log('Completing task:', task.id, 'for role:', currentUserRole);
+    onTaskComplete(task.id);
+  };
+
+  const handleUndoTask = (task: EventTask) => {
+    if (!canUserInteractWithTask(task) || !canUndoTask(task)) {
+      console.log('User cannot undo task');
+      return;
+    }
+
+    console.log('Undoing task:', task.id);
+    onTaskUndo(task.id);
+  };
+
   const handleModalComplete = () => {
     if (activeTaskModal) {
-      onTaskComplete(activeTaskModal.id);
+      handleCompleteTask(activeTaskModal);
       setActiveTaskModal(null);
     }
   };
@@ -230,7 +247,6 @@ const TaskChecklist = ({
                         </p>
                       )}
 
-                      {/* UPDATED: Role hierarchy message */}
                       {!canInteract && !readOnly && taskStatus !== 'complete' && taskStatus !== 'locked' && (
                         <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
                           <Lock className="w-3 h-3" />
@@ -265,31 +281,33 @@ const TaskChecklist = ({
                   
                   {canInteract && (
                     <div className="mt-3 flex gap-2">
-                      {(taskStatus === 'available' || taskStatus === 'in-progress') && (
+                      {taskStatus === 'available' && (
                         <Button
                           size="sm"
                           onClick={() => handleTaskAction(task)}
-                          className={taskStatus === 'available' ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-green-600 hover:bg-green-700 text-white"}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
                         >
-                          {taskStatus === 'available' ? (
-                            <>
-                              <Clock className="w-4 h-4 mr-2" />
-                              Start Task
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle className="w-4 h-4 mr-2" />
-                              Complete Task
-                            </>
-                          )}
+                          <Clock className="w-4 h-4 mr-2" />
+                          Start Task
                         </Button>
                       )}
                       
-                      {taskStatus === 'complete' && canUndo && canInteract && (
+                      {taskStatus === 'in-progress' && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleCompleteTask(task)}
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Complete Task
+                        </Button>
+                      )}
+                      
+                      {taskStatus === 'complete' && canUndo && (
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => onTaskUndo(task.id)}
+                          onClick={() => handleUndoTask(task)}
                           className="border-orange-300 text-orange-700 hover:bg-orange-50"
                         >
                           <Undo2 className="w-4 h-4 mr-2" />
@@ -311,7 +329,6 @@ const TaskChecklist = ({
         )}
       </div>
 
-      {/* Task Modal */}
       {activeTaskModal && (
         <TaskModalManager
           task={activeTaskModal}
