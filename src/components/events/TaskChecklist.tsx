@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -89,7 +88,11 @@ const TaskChecklist = ({
   };
 
   const canUserInteractWithTask = (task: EventTask) => {
-    return userHasAccessToTask(currentUserRole, task.assignedRole) && !readOnly;
+    const canInteract = currentUserRole === task.assignedRole || 
+      (currentUserRole === 'operator' && 
+        (task.assignedRole === 'maintenance' || task.assignedRole === 'leasing'));
+    
+    return canInteract && !readOnly;
   };
 
   const canUndoTask = (task: EventTask) => {
@@ -115,7 +118,7 @@ const TaskChecklist = ({
   };
 
   const handleCompleteTask = async (task: EventTask) => {
-    const canInteract = userHasAccessToTask(currentUserRole, task.assignedRole);
+    const canInteract = canUserInteractWithTask(task);
     
     if (!canInteract) {
       console.log('User cannot complete task - insufficient permissions');
@@ -315,9 +318,12 @@ const TaskChecklist = ({
                       {taskStatus === 'in-progress' && (
                         <Button
                           size="sm"
-                          onClick={() => handleCompleteTask(task)}
-                          className="bg-green-600 hover:bg-green-700 text-white"
                           disabled={!canInteract}
+                          onClick={() => {
+                            if (!canInteract) return;
+                            handleCompleteTask(task);
+                          }}
+                          className="bg-green-600 hover:bg-green-700 text-white"
                         >
                           <CheckCircle className="w-4 h-4 mr-2" />
                           Complete Task
