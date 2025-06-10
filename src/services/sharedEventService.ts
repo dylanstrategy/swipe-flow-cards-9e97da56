@@ -10,6 +10,13 @@ const isRoleAuthorizedToComplete = (userRole: Role, taskRole: Role): boolean => 
   return false;
 };
 
+// Utility function to check if a task is unlocked based on dependencies
+const isTaskUnlocked = (task: any, eventTasks: any[]): boolean => {
+  if (!task.dependsOnTaskId) return true;
+  const prerequisite = eventTasks.find(t => t.id === task.dependsOnTaskId);
+  return prerequisite?.isComplete === true;
+};
+
 // Utility function to check if it's past midnight
 const isPastMidnight = (): boolean => {
   const now = new Date();
@@ -69,7 +76,8 @@ class SharedEventService {
             isComplete: false,
             isRequired: true,
             status: 'available',
-            estimatedDuration: 90
+            estimatedDuration: 90,
+            dependsOnTaskId: 'shared-wo-001-task-1'
           },
           {
             id: 'shared-wo-001-task-3',
@@ -79,7 +87,8 @@ class SharedEventService {
             isComplete: false,
             isRequired: true,
             status: 'available',
-            estimatedDuration: 10
+            estimatedDuration: 10,
+            dependsOnTaskId: 'shared-wo-001-task-2'
           },
           {
             id: 'shared-wo-001-task-4',
@@ -89,7 +98,8 @@ class SharedEventService {
             isComplete: false,
             isRequired: false,
             status: 'available',
-            estimatedDuration: 5
+            estimatedDuration: 5,
+            dependsOnTaskId: 'shared-wo-001-task-3'
           }
         ],
         assignedUsers: [testResident, testMaintenance],
@@ -104,6 +114,67 @@ class SharedEventService {
           maintenanceUserId: 'test-maintenance-001',
           unit: 'Unit 417',
           building: 'Building A'
+        },
+        taskCompletionStamps: []
+      },
+
+      // Message Follow-Up - Today, testing dependencies between operator and resident
+      {
+        id: 'message-followup-001',
+        type: 'resident-message',
+        title: 'Message Follow-Up: Lease Inquiry',
+        description: 'Follow up on resident lease renewal inquiry',
+        date: today,
+        time: '14:30',
+        status: 'scheduled',
+        priority: 'medium',
+        category: 'Communication',
+        estimatedDuration: 30,
+        tasks: [
+          {
+            id: 'message-followup-001-task-1',
+            title: 'Resident: Acknowledge Message',
+            description: 'Acknowledge receipt of lease renewal information',
+            assignedRole: 'resident',
+            isComplete: false,
+            isRequired: true,
+            status: 'available',
+            estimatedDuration: 5
+          },
+          {
+            id: 'message-followup-001-task-2',
+            title: 'Operator: Reply to Message',
+            description: 'Provide detailed response to resident inquiry',
+            assignedRole: 'operator',
+            isComplete: false,
+            isRequired: true,
+            status: 'available',
+            estimatedDuration: 15,
+            dependsOnTaskId: 'message-followup-001-task-1'
+          },
+          {
+            id: 'message-followup-001-task-3',
+            title: 'Operator: Schedule Follow-up',
+            description: 'Schedule follow-up call if needed',
+            assignedRole: 'operator',
+            isComplete: false,
+            isRequired: false,
+            status: 'available',
+            estimatedDuration: 10,
+            dependsOnTaskId: 'message-followup-001-task-2'
+          }
+        ],
+        assignedUsers: [testResident, testOperator],
+        createdBy: 'system',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        rescheduledCount: 0,
+        followUpHistory: [],
+        metadata: {
+          messageId: 'MSG-TEST-001',
+          residentId: 'test-resident-001',
+          operatorId: 'test-operator-001',
+          unit: 'Unit 417'
         },
         taskCompletionStamps: []
       },
@@ -139,7 +210,8 @@ class SharedEventService {
             isComplete: false,
             isRequired: true,
             status: 'available',
-            estimatedDuration: 15
+            estimatedDuration: 15,
+            dependsOnTaskId: 'lease-sign-001-task-1'
           },
           {
             id: 'lease-sign-001-task-3',
@@ -149,7 +221,8 @@ class SharedEventService {
             isComplete: false,
             isRequired: true,
             status: 'available',
-            estimatedDuration: 10
+            estimatedDuration: 10,
+            dependsOnTaskId: 'lease-sign-001-task-2'
           }
         ],
         assignedUsers: [testResident, testOperator],
@@ -197,7 +270,8 @@ class SharedEventService {
             isComplete: false,
             isRequired: true,
             status: 'available',
-            estimatedDuration: 15
+            estimatedDuration: 15,
+            dependsOnTaskId: 'collections-001-task-1'
           },
           {
             id: 'collections-001-task-3',
@@ -207,7 +281,8 @@ class SharedEventService {
             isComplete: false,
             isRequired: true,
             status: 'available',
-            estimatedDuration: 5
+            estimatedDuration: 5,
+            dependsOnTaskId: 'collections-001-task-2'
           }
         ],
         assignedUsers: [testResident, testOperator],
@@ -265,7 +340,8 @@ class SharedEventService {
             isComplete: false,
             isRequired: true,
             status: 'available',
-            estimatedDuration: 10
+            estimatedDuration: 10,
+            dependsOnTaskId: 'pet-reg-001-task-1'
           },
           {
             id: 'pet-reg-001-task-4',
@@ -275,7 +351,8 @@ class SharedEventService {
             isComplete: false,
             isRequired: true,
             status: 'available',
-            estimatedDuration: 10
+            estimatedDuration: 10,
+            dependsOnTaskId: 'pet-reg-001-task-3'
           }
         ],
         assignedUsers: [testResident, testOperator],
@@ -334,7 +411,8 @@ class SharedEventService {
             isComplete: false,
             isRequired: true,
             status: 'available',
-            estimatedDuration: 30
+            estimatedDuration: 30,
+            dependsOnTaskId: 'community-001-task-2'
           }
         ],
         assignedUsers: [testResident, testOperator],
@@ -472,6 +550,12 @@ class SharedEventService {
     // Check role permission using the authorization utility
     if (!isRoleAuthorizedToComplete(completedBy, task.assignedRole)) {
       console.warn(`User role ${completedBy} is not authorized to complete task assigned to ${task.assignedRole}`);
+      return false;
+    }
+
+    // Check if task is unlocked (dependencies met)
+    if (!isTaskUnlocked(task, event.tasks)) {
+      console.warn(`Task ${taskId} is locked due to unmet dependencies`);
       return false;
     }
 
@@ -643,4 +727,4 @@ class SharedEventService {
 }
 
 export const sharedEventService = new SharedEventService();
-export { isRoleAuthorizedToComplete };
+export { isRoleAuthorizedToComplete, isTaskUnlocked };

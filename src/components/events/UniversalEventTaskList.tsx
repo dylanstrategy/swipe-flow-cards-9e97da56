@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Circle, Clock, User } from 'lucide-react';
+import { CheckCircle, Circle, Clock, User, Lock } from 'lucide-react';
 import { EventTask } from '@/types/eventTasks';
-import { isRoleAuthorizedToComplete } from '@/services/sharedEventService';
+import { isRoleAuthorizedToComplete, isTaskUnlocked } from '@/services/sharedEventService';
 
 interface UniversalEventTaskListProps {
   tasks: EventTask[];
@@ -61,11 +62,20 @@ const UniversalEventTaskList = ({
   };
 
   const canCompleteTask = (task: EventTask) => {
-    return isRoleAuthorizedToComplete(currentUserRole as any, task.assignedRole as any) && !task.isComplete && !readOnly;
+    return isRoleAuthorizedToComplete(currentUserRole as any, task.assignedRole as any) && 
+           isTaskUnlocked(task, tasks) && 
+           !task.isComplete && 
+           !readOnly;
   };
 
   const isTaskRelevantToUser = (task: EventTask) => {
     return isRoleAuthorizedToComplete(currentUserRole as any, task.assignedRole as any) || currentUserRole === 'operator';
+  };
+
+  const getTaskStatus = (task: EventTask) => {
+    if (task.isComplete) return 'complete';
+    if (!isTaskUnlocked(task, tasks)) return 'locked';
+    return 'available';
   };
 
   const handleCompleteTask = async (taskId: string) => {
@@ -104,6 +114,7 @@ const UniversalEventTaskList = ({
       {sortedTasks.map((task) => {
         const isRelevant = isTaskRelevantToUser(task);
         const canComplete = canCompleteTask(task);
+        const taskStatus = getTaskStatus(task);
         
         return (
           <div
@@ -111,6 +122,8 @@ const UniversalEventTaskList = ({
             className={`p-4 border rounded-lg transition-all cursor-pointer hover:shadow-sm ${
               task.isComplete
                 ? 'bg-gray-50 border-gray-200'
+                : taskStatus === 'locked'
+                ? 'bg-gray-50 border-gray-200 opacity-60'
                 : isRelevant
                 ? 'bg-white border-blue-200 hover:border-blue-300'
                 : 'bg-gray-50 border-gray-200 opacity-60'
@@ -121,6 +134,8 @@ const UniversalEventTaskList = ({
               <div className="flex-shrink-0 mt-1">
                 {task.isComplete ? (
                   <CheckCircle className="w-5 h-5 text-green-600" />
+                ) : taskStatus === 'locked' ? (
+                  <Lock className="w-5 h-5 text-gray-400" />
                 ) : (
                   <button
                     className={`focus:outline-none ${canComplete ? 'text-blue-600' : 'text-gray-400 cursor-not-allowed'}`}
@@ -139,7 +154,8 @@ const UniversalEventTaskList = ({
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1">
                     <h4 className={`font-medium ${
-                      task.isComplete ? 'text-gray-600 line-through' : 'text-gray-900'
+                      task.isComplete ? 'text-gray-600 line-through' : 
+                      taskStatus === 'locked' ? 'text-gray-500' : 'text-gray-900'
                     }`}>
                       {task.title}
                       {task.isRequired && !task.isComplete && (
@@ -147,14 +163,22 @@ const UniversalEventTaskList = ({
                       )}
                     </h4>
                     <p className={`text-sm mt-1 ${
-                      task.isComplete ? 'text-gray-500' : 'text-gray-600'
+                      task.isComplete ? 'text-gray-500' : 
+                      taskStatus === 'locked' ? 'text-gray-500' : 'text-gray-600'
                     }`}>
                       {task.description}
                     </p>
                     
-                    {task.instructions && !task.isComplete && (
+                    {task.instructions && !task.isComplete && taskStatus !== 'locked' && (
                       <p className="text-xs text-blue-600 mt-2 italic">
                         {task.instructions}
+                      </p>
+                    )}
+
+                    {taskStatus === 'locked' && task.dependsOnTaskId && (
+                      <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
+                        <Lock className="w-3 h-3" />
+                        Waiting for prerequisite task to complete
                       </p>
                     )}
                   </div>
@@ -180,7 +204,7 @@ const UniversalEventTaskList = ({
                   </div>
                 )}
                 
-                {canComplete && (
+                {canComplete && taskStatus === 'available' && (
                   <div className="mt-3">
                     <Button
                       size="sm"

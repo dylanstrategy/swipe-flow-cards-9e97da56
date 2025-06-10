@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +8,7 @@ import type { TaskCompletionStamp } from '@/types/taskStamps';
 import { Role } from '@/types/roles';
 import { format } from 'date-fns';
 import TaskModalManager from '../tasks/TaskModalManager';
+import { isRoleAuthorizedToComplete, isTaskUnlocked } from '@/services/sharedEventService';
 
 interface TaskChecklistProps {
   tasks: EventTask[];
@@ -43,6 +45,8 @@ const TaskChecklist = ({
         return 'bg-purple-100 text-purple-800';
       case 'vendor':
         return 'bg-gray-100 text-gray-800';
+      case 'leasing':
+        return 'bg-teal-100 text-teal-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -60,6 +64,8 @@ const TaskChecklist = ({
         return '👤';
       case 'vendor':
         return '🏢';
+      case 'leasing':
+        return '📄';
       default:
         return '👤';
     }
@@ -69,21 +75,17 @@ const TaskChecklist = ({
     if (task.isComplete) return 'complete';
     if (task.status) return task.status;
     
-    // Check dependencies
-    if (task.dependencies && task.dependencies.length > 0) {
-      const dependenciesMet = task.dependencies.every(depTitle => 
-        tasks.find(t => t.title === depTitle)?.isComplete
-      );
-      if (!dependenciesMet) return 'locked';
-    }
+    // Check dependencies using the shared service utility
+    if (!isTaskUnlocked(task, tasks)) return 'locked';
     
     return 'available';
   };
 
-  // STRICT ROLE ENFORCEMENT - Only assigned role can interact with task
+  // Role enforcement with dependency checking
   const canUserInteractWithTask = (task: EventTask) => {
-    // Only the exact assigned role can interact with the task (no exceptions)
-    return (task.assignedRole === currentUserRole) && !readOnly;
+    return isRoleAuthorizedToComplete(currentUserRole, task.assignedRole) && 
+           isTaskUnlocked(task, tasks) && 
+           !readOnly;
   };
 
   const canUndoTask = (task: EventTask) => {
@@ -111,9 +113,9 @@ const TaskChecklist = ({
   };
 
   const handleTaskAction = (task: EventTask) => {
-    // Check role permissions first - STRICT ENFORCEMENT
+    // Check role permissions and dependencies
     if (!canUserInteractWithTask(task)) {
-      console.log('User does not have permission to interact with this task - Role mismatch');
+      console.log('User does not have permission to interact with this task or dependencies not met');
       return;
     }
 
@@ -224,14 +226,15 @@ const TaskChecklist = ({
                         </p>
                       )}
 
-                      {task.unlockCondition && taskStatus === 'locked' && (
-                        <p className="text-xs text-gray-500 mt-2">
-                          Unlocks after: {task.unlockCondition}
+                      {taskStatus === 'locked' && task.dependsOnTaskId && (
+                        <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
+                          <Lock className="w-3 h-3" />
+                          Waiting for prerequisite task to complete
                         </p>
                       )}
 
-                      {/* STRICT ROLE ENFORCEMENT MESSAGE */}
-                      {!canInteract && !readOnly && taskStatus !== 'complete' && taskStatus !== 'locked' && (
+                      {/* Role authorization message */}
+                      {!isRoleAuthorizedToComplete(currentUserRole, task.assignedRole) && !readOnly && taskStatus !== 'complete' && taskStatus !== 'locked' && (
                         <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
                           <Lock className="w-3 h-3" />
                           Only {task.assignedRole} can complete this task
