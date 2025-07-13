@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench, ChevronDown, BarChart3, PieChart, CalendarDays, Activity } from 'lucide-react';
+import { Users, Building, Calendar, MessageSquare, Target, TrendingUp, Home, Wrench, ChevronDown, BarChart3, PieChart, CalendarDays, Activity, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -557,6 +557,38 @@ const OperatorTodayTab = () => {
         </div>
       </div>
 
+      {/* Delinquency Section */}
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+          <AlertTriangle className="text-red-600" size={24} />
+          DELINQUENCY
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-gray-50 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-red-600">{delinquentResidents}</div>
+            <div className="text-sm text-gray-600">Delinquent</div>
+            <div className="text-xs text-red-600 mt-1">Past Due</div>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-orange-600">{expiringLeases}</div>
+            <div className="text-sm text-gray-600">Expiring Soon</div>
+            <div className="text-xs text-orange-600 mt-1">30 Days</div>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-yellow-600">{renewalsPending}</div>
+            <div className="text-sm text-gray-600">Renewals Pending</div>
+            <div className="text-xs text-yellow-600 mt-1">Awaiting Response</div>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-gray-900">
+              ${((delinquentResidents * 2800) + (Math.floor(Math.random() * 5000))).toLocaleString()}
+            </div>
+            <div className="text-sm text-gray-600">Outstanding</div>
+            <div className="text-xs text-red-600 mt-1">Total Due</div>
+          </div>
+        </div>
+      </div>
+
       {/* Movement Tracking */}
       <div className="bg-white rounded-xl shadow-sm border p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
@@ -579,8 +611,8 @@ const OperatorTodayTab = () => {
 
       {/* Leasing */}
       <div className="bg-white rounded-xl shadow-sm border p-6">
-        <div className="flex flex-col items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
             <Users className="text-green-600" size={24} />
             LEASING
           </h2>
