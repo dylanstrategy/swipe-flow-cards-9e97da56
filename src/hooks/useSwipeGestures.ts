@@ -4,13 +4,14 @@ interface SwipeGesturesConfig {
   onSwipeUp?: () => void;
   onSwipeDown?: () => void;
   onSwipeLeft?: () => void;
+  onSwipeRight?: () => void;
   canSwipeUp?: boolean;
 }
 
-export const useSwipeGestures = ({ onSwipeUp, onSwipeDown, onSwipeLeft, canSwipeUp = false }: SwipeGesturesConfig) => {
+export const useSwipeGestures = ({ onSwipeUp, onSwipeDown, onSwipeLeft, onSwipeRight, canSwipeUp = false }: SwipeGesturesConfig) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [showAction, setShowAction] = useState<'up' | 'down' | 'left' | null>(null);
+  const [showAction, setShowAction] = useState<'up' | 'down' | 'left' | 'right' | null>(null);
   const startPos = useRef({ x: 0, y: 0 });
   const startTime = useRef(0);
 
@@ -41,6 +42,8 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeDown, onSwipeLeft, canSwipe
     } else {
       if (deltaX < -30) {
         setShowAction('left');
+      } else if (deltaX > 30) {
+        setShowAction('right');
       } else {
         setShowAction(null);
       }
@@ -66,6 +69,8 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeDown, onSwipeLeft, canSwipe
                              deltaY > distanceThreshold;
     const shouldCompleteLeft = (Math.abs(deltaX) > distanceThreshold || velocityX > velocityThreshold) && 
                               deltaX < -distanceThreshold;
+    const shouldCompleteRight = (Math.abs(deltaX) > distanceThreshold || velocityX > velocityThreshold) && 
+                               deltaX > distanceThreshold;
     
     if (shouldCompleteUp && onSwipeUp) {
       onSwipeUp();
@@ -73,6 +78,8 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeDown, onSwipeLeft, canSwipe
       onSwipeDown();
     } else if (shouldCompleteLeft && onSwipeLeft) {
       onSwipeLeft();
+    } else if (shouldCompleteRight && onSwipeRight) {
+      onSwipeRight();
     }
     
     setIsDragging(false);

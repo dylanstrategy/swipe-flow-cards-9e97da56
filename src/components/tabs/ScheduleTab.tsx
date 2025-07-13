@@ -12,6 +12,8 @@ import DraggableSuggestionsSection from '../schedule/DraggableSuggestionsSection
 import DroppableCalendar from '../schedule/DroppableCalendar';
 import SwipeableEventCards from '../schedule/SwipeableEventCards';
 import SwipeableSuggestionCards from '../schedule/SwipeableSuggestionCards';
+import MultidimensionalEventCards from '../schedule/MultidimensionalEventCards';
+import MultidimensionalSuggestionCards from '../schedule/MultidimensionalSuggestionCards';
 import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
 import UniversalEventDetailModal from '../events/UniversalEventDetailModal';
@@ -514,75 +516,69 @@ const ScheduleTab = () => {
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="relative">
+      {/* Main content - Card-focused layout */}
+      <div className="relative flex-1">
         {suggestionsExpanded ? (
           /* Expanded suggestions view - covers whole page */
           <div className="fixed inset-0 bg-white z-40 pt-20">
             <div className="p-4 h-full flex flex-col">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-900">Suggestions</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Suggestions</h2>
                 <button
                   onClick={() => setSuggestionsExpanded(false)}
-                  className="text-gray-600 hover:text-gray-900"
+                  className="text-gray-600 hover:text-gray-900 text-xl p-2"
                 >
                   ✕
                 </button>
               </div>
-              <SwipeableSuggestionCards
+              <MultidimensionalSuggestionCards
                 suggestions={getSuggestions()}
                 onCardTap={handleSuggestionTap}
                 onCardSwipeUp={handleSuggestionSwipeUp}
                 onCardSwipeDown={handleSuggestionSwipeDown}
-                isExpanded={true}
-                className="mb-6"
+                className="flex-1"
               />
             </div>
           </div>
         ) : (
-          /* Normal view */
-          <div>
-            {/* Suggestions dropdown section */}
-            <div className="bg-white border-b border-gray-100">
-              <div className="p-4">
-                <button
-                  onClick={() => setSuggestionsExpanded(true)}
-                  className="w-full flex items-center justify-between text-left"
-                >
-                  <span className="text-lg font-semibold text-gray-900">Suggestions</span>
-                  <span className="text-gray-500">({getSuggestions().length})</span>
-                </button>
-                {getSuggestions().length > 0 && (
-                  <SwipeableSuggestionCards
-                    suggestions={getSuggestions().slice(0, 3)}
-                    onCardTap={handleSuggestionTap}
-                    onCardSwipeUp={handleSuggestionSwipeUp}
-                    onCardSwipeDown={handleSuggestionSwipeDown}
-                    className="mt-4"
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* Event cards section */}
-            <div className="bg-gray-50 border-b border-gray-100">
-              <div className="p-4">
-                <SwipeableEventCards
-                  onCardTap={handleCardTap}
-                  onCardSwipeUp={handleCardSwipeUp}
+          /* Normal view - Card carousel layout */
+          <div className="flex flex-col h-full">
+            {/* Suggestions section */}
+            {getSuggestions().length > 0 && (
+              <div className="bg-white border-b border-gray-100 py-6">
+                <div className="px-4 mb-4">
+                  <button
+                    onClick={() => setSuggestionsExpanded(true)}
+                    className="w-full flex items-center justify-between text-left group"
+                  >
+                    <span className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                      Suggestions
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-gray-500 text-sm">({getSuggestions().length})</span>
+                      <span className="text-gray-400">→</span>
+                    </div>
+                  </button>
+                </div>
+                <MultidimensionalSuggestionCards
+                  suggestions={getSuggestions()}
+                  onCardTap={handleSuggestionTap}
+                  onCardSwipeUp={handleSuggestionSwipeUp}
+                  onCardSwipeDown={handleSuggestionSwipeDown}
                 />
               </div>
-            </div>
+            )}
 
-            {/* Calendar */}
-            <div className="bg-white">
-              <HourlyCalendarView
-                selectedDate={selectedDate}
-                events={getEventsForDate(selectedDate)}
-                onDropSuggestion={handleDropSuggestionInTimeline}
-                onEventClick={handleEventClick}
-                onEventHold={handleEventHold}
-                onEventReschedule={handleEventReschedule}
+            {/* Event cards section - Main focus */}
+            <div className="flex-1 bg-gradient-to-br from-gray-50 to-white py-8">
+              <div className="px-4 mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 text-center">Create New Event</h2>
+                <p className="text-gray-600 text-center mt-2">Swipe through options and tap to create</p>
+              </div>
+              <MultidimensionalEventCards
+                onCardTap={handleCardTap}
+                onCardSwipeUp={handleCardSwipeUp}
+                className="flex-1"
               />
             </div>
           </div>
