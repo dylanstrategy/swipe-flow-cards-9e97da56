@@ -268,26 +268,6 @@ const MultidimensionalSuggestionCards = ({
         }
       `}</style>
 
-      {/* Desktop Navigation Arrows - Positioned relative to card container */}
-      <div className="hidden md:block relative">
-        <button
-          onClick={goToPrev}
-          disabled={isTransitioning || activeEvents.length === 0}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-40 bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-700 hover:text-gray-900 p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ top: '50%' }}
-        >
-          <ChevronLeft size={24} />
-        </button>
-        <button
-          onClick={goToNext}
-          disabled={isTransitioning || activeEvents.length === 0}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-40 bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-700 hover:text-gray-900 p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ top: '50%' }}
-        >
-          <ChevronRight size={24} />
-        </button>
-      </div>
-
       {/* Main Card Container */}
       <div
         ref={containerRef}
@@ -295,6 +275,24 @@ const MultidimensionalSuggestionCards = ({
         style={{ perspective: '1500px' }}
         {...containerSwipeGestures}
       >
+        {/* Desktop Navigation Arrows - Positioned within card container */}
+        <div className="hidden md:block">
+          <button
+            onClick={goToPrev}
+            disabled={isTransitioning || activeEvents.length === 0}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-40 bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-700 hover:text-gray-900 p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed -translate-x-4"
+          >
+            <ChevronLeft size={24} />
+          </button>
+          <button
+            onClick={goToNext}
+            disabled={isTransitioning || activeEvents.length === 0}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-40 bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-700 hover:text-gray-900 p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed translate-x-4"
+          >
+            <ChevronRight size={24} />
+          </button>
+        </div>
+        
         {activeEvents.map((suggestion, index) => (
           <SuggestionCardComponent key={suggestion.id} suggestion={suggestion} index={index} />
         ))}
