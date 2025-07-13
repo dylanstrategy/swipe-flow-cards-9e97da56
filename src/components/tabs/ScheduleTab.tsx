@@ -487,56 +487,51 @@ const ScheduleTab = () => {
       .sort((a, b) => a.time.localeCompare(b.time));
   };
 
-  // Create dynamic shared gradient background
-  const createSharedGradient = () => {
+  // Create Instagram-style dynamic gradient background
+  const createInstagramGradient = () => {
     // Mock event cards data to get colors
     const eventCards = [
-      { color: 'bg-blue-500' },
-      { color: 'bg-green-500' },
-      { color: 'bg-purple-500' },
-      { color: 'bg-orange-500' },
-      { color: 'bg-red-500' },
-      { color: 'bg-indigo-500' }
+      { color: 'bg-blue-500', gradientColors: ['#667eea', '#764ba2'] },
+      { color: 'bg-green-500', gradientColors: ['#11998e', '#38ef7d'] },
+      { color: 'bg-purple-500', gradientColors: ['#667eea', '#764ba2'] },
+      { color: 'bg-orange-500', gradientColors: ['#ff6a00', '#ee0979'] },
+      { color: 'bg-red-500', gradientColors: ['#ee0979', '#ff6a00'] },
+      { color: 'bg-indigo-500', gradientColors: ['#667eea', '#764ba2'] }
     ];
     
     const suggestions = getSuggestions();
     
-    // Convert card colors to hex
-    const getEventHex = (colorClass: string) => {
-      const colorMap: { [key: string]: string } = {
-        'bg-blue-500': '#3B82F6',
-        'bg-green-500': '#22C55E',
-        'bg-purple-500': '#A855F7',
-        'bg-orange-500': '#F97316',
-        'bg-red-500': '#EF4444',
-        'bg-indigo-500': '#6366F1',
-        'bg-teal-500': '#14B8A6',
-        'bg-pink-500': '#EC4899'
+    // Instagram-style gradient colors based on priority
+    const getSuggestionGradient = (priority: string) => {
+      const gradientMap: { [key: string]: string[] } = {
+        'urgent': ['#ff6a00', '#ee0979'], // Orange to pink
+        'high': ['#f093fb', '#f5576c'], // Pink to red
+        'medium': ['#4facfe', '#00f2fe'], // Blue to cyan
+        'low': ['#43e97b', '#38f9d7'] // Green to cyan
       };
-      return colorMap[colorClass] || '#3B82F6';
+      return gradientMap[priority] || ['#667eea', '#764ba2'];
     };
     
-    const getSuggestionHex = (priority: string) => {
-      const colorMap: { [key: string]: string } = {
-        'urgent': '#EF4444',
-        'high': '#F97316',
-        'medium': '#EAB308',
-        'low': '#22C55E'
-      };
-      return colorMap[priority] || '#22C55E';
+    const getEventGradient = (index: number) => {
+      return eventCards[index]?.gradientColors || ['#667eea', '#764ba2'];
     };
     
-    const currentEventColor = getEventHex(eventCards[currentEventIndex]?.color || 'bg-blue-500');
-    const currentSuggestionColor = getSuggestionHex(suggestions[currentSuggestionIndex]?.priority || 'low');
+    const eventGradient = getEventGradient(currentEventIndex);
+    const suggestionGradient = getSuggestionGradient(suggestions[currentSuggestionIndex]?.priority || 'low');
     
-    return `linear-gradient(180deg, ${currentEventColor}30 0%, ${currentEventColor}15 25%, ${currentSuggestionColor}15 75%, ${currentSuggestionColor}30 100%)`;
+    // Create Instagram-style radial and linear combination
+    return `
+      radial-gradient(circle at 30% 20%, ${eventGradient[0]}40, transparent 70%),
+      radial-gradient(circle at 70% 80%, ${suggestionGradient[1]}40, transparent 70%),
+      linear-gradient(135deg, ${eventGradient[0]}60, ${eventGradient[1]}40, ${suggestionGradient[0]}40, ${suggestionGradient[1]}60)
+    `;
   };
 
 
   return (
     <div 
-      className="min-h-screen"
-      style={{ background: createSharedGradient() }}
+      className="min-h-screen transition-all duration-700 ease-in-out"
+      style={{ background: createInstagramGradient() }}
     >
       {/* Main content - Split screen layout */}
       <div className="h-screen flex flex-col">
