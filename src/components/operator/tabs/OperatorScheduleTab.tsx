@@ -622,14 +622,6 @@ const OperatorScheduleTab = () => {
           </div>
         )}
       </div>
-
-      {/* Floating Add Button */}
-      <button
-        onClick={() => setShowScheduleMenu(true)}
-        className="fixed bottom-24 right-6 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg transition-all duration-200 hover:scale-105 z-50"
-      >
-        <Plus size={24} />
-      </button>
     </div>
   );
 };
