@@ -247,6 +247,11 @@ class SharedSchedulingService {
 
     // Add the event to shared service (it will be visible to all roles)
     const success = sharedEventService.addEvent(sharedEvent);
+    console.log('🎯 Shared scheduling service - event added:', {
+      success,
+      eventId,
+      sharedEvent
+    });
     
     if (success) {
       console.log('Work order scheduled successfully:', {

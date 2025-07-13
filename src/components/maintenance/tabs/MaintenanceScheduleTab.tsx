@@ -198,7 +198,12 @@ const MaintenanceScheduleTab = ({
   };
 
   const handleScheduleWorkOrder = (workOrder: any, scheduledTime: string) => {
-    console.log('Scheduling work order with shared scheduling service:', workOrder, 'for time:', scheduledTime);
+    console.log('🔥 SCHEDULING WORK ORDER:', {
+      workOrderTitle: workOrder.title,
+      workOrderUnit: workOrder.unit,
+      scheduledTime,
+      workOrderData: workOrder
+    });
     
     // Convert work order to the format expected by shared scheduling service
     const workOrderData: WorkOrderScheduleData = {

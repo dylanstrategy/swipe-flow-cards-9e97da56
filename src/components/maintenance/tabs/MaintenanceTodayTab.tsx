@@ -75,7 +75,15 @@ const MaintenanceTodayTab = ({ onWorkOrderCompleted }: MaintenanceTodayTabProps)
       const events = [
         // Add maintenance events from shared data (work orders scheduled via drag and drop)
         ...updatedMaintenanceEvents.map(event => {
-          console.log('Converting shared maintenance event to calendar event:', event);
+          console.log('🏗️ Converting shared maintenance event to calendar event:', {
+            eventId: event.id,
+            eventTitle: event.title,
+            eventDate: event.date,
+            eventTime: event.time,
+            isToday: event.date instanceof Date ? 
+              event.date.toDateString() === new Date().toDateString() : 
+              new Date(event.date).toDateString() === new Date().toDateString()
+          });
           return {
             id: event.id,
             date: event.date instanceof Date ? event.date : new Date(event.date),
