@@ -252,10 +252,7 @@ const MultidimensionalEventCards = ({ onCardTap, onCardSwipeUp, className = '' }
   });
 
   return (
-    <div 
-      className={`relative h-screen ${className}`}
-      style={{ background: getBackgroundGradient() }}
-    >
+    <div className={`relative h-full ${className}`}>
       {/* Floating CSS Animations */}
       <style>{`
         @keyframes float {

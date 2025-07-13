@@ -485,75 +485,42 @@ const ScheduleTab = () => {
       .sort((a, b) => a.time.localeCompare(b.time));
   };
 
-  return (
-    <div className="min-h-screen">
-      {/* Main content - Card-focused layout */}
-      <div className="relative flex-1">
-        {suggestionsExpanded ? (
-          /* Expanded suggestions view - covers whole page */
-          <div className="fixed inset-0 bg-white z-40 pt-20">
-            <div className="p-4 h-full flex flex-col">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Suggestions</h2>
-                <button
-                  onClick={() => setSuggestionsExpanded(false)}
-                  className="text-gray-600 hover:text-gray-900 text-xl p-2"
-                >
-                  ✕
-                </button>
-              </div>
-              <MultidimensionalSuggestionCards
-                suggestions={getSuggestions()}
-                onCardTap={handleSuggestionTap}
-                onCardSwipeUp={handleSuggestionSwipeUp}
-                onCardSwipeDown={handleSuggestionSwipeDown}
-                className="flex-1"
-              />
-            </div>
-          </div>
-        ) : (
-          /* Normal view - Card carousel layout */
-          <div className="flex flex-col h-full">
-            {/* Suggestions section */}
-            {getSuggestions().length > 0 && (
-              <div className="bg-white border-b border-gray-100 py-6">
-                <div className="px-4 mb-4">
-                  <button
-                    onClick={() => setSuggestionsExpanded(true)}
-                    className="w-full flex items-center justify-between text-left group"
-                  >
-                    <span className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                      Suggestions
-                    </span>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-gray-500 text-sm">({getSuggestions().length})</span>
-                      <span className="text-gray-400">→</span>
-                    </div>
-                  </button>
-                </div>
-                <MultidimensionalSuggestionCards
-                  suggestions={getSuggestions()}
-                  onCardTap={handleSuggestionTap}
-                  onCardSwipeUp={handleSuggestionSwipeUp}
-                  onCardSwipeDown={handleSuggestionSwipeDown}
-                />
-              </div>
-            )}
+  // Create shared gradient background
+  const createSharedGradient = () => {
+    // Sample colors from both event and suggestion cards
+    const eventColor = '#3B82F6'; // Blue for events
+    const suggestionColor = '#22C55E'; // Green for suggestions
+    
+    return `linear-gradient(180deg, ${eventColor}25 0%, ${eventColor}10 25%, ${suggestionColor}10 75%, ${suggestionColor}25 100%)`;
+  };
 
-            {/* Event cards section - Main focus */}
-            <div className="flex-1 bg-gradient-to-br from-gray-50 to-white py-8">
-              <div className="px-4 mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 text-center">Create New Event</h2>
-                <p className="text-gray-600 text-center mt-2">Swipe through options and tap to create</p>
-              </div>
-              <MultidimensionalEventCards
-                onCardTap={handleCardTap}
-                onCardSwipeUp={handleCardSwipeUp}
-                className="flex-1"
-              />
-            </div>
-          </div>
-        )}
+
+  return (
+    <div 
+      className="min-h-screen"
+      style={{ background: createSharedGradient() }}
+    >
+      {/* Main content - Split screen layout */}
+      <div className="h-screen flex flex-col">
+        {/* Event Cards Section - Top half */}
+        <div className="flex-1">
+          <MultidimensionalEventCards
+            onCardTap={handleCardTap}
+            onCardSwipeUp={handleCardSwipeUp}
+            className="h-full"
+          />
+        </div>
+        
+        {/* Suggestions Section - Bottom half */}
+        <div className="flex-1">
+          <MultidimensionalSuggestionCards
+            suggestions={getSuggestions()}
+            onCardTap={handleSuggestionTap}
+            onCardSwipeUp={handleSuggestionSwipeUp}
+            onCardSwipeDown={handleSuggestionSwipeDown}
+            className="h-full"
+          />
+        </div>
       </div>
     </div>
   );
