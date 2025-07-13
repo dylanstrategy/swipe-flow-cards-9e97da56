@@ -132,6 +132,34 @@ const MultidimensionalEventCards = ({ onCardTap, onCardSwipeUp, className = '' }
     }
   };
 
+  // Get colors for gradient background
+  const getBackgroundGradient = () => {
+    const centerCard = eventCards[currentIndex];
+    const nextCard = eventCards[(currentIndex + 1) % eventCards.length];
+    const prevCard = eventCards[(currentIndex - 1 + eventCards.length) % eventCards.length];
+    
+    // Convert card color classes to hex colors
+    const getHexFromClass = (colorClass: string) => {
+      const colorMap: { [key: string]: string } = {
+        'bg-blue-500': '#3B82F6',
+        'bg-green-500': '#22C55E',
+        'bg-purple-500': '#A855F7',
+        'bg-orange-500': '#F97316',
+        'bg-red-500': '#EF4444',
+        'bg-indigo-500': '#6366F1',
+        'bg-teal-500': '#14B8A6',
+        'bg-pink-500': '#EC4899'
+      };
+      return colorMap[colorClass] || '#6B7280';
+    };
+
+    const centerColor = getHexFromClass(centerCard.color);
+    const topColor = getHexFromClass(prevCard.color);
+    const bottomColor = getHexFromClass(nextCard.color);
+    
+    return `linear-gradient(180deg, ${topColor}20, ${centerColor}10, ${bottomColor}20)`;
+  };
+
   const EventCardComponent = ({ card, index }: { card: EventCard; index: number }) => {
     const swipeGestures = useSwipeGestures({
       onSwipeUp: () => onCardSwipeUp(card.type),
@@ -224,7 +252,10 @@ const MultidimensionalEventCards = ({ onCardTap, onCardSwipeUp, className = '' }
   });
 
   return (
-    <div className={`relative ${className}`}>
+    <div 
+      className={`relative h-screen ${className}`}
+      style={{ background: getBackgroundGradient() }}
+    >
       {/* Floating CSS Animations */}
       <style>{`
         @keyframes float {
