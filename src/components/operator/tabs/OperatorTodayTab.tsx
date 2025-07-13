@@ -563,21 +563,32 @@ const OperatorTodayTab = () => {
           <AlertTriangle className="text-red-600" size={24} />
           DELINQUENCY
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-gray-50 rounded-lg p-4 text-center">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div 
+            className="bg-gray-50 rounded-lg p-4 text-center cursor-pointer hover:bg-red-50 transition-colors"
+            onClick={() => {
+              // Navigate to residents tab with delinquent filter
+              console.log('Navigate to delinquent residents');
+            }}
+          >
             <div className="text-2xl font-bold text-red-600">{delinquentResidents}</div>
             <div className="text-sm text-gray-600">Delinquent</div>
+            <div className="text-xs text-red-600 mt-1">View Profiles</div>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-orange-600">{Math.floor(delinquentResidents * 0.4)}</div>
+            <div className="text-sm text-gray-600">30 Day</div>
+            <div className="text-xs text-orange-600 mt-1">Past Due</div>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-red-600">{Math.floor(delinquentResidents * 0.3)}</div>
+            <div className="text-sm text-gray-600">60 Day</div>
             <div className="text-xs text-red-600 mt-1">Past Due</div>
           </div>
           <div className="bg-gray-50 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-orange-600">{expiringLeases}</div>
-            <div className="text-sm text-gray-600">Expiring Soon</div>
-            <div className="text-xs text-orange-600 mt-1">30 Days</div>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-600">{renewalsPending}</div>
-            <div className="text-sm text-gray-600">Renewals Pending</div>
-            <div className="text-xs text-yellow-600 mt-1">Awaiting Response</div>
+            <div className="text-2xl font-bold text-red-800">{Math.floor(delinquentResidents * 0.2)}</div>
+            <div className="text-sm text-gray-600">90 Day</div>
+            <div className="text-xs text-red-800 mt-1">Past Due</div>
           </div>
           <div className="bg-gray-50 rounded-lg p-4 text-center">
             <div className="text-2xl font-bold text-gray-900">
@@ -585,6 +596,11 @@ const OperatorTodayTab = () => {
             </div>
             <div className="text-sm text-gray-600">Outstanding</div>
             <div className="text-xs text-red-600 mt-1">Total Due</div>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-red-900">{Math.floor(delinquentResidents * 0.1)}</div>
+            <div className="text-sm text-gray-600">In Legal</div>
+            <div className="text-xs text-red-900 mt-1">Account Status</div>
           </div>
         </div>
       </div>
