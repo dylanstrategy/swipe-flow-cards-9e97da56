@@ -319,7 +319,7 @@ const MultidimensionalSuggestionCards = ({
 
       {/* Swipe Hint - Centered and Mobile Responsive */}
       <div className="text-center px-4 py-3">
-        <p className="text-sm text-gray-500 max-w-sm mx-auto leading-relaxed">
+        <p className="text-xs text-gray-500 max-w-sm mx-auto leading-relaxed">
           <span className="block sm:inline">Swipe left or right to explore</span>
           <span className="hidden sm:inline"> • </span>
           <span className="block sm:inline">Tap to view</span>
