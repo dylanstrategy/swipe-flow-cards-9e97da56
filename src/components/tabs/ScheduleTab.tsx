@@ -487,47 +487,46 @@ const ScheduleTab = () => {
       .sort((a, b) => a.time.localeCompare(b.time));
   };
 
-  // Create gradient that matches actual card colors
+  // Create gradient that matches the actual card colors
   const createMatchingGradient = () => {
-    // Mock event cards data with their actual colors
+    // REAL event cards data (matching MultidimensionalEventCards.tsx)
     const eventCards = [
-      { color: 'bg-blue-500', hex: '#3B82F6' },
-      { color: 'bg-green-500', hex: '#22C55E' },
-      { color: 'bg-purple-500', hex: '#A855F7' },
-      { color: 'bg-orange-500', hex: '#F97316' },
-      { color: 'bg-red-500', hex: '#EF4444' },
-      { color: 'bg-indigo-500', hex: '#6366F1' }
+      { color: 'from-blue-500 to-blue-600', hex: '#3B82F6' },      // Message
+      { color: 'from-orange-500 to-orange-600', hex: '#F97316' },  // Work Order
+      { color: 'from-green-500 to-green-600', hex: '#22C55E' },    // Appointment
+      { color: 'from-purple-500 to-purple-600', hex: '#A855F7' },  // Service
+      { color: 'from-indigo-500 to-indigo-600', hex: '#6366F1' },  // Document
+      { color: 'from-pink-500 to-pink-600', hex: '#EC4899' }       // Event
     ];
     
-    const suggestions = getSuggestions();
-    
-    // Get suggestion colors based on priority
+    // REAL suggestion colors (matching MultidimensionalSuggestionCards.tsx)
     const getSuggestionColor = (priority: string) => {
-      const colorMap: { [key: string]: string } = {
-        'urgent': '#EF4444', // Red
-        'high': '#F97316',   // Orange  
-        'medium': '#EAB308', // Yellow
-        'low': '#22C55E'     // Green
-      };
-      return colorMap[priority] || '#22C55E';
+      switch (priority) {
+        case 'urgent': return '#EF4444';  // Red (from-red-500 to-red-600)
+        case 'high': return '#F97316';    // Orange (from-orange-500 to-orange-600)
+        case 'medium': return '#EAB308';  // Yellow (from-yellow-500 to-yellow-600)
+        case 'low': return '#22C55E';     // Green (from-green-500 to-green-600)
+        default: return '#6B7280';        // Gray
+      }
     };
     
+    const suggestions = getSuggestions();
     const currentEventColor = eventCards[currentEventIndex]?.hex || '#3B82F6';
     const currentSuggestionColor = getSuggestionColor(suggestions[currentSuggestionIndex]?.priority || 'low');
     
     // If both colors are the same, create a subtle single-color gradient
     if (currentEventColor === currentSuggestionColor) {
       return `
-        radial-gradient(circle at 50% 50%, ${currentEventColor}60, ${currentEventColor}30),
-        linear-gradient(135deg, ${currentEventColor}40, ${currentEventColor}60)
+        radial-gradient(circle at 50% 50%, ${currentEventColor}50, ${currentEventColor}20),
+        linear-gradient(135deg, ${currentEventColor}30, ${currentEventColor}50)
       `;
     }
     
-    // If colors are different, create a proper gradient between them
+    // If colors are different, create a gradient between them
     return `
-      radial-gradient(circle at 30% 20%, ${currentEventColor}50, transparent 70%),
-      radial-gradient(circle at 70% 80%, ${currentSuggestionColor}50, transparent 70%),
-      linear-gradient(135deg, ${currentEventColor}60, ${currentEventColor}30, ${currentSuggestionColor}30, ${currentSuggestionColor}60)
+      radial-gradient(circle at 30% 20%, ${currentEventColor}40, transparent 70%),
+      radial-gradient(circle at 70% 80%, ${currentSuggestionColor}40, transparent 70%),
+      linear-gradient(135deg, ${currentEventColor}50, ${currentEventColor}20, ${currentSuggestionColor}20, ${currentSuggestionColor}50)
     `;
   };
 
