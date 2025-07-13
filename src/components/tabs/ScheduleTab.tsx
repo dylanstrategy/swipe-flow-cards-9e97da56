@@ -14,6 +14,7 @@ import SwipeableEventCards from '../schedule/SwipeableEventCards';
 import SwipeableSuggestionCards from '../schedule/SwipeableSuggestionCards';
 import MultidimensionalEventCards from '../schedule/MultidimensionalEventCards';
 import MultidimensionalSuggestionCards from '../schedule/MultidimensionalSuggestionCards';
+import EventMenuCards from '../schedule/EventMenuCards';
 import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
 import UniversalEventDetailModal from '../events/UniversalEventDetailModal';
@@ -27,6 +28,8 @@ import { UniversalEvent } from '@/types/eventTasks';
 const ScheduleTab = () => {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  
+  // State for tracking current card indices - moved here to avoid hooks rule violation
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
   const [showScheduleMenu, setShowScheduleMenu] = useState(false);
@@ -337,6 +340,11 @@ const ScheduleTab = () => {
     }
   };
 
+  const handleMenuItemTap = (item: any) => {
+    const cardType = item.title;
+    handleCardTap(cardType);
+  };
+
   const handleCardSwipeUp = (cardType: string) => {
     // Auto-schedule the event type for the next available time slot
     const assignedTime = findAvailableTimeSlot(selectedDate);
@@ -487,46 +495,32 @@ const ScheduleTab = () => {
       .sort((a, b) => a.time.localeCompare(b.time));
   };
 
-  // Create gradient that matches the actual card colors
+  // Create background gradient based on suggestions
   const createMatchingGradient = () => {
-    // REAL event cards data (matching MultidimensionalEventCards.tsx)
-    const eventCards = [
-      { color: 'from-blue-500 to-blue-600', hex: '#3B82F6' },      // Message
-      { color: 'from-orange-500 to-orange-600', hex: '#F97316' },  // Work Order
-      { color: 'from-green-500 to-green-600', hex: '#22C55E' },    // Appointment
-      { color: 'from-purple-500 to-purple-600', hex: '#A855F7' },  // Service
-      { color: 'from-indigo-500 to-indigo-600', hex: '#6366F1' },  // Document
-      { color: 'from-pink-500 to-pink-600', hex: '#EC4899' }       // Event
-    ];
+    const suggestions = getSuggestions();
+    const currentSuggestion = suggestions[currentSuggestionIndex];
     
-    // REAL suggestion colors (matching MultidimensionalSuggestionCards.tsx)
+    if (!currentSuggestion) {
+      return 'linear-gradient(135deg, hsl(240, 3.8%, 9%), hsl(240, 3.8%, 6%))';
+    }
+    
+    // Get gradient color based on current suggestion priority only
     const getSuggestionColor = (priority: string) => {
       switch (priority) {
-        case 'urgent': return '#EF4444';  // Red (from-red-500 to-red-600)
-        case 'high': return '#F97316';    // Orange (from-orange-500 to-orange-600)
-        case 'medium': return '#EAB308';  // Yellow (from-yellow-500 to-yellow-600)
-        case 'low': return '#22C55E';     // Green (from-green-500 to-green-600)
-        default: return '#6B7280';        // Gray
+        case 'urgent': return '#EF4444';
+        case 'high': return '#F97316';
+        case 'medium': return '#EAB308';
+        case 'low': return '#22C55E';
+        default: return '#6B7280';
       }
     };
     
-    const suggestions = getSuggestions();
-    const currentEventColor = eventCards[currentEventIndex]?.hex || '#3B82F6';
-    const currentSuggestionColor = getSuggestionColor(suggestions[currentSuggestionIndex]?.priority || 'low');
+    const suggestionColor = getSuggestionColor(currentSuggestion.priority);
     
-    // If both colors are the same, create a subtle single-color gradient
-    if (currentEventColor === currentSuggestionColor) {
-      return `
-        radial-gradient(circle at 50% 50%, ${currentEventColor}50, ${currentEventColor}20),
-        linear-gradient(135deg, ${currentEventColor}30, ${currentEventColor}50)
-      `;
-    }
-    
-    // If colors are different, create a gradient between them
     return `
-      radial-gradient(circle at 30% 20%, ${currentEventColor}40, transparent 70%),
-      radial-gradient(circle at 70% 80%, ${currentSuggestionColor}40, transparent 70%),
-      linear-gradient(135deg, ${currentEventColor}50, ${currentEventColor}20, ${currentSuggestionColor}20, ${currentSuggestionColor}50)
+      radial-gradient(circle at 50% 30%, ${suggestionColor}40, transparent 70%),
+      linear-gradient(135deg, ${suggestionColor}30, ${suggestionColor}10, transparent 50%),
+      linear-gradient(135deg, hsl(240, 3.8%, 9%), hsl(240, 3.8%, 6%))
     `;
   };
 
@@ -538,17 +532,7 @@ const ScheduleTab = () => {
     >
       {/* Main content - Split screen layout */}
       <div className="h-screen flex flex-col">
-        {/* Event Cards Section - Top half */}
-        <div className="flex-1">
-          <MultidimensionalEventCards
-            onCardTap={handleCardTap}
-            onCardSwipeUp={handleCardSwipeUp}
-            onCurrentIndexChange={setCurrentEventIndex}
-            className="h-full"
-          />
-        </div>
-        
-        {/* Suggestions Section - Bottom half */}
+        {/* Suggestions Section - Top half */}
         <div className="flex-1">
           <MultidimensionalSuggestionCards
             suggestions={getSuggestions()}
@@ -556,6 +540,14 @@ const ScheduleTab = () => {
             onCardSwipeUp={handleSuggestionSwipeUp}
             onCardSwipeDown={handleSuggestionSwipeDown}
             onCurrentIndexChange={setCurrentSuggestionIndex}
+            className="h-full"
+          />
+        </div>
+        
+        {/* Event Menu Section - Bottom half */}
+        <div className="flex-1">
+          <EventMenuCards
+            onMenuItemTap={handleMenuItemTap}
             className="h-full"
           />
         </div>
