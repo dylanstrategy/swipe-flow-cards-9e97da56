@@ -27,6 +27,8 @@ import { UniversalEvent } from '@/types/eventTasks';
 const ScheduleTab = () => {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [currentEventIndex, setCurrentEventIndex] = useState(0);
+  const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
   const [showScheduleMenu, setShowScheduleMenu] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
@@ -485,13 +487,49 @@ const ScheduleTab = () => {
       .sort((a, b) => a.time.localeCompare(b.time));
   };
 
-  // Create shared gradient background
+  // Create dynamic shared gradient background
   const createSharedGradient = () => {
-    // Sample colors from both event and suggestion cards
-    const eventColor = '#3B82F6'; // Blue for events
-    const suggestionColor = '#22C55E'; // Green for suggestions
+    // Mock event cards data to get colors
+    const eventCards = [
+      { color: 'bg-blue-500' },
+      { color: 'bg-green-500' },
+      { color: 'bg-purple-500' },
+      { color: 'bg-orange-500' },
+      { color: 'bg-red-500' },
+      { color: 'bg-indigo-500' }
+    ];
     
-    return `linear-gradient(180deg, ${eventColor}25 0%, ${eventColor}10 25%, ${suggestionColor}10 75%, ${suggestionColor}25 100%)`;
+    const suggestions = getSuggestions();
+    
+    // Convert card colors to hex
+    const getEventHex = (colorClass: string) => {
+      const colorMap: { [key: string]: string } = {
+        'bg-blue-500': '#3B82F6',
+        'bg-green-500': '#22C55E',
+        'bg-purple-500': '#A855F7',
+        'bg-orange-500': '#F97316',
+        'bg-red-500': '#EF4444',
+        'bg-indigo-500': '#6366F1',
+        'bg-teal-500': '#14B8A6',
+        'bg-pink-500': '#EC4899'
+      };
+      return colorMap[colorClass] || '#3B82F6';
+    };
+    
+    const getSuggestionHex = (priority: string) => {
+      const colorMap: { [key: string]: string } = {
+        'urgent': '#EF4444',
+        'high': '#F97316',
+        'medium': '#EAB308',
+        'low': '#22C55E'
+      };
+      return colorMap[priority] || '#22C55E';
+    };
+    
+    const currentEventColor = getEventHex(eventCards[currentEventIndex]?.color || 'bg-blue-500');
+    const currentSuggestionColor = getSuggestionHex(suggestions[currentSuggestionIndex]?.priority || 'low');
+    
+    return `linear-gradient(180deg, ${currentEventColor}30 0%, ${currentEventColor}15 25%, ${currentSuggestionColor}15 75%, ${currentSuggestionColor}30 100%)`;
   };
 
 
@@ -507,6 +545,7 @@ const ScheduleTab = () => {
           <MultidimensionalEventCards
             onCardTap={handleCardTap}
             onCardSwipeUp={handleCardSwipeUp}
+            onCurrentIndexChange={setCurrentEventIndex}
             className="h-full"
           />
         </div>
@@ -518,6 +557,7 @@ const ScheduleTab = () => {
             onCardTap={handleSuggestionTap}
             onCardSwipeUp={handleSuggestionSwipeUp}
             onCardSwipeDown={handleSuggestionSwipeDown}
+            onCurrentIndexChange={setCurrentSuggestionIndex}
             className="h-full"
           />
         </div>

@@ -17,6 +17,7 @@ interface MultidimensionalSuggestionCardsProps {
   onCardTap: (suggestion: SuggestionCard) => void;
   onCardSwipeUp: (suggestion: SuggestionCard) => void;
   onCardSwipeDown: (suggestion: SuggestionCard) => void;
+  onCurrentIndexChange?: (index: number) => void;
   className?: string;
 }
 
@@ -25,6 +26,7 @@ const MultidimensionalSuggestionCards = ({
   onCardTap, 
   onCardSwipeUp, 
   onCardSwipeDown, 
+  onCurrentIndexChange,
   className = '' 
 }: MultidimensionalSuggestionCardsProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -44,15 +46,19 @@ const MultidimensionalSuggestionCards = ({
   const goToNext = () => {
     if (isTransitioning || activeEvents.length === 0) return;
     setIsTransitioning(true);
-    setCurrentIndex((prev) => (prev + 1) % activeEvents.length);
-    setTimeout(() => setIsTransitioning(false), 300);
+    const newIndex = (currentIndex + 1) % activeEvents.length;
+    setCurrentIndex(newIndex);
+    onCurrentIndexChange?.(newIndex);
+    setTimeout(() => setIsTransitioning(false), 500);
   };
 
   const goToPrev = () => {
     if (isTransitioning || activeEvents.length === 0) return;
     setIsTransitioning(true);
-    setCurrentIndex((prev) => (prev - 1 + activeEvents.length) % activeEvents.length);
-    setTimeout(() => setIsTransitioning(false), 300);
+    const newIndex = (currentIndex - 1 + activeEvents.length) % activeEvents.length;
+    setCurrentIndex(newIndex);
+    onCurrentIndexChange?.(newIndex);
+    setTimeout(() => setIsTransitioning(false), 500);
   };
 
   const getPriorityColor = (priority: string) => {

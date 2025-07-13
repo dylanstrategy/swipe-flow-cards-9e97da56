@@ -15,10 +15,11 @@ interface EventCard {
 interface MultidimensionalEventCardsProps {
   onCardTap: (cardType: string) => void;
   onCardSwipeUp: (cardType: string) => void;
+  onCurrentIndexChange?: (index: number) => void;
   className?: string;
 }
 
-const MultidimensionalEventCards = ({ onCardTap, onCardSwipeUp, className = '' }: MultidimensionalEventCardsProps) => {
+const MultidimensionalEventCards = ({ onCardTap, onCardSwipeUp, onCurrentIndexChange, className = '' }: MultidimensionalEventCardsProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
@@ -78,14 +79,18 @@ const MultidimensionalEventCards = ({ onCardTap, onCardSwipeUp, className = '' }
   const goToNext = () => {
     if (isTransitioning) return;
     setIsTransitioning(true);
-    setCurrentIndex((prev) => (prev + 1) % eventCards.length);
+    const newIndex = (currentIndex + 1) % eventCards.length;
+    setCurrentIndex(newIndex);
+    onCurrentIndexChange?.(newIndex);
     setTimeout(() => setIsTransitioning(false), 300);
   };
 
   const goToPrev = () => {
     if (isTransitioning) return;
     setIsTransitioning(true);
-    setCurrentIndex((prev) => (prev - 1 + eventCards.length) % eventCards.length);
+    const newIndex = (currentIndex - 1 + eventCards.length) % eventCards.length;
+    setCurrentIndex(newIndex);
+    onCurrentIndexChange?.(newIndex);
     setTimeout(() => setIsTransitioning(false), 300);
   };
 
