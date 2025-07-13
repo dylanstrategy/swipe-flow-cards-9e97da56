@@ -72,19 +72,28 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeDown, onSwipeLeft, onSwipeR
     const shouldCompleteRight = (Math.abs(deltaX) > distanceThreshold || velocityX > velocityThreshold) && 
                                deltaX > distanceThreshold;
     
-    if (shouldCompleteUp && onSwipeUp) {
-      onSwipeUp();
-    } else if (shouldCompleteDown && onSwipeDown) {
-      onSwipeDown();
-    } else if (shouldCompleteLeft && onSwipeLeft) {
-      onSwipeLeft();
-    } else if (shouldCompleteRight && onSwipeRight) {
-      onSwipeRight();
-    }
+    // Add playful delay before executing swipe actions
+    const executeAction = () => {
+      if (shouldCompleteUp && onSwipeUp) {
+        onSwipeUp();
+      } else if (shouldCompleteDown && onSwipeDown) {
+        onSwipeDown();
+      } else if (shouldCompleteLeft && onSwipeLeft) {
+        onSwipeLeft();
+      } else if (shouldCompleteRight && onSwipeRight) {
+        onSwipeRight();
+      }
+    };
     
+    // Reset UI state immediately for responsive feel
     setIsDragging(false);
     setDragOffset({ x: 0, y: 0 });
     setShowAction(null);
+    
+    // Execute action with a playful delay
+    if (shouldCompleteUp || shouldCompleteDown || shouldCompleteLeft || shouldCompleteRight) {
+      setTimeout(executeAction, 150);
+    }
   };
 
   const getActionOpacity = () => {
