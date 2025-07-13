@@ -222,15 +222,19 @@ const MaintenanceScheduleTab = ({
 
     // Parse the scheduled time if it's not "Tomorrow"
     if (!scheduledTime.includes('Tomorrow')) {
-      targetTime = scheduledTime.replace('Today ', '').replace(' AM', '').replace(' PM', '');
-      // Convert to 24-hour format if needed
+      // Handle different time formats
       if (scheduledTime.includes('AM') || scheduledTime.includes('PM')) {
-        const [time, period] = scheduledTime.split(' ');
+        // Format: "1:30 PM" or "Today at 1:30 PM"
+        const timeOnly = scheduledTime.replace('Today at ', '').replace('today at ', '');
+        const [time, period] = timeOnly.split(' ');
         const [hours, minutes] = time.split(':').map(Number);
         let hour24 = hours;
         if (period === 'PM' && hours !== 12) hour24 += 12;
         if (period === 'AM' && hours === 12) hour24 = 0;
         targetTime = `${hour24.toString().padStart(2, '0')}:${(minutes || 0).toString().padStart(2, '0')}`;
+      } else {
+        // Format: "13:30" (24-hour format)
+        targetTime = scheduledTime;
       }
     } else {
       // Schedule for tomorrow
