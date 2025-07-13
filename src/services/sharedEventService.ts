@@ -701,6 +701,31 @@ class SharedEventService {
     return userIds[role] || 'system';
   }
 
+  // Complete event (mark as completed and add completion stamp)
+  completeEvent(eventId: string, completionStamp: any): boolean {
+    try {
+      const eventIndex = this.events.findIndex(event => event.id === eventId);
+      if (eventIndex === -1) {
+        console.error('Event not found for completion:', eventId);
+        return false;
+      }
+      
+      // Update event status and add completion stamp
+      this.events[eventIndex] = {
+        ...this.events[eventIndex],
+        status: 'completed',
+        taskCompletionStamps: [...(this.events[eventIndex].taskCompletionStamps || []), completionStamp]
+      };
+      
+      this.notifySubscribers();
+      console.log('Event completed successfully:', eventId);
+      return true;
+    } catch (error) {
+      console.error('Error completing event:', error);
+      return false;
+    }
+  }
+
   // Remove event
   removeEvent(eventId: string): boolean {
     try {

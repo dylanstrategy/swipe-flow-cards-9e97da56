@@ -231,18 +231,37 @@ const MaintenanceTodayTab = ({ onWorkOrderCompleted }: MaintenanceTodayTabProps)
     // Find the event in calendar
     const event = calendarEvents.find(e => e.workOrderData?.id === workOrderId || e.id === workOrderId);
     
-    if (event && event.workOrderData) {
-      // If it's a shared work order, remove from shared service
-      const success = sharedEventService.removeEvent(event.id);
-      if (success) {
-        console.log('MaintenanceTodayTab - Successfully removed shared event');
-        // The subscription will automatically update our calendar events
+    if (event) {
+      const completionStamp = {
+        id: `completion-${workOrderId}-${Date.now()}`,
+        taskName: `Work Order Completed: ${event.title}`,
+        completedBy: 'Maintenance Team',
+        completedByRole: 'maintenance' as const,
+        completedAt: new Date(),
+        eventId: event.id,
+        eventType: 'work-order',
+        timeSlot: event.time,
+        isEventCompletion: true,
+        permanent: false,
+        actualCompletionTime: new Date()
+      };
+
+      if (event.workOrderData) {
+        // If it's a shared work order, update it as completed in shared service
+        const success = sharedEventService.completeEvent(event.id, completionStamp);
+        if (success) {
+          console.log('MaintenanceTodayTab - Successfully completed shared event with stamp');
+        } else {
+          console.error('MaintenanceTodayTab - Failed to complete shared event');
+        }
       } else {
-        console.error('MaintenanceTodayTab - Failed to remove shared event');
+        // For non-shared events, update locally
+        setCalendarEvents(prev => prev.map(e => 
+          e.workOrderData?.id === workOrderId || e.id === workOrderId
+            ? { ...e, status: 'completed', taskCompletionStamps: [...(e.taskCompletionStamps || []), completionStamp] }
+            : e
+        ));
       }
-    } else {
-      // For non-shared events, remove locally
-      setCalendarEvents(prev => prev.filter(e => e.workOrderData?.id !== workOrderId && e.id !== workOrderId));
     }
     
     // Notify parent component if callback provided
