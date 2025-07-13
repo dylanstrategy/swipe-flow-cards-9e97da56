@@ -69,6 +69,10 @@ const OperatorScheduleTab = () => {
   const [completedSuggestionIds, setCompletedSuggestionIds] = useState<number[]>([]);
   const [scheduledForLaterIds, setScheduledForLaterIds] = useState<number[]>([]);
   const [suggestionsExpanded, setSuggestionsExpanded] = useState(false);
+  
+  // State for tracking current card indices - moved here to avoid hooks rule violation
+  const [currentEventIndex, setCurrentEventIndex] = useState(0);
+  const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
 
   const convertTimeToMinutes = (timeString: string): number => {
     if (!timeString) return 0;
@@ -539,9 +543,6 @@ const OperatorScheduleTab = () => {
       .sort((a, b) => a.time.localeCompare(b.time));
   };
 
-  // State for tracking current card indices
-  const [currentEventIndex, setCurrentEventIndex] = useState(0);
-  const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
 
   // Create background gradient based on suggestions
   const createMatchingGradient = () => {
