@@ -5,6 +5,7 @@ import WorkOrderFlow from '../schedule/WorkOrderFlow';
 import WorkOrdersReview from './today/WorkOrdersReview';
 import WorkOrderTimeline from '../maintenance/WorkOrderTimeline';
 import UniversalEventDetailModal from '../events/UniversalEventDetailModal';
+import { EventCardGrid } from '../events/EventCardGrid';
 import { useToast } from '@/hooks/use-toast';
 import { format, addDays, isSameDay, differenceInDays, isPast, isToday } from 'date-fns';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -490,20 +491,23 @@ const TodayTab = () => {
         {renderPersonalizedOffers()}
 
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            Today's Events 
-            <span className="text-sm font-normal text-gray-600 ml-2">
-              ({todayEvents.length} events)
-            </span>
-          </h2>
-          
-          <TodayMiniCalendar 
-            selectedDate={selectedDate}
-            getEventsForDate={getEventsForDate}
-            onDropSuggestion={handleDropSuggestion}
-            onDateSelect={handleDateSelect}
-            onEventReschedule={handleEventReschedule}
+          <EventCardGrid
+            events={todayEvents}
+            currentUserRole="resident"
             onEventClick={handleEventClick}
+            onTaskAction={(eventId, taskId, action) => {
+              if (action === 'complete') {
+                sharedEventService.completeTask(eventId, taskId, 'resident');
+                toast({
+                  title: "Task Completed",
+                  description: "Task marked as complete successfully."
+                });
+              }
+            }}
+            title="Today's Events"
+            maxEvents={6}
+            compact
+            showFilters={false}
           />
         </div>
       </div>
