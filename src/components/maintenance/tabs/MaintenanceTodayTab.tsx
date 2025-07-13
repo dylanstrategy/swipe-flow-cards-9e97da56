@@ -115,7 +115,7 @@ const MaintenanceTodayTab = ({ onWorkOrderCompleted }: MaintenanceTodayTabProps)
         }))
       ];
       
-      setCalendarEvents(events);
+      setCalendarEvents([...events]); // Force re-render with new array reference
       console.log('MaintenanceTodayTab - Calendar events updated:', events);
     });
 
@@ -166,7 +166,7 @@ const MaintenanceTodayTab = ({ onWorkOrderCompleted }: MaintenanceTodayTabProps)
       }))
     ];
     
-    setCalendarEvents(initialEvents);
+    setCalendarEvents([...initialEvents]); // Force re-render with new array reference
     console.log('MaintenanceTodayTab - Initial calendar events set:', initialEvents);
 
     // Cleanup subscription
