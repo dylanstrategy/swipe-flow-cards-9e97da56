@@ -62,18 +62,32 @@ const HourlyCalendarView = ({
         break;
       case '3day':
         for (let i = 0; i < 3; i++) {
-          dates.push(addMinutes(baseDate, i * 24 * 60));
+          const date = new Date(baseDate);
+          date.setDate(date.getDate() + i);
+          dates.push(date);
         }
         break;
       case 'week':
-        const weekStart = startOfDay(baseDate);
+        const weekStart = new Date(baseDate);
         weekStart.setDate(weekStart.getDate() - weekStart.getDay());
         for (let i = 0; i < 7; i++) {
-          dates.push(addMinutes(weekStart, i * 24 * 60));
+          const date = new Date(weekStart);
+          date.setDate(date.getDate() + i);
+          dates.push(date);
         }
         break;
       case 'month':
-        dates.push(baseDate);
+        // For month view, generate a full month calendar grid
+        const monthStart = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+        const monthEnd = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0);
+        const calendarStart = new Date(monthStart);
+        calendarStart.setDate(calendarStart.getDate() - monthStart.getDay());
+        
+        for (let i = 0; i < 42; i++) { // 6 weeks * 7 days
+          const date = new Date(calendarStart);
+          date.setDate(date.getDate() + i);
+          dates.push(date);
+        }
         break;
     }
     return dates;
@@ -94,8 +108,17 @@ const HourlyCalendarView = ({
     );
   }
 
-  // Month view - simple grid layout
+  // Month view - traditional calendar grid layout
   if (viewType === 'month') {
+    const eventsForDate = (date: Date) => {
+      return events.filter(event => 
+        format(event.date, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
+      );
+    };
+
+    const today = new Date();
+    const currentMonth = selectedDate.getMonth();
+
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -106,34 +129,72 @@ const HourlyCalendarView = ({
             </h3>
           </div>
         </div>
-        <div className="p-4">
-          <div className="space-y-2">
-            {events.map((event) => {
-              const isOverdue = isEventOverdue(event);
-              const isCompleted = isEventCompleted(event);
-              const eventColors = getEventColors(event, isOverdue, isCompleted);
-              
-              return (
-                <div
-                  key={event.id}
-                  onClick={() => handleEventClick(event)}
-                  className={cn(
-                    "p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md",
-                    eventColors
-                  )}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-sm">
-                        {event.time} - {event.title}
-                      </h4>
-                      <p className="text-xs mt-1">{event.description}</p>
-                    </div>
-                  </div>
+        
+        {/* Day headers */}
+        <div className="grid grid-cols-7 border-b border-gray-100">
+          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+            <div key={index} className="p-3 text-center text-sm font-medium text-gray-500 bg-gray-50">
+              {day}
+            </div>
+          ))}
+        </div>
+        
+        {/* Calendar grid */}
+        <div className="grid grid-cols-7">
+          {viewDates.map((date, index) => {
+            const dayEvents = eventsForDate(date);
+            const isToday = format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
+            const isCurrentMonth = date.getMonth() === currentMonth;
+            const isSelected = format(date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
+            
+            return (
+              <div
+                key={index}
+                className={cn(
+                  "min-h-[120px] p-2 border-b border-r border-gray-100 last:border-r-0",
+                  !isCurrentMonth && "bg-gray-50 text-gray-400"
+                )}
+              >
+                <div className={cn(
+                  "w-8 h-8 flex items-center justify-center text-sm rounded-full mb-2",
+                  isToday && "bg-blue-600 text-white font-semibold",
+                  isSelected && !isToday && "bg-blue-100 text-blue-600 font-semibold",
+                  !isToday && !isSelected && isCurrentMonth && "text-gray-900",
+                  !isCurrentMonth && "text-gray-400"
+                )}>
+                  {format(date, 'd')}
                 </div>
-              );
-            })}
-          </div>
+                
+                <div className="space-y-1">
+                  {dayEvents.slice(0, 3).map((event) => {
+                    const isOverdue = isEventOverdue(event);
+                    const isCompleted = isEventCompleted(event);
+                    
+                    return (
+                      <div
+                        key={event.id}
+                        onClick={() => handleEventClick(event)}
+                        className={cn(
+                          "text-xs p-1 rounded cursor-pointer truncate",
+                          isCompleted && "bg-green-100 text-green-800",
+                          isOverdue && !isCompleted && "bg-red-100 text-red-800",
+                          !isOverdue && !isCompleted && "bg-blue-100 text-blue-800"
+                        )}
+                        title={`${event.time} - ${event.title}`}
+                      >
+                        {event.time} {event.title}
+                      </div>
+                    );
+                  })}
+                  {dayEvents.length > 3 && (
+                    <div className="text-xs text-gray-500 p-1">
+                      +{dayEvents.length - 3} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
