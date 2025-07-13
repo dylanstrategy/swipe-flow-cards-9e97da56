@@ -3,7 +3,7 @@ import React from 'react';
 import { ArrowUp } from 'lucide-react';
 
 interface SwipeActionOverlaysProps {
-  showAction: 'up' | 'left' | null;
+  showAction: 'up' | 'down' | 'left' | null;
   canSwipeUp: boolean;
   getActionOpacity: () => number;
 }

@@ -10,6 +10,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import ScheduleMenu from '../../schedule/ScheduleMenu';
 import WorkOrderFlow from '../../schedule/WorkOrderFlow';
 import DraggableSuggestionsSection from '../../schedule/DraggableSuggestionsSection';
+import SwipeableEventCards from '../../schedule/SwipeableEventCards';
+import SwipeableSuggestionCards from '../../schedule/SwipeableSuggestionCards';
 import MessageModule from '../../message/MessageModule';
 import ServiceModule from '../../service/ServiceModule';
 import UniversalEventDetailModal from '../../events/UniversalEventDetailModal';
@@ -62,6 +64,8 @@ const OperatorScheduleTab = () => {
   // State to track which suggestions have been scheduled and completed
   const [scheduledSuggestionIds, setScheduledSuggestionIds] = useState<number[]>([]);
   const [completedSuggestionIds, setCompletedSuggestionIds] = useState<number[]>([]);
+  const [scheduledForLaterIds, setScheduledForLaterIds] = useState<number[]>([]);
+  const [suggestionsExpanded, setSuggestionsExpanded] = useState(false);
 
   const convertTimeToMinutes = (timeString: string): number => {
     if (!timeString) return 0;
@@ -335,6 +339,74 @@ const OperatorScheduleTab = () => {
     });
   };
 
+  // Mock suggestions data - operators see more comprehensive suggestions
+  const getSuggestions = () => {
+    const baseSuggestions = [
+      { id: 1, title: "Schedule maintenance check", description: "Yearly HVAC inspection", priority: 'medium' as const, category: 'Maintenance', type: 'work-order' },
+      { id: 2, title: "Process lease renewal", description: "Review and process renewal", priority: 'high' as const, category: 'Leasing' },
+      { id: 3, title: "Unit inspection needed", description: "Unit 204 quarterly check", priority: 'medium' as const, category: 'Maintenance', type: 'work-order' },
+      { id: 4, title: "Follow up with vendor", description: "Check completion status", priority: 'high' as const, category: 'Vendor Management' },
+      { id: 5, title: "Schedule move-in prep", description: "Unit 315 cleaning and setup", priority: 'urgent' as const, category: 'Operations' },
+      { id: 6, title: "Review maintenance requests", description: "Weekly team meeting", priority: 'medium' as const, category: 'Management' },
+    ];
+
+    return baseSuggestions.filter(s => 
+      !scheduledSuggestionIds.includes(s.id) && 
+      !completedSuggestionIds.includes(s.id) &&
+      !scheduledForLaterIds.includes(s.id)
+    );
+  };
+
+  const handleCardTap = (cardType: string) => {
+    setSelectedScheduleType(cardType);
+    if (cardType === 'Work Order') {
+      setIsCreatingOrder(true);
+      setCurrentStep(1);
+    } else if (cardType === 'Message') {
+      setShowMessageModule(true);
+    } else if (cardType === 'Service Request') {
+      setShowServiceModule(true);
+    } else {
+      setShowScheduleMenu(true);
+    }
+  };
+
+  const handleCardSwipeUp = (cardType: string) => {
+    // Auto-schedule the event type for the next available time slot
+    const assignedTime = findAvailableTimeSlot(selectedDate);
+    
+    toast({
+      title: "Event Auto-Scheduled!",
+      description: `${cardType} scheduled at ${assignedTime} on ${format(selectedDate, 'MMM d, yyyy')}`,
+    });
+  };
+
+  const handleSuggestionTap = (suggestion: any) => {
+    setSelectedUniversalEvent({
+      id: suggestion.id.toString(),
+      title: suggestion.title,
+      description: suggestion.description,
+      category: suggestion.category,
+      priority: suggestion.priority,
+      date: selectedDate,
+      time: '12:00 PM',
+      status: 'scheduled'
+    });
+    setShowUniversalEventDetail(true);
+  };
+
+  const handleSuggestionSwipeUp = (suggestion: any) => {
+    handleDropSuggestionInTimeline(suggestion);
+  };
+
+  const handleSuggestionSwipeDown = (suggestion: any) => {
+    setScheduledForLaterIds(prev => [...prev, suggestion.id]);
+    toast({
+      title: "Scheduled for Later",
+      description: `${suggestion.title} saved for later scheduling`,
+    });
+  };
+
   if (showUniversalEventDetail && selectedUniversalEvent) {
     return (
       <UniversalEventDetailModal
@@ -480,31 +552,79 @@ const OperatorScheduleTab = () => {
         </div>
       </div>
 
-      {/* Main content area - REVERTED TO ORIGINAL LAYOUT */}
-      <div className="flex-1 overflow-hidden">
-        <div className="flex flex-col h-full">
-          {/* Suggestions ABOVE the calendar - ORIGINAL LAYOUT */}
-          <div className="flex-shrink-0">
-            <DraggableSuggestionsSection
-              scheduledSuggestionIds={scheduledSuggestionIds}
-              completedSuggestionIds={completedSuggestionIds}
-              onDropInTimeline={handleDropSuggestionInTimeline}
-              selectedDate={selectedDate}
-            />
+      {/* Main content */}
+      <div className="relative flex-1">
+        {suggestionsExpanded ? (
+          /* Expanded suggestions view - covers whole page */
+          <div className="fixed inset-0 bg-white z-40 pt-20">
+            <div className="p-4 h-full flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900">Suggestions</h2>
+                <button
+                  onClick={() => setSuggestionsExpanded(false)}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  ✕
+                </button>
+              </div>
+              <SwipeableSuggestionCards
+                suggestions={getSuggestions()}
+                onCardTap={handleSuggestionTap}
+                onCardSwipeUp={handleSuggestionSwipeUp}
+                onCardSwipeDown={handleSuggestionSwipeDown}
+                isExpanded={true}
+                className="mb-6"
+              />
+            </div>
           </div>
+        ) : (
+          /* Normal view */
+          <div className="flex flex-col h-full">
+            {/* Suggestions dropdown section */}
+            <div className="bg-white border-b border-gray-100 flex-shrink-0">
+              <div className="p-4">
+                <button
+                  onClick={() => setSuggestionsExpanded(true)}
+                  className="w-full flex items-center justify-between text-left"
+                >
+                  <span className="text-lg font-semibold text-gray-900">Suggestions</span>
+                  <span className="text-gray-500">({getSuggestions().length})</span>
+                </button>
+                {getSuggestions().length > 0 && (
+                  <SwipeableSuggestionCards
+                    suggestions={getSuggestions().slice(0, 3)}
+                    onCardTap={handleSuggestionTap}
+                    onCardSwipeUp={handleSuggestionSwipeUp}
+                    onCardSwipeDown={handleSuggestionSwipeDown}
+                    className="mt-4"
+                  />
+                )}
+              </div>
+            </div>
 
-          {/* Calendar below suggestions - ORIGINAL LAYOUT */}
-          <div className="flex-1 bg-white">
-            <HourlyCalendarView
-              selectedDate={selectedDate}
-              events={getEventsForDate(selectedDate)}
-              onDropSuggestion={handleDropSuggestionInTimeline}
-              onEventClick={handleEventClick}
-              onEventHold={handleEventHold}
-              onEventReschedule={handleEventReschedule}
-            />
+            {/* Event cards section */}
+            <div className="bg-gray-50 border-b border-gray-100 flex-shrink-0">
+              <div className="p-4">
+                <SwipeableEventCards
+                  onCardTap={handleCardTap}
+                  onCardSwipeUp={handleCardSwipeUp}
+                />
+              </div>
+            </div>
+
+            {/* Calendar */}
+            <div className="flex-1 bg-white overflow-hidden">
+              <HourlyCalendarView
+                selectedDate={selectedDate}
+                events={getEventsForDate(selectedDate)}
+                onDropSuggestion={handleDropSuggestionInTimeline}
+                onEventClick={handleEventClick}
+                onEventHold={handleEventHold}
+                onEventReschedule={handleEventReschedule}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Floating Add Button */}

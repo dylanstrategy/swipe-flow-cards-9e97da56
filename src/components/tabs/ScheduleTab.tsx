@@ -10,6 +10,8 @@ import ScheduleMenu from '../schedule/ScheduleMenu';
 import WorkOrderFlow from '../schedule/WorkOrderFlow';
 import DraggableSuggestionsSection from '../schedule/DraggableSuggestionsSection';
 import DroppableCalendar from '../schedule/DroppableCalendar';
+import SwipeableEventCards from '../schedule/SwipeableEventCards';
+import SwipeableSuggestionCards from '../schedule/SwipeableSuggestionCards';
 import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
 import UniversalEventDetailModal from '../events/UniversalEventDetailModal';
@@ -60,6 +62,8 @@ const ScheduleTab = () => {
   // State to track which suggestions have been scheduled and completed
   const [scheduledSuggestionIds, setScheduledSuggestionIds] = useState<number[]>([]);
   const [completedSuggestionIds, setCompletedSuggestionIds] = useState<number[]>([]);
+  const [scheduledForLaterIds, setScheduledForLaterIds] = useState<number[]>([]);
+  const [suggestionsExpanded, setSuggestionsExpanded] = useState(false);
 
   const convertTimeToMinutes = (timeString: string): number => {
     if (!timeString) return 0;
@@ -298,6 +302,73 @@ const ScheduleTab = () => {
     });
   };
 
+  // Mock suggestions data
+  const getSuggestions = () => {
+    const baseSuggestions = [
+      { id: 1, title: "Schedule maintenance check", description: "Yearly HVAC inspection", priority: 'medium' as const, category: 'Maintenance', type: 'work-order' },
+      { id: 2, title: "Update emergency contacts", description: "Review contact information", priority: 'low' as const, category: 'Personal' },
+      { id: 3, title: "Pay monthly rent", description: "Due in 3 days", priority: 'high' as const, category: 'Financial' },
+      { id: 4, title: "Submit package request", description: "Arrange package delivery", priority: 'medium' as const, category: 'Services' },
+      { id: 5, title: "Book community room", description: "Reserve for weekend event", priority: 'low' as const, category: 'Community' },
+    ];
+
+    return baseSuggestions.filter(s => 
+      !scheduledSuggestionIds.includes(s.id) && 
+      !completedSuggestionIds.includes(s.id) &&
+      !scheduledForLaterIds.includes(s.id)
+    );
+  };
+
+  const handleCardTap = (cardType: string) => {
+    setSelectedScheduleType(cardType);
+    if (cardType === 'Work Order') {
+      setIsCreatingOrder(true);
+      setCurrentStep(1);
+    } else if (cardType === 'Message') {
+      setShowMessageModule(true);
+    } else if (cardType === 'Service Request') {
+      setShowServiceModule(true);
+    } else {
+      setShowScheduleMenu(true);
+    }
+  };
+
+  const handleCardSwipeUp = (cardType: string) => {
+    // Auto-schedule the event type for the next available time slot
+    const assignedTime = findAvailableTimeSlot(selectedDate);
+    
+    toast({
+      title: "Event Auto-Scheduled!",
+      description: `${cardType} scheduled at ${assignedTime} on ${format(selectedDate, 'MMM d, yyyy')}`,
+    });
+  };
+
+  const handleSuggestionTap = (suggestion: any) => {
+    setSelectedUniversalEvent({
+      id: suggestion.id.toString(),
+      title: suggestion.title,
+      description: suggestion.description,
+      category: suggestion.category,
+      priority: suggestion.priority,
+      date: selectedDate,
+      time: '12:00 PM',
+      status: 'scheduled'
+    });
+    setShowUniversalEventDetail(true);
+  };
+
+  const handleSuggestionSwipeUp = (suggestion: any) => {
+    handleDropSuggestionInTimeline(suggestion);
+  };
+
+  const handleSuggestionSwipeDown = (suggestion: any) => {
+    setScheduledForLaterIds(prev => [...prev, suggestion.id]);
+    toast({
+      title: "Scheduled for Later",
+      description: `${suggestion.title} saved for later scheduling`,
+    });
+  };
+
   if (showUniversalEventDetail && selectedUniversalEvent) {
     return (
       <UniversalEventDetailModal
@@ -443,27 +514,79 @@ const ScheduleTab = () => {
         </div>
       </div>
 
-      {/* Main content - Allow page scroll, no height constraints */}
-      <div>
-        {/* Suggestions section */}
-        <DraggableSuggestionsSection
-          scheduledSuggestionIds={scheduledSuggestionIds}
-          completedSuggestionIds={completedSuggestionIds}
-          onDropInTimeline={handleDropSuggestionInTimeline}
-          selectedDate={selectedDate}
-        />
+      {/* Main content */}
+      <div className="relative">
+        {suggestionsExpanded ? (
+          /* Expanded suggestions view - covers whole page */
+          <div className="fixed inset-0 bg-white z-40 pt-20">
+            <div className="p-4 h-full flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900">Suggestions</h2>
+                <button
+                  onClick={() => setSuggestionsExpanded(false)}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  ✕
+                </button>
+              </div>
+              <SwipeableSuggestionCards
+                suggestions={getSuggestions()}
+                onCardTap={handleSuggestionTap}
+                onCardSwipeUp={handleSuggestionSwipeUp}
+                onCardSwipeDown={handleSuggestionSwipeDown}
+                isExpanded={true}
+                className="mb-6"
+              />
+            </div>
+          </div>
+        ) : (
+          /* Normal view */
+          <div>
+            {/* Suggestions dropdown section */}
+            <div className="bg-white border-b border-gray-100">
+              <div className="p-4">
+                <button
+                  onClick={() => setSuggestionsExpanded(true)}
+                  className="w-full flex items-center justify-between text-left"
+                >
+                  <span className="text-lg font-semibold text-gray-900">Suggestions</span>
+                  <span className="text-gray-500">({getSuggestions().length})</span>
+                </button>
+                {getSuggestions().length > 0 && (
+                  <SwipeableSuggestionCards
+                    suggestions={getSuggestions().slice(0, 3)}
+                    onCardTap={handleSuggestionTap}
+                    onCardSwipeUp={handleSuggestionSwipeUp}
+                    onCardSwipeDown={handleSuggestionSwipeDown}
+                    className="mt-4"
+                  />
+                )}
+              </div>
+            </div>
 
-        {/* Calendar - Full height without scroll container */}
-        <div className="bg-white">
-          <HourlyCalendarView
-            selectedDate={selectedDate}
-            events={getEventsForDate(selectedDate)}
-            onDropSuggestion={handleDropSuggestionInTimeline}
-            onEventClick={handleEventClick}
-            onEventHold={handleEventHold}
-            onEventReschedule={handleEventReschedule}
-          />
-        </div>
+            {/* Event cards section */}
+            <div className="bg-gray-50 border-b border-gray-100">
+              <div className="p-4">
+                <SwipeableEventCards
+                  onCardTap={handleCardTap}
+                  onCardSwipeUp={handleCardSwipeUp}
+                />
+              </div>
+            </div>
+
+            {/* Calendar */}
+            <div className="bg-white">
+              <HourlyCalendarView
+                selectedDate={selectedDate}
+                events={getEventsForDate(selectedDate)}
+                onDropSuggestion={handleDropSuggestionInTimeline}
+                onEventClick={handleEventClick}
+                onEventHold={handleEventHold}
+                onEventReschedule={handleEventReschedule}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Floating Add Button */}

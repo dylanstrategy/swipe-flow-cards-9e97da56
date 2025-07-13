@@ -1,16 +1,16 @@
-
 import { useState, useRef } from 'react';
 
 interface SwipeGesturesConfig {
   onSwipeUp?: () => void;
+  onSwipeDown?: () => void;
   onSwipeLeft?: () => void;
   canSwipeUp?: boolean;
 }
 
-export const useSwipeGestures = ({ onSwipeUp, onSwipeLeft, canSwipeUp = false }: SwipeGesturesConfig) => {
+export const useSwipeGestures = ({ onSwipeUp, onSwipeDown, onSwipeLeft, canSwipeUp = false }: SwipeGesturesConfig) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [showAction, setShowAction] = useState<'up' | 'left' | null>(null);
+  const [showAction, setShowAction] = useState<'up' | 'down' | 'left' | null>(null);
   const startPos = useRef({ x: 0, y: 0 });
   const startTime = useRef(0);
 
@@ -33,6 +33,8 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeLeft, canSwipeUp = false }:
     if (Math.abs(deltaY) > Math.abs(deltaX)) {
       if (deltaY < -30 && canSwipeUp) {
         setShowAction('up');
+      } else if (deltaY > 30) {
+        setShowAction('down');
       } else {
         setShowAction(null);
       }
@@ -60,11 +62,15 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeLeft, canSwipeUp = false }:
     
     const shouldCompleteUp = (Math.abs(deltaY) > distanceThreshold || velocityY > velocityThreshold) && 
                             deltaY < -distanceThreshold && canSwipeUp;
+    const shouldCompleteDown = (Math.abs(deltaY) > distanceThreshold || velocityY > velocityThreshold) && 
+                             deltaY > distanceThreshold;
     const shouldCompleteLeft = (Math.abs(deltaX) > distanceThreshold || velocityX > velocityThreshold) && 
                               deltaX < -distanceThreshold;
     
     if (shouldCompleteUp && onSwipeUp) {
       onSwipeUp();
+    } else if (shouldCompleteDown && onSwipeDown) {
+      onSwipeDown();
     } else if (shouldCompleteLeft && onSwipeLeft) {
       onSwipeLeft();
     }
@@ -76,7 +82,7 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeLeft, canSwipeUp = false }:
 
   const getActionOpacity = () => {
     if (!showAction) return 0;
-    const distance = showAction === 'up' ? Math.abs(dragOffset.y) : Math.abs(dragOffset.x);
+    const distance = (showAction === 'up' || showAction === 'down') ? Math.abs(dragOffset.y) : Math.abs(dragOffset.x);
     const progress = Math.min(distance / 80, 1);
     return Math.max(0.2, progress * 0.8);
   };
