@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Calendar, Wrench, MessageCircle, Clock, FileText, Users } from 'lucide-react';
+import { Calendar, Wrench, MessageCircle, Clock, FileText, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSwipeGestures } from '@/hooks/useSwipeGestures';
 
 interface EventCard {
@@ -20,6 +20,7 @@ interface MultidimensionalEventCardsProps {
 const MultidimensionalEventCards = ({ onCardTap, onCardSwipeUp, className = '' }: MultidimensionalEventCardsProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const eventCards: EventCard[] = [
@@ -90,30 +91,34 @@ const MultidimensionalEventCards = ({ onCardTap, onCardSwipeUp, className = '' }
   const getCardStyle = (index: number) => {
     const diff = (index - currentIndex + eventCards.length) % eventCards.length;
     const normalizedDiff = diff > eventCards.length / 2 ? diff - eventCards.length : diff;
+    const isHovered = hoveredCard === index;
 
     if (normalizedDiff === 0) {
-      // Center card
+      // Center card with floating animation
       return {
-        transform: 'translateX(0%) scale(1) rotateY(0deg)',
+        transform: `translateX(0%) scale(${isHovered ? 1.02 : 1}) rotateY(0deg) translateZ(${isHovered ? '20px' : '0px'})`,
         zIndex: 30,
         opacity: 1,
-        filter: 'brightness(1)'
+        filter: 'brightness(1)',
+        animation: 'float 6s ease-in-out infinite'
       };
     } else if (normalizedDiff === 1 || normalizedDiff === -(eventCards.length - 1)) {
-      // Right card
+      // Right card with subtle movement
       return {
-        transform: 'translateX(85%) scale(0.8) rotateY(-15deg)',
+        transform: `translateX(85%) scale(${isHovered ? 0.85 : 0.8}) rotateY(-15deg) translateZ(${isHovered ? '10px' : '0px'})`,
         zIndex: 20,
-        opacity: 0.7,
-        filter: 'brightness(0.8)'
+        opacity: isHovered ? 0.8 : 0.7,
+        filter: 'brightness(0.8)',
+        animation: 'floatRight 8s ease-in-out infinite'
       };
     } else if (normalizedDiff === -1 || normalizedDiff === (eventCards.length - 1)) {
-      // Left card
+      // Left card with subtle movement
       return {
-        transform: 'translateX(-85%) scale(0.8) rotateY(15deg)',
+        transform: `translateX(-85%) scale(${isHovered ? 0.85 : 0.8}) rotateY(15deg) translateZ(${isHovered ? '10px' : '0px'})`,
         zIndex: 20,
-        opacity: 0.7,
-        filter: 'brightness(0.8)'
+        opacity: isHovered ? 0.8 : 0.7,
+        filter: 'brightness(0.8)',
+        animation: 'floatLeft 8s ease-in-out infinite'
       };
     } else {
       // Hidden cards
@@ -140,7 +145,7 @@ const MultidimensionalEventCards = ({ onCardTap, onCardSwipeUp, className = '' }
 
     return (
       <div
-        className={`absolute inset-0 transition-all duration-300 ease-out cursor-pointer ${
+        className={`absolute inset-0 transition-all duration-500 ease-out cursor-pointer ${
           isTransitioning ? 'pointer-events-none' : ''
         }`}
         style={{
@@ -148,9 +153,12 @@ const MultidimensionalEventCards = ({ onCardTap, onCardSwipeUp, className = '' }
           zIndex: style.zIndex,
           opacity: style.opacity,
           filter: style.filter,
-          transformStyle: 'preserve-3d'
+          transformStyle: 'preserve-3d',
+          animation: style.animation
         }}
         onClick={() => isCenter && onCardTap(card.type)}
+        onMouseEnter={() => setHoveredCard(index)}
+        onMouseLeave={() => setHoveredCard(null)}
         {...(isCenter ? swipeGestures : {})}
       >
         <div
@@ -216,11 +224,45 @@ const MultidimensionalEventCards = ({ onCardTap, onCardSwipeUp, className = '' }
 
   return (
     <div className={`relative ${className}`}>
+      {/* Floating CSS Animations */}
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateX(0%) scale(1) rotateY(0deg) translateY(0px); }
+          50% { transform: translateX(0%) scale(1) rotateY(0deg) translateY(-8px); }
+        }
+        @keyframes floatLeft {
+          0%, 100% { transform: translateX(-85%) scale(0.8) rotateY(15deg) translateY(0px); }
+          50% { transform: translateX(-85%) scale(0.8) rotateY(15deg) translateY(-4px); }
+        }
+        @keyframes floatRight {
+          0%, 100% { transform: translateX(85%) scale(0.8) rotateY(-15deg) translateY(0px); }
+          50% { transform: translateX(85%) scale(0.8) rotateY(-15deg) translateY(-4px); }
+        }
+      `}</style>
+
+      {/* Desktop Navigation Arrows */}
+      <div className="hidden md:block">
+        <button
+          onClick={goToPrev}
+          disabled={isTransitioning}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-40 bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-700 hover:text-gray-900 p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <ChevronLeft size={24} />
+        </button>
+        <button
+          onClick={goToNext}
+          disabled={isTransitioning}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-40 bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-700 hover:text-gray-900 p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <ChevronRight size={24} />
+        </button>
+      </div>
+
       {/* Main Card Container */}
       <div
         ref={containerRef}
         className="relative h-96 mx-8 mb-8"
-        style={{ perspective: '1000px' }}
+        style={{ perspective: '1500px' }}
         {...containerSwipeGestures}
       >
         {eventCards.map((card, index) => (
