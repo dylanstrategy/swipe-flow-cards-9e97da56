@@ -14,6 +14,7 @@ import SwipeableEventCards from '../../schedule/SwipeableEventCards';
 import SwipeableSuggestionCards from '../../schedule/SwipeableSuggestionCards';
 import MultidimensionalEventCards from '../../schedule/MultidimensionalEventCards';
 import MultidimensionalSuggestionCards from '../../schedule/MultidimensionalSuggestionCards';
+import EventMenuCards from '../../schedule/EventMenuCards';
 import MessageModule from '../../message/MessageModule';
 import ServiceModule from '../../service/ServiceModule';
 import UniversalEventDetailModal from '../../events/UniversalEventDetailModal';
@@ -409,6 +410,21 @@ const OperatorScheduleTab = () => {
     });
   };
 
+  const handleEventMenuTap = (menuItem: any) => {
+    setSelectedScheduleType(menuItem.title);
+    
+    if (menuItem.id === 'work-order') {
+      setIsCreatingOrder(true);
+      setCurrentStep(1);
+    } else if (menuItem.id === 'message') {
+      setShowMessageModule(true);
+    } else if (menuItem.id === 'service') {
+      setShowServiceModule(true);
+    } else {
+      setShowScheduleMenu(true);
+    }
+  };
+
   if (showUniversalEventDetail && selectedUniversalEvent) {
     return (
       <UniversalEventDetailModal
@@ -527,18 +543,8 @@ const OperatorScheduleTab = () => {
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
 
-  // Create matching gradient background like the resident schedule
+  // Create background gradient based on suggestions
   const createMatchingGradient = () => {
-    // REAL event cards data (matching MultidimensionalEventCards.tsx)
-    const eventCards = [
-      { color: 'from-blue-500 to-blue-600', hex: '#3B82F6' },      // Message
-      { color: 'from-orange-500 to-orange-600', hex: '#F97316' },  // Work Order
-      { color: 'from-green-500 to-green-600', hex: '#22C55E' },    // Appointment
-      { color: 'from-purple-500 to-purple-600', hex: '#A855F7' },  // Service
-      { color: 'from-indigo-500 to-indigo-600', hex: '#6366F1' },  // Document
-      { color: 'from-pink-500 to-pink-600', hex: '#EC4899' }       // Event
-    ];
-    
     // REAL suggestion colors (matching MultidimensionalSuggestionCards.tsx)
     const getSuggestionColor = (priority: string) => {
       switch (priority) {
@@ -551,22 +557,13 @@ const OperatorScheduleTab = () => {
     };
 
     const suggestions = getSuggestions();
-    const currentEventColor = eventCards[currentEventIndex]?.hex || '#3B82F6';
     const currentSuggestionColor = getSuggestionColor(suggestions[currentSuggestionIndex]?.priority || 'low');
     
-    // If both colors are the same, create a subtle single-color gradient
-    if (currentEventColor === currentSuggestionColor) {
-      return `
-        radial-gradient(circle at 50% 50%, ${currentEventColor}50, ${currentEventColor}20),
-        linear-gradient(135deg, ${currentEventColor}30, ${currentEventColor}50)
-      `;
-    }
-    
-    // If colors are different, create a gradient between them
+    // Create a subtle gradient based on current suggestion priority
     return `
-      radial-gradient(circle at 30% 20%, ${currentEventColor}40, transparent 70%),
-      radial-gradient(circle at 70% 80%, ${currentSuggestionColor}40, transparent 70%),
-      linear-gradient(135deg, ${currentEventColor}50, ${currentEventColor}20, ${currentSuggestionColor}20, ${currentSuggestionColor}50)
+      radial-gradient(circle at 30% 20%, ${currentSuggestionColor}40, transparent 70%),
+      radial-gradient(circle at 70% 80%, ${currentSuggestionColor}30, transparent 70%),
+      linear-gradient(135deg, ${currentSuggestionColor}20, ${currentSuggestionColor}10, #f8fafc)
     `;
   };
 
@@ -602,17 +599,7 @@ const OperatorScheduleTab = () => {
         ) : (
           /* Split screen layout */
           <div className="h-screen flex flex-col">
-            {/* Event Cards Section - Top half */}
-            <div className="flex-1">
-              <MultidimensionalEventCards
-                onCardTap={handleCardTap}
-                onCardSwipeUp={handleCardSwipeUp}
-                onCurrentIndexChange={setCurrentEventIndex}
-                className="h-full"
-              />
-            </div>
-            
-            {/* Suggestions Section - Bottom half */}
+            {/* Suggestion Queue - Top half (non-complete events) */}
             <div className="flex-1">
               <MultidimensionalSuggestionCards
                 suggestions={getSuggestions()}
@@ -620,6 +607,14 @@ const OperatorScheduleTab = () => {
                 onCardSwipeUp={handleSuggestionSwipeUp}
                 onCardSwipeDown={handleSuggestionSwipeDown}
                 onCurrentIndexChange={setCurrentSuggestionIndex}
+                className="h-full"
+              />
+            </div>
+            
+            {/* Event Menu - Bottom half (full menu as cards) */}
+            <div className="flex-1 bg-white/10 backdrop-blur-sm">
+              <EventMenuCards
+                onMenuItemTap={handleEventMenuTap}
                 className="h-full"
               />
             </div>
