@@ -750,6 +750,7 @@ const OperatorTodayTab = () => {
               onEventHold={handleHoldEvent}
               onEventReschedule={handleEventReschedule}
               currentUserRole="operator"
+              viewType={viewType}
             />
           </div>
         )}

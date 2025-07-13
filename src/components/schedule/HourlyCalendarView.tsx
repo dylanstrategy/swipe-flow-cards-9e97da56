@@ -35,6 +35,7 @@ interface HourlyCalendarViewProps {
   onEventHold?: (event: Event) => void;
   onEventReschedule?: (event: Event, newTime: string) => void;
   currentUserRole?: string;
+  viewType?: 'day' | '3day' | 'week' | 'month';
 }
 
 const HourlyCalendarView = ({
@@ -44,10 +45,55 @@ const HourlyCalendarView = ({
   onEventClick,
   onEventHold,
   onEventReschedule,
-  currentUserRole = 'resident'
+  currentUserRole = 'resident',
+  viewType = 'day'
 }: HourlyCalendarViewProps) => {
   const [dragOverSlot, setDragOverSlot] = useState<string | null>(null);
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
+
+  // Generate dates based on view type
+  const getDatesForView = () => {
+    const dates = [];
+    const baseDate = new Date(selectedDate);
+    
+    switch (viewType) {
+      case 'day':
+        dates.push(baseDate);
+        break;
+      case '3day':
+        for (let i = 0; i < 3; i++) {
+          dates.push(addMinutes(baseDate, i * 24 * 60));
+        }
+        break;
+      case 'week':
+        const weekStart = startOfDay(baseDate);
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+        for (let i = 0; i < 7; i++) {
+          dates.push(addMinutes(weekStart, i * 24 * 60));
+        }
+        break;
+      case 'month':
+        dates.push(baseDate);
+        break;
+    }
+    return dates;
+  };
+
+  const viewDates = getDatesForView();
+
+  // Handle different view types with empty state
+  if ((viewType === 'month' || viewType === 'week' || viewType === '3day') && events.length === 0) {
+    return (
+      <div className="bg-white rounded-lg">
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <Calendar className="h-16 w-16 text-gray-300 mb-4" />
+          <h3 className="text-lg font-medium text-gray-600 mb-2">You have a free day</h3>
+          <p className="text-gray-400">Take it easy</p>
+        </div>
+      </div>
+    );
+  }
+
   const dragCounterRef = useRef(0);
 
   const timeSlots = Array.from({ length: 24 }, (_, i) => {

@@ -621,6 +621,7 @@ const TodayTab = () => {
             onEventClick={handleEventClick}
             onEventReschedule={handleEventReschedule}
             currentUserRole="resident"
+            viewType={viewType}
           />
         </div>
       </div>
