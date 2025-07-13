@@ -486,36 +486,7 @@ const ScheduleTab = () => {
   };
 
   return (
-    <div className="min-h-screen pb-20">
-      {/* Header with date picker - Fixed at top */}
-      <div className="bg-white border-b border-gray-100 p-4 sticky top-0 z-40">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Schedule</h1>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-[280px] justify-start text-left font-normal",
-                  !selectedDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
-
+    <div className="min-h-screen">
       {/* Main content - Card-focused layout */}
       <div className="relative flex-1">
         {suggestionsExpanded ? (
