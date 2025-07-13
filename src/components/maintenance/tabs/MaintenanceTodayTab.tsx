@@ -64,23 +64,88 @@ const MaintenanceTodayTab = ({ onWorkOrderCompleted }: MaintenanceTodayTabProps)
 
   // Convert maintenance events to calendar events format
   React.useEffect(() => {
-    const events = [
+    console.log('MaintenanceTodayTab - Setting up shared event subscription');
+    
+    // Subscribe to shared event service for real-time updates
+    const unsubscribe = sharedEventService.subscribe(() => {
+      console.log('MaintenanceTodayTab - Received shared event update, refreshing events');
+      const updatedMaintenanceEvents = sharedEventService.getEventsForRole('maintenance');
+      console.log('MaintenanceTodayTab - Updated maintenance events:', updatedMaintenanceEvents);
+      
+      const events = [
+        // Add maintenance events from shared data (work orders scheduled via drag and drop)
+        ...updatedMaintenanceEvents.map(event => {
+          console.log('Converting shared maintenance event to calendar event:', event);
+          return {
+            id: event.id,
+            date: event.date instanceof Date ? event.date : new Date(event.date),
+            time: event.time,
+            title: event.title,
+            description: event.description,
+            category: event.type,
+            priority: event.priority,
+            status: event.status,
+            workOrderData: event.type === 'work-order' ? event : null,
+            canReschedule: true,
+            canCancel: false,
+            estimatedDuration: event.metadata?.estimatedDuration || 120,
+            rescheduledCount: event.rescheduledCount || 0,
+            building: event.metadata?.building || '',
+            unit: event.metadata?.unit || '',
+            residentName: event.assignedUsers?.find(u => u.role === 'resident')?.name || '',
+            tasks: event.tasks || [],
+            taskCompletionStamps: event.taskCompletionStamps || []
+          };
+        }),
+        // Add unit turns scheduled for today
+        ...unitTurns.filter(turn => turn.status === 'Scheduled').map(unitTurn => ({
+          id: unitTurn.id,
+          date: today,
+          time: '10:00',
+          title: `Unit Turn - ${unitTurn.unit}`,
+          description: `${unitTurn.pendingSteps.length} steps remaining`,
+          category: 'unit-turn',
+          priority: unitTurn.priority,
+          status: 'scheduled',
+          unitTurnData: unitTurn,
+          canReschedule: true,
+          canCancel: false,
+          estimatedDuration: 240,
+          rescheduledCount: 0
+        }))
+      ];
+      
+      setCalendarEvents(events);
+      console.log('MaintenanceTodayTab - Calendar events updated:', events);
+    });
+
+    // Initial load
+    const initialMaintenanceEvents = sharedEventService.getEventsForRole('maintenance');
+    console.log('MaintenanceTodayTab - Initial maintenance events:', initialMaintenanceEvents);
+    
+    const initialEvents = [
       // Add maintenance events from shared data
-      ...maintenanceEvents.map(event => {
-        console.log('Converting maintenance event to calendar event:', event);
+      ...initialMaintenanceEvents.map(event => {
+        console.log('Converting initial maintenance event to calendar event:', event);
         return {
           id: event.id,
-          date: today,
+          date: event.date instanceof Date ? event.date : new Date(event.date),
           time: event.time,
           title: event.title,
           description: event.description,
           category: event.type,
           priority: event.priority,
+          status: event.status,
           workOrderData: event.type === 'work-order' ? event : null,
           canReschedule: true,
           canCancel: false,
-          estimatedDuration: 120,
-          rescheduledCount: event.rescheduledCount || 0
+          estimatedDuration: event.metadata?.estimatedDuration || 120,
+          rescheduledCount: event.rescheduledCount || 0,
+          building: event.metadata?.building || '',
+          unit: event.metadata?.unit || '',
+          residentName: event.assignedUsers?.find(u => u.role === 'resident')?.name || '',
+          tasks: event.tasks || [],
+          taskCompletionStamps: event.taskCompletionStamps || []
         };
       }),
       // Add unit turns scheduled for today
@@ -92,6 +157,7 @@ const MaintenanceTodayTab = ({ onWorkOrderCompleted }: MaintenanceTodayTabProps)
         description: `${unitTurn.pendingSteps.length} steps remaining`,
         category: 'unit-turn',
         priority: unitTurn.priority,
+        status: 'scheduled',
         unitTurnData: unitTurn,
         canReschedule: true,
         canCancel: false,
@@ -100,9 +166,15 @@ const MaintenanceTodayTab = ({ onWorkOrderCompleted }: MaintenanceTodayTabProps)
       }))
     ];
     
-    setCalendarEvents(events);
-    console.log('Maintenance calendar events generated:', events);
-  }, [maintenanceEvents]);
+    setCalendarEvents(initialEvents);
+    console.log('MaintenanceTodayTab - Initial calendar events set:', initialEvents);
+
+    // Cleanup subscription
+    return () => {
+      console.log('MaintenanceTodayTab - Cleaning up shared event subscription');
+      unsubscribe();
+    };
+  }, []); // Only run once on mount
 
   const handleEventClick = (event: any) => {
     console.log('Event clicked:', event);
@@ -119,14 +191,25 @@ const MaintenanceTodayTab = ({ onWorkOrderCompleted }: MaintenanceTodayTabProps)
   };
 
   const handleEventReschedule = (event: any, newTime: string) => {
-    console.log('Event rescheduled:', event, 'to', newTime);
+    console.log('MaintenanceTodayTab - Event rescheduled:', event, 'to', newTime);
     
-    // Update the calendar events state
-    setCalendarEvents(prev => prev.map(e => 
-      e.id === event.id 
-        ? { ...e, time: newTime, rescheduledCount: (e.rescheduledCount || 0) + 1 }
-        : e
-    ));
+    // If it's a shared work order event, update it in the shared service
+    if (event.workOrderData && event.workOrderData.id) {
+      const success = sharedEventService.rescheduleEvent(event.id, selectedDate, newTime);
+      if (success) {
+        console.log('MaintenanceTodayTab - Successfully rescheduled shared event');
+        // The subscription will automatically update our calendar events
+      } else {
+        console.error('MaintenanceTodayTab - Failed to reschedule shared event');
+      }
+    } else {
+      // For non-shared events (like unit turns), update locally
+      setCalendarEvents(prev => prev.map(e => 
+        e.id === event.id 
+          ? { ...e, time: newTime, rescheduledCount: (e.rescheduledCount || 0) + 1 }
+          : e
+      ));
+    }
     
     toast({
       title: "Event Rescheduled",
@@ -135,10 +218,24 @@ const MaintenanceTodayTab = ({ onWorkOrderCompleted }: MaintenanceTodayTabProps)
   };
 
   const handleWorkOrderCompleted = (workOrderId: string) => {
-    console.log('Work order completed in Today tab:', workOrderId);
+    console.log('MaintenanceTodayTab - Work order completed:', workOrderId);
     
-    // Remove from calendar events
-    setCalendarEvents(prev => prev.filter(e => e.workOrderData?.id !== workOrderId));
+    // Find the event in calendar
+    const event = calendarEvents.find(e => e.workOrderData?.id === workOrderId || e.id === workOrderId);
+    
+    if (event && event.workOrderData) {
+      // If it's a shared work order, remove from shared service
+      const success = sharedEventService.removeEvent(event.id);
+      if (success) {
+        console.log('MaintenanceTodayTab - Successfully removed shared event');
+        // The subscription will automatically update our calendar events
+      } else {
+        console.error('MaintenanceTodayTab - Failed to remove shared event');
+      }
+    } else {
+      // For non-shared events, remove locally
+      setCalendarEvents(prev => prev.filter(e => e.workOrderData?.id !== workOrderId && e.id !== workOrderId));
+    }
     
     // Notify parent component if callback provided
     if (onWorkOrderCompleted) {
