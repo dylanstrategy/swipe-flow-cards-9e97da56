@@ -23,86 +23,170 @@ interface EventMenuItem {
 interface EventMenuCardsProps {
   onMenuItemTap: (item: EventMenuItem) => void;
   className?: string;
+  userRole?: 'resident' | 'operator';
 }
 
 const EventMenuCards: React.FC<EventMenuCardsProps> = ({
   onMenuItemTap,
-  className = ""
+  className = "",
+  userRole = 'operator'
 }) => {
-  const eventMenuItems: EventMenuItem[] = [
-    {
-      id: 'message',
-      title: 'Message',
-      description: 'Send resident communications',
-      icon: MessageCircle,
-      color: 'from-blue-500 to-blue-600',
-      category: 'Communication'
-    },
-    {
-      id: 'work-order',
-      title: 'Work Order',
-      description: 'Schedule maintenance tasks',
-      icon: Wrench,
-      color: 'from-orange-500 to-orange-600',
-      category: 'Maintenance'
-    },
-    {
-      id: 'appointment',
-      title: 'Appointment',
-      description: 'Schedule resident meetings',
-      icon: Calendar,
-      color: 'from-green-500 to-green-600',
-      category: 'Scheduling'
-    },
-    {
-      id: 'service',
-      title: 'Service Request',
-      description: 'External service needs',
-      icon: Settings,
-      color: 'from-purple-500 to-purple-600',
-      category: 'Service'
-    },
-    {
-      id: 'document',
-      title: 'Document',
-      description: 'Process lease documents',
-      icon: FileText,
-      color: 'from-indigo-500 to-indigo-600',
-      category: 'Documentation'
-    },
-    {
-      id: 'inspection',
-      title: 'Inspection',
-      description: 'Unit quality checks',
-      icon: CheckCircle,
-      color: 'from-teal-500 to-teal-600',
-      category: 'Quality'
-    },
-    {
-      id: 'meeting',
-      title: 'Team Meeting',
-      description: 'Staff coordination',
-      icon: Users,
-      color: 'from-pink-500 to-pink-600',
-      category: 'Management'
-    },
-    {
-      id: 'follow-up',
-      title: 'Follow Up',
-      description: 'Track pending items',
-      icon: Clock,
-      color: 'from-amber-500 to-amber-600',
-      category: 'Follow-up'
-    },
-    {
-      id: 'emergency',
-      title: 'Emergency',
-      description: 'Urgent response needed',
-      icon: AlertTriangle,
-      color: 'from-red-500 to-red-600',
-      category: 'Emergency'
+  const getEventMenuItems = (): EventMenuItem[] => {
+    if (userRole === 'resident') {
+      return [
+        {
+          id: 'maintenance',
+          title: 'Maintenance Request',
+          description: 'Report unit issues',
+          icon: Wrench,
+          color: 'from-orange-500 to-orange-600',
+          category: 'Maintenance'
+        },
+        {
+          id: 'package',
+          title: 'Package Delivery',
+          description: 'Schedule deliveries',
+          icon: Settings,
+          color: 'from-purple-500 to-purple-600',
+          category: 'Service'
+        },
+        {
+          id: 'amenity',
+          title: 'Amenity Booking',
+          description: 'Reserve common areas',
+          icon: Calendar,
+          color: 'from-green-500 to-green-600',
+          category: 'Booking'
+        },
+        {
+          id: 'payment',
+          title: 'Rent Payment',
+          description: 'Make rental payments',
+          icon: FileText,
+          color: 'from-indigo-500 to-indigo-600',
+          category: 'Financial'
+        },
+        {
+          id: 'guest',
+          title: 'Guest Registration',
+          description: 'Register visitors',
+          icon: Users,
+          color: 'from-pink-500 to-pink-600',
+          category: 'Access'
+        },
+        {
+          id: 'service',
+          title: 'Service Request',
+          description: 'Cleaning & services',
+          icon: CheckCircle,
+          color: 'from-teal-500 to-teal-600',
+          category: 'Service'
+        },
+        {
+          id: 'renewal',
+          title: 'Lease Renewal',
+          description: 'Renewal process',
+          icon: FileText,
+          color: 'from-amber-500 to-amber-600',
+          category: 'Lease'
+        },
+        {
+          id: 'community',
+          title: 'Community Event',
+          description: 'Join activities',
+          icon: Users,
+          color: 'from-blue-500 to-blue-600',
+          category: 'Community'
+        },
+        {
+          id: 'contact',
+          title: 'Update Contact',
+          description: 'Change contact info',
+          icon: MessageCircle,
+          color: 'from-gray-500 to-gray-600',
+          category: 'Profile'
+        }
+      ];
     }
-  ];
+
+    // Operator events
+    return [
+      {
+        id: 'message',
+        title: 'Message',
+        description: 'Send resident communications',
+        icon: MessageCircle,
+        color: 'from-blue-500 to-blue-600',
+        category: 'Communication'
+      },
+      {
+        id: 'work-order',
+        title: 'Work Order',
+        description: 'Schedule maintenance tasks',
+        icon: Wrench,
+        color: 'from-orange-500 to-orange-600',
+        category: 'Maintenance'
+      },
+      {
+        id: 'appointment',
+        title: 'Appointment',
+        description: 'Schedule resident meetings',
+        icon: Calendar,
+        color: 'from-green-500 to-green-600',
+        category: 'Scheduling'
+      },
+      {
+        id: 'service',
+        title: 'Service Request',
+        description: 'External service needs',
+        icon: Settings,
+        color: 'from-purple-500 to-purple-600',
+        category: 'Service'
+      },
+      {
+        id: 'document',
+        title: 'Document',
+        description: 'Process lease documents',
+        icon: FileText,
+        color: 'from-indigo-500 to-indigo-600',
+        category: 'Documentation'
+      },
+      {
+        id: 'inspection',
+        title: 'Inspection',
+        description: 'Unit quality checks',
+        icon: CheckCircle,
+        color: 'from-teal-500 to-teal-600',
+        category: 'Quality'
+      },
+      {
+        id: 'meeting',
+        title: 'Team Meeting',
+        description: 'Staff coordination',
+        icon: Users,
+        color: 'from-pink-500 to-pink-600',
+        category: 'Management'
+      },
+      {
+        id: 'follow-up',
+        title: 'Follow Up',
+        description: 'Track pending items',
+        icon: Clock,
+        color: 'from-amber-500 to-amber-600',
+        category: 'Follow-up'
+      },
+      {
+        id: 'emergency',
+        title: 'Emergency',
+        description: 'Urgent response needed',
+        icon: AlertTriangle,
+        color: 'from-red-500 to-red-600',
+        category: 'Emergency'
+      }
+    ];
+  };
+
+  const eventMenuItems = getEventMenuItems();
 
   return (
     <div className={`p-4 ${className}`}>

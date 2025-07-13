@@ -548,6 +548,7 @@ const ScheduleTab = () => {
         <div className="flex-1">
           <EventMenuCards
             onMenuItemTap={handleMenuItemTap}
+            userRole="resident"
             className="h-full"
           />
         </div>
