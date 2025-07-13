@@ -99,12 +99,12 @@ const EventMenuCards: React.FC<EventMenuCardsProps> = ({
           category: 'Community'
         },
         {
-          id: 'contact',
-          title: 'Update Contact',
-          description: 'Change contact info',
+          id: 'message',
+          title: 'Send a Message',
+          description: 'Contact management',
           icon: MessageCircle,
-          color: 'from-gray-500 to-gray-600',
-          category: 'Profile'
+          color: 'from-blue-500 to-blue-600',
+          category: 'Communication'
         }
       ];
     }
