@@ -6,13 +6,24 @@ interface SwipeActionOverlaysProps {
   showAction: 'up' | 'down' | 'left' | 'right' | null;
   canSwipeUp: boolean;
   getActionOpacity: () => number;
+  cardColor?: string;
 }
 
 const SwipeActionOverlays = ({ 
   showAction, 
   canSwipeUp, 
-  getActionOpacity 
+  getActionOpacity,
+  cardColor = '#22C55E'
 }: SwipeActionOverlaysProps) => {
+  
+  // Convert hex to lighter version for background
+  const getLighterColor = (hexColor: string, opacity: number = 0.3) => {
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  };
   return (
     <>
       {/* Swipe Up Action Overlay */}
@@ -20,8 +31,8 @@ const SwipeActionOverlays = ({
         <div 
           className="absolute inset-0 flex items-start justify-center pt-16 transition-all duration-200 pointer-events-none z-50"
           style={{ 
-            backgroundColor: '#22C55E',
-            opacity: getActionOpacity()
+            backgroundColor: getLighterColor(cardColor, getActionOpacity() * 0.8),
+            opacity: 1
           }}
         >
           <div className="text-white font-bold text-2xl flex flex-col items-center gap-3">
@@ -36,8 +47,8 @@ const SwipeActionOverlays = ({
         <div 
           className="absolute inset-0 flex items-center justify-start pl-12 transition-all duration-200 pointer-events-none z-50"
           style={{ 
-            backgroundColor: '#EF4444',
-            opacity: getActionOpacity()
+            backgroundColor: getLighterColor('#EF4444', getActionOpacity() * 0.8),
+            opacity: 1
           }}
         >
           <div className="text-white font-bold text-2xl flex items-center gap-4">

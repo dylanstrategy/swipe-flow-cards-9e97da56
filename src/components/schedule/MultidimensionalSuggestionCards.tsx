@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSwipeGestures } from '@/hooks/useSwipeGestures';
+import SwipeActionOverlays from './SwipeActionOverlays';
 
 interface SuggestionCard {
   id: number;
@@ -148,23 +149,22 @@ const MultidimensionalSuggestionCards = ({
             transition: isCenter && swipeGestures.isDragging ? 'none' : 'transform 0.3s ease'
           }}
         >
-          {/* Swipe Indicators for center card */}
-          {isCenter && swipeGestures.showAction === 'up' && (
-            <div className="absolute inset-0 bg-green-500 bg-opacity-90 flex items-center justify-center rounded-2xl z-10">
-              <div className="text-white text-center">
-                <div className="text-4xl mb-2">⬆️</div>
-                <div className="text-lg font-bold">Auto Schedule</div>
-              </div>
-            </div>
-          )}
-          
-          {isCenter && swipeGestures.showAction === 'down' && (
-            <div className="absolute inset-0 bg-blue-500 bg-opacity-90 flex items-center justify-center rounded-2xl z-10">
-              <div className="text-white text-center">
-                <div className="text-4xl mb-2">⬇️</div>
-                <div className="text-lg font-bold">Schedule Later</div>
-              </div>
-            </div>
+          {/* Swipe Action Overlays */}
+          {isCenter && (
+            <SwipeActionOverlays
+              showAction={swipeGestures.showAction}
+              canSwipeUp={true}
+              getActionOpacity={swipeGestures.getActionOpacity}
+              cardColor={(() => {
+                switch (suggestion.priority) {
+                  case 'urgent': return '#EF4444';
+                  case 'high': return '#F97316';
+                  case 'medium': return '#EAB308';
+                  case 'low': return '#22C55E';
+                  default: return '#6B7280';
+                }
+              })()}
+            />
           )}
 
           <div className="relative h-full p-8 flex flex-col justify-between text-white">

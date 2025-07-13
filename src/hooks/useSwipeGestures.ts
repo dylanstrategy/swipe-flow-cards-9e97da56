@@ -90,9 +90,9 @@ export const useSwipeGestures = ({ onSwipeUp, onSwipeDown, onSwipeLeft, onSwipeR
     setDragOffset({ x: 0, y: 0 });
     setShowAction(null);
     
-    // Execute action with a playful delay
+    // Execute action with a more playful delay
     if (shouldCompleteUp || shouldCompleteDown || shouldCompleteLeft || shouldCompleteRight) {
-      setTimeout(executeAction, 150);
+      setTimeout(executeAction, 300);
     }
   };
 
