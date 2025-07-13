@@ -81,14 +81,113 @@ const HourlyCalendarView = ({
 
   const viewDates = getDatesForView();
 
-  // Handle different view types with empty state
-  if ((viewType === 'month' || viewType === 'week' || viewType === '3day') && events.length === 0) {
+  // Handle empty state for all view types
+  if (events.length === 0) {
     return (
       <div className="bg-white rounded-lg">
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <Calendar className="h-16 w-16 text-gray-300 mb-4" />
           <h3 className="text-lg font-medium text-gray-600 mb-2">You have a free day</h3>
           <p className="text-gray-400">Take it easy</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Month view - simple grid layout
+  if (viewType === 'month') {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <div className="flex items-center gap-2 mb-2">
+            <Calendar className="w-5 h-5 text-blue-600" />
+            <h3 className="text-lg font-semibold text-gray-900">
+              {format(selectedDate, 'MMMM yyyy')}
+            </h3>
+          </div>
+        </div>
+        <div className="p-4">
+          <div className="space-y-2">
+            {events.map((event) => {
+              const isOverdue = isEventOverdue(event);
+              const isCompleted = isEventCompleted(event);
+              const eventColors = getEventColors(event, isOverdue, isCompleted);
+              
+              return (
+                <div
+                  key={event.id}
+                  onClick={() => handleEventClick(event)}
+                  className={cn(
+                    "p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md",
+                    eventColors
+                  )}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-sm">
+                        {event.time} - {event.title}
+                      </h4>
+                      <p className="text-xs mt-1">{event.description}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Week and 3-day view - multi-column layout
+  if (viewType === 'week' || viewType === '3day') {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <div className="flex items-center gap-2 mb-2">
+            <Calendar className="w-5 h-5 text-blue-600" />
+            <h3 className="text-lg font-semibold text-gray-900">
+              {viewType === 'week' ? 'Week View' : '3-Day View'}
+            </h3>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <div className={cn("grid", viewType === 'week' ? "grid-cols-7" : "grid-cols-3", "min-w-full")}>
+            {viewDates.map((date, index) => (
+              <div key={index} className="border-r border-gray-100 last:border-r-0">
+                <div className="p-3 bg-gray-50 border-b border-gray-100">
+                  <h4 className="text-sm font-medium text-gray-900">
+                    {format(date, 'EEE d')}
+                  </h4>
+                </div>
+                <div className="p-2 min-h-[300px]">
+                  <div className="space-y-1">
+                    {events
+                      .filter(event => format(event.date, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd'))
+                      .map((event) => {
+                        const isOverdue = isEventOverdue(event);
+                        const isCompleted = isEventCompleted(event);
+                        const eventColors = getEventColors(event, isOverdue, isCompleted);
+                        
+                        return (
+                          <div
+                            key={event.id}
+                            onClick={() => handleEventClick(event)}
+                            className={cn(
+                              "p-2 rounded text-xs cursor-pointer transition-all duration-200 hover:shadow-sm",
+                              eventColors
+                            )}
+                          >
+                            <div className="font-medium">{event.time}</div>
+                            <div className="truncate">{event.title}</div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
