@@ -214,14 +214,14 @@ const MultidimensionalEventCards = ({ onCardTap, onCardSwipeUp, onCurrentIndexCh
             />
           )}
 
-          <div className="relative h-full p-8 flex flex-col justify-between text-white">
+          <div className="relative h-full p-6 flex flex-col justify-between text-white min-h-0">
             {/* Header */}
-            <div className="flex items-start justify-between">
-              <div className="bg-white bg-opacity-20 rounded-2xl p-4">
+            <div className="flex items-start justify-between mb-4">
+              <div className="bg-white bg-opacity-20 rounded-xl p-3">
                 <IconComponent size={32} className="text-white" />
               </div>
               {isCenter && (
-                <div className="text-sm opacity-80 text-right">
+                <div className="text-xs opacity-80 text-right leading-tight">
                   <div>Tap to create</div>
                   <div>Swipe up to schedule</div>
                 </div>
@@ -229,19 +229,19 @@ const MultidimensionalEventCards = ({ onCardTap, onCardSwipeUp, onCurrentIndexCh
             </div>
 
             {/* Content */}
-            <div className="flex-1 flex flex-col justify-center">
-              <h2 className="text-3xl font-bold mb-4 leading-tight">{card.title}</h2>
-              <p className="text-lg opacity-90 leading-relaxed">{card.description}</p>
+            <div className="flex-1 flex flex-col justify-center py-2 min-h-0">
+              <h2 className="text-2xl font-bold mb-3 leading-tight">{card.title}</h2>
+              <p className="text-base opacity-90 leading-relaxed">{card.description}</p>
             </div>
 
             {/* Footer */}
-            <div className="flex justify-between items-end">
-              <div className="text-sm opacity-70">
+            <div className="flex justify-between items-end pt-2">
+              <div className="text-xs opacity-70">
                 Swipe to navigate
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold">{String(index + 1).padStart(2, '0')}</div>
-                <div className="text-sm opacity-70">of {String(eventCards.length).padStart(2, '0')}</div>
+                <div className="text-xl font-bold">{String(index + 1).padStart(2, '0')}</div>
+                <div className="text-xs opacity-70">of {String(eventCards.length).padStart(2, '0')}</div>
               </div>
             </div>
           </div>
@@ -277,7 +277,7 @@ const MultidimensionalEventCards = ({ onCardTap, onCardSwipeUp, onCurrentIndexCh
       {/* Main Card Container */}
       <div
         ref={containerRef}
-        className="relative h-96 mx-8 mb-8"
+        className="relative h-[420px] mx-6 mb-6"
         style={{ perspective: '1500px' }}
         {...containerSwipeGestures}
       >

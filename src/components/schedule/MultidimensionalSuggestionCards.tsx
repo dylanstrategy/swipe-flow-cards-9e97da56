@@ -199,14 +199,14 @@ const MultidimensionalSuggestionCards = ({
             />
           )}
 
-          <div className="relative h-full p-8 flex flex-col justify-between text-white">
+          <div className="relative h-full p-6 flex flex-col justify-between text-white min-h-0">
             {/* Header */}
-            <div className="flex items-start justify-between">
-              <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-white bg-opacity-20`}>
+            <div className="flex items-start justify-between mb-4">
+              <div className={`px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-white bg-opacity-20`}>
                 {suggestion.priority}
               </div>
               {isCenter && (
-                <div className="text-sm opacity-80 text-right">
+                <div className="text-xs opacity-80 text-right leading-tight">
                   <div>Tap to view</div>
                   <div>Swipe to schedule</div>
                 </div>
@@ -214,20 +214,20 @@ const MultidimensionalSuggestionCards = ({
             </div>
 
             {/* Content */}
-            <div className="flex-1 flex flex-col justify-center">
-              <h2 className="text-3xl font-bold mb-4 leading-tight">{suggestion.title}</h2>
-              <p className="text-lg opacity-90 leading-relaxed mb-4">{suggestion.description}</p>
-              <div className="text-base opacity-75 capitalize font-medium">{suggestion.category}</div>
+            <div className="flex-1 flex flex-col justify-center py-2 min-h-0">
+              <h2 className="text-2xl font-bold mb-3 leading-tight">{suggestion.title}</h2>
+              <p className="text-base opacity-90 leading-relaxed mb-2">{suggestion.description}</p>
+              <div className="text-sm opacity-75 capitalize font-medium">{suggestion.category}</div>
             </div>
 
             {/* Footer */}
-            <div className="flex justify-between items-end">
-              <div className="text-sm opacity-70">
+            <div className="flex justify-between items-end pt-2">
+              <div className="text-xs opacity-70">
                 Swipe to navigate
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold">{String(index + 1).padStart(2, '0')}</div>
-                <div className="text-sm opacity-70">of {String(activeEvents.length).padStart(2, '0')}</div>
+                <div className="text-xl font-bold">{String(index + 1).padStart(2, '0')}</div>
+                <div className="text-xs opacity-70">of {String(activeEvents.length).padStart(2, '0')}</div>
               </div>
             </div>
           </div>
@@ -271,7 +271,7 @@ const MultidimensionalSuggestionCards = ({
       {/* Main Card Container */}
       <div
         ref={containerRef}
-        className="relative h-80 mx-8 mb-8"
+        className="relative h-[360px] mx-6 mb-6"
         style={{ perspective: '1500px' }}
         {...containerSwipeGestures}
       >
