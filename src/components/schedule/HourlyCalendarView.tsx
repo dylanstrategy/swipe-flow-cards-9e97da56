@@ -51,6 +51,72 @@ const HourlyCalendarView = ({
   const [dragOverSlot, setDragOverSlot] = useState<string | null>(null);
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
 
+  // Real-time overdue detection logic - MOVED TO TOP
+  const isEventOverdue = (event: Event): boolean => {
+    if (event.hasOwnProperty('isOverdue')) {
+      return event.isOverdue || false;
+    }
+
+    if (event.status === 'completed' || event.status === 'cancelled') return false;
+    
+    const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+    const now = new Date();
+    
+    if (isPast(eventDate) && !isToday(eventDate)) {
+      return true;
+    }
+    
+    if (isToday(eventDate) && event.time) {
+      try {
+        const [hours, minutes] = event.time.split(':').map(Number);
+        const eventDateTime = new Date(eventDate);
+        eventDateTime.setHours(hours, minutes || 0, 0, 0);
+        
+        return isPast(eventDateTime);
+      } catch (error) {
+        console.warn('Error parsing event time:', event.time, error);
+        return false;
+      }
+    }
+    
+    return false;
+  };
+
+  // Check if event is fully completed - all required tasks done
+  const isEventCompleted = (event: Event): boolean => {
+    if (event.status === 'completed') return true;
+    
+    if (event.tasks) {
+      const requiredTasks = event.tasks.filter(task => task.isRequired);
+      const completedRequiredTasks = requiredTasks.filter(task => task.isComplete);
+      return requiredTasks.length > 0 && completedRequiredTasks.length === requiredTasks.length;
+    }
+    
+    return false;
+  };
+
+  // Updated color logic: Blue by default, red only when overdue, green when completed
+  const getEventColors = (event: Event, isOverdue: boolean, isCompleted: boolean) => {
+    if (isCompleted) {
+      return 'bg-green-100 border-green-300 text-green-800';
+    }
+    
+    if (isOverdue) {
+      return 'bg-red-100 border-red-300 text-red-800';
+    }
+    
+    // Default blue styling for all events
+    if (event.isDroppedSuggestion) {
+      return 'bg-blue-500 border-blue-600 text-white';
+    } else {
+      return 'bg-blue-100 border-blue-300 text-blue-800';
+    }
+  };
+
+  const handleEventClick = (event: Event) => {
+    onEventClick?.(event);
+  };
+
   // Generate dates based on view type
   const getDatesForView = () => {
     const dates = [];
@@ -274,50 +340,6 @@ const HourlyCalendarView = ({
 
   const allTaskStamps = getAllTaskStamps();
 
-  // Real-time overdue detection logic
-  const isEventOverdue = (event: Event): boolean => {
-    if (event.hasOwnProperty('isOverdue')) {
-      return event.isOverdue || false;
-    }
-
-    if (event.status === 'completed' || event.status === 'cancelled') return false;
-    
-    const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
-    const now = new Date();
-    
-    if (isPast(eventDate) && !isToday(eventDate)) {
-      return true;
-    }
-    
-    if (isToday(eventDate) && event.time) {
-      try {
-        const [hours, minutes] = event.time.split(':').map(Number);
-        const eventDateTime = new Date(eventDate);
-        eventDateTime.setHours(hours, minutes || 0, 0, 0);
-        
-        return isPast(eventDateTime);
-      } catch (error) {
-        console.warn('Error parsing event time:', event.time, error);
-        return false;
-      }
-    }
-    
-    return false;
-  };
-
-  // Check if event is fully completed - all required tasks done
-  const isEventCompleted = (event: Event): boolean => {
-    if (event.status === 'completed') return true;
-    
-    if (event.tasks) {
-      const requiredTasks = event.tasks.filter(task => task.isRequired);
-      const completedRequiredTasks = requiredTasks.filter(task => task.isComplete);
-      return requiredTasks.length > 0 && completedRequiredTasks.length === requiredTasks.length;
-    }
-    
-    return false;
-  };
-
   const convertTimeToMinutes = (timeString: string): number => {
     if (!timeString) return 0;
     
@@ -347,24 +369,6 @@ const HourlyCalendarView = ({
       const eventMinutes = convertTimeToMinutes(event.time);
       return eventMinutes >= slotMinutes && eventMinutes < slotMinutes + 60;
     });
-  };
-
-  // Updated color logic: Blue by default, red only when overdue, green when completed
-  const getEventColors = (event: Event, isOverdue: boolean, isCompleted: boolean) => {
-    if (isCompleted) {
-      return 'bg-green-100 border-green-300 text-green-800';
-    }
-    
-    if (isOverdue) {
-      return 'bg-red-100 border-red-300 text-red-800';
-    }
-    
-    // Default blue styling for all events
-    if (event.isDroppedSuggestion) {
-      return 'bg-blue-500 border-blue-600 text-white';
-    } else {
-      return 'bg-blue-100 border-blue-300 text-blue-800';
-    }
   };
 
   const getOverdueClasses = (isOverdue: boolean) => {
@@ -434,10 +438,6 @@ const HourlyCalendarView = ({
     } catch (error) {
       console.error('Error handling drop:', error);
     }
-  };
-
-  const handleEventClick = (event: Event) => {
-    onEventClick?.(event);
   };
 
   const handleEventHold = (event: Event) => {
