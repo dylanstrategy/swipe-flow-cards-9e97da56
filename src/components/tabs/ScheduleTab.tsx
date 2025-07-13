@@ -501,21 +501,28 @@ const ScheduleTab = () => {
     const currentSuggestion = suggestions[currentSuggestionIndex];
     
     if (!currentSuggestion) {
-      return 'linear-gradient(135deg, hsl(220, 13%, 91%), hsl(220, 13%, 69%))';
+      return '#f8fafc'; // Light gray-white background
     }
     
-    // Get gradient color based on current suggestion priority only - using HSL values
-    const getSuggestionGradient = (priority: string) => {
+    // Get gradient color based on current suggestion priority - same as operator
+    const getSuggestionColor = (priority: string) => {
       switch (priority) {
-        case 'urgent': return 'linear-gradient(135deg, hsl(0, 84%, 60%), hsl(0, 84%, 40%))';
-        case 'high': return 'linear-gradient(135deg, hsl(24, 95%, 53%), hsl(24, 95%, 33%))';
-        case 'medium': return 'linear-gradient(135deg, hsl(45, 93%, 47%), hsl(45, 93%, 27%))';
-        case 'low': return 'linear-gradient(135deg, hsl(142, 71%, 45%), hsl(142, 71%, 25%))';
-        default: return 'linear-gradient(135deg, hsl(220, 13%, 91%), hsl(220, 13%, 69%))';
+        case 'urgent': return '#EF4444';  // Red
+        case 'high': return '#F97316';    // Orange
+        case 'medium': return '#EAB308';  // Yellow
+        case 'low': return '#22C55E';     // Green
+        default: return '#6B7280';        // Gray
       }
     };
     
-    return getSuggestionGradient(currentSuggestion.priority);
+    const currentSuggestionColor = getSuggestionColor(currentSuggestion.priority);
+    
+    // Create a subtle gradient based on current suggestion priority - same as operator
+    return `
+      radial-gradient(circle at 30% 20%, ${currentSuggestionColor}40, transparent 70%),
+      radial-gradient(circle at 70% 80%, ${currentSuggestionColor}30, transparent 70%),
+      linear-gradient(135deg, ${currentSuggestionColor}20, ${currentSuggestionColor}10, #f8fafc)
+    `;
   };
 
 
