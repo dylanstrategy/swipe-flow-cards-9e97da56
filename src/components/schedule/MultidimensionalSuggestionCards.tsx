@@ -317,9 +317,17 @@ const MultidimensionalSuggestionCards = ({
         ))}
       </div>
 
-      {/* Swipe Hint */}
-      <div className="text-center text-gray-500 text-sm">
-        Swipe left or right to explore • Tap to view • Swipe up to schedule • Swipe down for later
+      {/* Swipe Hint - Centered and Mobile Responsive */}
+      <div className="text-center px-4 py-3">
+        <p className="text-sm text-gray-500 max-w-sm mx-auto leading-relaxed">
+          <span className="block sm:inline">Swipe left or right to explore</span>
+          <span className="hidden sm:inline"> • </span>
+          <span className="block sm:inline">Tap to view</span>
+          <span className="hidden sm:inline"> • </span>
+          <span className="block sm:inline">Swipe up to schedule</span>
+          <span className="hidden sm:inline"> • </span>
+          <span className="block sm:inline">Swipe down for later</span>
+        </p>
       </div>
     </div>
   );

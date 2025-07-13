@@ -523,8 +523,58 @@ const OperatorScheduleTab = () => {
       .sort((a, b) => a.time.localeCompare(b.time));
   };
 
+  // State for tracking current card indices
+  const [currentEventIndex, setCurrentEventIndex] = useState(0);
+  const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
+
+  // Create matching gradient background like the resident schedule
+  const createMatchingGradient = () => {
+    // REAL event cards data (matching MultidimensionalEventCards.tsx)
+    const eventCards = [
+      { color: 'from-blue-500 to-blue-600', hex: '#3B82F6' },      // Message
+      { color: 'from-orange-500 to-orange-600', hex: '#F97316' },  // Work Order
+      { color: 'from-green-500 to-green-600', hex: '#22C55E' },    // Appointment
+      { color: 'from-purple-500 to-purple-600', hex: '#A855F7' },  // Service
+      { color: 'from-indigo-500 to-indigo-600', hex: '#6366F1' },  // Document
+      { color: 'from-pink-500 to-pink-600', hex: '#EC4899' }       // Event
+    ];
+    
+    // REAL suggestion colors (matching MultidimensionalSuggestionCards.tsx)
+    const getSuggestionColor = (priority: string) => {
+      switch (priority) {
+        case 'urgent': return '#EF4444';  // Red (from-red-500 to-red-600)
+        case 'high': return '#F97316';    // Orange (from-orange-500 to-orange-600)
+        case 'medium': return '#EAB308';  // Yellow (from-yellow-500 to-yellow-600)
+        case 'low': return '#22C55E';     // Green (from-green-500 to-green-600)
+        default: return '#6B7280';        // Gray
+      }
+    };
+
+    const suggestions = getSuggestions();
+    const currentEventColor = eventCards[currentEventIndex]?.hex || '#3B82F6';
+    const currentSuggestionColor = getSuggestionColor(suggestions[currentSuggestionIndex]?.priority || 'low');
+    
+    // If both colors are the same, create a subtle single-color gradient
+    if (currentEventColor === currentSuggestionColor) {
+      return `
+        radial-gradient(circle at 50% 50%, ${currentEventColor}50, ${currentEventColor}20),
+        linear-gradient(135deg, ${currentEventColor}30, ${currentEventColor}50)
+      `;
+    }
+    
+    // If colors are different, create a gradient between them
+    return `
+      radial-gradient(circle at 30% 20%, ${currentEventColor}40, transparent 70%),
+      radial-gradient(circle at 70% 80%, ${currentSuggestionColor}40, transparent 70%),
+      linear-gradient(135deg, ${currentEventColor}50, ${currentEventColor}20, ${currentSuggestionColor}20, ${currentSuggestionColor}50)
+    `;
+  };
+
   return (
-    <div className="flex flex-col h-full">
+    <div 
+      className="flex flex-col h-full transition-all duration-700 ease-in-out"
+      style={{ background: createMatchingGradient() }}
+    >
       {/* Main content - Card-focused layout */}
       <div className="relative flex-1">
         {suggestionsExpanded ? (
@@ -550,44 +600,27 @@ const OperatorScheduleTab = () => {
             </div>
           </div>
         ) : (
-          /* Normal view - Card carousel layout */
-          <div className="flex flex-col h-full">
-            {/* Suggestions section */}
-            {getSuggestions().length > 0 && (
-              <div className="bg-white border-b border-gray-100 py-6">
-                <div className="px-4 mb-4">
-                  <button
-                    onClick={() => setSuggestionsExpanded(true)}
-                    className="w-full flex items-center justify-between text-left group"
-                  >
-                    <span className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                      Operator Suggestions
-                    </span>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-gray-500 text-sm">({getSuggestions().length})</span>
-                      <span className="text-gray-400">→</span>
-                    </div>
-                  </button>
-                </div>
-                <MultidimensionalSuggestionCards
-                  suggestions={getSuggestions()}
-                  onCardTap={handleSuggestionTap}
-                  onCardSwipeUp={handleSuggestionSwipeUp}
-                  onCardSwipeDown={handleSuggestionSwipeDown}
-                />
-              </div>
-            )}
-
-            {/* Event cards section - Main focus */}
-            <div className="flex-1 bg-gradient-to-br from-gray-50 to-white py-8">
-              <div className="px-4 mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 text-center">Create New Event</h2>
-                <p className="text-gray-600 text-center mt-2">Swipe through options and tap to create</p>
-              </div>
+          /* Split screen layout */
+          <div className="h-screen flex flex-col">
+            {/* Event Cards Section - Top half */}
+            <div className="flex-1">
               <MultidimensionalEventCards
                 onCardTap={handleCardTap}
                 onCardSwipeUp={handleCardSwipeUp}
-                className="flex-1"
+                onCurrentIndexChange={setCurrentEventIndex}
+                className="h-full"
+              />
+            </div>
+            
+            {/* Suggestions Section - Bottom half */}
+            <div className="flex-1">
+              <MultidimensionalSuggestionCards
+                suggestions={getSuggestions()}
+                onCardTap={handleSuggestionTap}
+                onCardSwipeUp={handleSuggestionSwipeUp}
+                onCardSwipeDown={handleSuggestionSwipeDown}
+                onCurrentIndexChange={setCurrentSuggestionIndex}
+                className="h-full"
               />
             </div>
           </div>
