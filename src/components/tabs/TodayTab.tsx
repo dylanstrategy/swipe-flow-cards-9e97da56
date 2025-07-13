@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import WorkOrderFlow from '../schedule/WorkOrderFlow';
 import WorkOrdersReview from './today/WorkOrdersReview';
 import WorkOrderTimeline from '../maintenance/WorkOrderTimeline';
@@ -8,7 +10,8 @@ import UniversalEventDetailModal from '../events/UniversalEventDetailModal';
 import { EventCardGrid } from '../events/EventCardGrid';
 import HourlyCalendarView from '../schedule/HourlyCalendarView';
 import { useToast } from '@/hooks/use-toast';
-import { format, addDays, isSameDay, differenceInDays, isPast, isToday } from 'date-fns';
+import { format, addDays, isSameDay, differenceInDays, isPast, isToday, startOfWeek, endOfWeek, addWeeks, addMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import { useProfile } from '@/contexts/ProfileContext';
 import ResidentTimeline from '../ResidentTimeline';
 import TodayHeader from './today/TodayHeader';
@@ -38,7 +41,8 @@ const TodayTab = () => {
     recipientType: 'management' as 'management' | 'maintenance' | 'leasing',
     mode: 'compose' as 'compose' | 'reply'
   });
-  const [selectedDate] = useState<Date>(new Date()); // Always today for this tab
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // Allow date changes
+  const [viewType, setViewType] = useState<'day' | '3day' | 'week' | 'month'>('day');
   const [weather, setWeather] = useState({ temp: 72, condition: 'Sunny' });
   const [calendarEvents, setCalendarEvents] = useState<UniversalEvent[]>([]);
 
@@ -141,6 +145,76 @@ const TodayTab = () => {
   const getEventsForDate = (date: Date) => {
     return sharedEventService.getEventsForRoleAndDate('resident', date)
       .sort((a, b) => a.time.localeCompare(b.time));
+  };
+
+  const getEventsForDateRange = () => {
+    const events = [];
+    const today = new Date(selectedDate);
+    
+    switch (viewType) {
+      case 'day':
+        return getEventsForDate(today);
+      case '3day':
+        for (let i = 0; i < 3; i++) {
+          const date = addDays(today, i);
+          events.push(...getEventsForDate(date));
+        }
+        return events;
+      case 'week':
+        const weekStart = startOfWeek(today);
+        for (let i = 0; i < 7; i++) {
+          const date = addDays(weekStart, i);
+          events.push(...getEventsForDate(date));
+        }
+        return events;
+      case 'month':
+        const monthStart = startOfMonth(today);
+        const monthEnd = endOfMonth(today);
+        let current = monthStart;
+        while (current <= monthEnd) {
+          events.push(...getEventsForDate(current));
+          current = addDays(current, 1);
+        }
+        return events;
+      default:
+        return getEventsForDate(today);
+    }
+  };
+
+  const navigateDate = (direction: 'prev' | 'next') => {
+    let newDate = new Date(selectedDate);
+    
+    switch (viewType) {
+      case 'day':
+      case '3day':
+        newDate = addDays(selectedDate, direction === 'next' ? (viewType === 'day' ? 1 : 3) : (viewType === 'day' ? -1 : -3));
+        break;
+      case 'week':
+        newDate = addWeeks(selectedDate, direction === 'next' ? 1 : -1);
+        break;
+      case 'month':
+        newDate = addMonths(selectedDate, direction === 'next' ? 1 : -1);
+        break;
+    }
+    
+    setSelectedDate(newDate);
+  };
+
+  const getDateRangeText = () => {
+    switch (viewType) {
+      case 'day':
+        return format(selectedDate, 'EEEE, MMMM d, yyyy');
+      case '3day':
+        return `${format(selectedDate, 'MMM d')} - ${format(addDays(selectedDate, 2), 'MMM d, yyyy')}`;
+      case 'week':
+        const weekStart = startOfWeek(selectedDate);
+        const weekEnd = endOfWeek(selectedDate);
+        return `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`;
+      case 'month':
+        return format(selectedDate, 'MMMM yyyy');
+      default:
+        return format(selectedDate, 'EEEE, MMMM d, yyyy');
+    }
   };
 
   const formatTime = (time: string) => {
@@ -461,10 +535,10 @@ const TodayTab = () => {
     return <ResidentTimeline onClose={() => setShowTimeline(false)} />;
   }
 
-  // Only show today's events - this ensures calendar sync
-  const todayEvents = getEventsForDate(new Date());
+  // Get events for current view
+  const displayEvents = getEventsForDateRange();
 
-  console.log('TodayTab: Today events loaded:', todayEvents.length, 'events');
+  console.log('TodayTab: Display events loaded:', displayEvents.length, 'events for', viewType, 'view');
 
   return (
     <div className="min-h-screen pb-24">
@@ -492,16 +566,57 @@ const TodayTab = () => {
         {renderPersonalizedOffers()}
 
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            Today's Schedule
-            <span className="text-sm font-normal text-gray-600 ml-2">
-              ({todayEvents.length} events)
-            </span>
-          </h2>
-          
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Schedule
+              <span className="text-sm font-normal text-gray-600 ml-2">
+                ({displayEvents.length} events)
+              </span>
+            </h2>
+            
+            {/* View Controls */}
+            <div className="flex items-center gap-2">
+              <Select value={viewType} onValueChange={(value: 'day' | '3day' | 'week' | 'month') => setViewType(value)}>
+                <SelectTrigger className="w-24">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="day">Day</SelectItem>
+                  <SelectItem value="3day">3 Day</SelectItem>
+                  <SelectItem value="week">Week</SelectItem>
+                  <SelectItem value="month">Month</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Date Navigation */}
+          <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-lg">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateDate('prev')}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <div className="flex items-center gap-2">
+              <CalendarIcon className="h-4 w-4 text-gray-500" />
+              <span className="font-medium">{getDateRangeText()}</span>
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateDate('next')}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+
           <HourlyCalendarView
             selectedDate={selectedDate}
-            events={todayEvents}
+            events={displayEvents}
             onDropSuggestion={handleDropSuggestion}
             onEventClick={handleEventClick}
             onEventReschedule={handleEventReschedule}
