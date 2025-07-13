@@ -487,43 +487,47 @@ const ScheduleTab = () => {
       .sort((a, b) => a.time.localeCompare(b.time));
   };
 
-  // Create Instagram-style dynamic gradient background
-  const createInstagramGradient = () => {
-    // Mock event cards data to get colors
+  // Create gradient that matches actual card colors
+  const createMatchingGradient = () => {
+    // Mock event cards data with their actual colors
     const eventCards = [
-      { color: 'bg-blue-500', gradientColors: ['#667eea', '#764ba2'] },
-      { color: 'bg-green-500', gradientColors: ['#11998e', '#38ef7d'] },
-      { color: 'bg-purple-500', gradientColors: ['#667eea', '#764ba2'] },
-      { color: 'bg-orange-500', gradientColors: ['#ff6a00', '#ee0979'] },
-      { color: 'bg-red-500', gradientColors: ['#ee0979', '#ff6a00'] },
-      { color: 'bg-indigo-500', gradientColors: ['#667eea', '#764ba2'] }
+      { color: 'bg-blue-500', hex: '#3B82F6' },
+      { color: 'bg-green-500', hex: '#22C55E' },
+      { color: 'bg-purple-500', hex: '#A855F7' },
+      { color: 'bg-orange-500', hex: '#F97316' },
+      { color: 'bg-red-500', hex: '#EF4444' },
+      { color: 'bg-indigo-500', hex: '#6366F1' }
     ];
     
     const suggestions = getSuggestions();
     
-    // Instagram-style gradient colors based on priority
-    const getSuggestionGradient = (priority: string) => {
-      const gradientMap: { [key: string]: string[] } = {
-        'urgent': ['#ff6a00', '#ee0979'], // Orange to pink
-        'high': ['#f093fb', '#f5576c'], // Pink to red
-        'medium': ['#4facfe', '#00f2fe'], // Blue to cyan
-        'low': ['#43e97b', '#38f9d7'] // Green to cyan
+    // Get suggestion colors based on priority
+    const getSuggestionColor = (priority: string) => {
+      const colorMap: { [key: string]: string } = {
+        'urgent': '#EF4444', // Red
+        'high': '#F97316',   // Orange  
+        'medium': '#EAB308', // Yellow
+        'low': '#22C55E'     // Green
       };
-      return gradientMap[priority] || ['#667eea', '#764ba2'];
+      return colorMap[priority] || '#22C55E';
     };
     
-    const getEventGradient = (index: number) => {
-      return eventCards[index]?.gradientColors || ['#667eea', '#764ba2'];
-    };
+    const currentEventColor = eventCards[currentEventIndex]?.hex || '#3B82F6';
+    const currentSuggestionColor = getSuggestionColor(suggestions[currentSuggestionIndex]?.priority || 'low');
     
-    const eventGradient = getEventGradient(currentEventIndex);
-    const suggestionGradient = getSuggestionGradient(suggestions[currentSuggestionIndex]?.priority || 'low');
+    // If both colors are the same, create a subtle single-color gradient
+    if (currentEventColor === currentSuggestionColor) {
+      return `
+        radial-gradient(circle at 50% 50%, ${currentEventColor}60, ${currentEventColor}30),
+        linear-gradient(135deg, ${currentEventColor}40, ${currentEventColor}60)
+      `;
+    }
     
-    // Create Instagram-style radial and linear combination
+    // If colors are different, create a proper gradient between them
     return `
-      radial-gradient(circle at 30% 20%, ${eventGradient[0]}40, transparent 70%),
-      radial-gradient(circle at 70% 80%, ${suggestionGradient[1]}40, transparent 70%),
-      linear-gradient(135deg, ${eventGradient[0]}60, ${eventGradient[1]}40, ${suggestionGradient[0]}40, ${suggestionGradient[1]}60)
+      radial-gradient(circle at 30% 20%, ${currentEventColor}50, transparent 70%),
+      radial-gradient(circle at 70% 80%, ${currentSuggestionColor}50, transparent 70%),
+      linear-gradient(135deg, ${currentEventColor}60, ${currentEventColor}30, ${currentSuggestionColor}30, ${currentSuggestionColor}60)
     `;
   };
 
@@ -531,7 +535,7 @@ const ScheduleTab = () => {
   return (
     <div 
       className="min-h-screen transition-all duration-700 ease-in-out"
-      style={{ background: createInstagramGradient() }}
+      style={{ background: createMatchingGradient() }}
     >
       {/* Main content - Split screen layout */}
       <div className="h-screen flex flex-col">
