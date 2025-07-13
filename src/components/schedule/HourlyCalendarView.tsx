@@ -48,8 +48,10 @@ const HourlyCalendarView = ({
   currentUserRole = 'resident',
   viewType = 'day'
 }: HourlyCalendarViewProps) => {
+  // ALL HOOKS MUST BE AT THE TOP - BEFORE ANY CONDITIONAL LOGIC
   const [dragOverSlot, setDragOverSlot] = useState<string | null>(null);
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
+  const dragCounterRef = useRef(0);
 
   // Real-time overdue detection logic - MOVED TO TOP
   const isEventOverdue = (event: Event): boolean => {
@@ -320,7 +322,6 @@ const HourlyCalendarView = ({
     );
   }
 
-  const dragCounterRef = useRef(0);
 
   const timeSlots = Array.from({ length: 24 }, (_, i) => {
     const hour = i.toString().padStart(2, '0');
