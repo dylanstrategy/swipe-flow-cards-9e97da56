@@ -274,19 +274,21 @@ const MultidimensionalEventCards = ({ onCardTap, onCardSwipeUp, onCurrentIndexCh
         }
       `}</style>
 
-      {/* Desktop Navigation Arrows */}
-      <div className="hidden md:block">
+      {/* Desktop Navigation Arrows - Positioned relative to card container */}
+      <div className="hidden md:block relative">
         <button
           onClick={goToPrev}
           disabled={isTransitioning}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-40 bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-700 hover:text-gray-900 p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-40 bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-700 hover:text-gray-900 p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ top: '50%' }}
         >
           <ChevronLeft size={24} />
         </button>
         <button
           onClick={goToNext}
           disabled={isTransitioning}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-40 bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-700 hover:text-gray-900 p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-40 bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-700 hover:text-gray-900 p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ top: '50%' }}
         >
           <ChevronRight size={24} />
         </button>
