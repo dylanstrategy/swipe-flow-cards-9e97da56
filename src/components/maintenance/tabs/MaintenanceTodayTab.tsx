@@ -390,6 +390,21 @@ const MaintenanceTodayTab = ({ onWorkOrderCompleted }: MaintenanceTodayTabProps)
             currentUserRole="maintenance"
             viewType={viewType}
           />
+          
+          {/* Debug info */}
+          <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
+            <div>Total calendar events: {calendarEvents.length}</div>
+            <div>Events for today: {calendarEvents.filter(e => {
+              const eventDate = e.date instanceof Date ? e.date : new Date(e.date);
+              const today = new Date();
+              return eventDate.toDateString() === today.toDateString();
+            }).length}</div>
+            {calendarEvents.map(e => (
+              <div key={e.id}>
+                {e.title} - {e.unit} - {(e.date instanceof Date ? e.date : new Date(e.date)).toDateString()} at {e.time}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
