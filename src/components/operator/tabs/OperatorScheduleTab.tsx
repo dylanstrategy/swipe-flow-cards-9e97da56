@@ -570,11 +570,11 @@ const OperatorScheduleTab = () => {
 
   return (
     <div 
-      className="flex flex-col h-full transition-all duration-700 ease-in-out"
+      className="flex flex-col h-full transition-all duration-700 ease-in-out overflow-hidden"
       style={{ background: createMatchingGradient() }}
     >
       {/* Main content - Card-focused layout */}
-      <div className="relative flex-1">
+      <div className="relative flex-1 overflow-hidden">
         {suggestionsExpanded ? (
           /* Expanded suggestions view - covers whole page */
           <div className="fixed inset-0 bg-white z-40 pt-20">
