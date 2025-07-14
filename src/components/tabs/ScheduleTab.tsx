@@ -528,11 +528,11 @@ const ScheduleTab = () => {
 
   return (
     <div 
-      className="min-h-screen transition-all duration-700 ease-in-out pb-20"
+      className="min-h-screen transition-all duration-700 ease-in-out pb-20 overflow-x-hidden"
       style={{ background: createMatchingGradient() }}
     >
       {/* Main content - Full page scroll layout */}
-      <div className="flex flex-col">
+      <div className="flex flex-col overflow-x-hidden">
         {/* Suggestions Section */}
         <div className="flex-shrink-0">
           <MultidimensionalSuggestionCards
