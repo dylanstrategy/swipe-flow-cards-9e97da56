@@ -528,13 +528,13 @@ const ScheduleTab = () => {
 
   return (
     <div 
-      className="min-h-screen transition-all duration-700 ease-in-out overflow-hidden"
+      className="h-screen transition-all duration-700 ease-in-out overflow-hidden pb-20"
       style={{ background: createMatchingGradient() }}
     >
-      {/* Main content - Split screen layout */}
-      <div className="h-screen flex flex-col overflow-hidden">
+      {/* Main content - Split screen layout with proper height accounting for bottom nav */}
+      <div className="h-full flex flex-col overflow-hidden">
         {/* Suggestions Section - Top half */}
-        <div className="flex-1">
+        <div className="flex-1 overflow-y-auto">
           <MultidimensionalSuggestionCards
             suggestions={getSuggestions()}
             onCardTap={handleSuggestionTap}
@@ -546,7 +546,7 @@ const ScheduleTab = () => {
         </div>
         
         {/* Event Menu Section - Bottom half */}
-        <div className="flex-1">
+        <div className="flex-1 overflow-y-auto">
           <EventMenuCards
             onMenuItemTap={handleMenuItemTap}
             userRole="resident"

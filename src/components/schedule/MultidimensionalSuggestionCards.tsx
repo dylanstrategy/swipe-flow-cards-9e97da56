@@ -271,8 +271,11 @@ const MultidimensionalSuggestionCards = ({
       {/* Main Card Container */}
       <div
         ref={containerRef}
-        className="relative h-[360px] mx-6 mb-6"
-        style={{ perspective: '1500px' }}
+        className="relative h-[360px] mx-6 mb-6 touch-pan-x"
+        style={{ 
+          perspective: '1500px',
+          touchAction: 'pan-x pinch-zoom'
+        }}
         {...containerSwipeGestures}
       >
         {/* Desktop Navigation Arrows - Positioned within card container */}
