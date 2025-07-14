@@ -156,16 +156,13 @@ const MultidimensionalSuggestionCards = ({
 
     return (
       <div
-        className={`absolute inset-0 transition-all duration-500 ease-out cursor-pointer ${
+        className={`w-full h-full transition-all duration-500 ease-out cursor-pointer ${
           isTransitioning ? 'pointer-events-none' : ''
         }`}
         style={{
-          transform: style.transform,
-          zIndex: style.zIndex,
-          opacity: style.opacity,
-          filter: style.filter,
-          transformStyle: 'preserve-3d',
-          animation: style.animation
+          transform: isCenter ? 'scale(1) rotateY(0deg)' : 'scale(0.9) rotateY(0deg)',
+          opacity: isCenter ? 1 : 0.7,
+          transformStyle: 'preserve-3d'
         }}
         onClick={() => isCenter && onCardTap(suggestion)}
         onMouseEnter={() => setHoveredCard(index)}
@@ -271,34 +268,22 @@ const MultidimensionalSuggestionCards = ({
       {/* Main Card Container */}
       <div
         ref={containerRef}
-        className="relative h-[240px] mx-6 mb-6"
+        className="overflow-x-auto overflow-y-hidden scroll-smooth snap-x snap-mandatory scrollbar-hide h-[240px] mx-6 mb-6"
         style={{ 
-          perspective: '1500px',
-          touchAction: 'pan-x pinch-zoom'
+          touchAction: 'pan-x pinch-zoom',
+          scrollSnapType: 'x mandatory'
         }}
-        {...containerSwipeGestures}
       >
-        {/* Desktop Navigation Arrows - Positioned within card container */}
-        <div className="hidden md:block">
-          <button
-            onClick={goToPrev}
-            disabled={isTransitioning || activeEvents.length === 0}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-40 bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-700 hover:text-gray-900 p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed -translate-x-4"
-          >
-            <ChevronLeft size={24} />
-          </button>
-          <button
-            onClick={goToNext}
-            disabled={isTransitioning || activeEvents.length === 0}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-40 bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-700 hover:text-gray-900 p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed translate-x-4"
-          >
-            <ChevronRight size={24} />
-          </button>
+        <div className="flex space-x-8 px-[50vw] py-0" style={{ width: 'max-content' }}>
+          {activeEvents.map((suggestion, index) => (
+            <div
+              key={suggestion.id}
+              className="flex-shrink-0 w-[280px] snap-center"
+            >
+              <SuggestionCardComponent suggestion={suggestion} index={index} />
+            </div>
+          ))}
         </div>
-        
-        {activeEvents.map((suggestion, index) => (
-          <SuggestionCardComponent key={suggestion.id} suggestion={suggestion} index={index} />
-        ))}
       </div>
 
       {/* Navigation Dots */}
