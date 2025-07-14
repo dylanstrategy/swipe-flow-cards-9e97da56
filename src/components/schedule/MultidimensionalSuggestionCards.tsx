@@ -79,30 +79,30 @@ const MultidimensionalSuggestionCards = ({
     const isHovered = hoveredCard === index;
 
     if (normalizedDiff === 0) {
-      // Center card with floating animation
+      // Center card - completely flat when centered, locks into place  
       return {
-        transform: `translateX(0%) scale(${isHovered ? 1.02 : 1}) rotateY(0deg) translateZ(${isHovered ? '20px' : '0px'})`,
+        transform: `translateX(0%) scale(${isHovered ? 1.01 : 1}) rotateY(0deg) translateZ(${isHovered ? '15px' : '8px'})`,
         zIndex: 30,
         opacity: 1,
         filter: 'brightness(1)',
-        animation: 'float 6s ease-in-out infinite'
+        animation: 'none'
       };
     } else if (normalizedDiff === 1 || normalizedDiff === -(activeEvents.length - 1)) {
-      // Right card with subtle movement
+      // Right card with reduced rotation for better snap behavior
       return {
-        transform: `translateX(85%) scale(${isHovered ? 0.85 : 0.8}) rotateY(-15deg) translateZ(${isHovered ? '10px' : '0px'})`,
+        transform: `translateX(85%) scale(${isHovered ? 0.88 : 0.85}) rotateY(-8deg) translateZ(${isHovered ? '5px' : '0px'})`,
         zIndex: 20,
-        opacity: isHovered ? 0.8 : 0.7,
-        filter: 'brightness(0.8)',
+        opacity: isHovered ? 0.85 : 0.75,
+        filter: 'brightness(0.85)',
         animation: 'floatRight 8s ease-in-out infinite'
       };
     } else if (normalizedDiff === -1 || normalizedDiff === (activeEvents.length - 1)) {
-      // Left card with subtle movement
+      // Left card with reduced rotation for better snap behavior
       return {
-        transform: `translateX(-85%) scale(${isHovered ? 0.85 : 0.8}) rotateY(15deg) translateZ(${isHovered ? '10px' : '0px'})`,
+        transform: `translateX(-85%) scale(${isHovered ? 0.88 : 0.85}) rotateY(8deg) translateZ(${isHovered ? '5px' : '0px'})`,
         zIndex: 20,
-        opacity: isHovered ? 0.8 : 0.7,
-        filter: 'brightness(0.8)',
+        opacity: isHovered ? 0.85 : 0.75,
+        filter: 'brightness(0.85)',
         animation: 'floatLeft 8s ease-in-out infinite'
       };
     } else {
@@ -271,7 +271,7 @@ const MultidimensionalSuggestionCards = ({
       {/* Main Card Container */}
       <div
         ref={containerRef}
-        className="relative h-[360px] mx-6 mb-6 touch-pan-x"
+        className="relative h-[240px] mx-6 mb-6"
         style={{ 
           perspective: '1500px',
           touchAction: 'pan-x pinch-zoom'
