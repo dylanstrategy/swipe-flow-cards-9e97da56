@@ -44,24 +44,36 @@ const MultidimensionalSuggestionCards = ({
     }
   }, [activeEvents.length, currentIndex]);
 
-  // Handle scroll events to update navigation dots
+  // Initialize infinite scroll position and handle scroll events
   useEffect(() => {
     const container = containerRef.current;
     if (!container || activeEvents.length === 0) return;
 
+    // Set initial scroll position to middle array for infinite scroll
+    const cardWidth = 288; // 280px + 8px margin on each side = 288px total width per card
+    const initialScrollPosition = activeEvents.length * cardWidth;
+    container.scrollLeft = initialScrollPosition;
+
     const handleScroll = () => {
       const scrollLeft = container.scrollLeft;
-      const cardWidth = 280 + 32; // card width + gap (space-x-8 = 32px)
       const containerWidth = container.clientWidth;
       const centerPosition = scrollLeft + containerWidth / 2;
       
-      // Calculate which card is centered
+      // Calculate which card is centered, accounting for the offset
       const cardIndex = Math.round((centerPosition - containerWidth / 2) / cardWidth);
       const normalizedIndex = ((cardIndex % activeEvents.length) + activeEvents.length) % activeEvents.length;
       
       setScrollIndex(normalizedIndex);
       setCurrentIndex(normalizedIndex);
       onCurrentIndexChange?.(normalizedIndex);
+
+      // Reset scroll position for infinite scroll
+      const totalWidth = activeEvents.length * cardWidth;
+      if (scrollLeft <= 0) {
+        container.scrollLeft = totalWidth;
+      } else if (scrollLeft >= totalWidth * 2) {
+        container.scrollLeft = totalWidth;
+      }
     };
 
     container.addEventListener('scroll', handleScroll, { passive: true });
@@ -185,8 +197,6 @@ const MultidimensionalSuggestionCards = ({
           isTransitioning ? 'pointer-events-none' : ''
         }`}
         style={{
-          transform: isCenter ? 'scale(1) rotateY(0deg)' : 'scale(0.9) rotateY(0deg)',
-          opacity: isCenter ? 1 : 0.7,
           transformStyle: 'preserve-3d'
         }}
         onClick={() => isCenter && onCardTap(suggestion)}
@@ -290,7 +300,7 @@ const MultidimensionalSuggestionCards = ({
         }
       `}</style>
 
-      {/* Main Card Container - Increased height for full cards */}
+      {/* Main Card Container - Infinite scroll with consistent card sizing */}
       <div
         ref={containerRef}
         className="overflow-x-auto overflow-y-hidden scroll-smooth snap-x snap-mandatory scrollbar-hide h-[360px] mx-6 mb-8"
@@ -299,8 +309,8 @@ const MultidimensionalSuggestionCards = ({
           scrollSnapType: 'x mandatory'
         }}
       >
-        <div className="flex space-x-8 px-[50vw] py-8" style={{ width: 'max-content' }}>
-          {/* Create endless scroll by duplicating cards */}
+        <div className="flex px-[50vw] py-8" style={{ width: 'max-content', gap: '16px' }}>
+          {/* Create infinite scroll by tripling cards */}
           {[...activeEvents, ...activeEvents, ...activeEvents].map((suggestion, index) => (
             <div
               key={`${suggestion.id}-${Math.floor(index / activeEvents.length)}`}
@@ -315,16 +325,15 @@ const MultidimensionalSuggestionCards = ({
         </div>
       </div>
 
-      {/* Navigation Dots - Fixed to sync with scroll */}
+      {/* Navigation Dots - Synced with infinite scroll */}
       <div className="flex justify-center space-x-3 mb-8">
         {activeEvents.map((_, index) => (
           <button
             key={index}
             onClick={() => {
               if (containerRef.current) {
-                const cardWidth = 280 + 32; // card width + gap
-                const containerWidth = containerRef.current.clientWidth;
-                const targetScroll = (index * cardWidth) + (containerWidth / 2) - (cardWidth / 2);
+                const cardWidth = 288; // 280px + 8px margin = 288px
+                const targetScroll = (activeEvents.length * cardWidth) + (index * cardWidth);
                 containerRef.current.scrollTo({
                   left: targetScroll,
                   behavior: 'smooth'
