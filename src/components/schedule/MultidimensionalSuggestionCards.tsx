@@ -157,31 +157,6 @@ const MultidimensionalSuggestionCards = ({
     }
   };
 
-  // Get colors for gradient background
-  const getBackgroundGradient = () => {
-    if (activeEvents.length === 0) return 'linear-gradient(180deg, #6B728020, #6B728010, #6B728020)';
-    
-    const centerCard = activeEvents[currentIndex];
-    const nextCard = activeEvents[(currentIndex + 1) % activeEvents.length];
-    const prevCard = activeEvents[(currentIndex - 1 + activeEvents.length) % activeEvents.length];
-    
-    // Convert priority to hex colors
-    const getHexFromPriority = (priority: string) => {
-      const colorMap: { [key: string]: string } = {
-        'urgent': '#EF4444',
-        'high': '#F97316',
-        'medium': '#EAB308',
-        'low': '#22C55E'
-      };
-      return colorMap[priority] || '#6B7280';
-    };
-
-    const centerColor = getHexFromPriority(centerCard.priority);
-    const topColor = getHexFromPriority(prevCard.priority);
-    const bottomColor = getHexFromPriority(nextCard.priority);
-    
-    return `linear-gradient(180deg, ${topColor}20, ${centerColor}10, ${bottomColor}20)`;
-  };
 
   const SuggestionCardComponent = ({ suggestion, index }: { suggestion: SuggestionCard; index: number }) => {
     const swipeGestures = useSwipeGestures({
