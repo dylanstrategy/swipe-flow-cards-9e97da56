@@ -33,6 +33,7 @@ const MultidimensionalSuggestionCards = ({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [scrollIndex, setScrollIndex] = useState(0);
 
   // Filter out completed events
   const activeEvents = suggestions.filter(s => s.title !== 'Complete work order');
@@ -42,6 +43,24 @@ const MultidimensionalSuggestionCards = ({
       setCurrentIndex(0);
     }
   }, [activeEvents.length, currentIndex]);
+
+  // Handle scroll events to update navigation dots
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const scrollLeft = container.scrollLeft;
+      const cardWidth = 280 + 32; // card width + gap
+      const centerOffset = container.clientWidth / 2;
+      const adjustedScroll = scrollLeft + centerOffset - cardWidth/2;
+      const newIndex = Math.round(adjustedScroll / cardWidth) % activeEvents.length;
+      setScrollIndex(Math.max(0, newIndex));
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [activeEvents.length]);
 
   const goToNext = () => {
     if (isTransitioning || activeEvents.length === 0) return;
@@ -268,18 +287,18 @@ const MultidimensionalSuggestionCards = ({
       {/* Main Card Container */}
       <div
         ref={containerRef}
-        className="overflow-x-auto overflow-y-hidden scroll-smooth snap-x snap-mandatory scrollbar-hide h-[280px] mx-6 mb-8"
+        className="overflow-x-auto overflow-y-hidden scroll-smooth snap-x snap-mandatory scrollbar-hide h-[320px] mx-6 mb-8"
         style={{ 
           touchAction: 'pan-x pinch-zoom',
           scrollSnapType: 'x mandatory'
         }}
       >
-        <div className="flex space-x-8 px-[50vw] py-0" style={{ width: 'max-content' }}>
+        <div className="flex space-x-8 px-[50vw] py-4" style={{ width: 'max-content' }}>
           {/* Create endless scroll by duplicating cards */}
           {[...activeEvents, ...activeEvents, ...activeEvents].map((suggestion, index) => (
             <div
               key={`${suggestion.id}-${Math.floor(index / activeEvents.length)}`}
-              className="flex-shrink-0 w-[280px] snap-center"
+              className="flex-shrink-0 w-[280px] h-[280px] snap-center"
             >
               <SuggestionCardComponent 
                 suggestion={suggestion} 
@@ -296,12 +315,17 @@ const MultidimensionalSuggestionCards = ({
           <button
             key={index}
             onClick={() => {
-              if (!isTransitioning) {
-                setCurrentIndex(index);
+              if (!isTransitioning && containerRef.current) {
+                const cardWidth = 280 + 32; // card width + gap
+                const targetScroll = index * cardWidth;
+                containerRef.current.scrollTo({
+                  left: targetScroll,
+                  behavior: 'smooth'
+                });
               }
             }}
             className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              index === currentIndex
+              index === scrollIndex
                 ? 'bg-blue-500 scale-125'
                 : 'bg-gray-300 hover:bg-gray-400'
             }`}
