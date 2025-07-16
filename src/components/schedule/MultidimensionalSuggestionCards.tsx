@@ -47,20 +47,26 @@ const MultidimensionalSuggestionCards = ({
   // Handle scroll events to update navigation dots
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || activeEvents.length === 0) return;
 
     const handleScroll = () => {
       const scrollLeft = container.scrollLeft;
-      const cardWidth = 280 + 32; // card width + gap
-      const centerOffset = container.clientWidth / 2;
-      const adjustedScroll = scrollLeft + centerOffset - cardWidth/2;
-      const newIndex = Math.round(adjustedScroll / cardWidth) % activeEvents.length;
-      setScrollIndex(Math.max(0, newIndex));
+      const cardWidth = 280 + 32; // card width + gap (space-x-8 = 32px)
+      const containerWidth = container.clientWidth;
+      const centerPosition = scrollLeft + containerWidth / 2;
+      
+      // Calculate which card is centered
+      const cardIndex = Math.round((centerPosition - containerWidth / 2) / cardWidth);
+      const normalizedIndex = ((cardIndex % activeEvents.length) + activeEvents.length) % activeEvents.length;
+      
+      setScrollIndex(normalizedIndex);
+      setCurrentIndex(normalizedIndex);
+      onCurrentIndexChange?.(normalizedIndex);
     };
 
-    container.addEventListener('scroll', handleScroll);
+    container.addEventListener('scroll', handleScroll, { passive: true });
     return () => container.removeEventListener('scroll', handleScroll);
-  }, [activeEvents.length]);
+  }, [activeEvents.length, onCurrentIndexChange]);
 
   const goToNext = () => {
     if (isTransitioning || activeEvents.length === 0) return;
@@ -284,21 +290,21 @@ const MultidimensionalSuggestionCards = ({
         }
       `}</style>
 
-      {/* Main Card Container */}
+      {/* Main Card Container - Increased height for full cards */}
       <div
         ref={containerRef}
-        className="overflow-x-auto overflow-y-hidden scroll-smooth snap-x snap-mandatory scrollbar-hide h-[320px] mx-6 mb-8"
+        className="overflow-x-auto overflow-y-hidden scroll-smooth snap-x snap-mandatory scrollbar-hide h-[360px] mx-6 mb-8"
         style={{ 
           touchAction: 'pan-x pinch-zoom',
           scrollSnapType: 'x mandatory'
         }}
       >
-        <div className="flex space-x-8 px-[50vw] py-4" style={{ width: 'max-content' }}>
+        <div className="flex space-x-8 px-[50vw] py-8" style={{ width: 'max-content' }}>
           {/* Create endless scroll by duplicating cards */}
           {[...activeEvents, ...activeEvents, ...activeEvents].map((suggestion, index) => (
             <div
               key={`${suggestion.id}-${Math.floor(index / activeEvents.length)}`}
-              className="flex-shrink-0 w-[280px] h-[280px] snap-center"
+              className="flex-shrink-0 w-[280px] h-[300px] snap-center"
             >
               <SuggestionCardComponent 
                 suggestion={suggestion} 
@@ -309,15 +315,16 @@ const MultidimensionalSuggestionCards = ({
         </div>
       </div>
 
-      {/* Navigation Dots */}
+      {/* Navigation Dots - Fixed to sync with scroll */}
       <div className="flex justify-center space-x-3 mb-8">
         {activeEvents.map((_, index) => (
           <button
             key={index}
             onClick={() => {
-              if (!isTransitioning && containerRef.current) {
+              if (containerRef.current) {
                 const cardWidth = 280 + 32; // card width + gap
-                const targetScroll = index * cardWidth;
+                const containerWidth = containerRef.current.clientWidth;
+                const targetScroll = (index * cardWidth) + (containerWidth / 2) - (cardWidth / 2);
                 containerRef.current.scrollTo({
                   left: targetScroll,
                   behavior: 'smooth'
