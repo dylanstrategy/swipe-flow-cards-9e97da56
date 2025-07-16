@@ -50,29 +50,33 @@ const MultidimensionalSuggestionCards = ({
     if (!container || activeEvents.length === 0) return;
 
     // Set initial scroll position to middle array for infinite scroll
-    const cardWidth = 288; // 280px + 8px margin on each side = 288px total width per card
+    const cardWidth = 296; // 280px card + 16px gap = 296px total
     const initialScrollPosition = activeEvents.length * cardWidth;
-    container.scrollLeft = initialScrollPosition;
+    
+    // Use setTimeout to ensure DOM is ready
+    setTimeout(() => {
+      container.scrollLeft = initialScrollPosition;
+    }, 0);
 
     const handleScroll = () => {
       const scrollLeft = container.scrollLeft;
-      const containerWidth = container.clientWidth;
-      const centerPosition = scrollLeft + containerWidth / 2;
+      const totalArrayWidth = activeEvents.length * cardWidth;
       
-      // Calculate which card is centered, accounting for the offset
-      const cardIndex = Math.round((centerPosition - containerWidth / 2) / cardWidth);
+      // Calculate which card is centered for navigation dots
+      const cardIndex = Math.round(scrollLeft / cardWidth) % activeEvents.length;
       const normalizedIndex = ((cardIndex % activeEvents.length) + activeEvents.length) % activeEvents.length;
       
       setScrollIndex(normalizedIndex);
       setCurrentIndex(normalizedIndex);
       onCurrentIndexChange?.(normalizedIndex);
 
-      // Reset scroll position for infinite scroll
-      const totalWidth = activeEvents.length * cardWidth;
-      if (scrollLeft <= 0) {
-        container.scrollLeft = totalWidth;
-      } else if (scrollLeft >= totalWidth * 2) {
-        container.scrollLeft = totalWidth;
+      // Infinite scroll logic - reset position when reaching boundaries
+      if (scrollLeft <= cardWidth / 2) {
+        // Scrolled too far left, jump to end of middle array
+        container.scrollLeft = totalArrayWidth + scrollLeft;
+      } else if (scrollLeft >= totalArrayWidth * 2 - cardWidth / 2) {
+        // Scrolled too far right, jump to start of middle array
+        container.scrollLeft = totalArrayWidth + (scrollLeft - totalArrayWidth * 2);
       }
     };
 
@@ -332,7 +336,7 @@ const MultidimensionalSuggestionCards = ({
             key={index}
             onClick={() => {
               if (containerRef.current) {
-                const cardWidth = 288; // 280px + 8px margin = 288px
+                const cardWidth = 296; // 280px + 16px gap = 296px
                 const targetScroll = (activeEvents.length * cardWidth) + (index * cardWidth);
                 containerRef.current.scrollTo({
                   left: targetScroll,
