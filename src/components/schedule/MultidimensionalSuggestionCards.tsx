@@ -268,26 +268,30 @@ const MultidimensionalSuggestionCards = ({
       {/* Main Card Container */}
       <div
         ref={containerRef}
-        className="overflow-x-auto overflow-y-hidden scroll-smooth snap-x snap-mandatory scrollbar-hide h-[240px] mx-6 mb-6"
+        className="overflow-x-auto overflow-y-hidden scroll-smooth snap-x snap-mandatory scrollbar-hide h-[280px] mx-6 mb-8"
         style={{ 
           touchAction: 'pan-x pinch-zoom',
           scrollSnapType: 'x mandatory'
         }}
       >
         <div className="flex space-x-8 px-[50vw] py-0" style={{ width: 'max-content' }}>
-          {activeEvents.map((suggestion, index) => (
+          {/* Create endless scroll by duplicating cards */}
+          {[...activeEvents, ...activeEvents, ...activeEvents].map((suggestion, index) => (
             <div
-              key={suggestion.id}
+              key={`${suggestion.id}-${Math.floor(index / activeEvents.length)}`}
               className="flex-shrink-0 w-[280px] snap-center"
             >
-              <SuggestionCardComponent suggestion={suggestion} index={index} />
+              <SuggestionCardComponent 
+                suggestion={suggestion} 
+                index={index % activeEvents.length} 
+              />
             </div>
           ))}
         </div>
       </div>
 
       {/* Navigation Dots */}
-      <div className="flex justify-center space-x-3 mb-6">
+      <div className="flex justify-center space-x-3 mb-8">
         {activeEvents.map((_, index) => (
           <button
             key={index}
@@ -303,19 +307,6 @@ const MultidimensionalSuggestionCards = ({
             }`}
           />
         ))}
-      </div>
-
-      {/* Swipe Hint - Centered and Mobile Responsive */}
-      <div className="text-center px-4 py-3">
-        <p className="text-xs text-gray-500 max-w-sm mx-auto leading-relaxed">
-          <span className="block sm:inline">Swipe left or right to explore</span>
-          <span className="hidden sm:inline"> • </span>
-          <span className="block sm:inline">Tap to view</span>
-          <span className="hidden sm:inline"> • </span>
-          <span className="block sm:inline">Swipe up to schedule</span>
-          <span className="hidden sm:inline"> • </span>
-          <span className="block sm:inline">Swipe down for later</span>
-        </p>
       </div>
     </div>
   );
