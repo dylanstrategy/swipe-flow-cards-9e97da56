@@ -544,82 +544,36 @@ const OperatorScheduleTab = () => {
   };
 
 
-  // Create background gradient based on suggestions
-  const createMatchingGradient = () => {
-    // REAL suggestion colors (matching MultidimensionalSuggestionCards.tsx)
-    const getSuggestionColor = (priority: string) => {
-      switch (priority) {
-        case 'urgent': return '#EF4444';  // Red (from-red-500 to-red-600)
-        case 'high': return '#F97316';    // Orange (from-orange-500 to-orange-600)
-        case 'medium': return '#EAB308';  // Yellow (from-yellow-500 to-yellow-600)
-        case 'low': return '#22C55E';     // Green (from-green-500 to-green-600)
-        default: return '#6B7280';        // Gray
-      }
-    };
-
-    const suggestions = getSuggestions();
-    const currentSuggestionColor = getSuggestionColor(suggestions[currentSuggestionIndex]?.priority || 'low');
-    
-    // Create a subtle gradient based on current suggestion priority
-    return `
-      radial-gradient(circle at 30% 20%, ${currentSuggestionColor}40, transparent 70%),
-      radial-gradient(circle at 70% 80%, ${currentSuggestionColor}30, transparent 70%),
-      linear-gradient(135deg, ${currentSuggestionColor}20, ${currentSuggestionColor}10, #f8fafc)
-    `;
-  };
-
   return (
     <div 
-      className="flex flex-col h-full transition-all duration-700 ease-in-out overflow-hidden"
-      style={{ background: createMatchingGradient() }}
+      className="min-h-screen pb-24" 
+      style={{ 
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'none',
+        transform: 'translateZ(0)'
+      }}
     >
-      {/* Main content - Card-focused layout */}
-      <div className="relative flex-1 overflow-hidden">
-        {suggestionsExpanded ? (
-          /* Expanded suggestions view - covers whole page */
-          <div className="fixed inset-0 bg-white z-40 pt-20">
-            <div className="p-4 h-full flex flex-col">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Operator Suggestions</h2>
-                <button
-                  onClick={() => setSuggestionsExpanded(false)}
-                  className="text-gray-600 hover:text-gray-900 text-xl p-2"
-                >
-                  ✕
-                </button>
-              </div>
-              <TodaysSuggestionCards
-                suggestions={getSuggestions()}
-                onCardTap={handleSuggestionTap}
-                onCardSwipeUp={handleSuggestionSwipeUp}
-                onCardSwipeDown={handleSuggestionSwipeDown}
-                className="flex-1"
-              />
-            </div>
+      <div className="px-4 py-6">
+        {/* Main content */}
+        <div className="flex flex-col">
+        {/* Suggestions Section */}
+        <div className="flex-shrink-0">
+          <TodaysSuggestionCards
+            suggestions={getSuggestions()}
+            onCardTap={handleSuggestionTap}
+            onCardSwipeUp={handleSuggestionSwipeUp}
+            onCardSwipeDown={handleSuggestionSwipeDown}
+          />
+        </div>
+        
+        {/* Event Menu Section */}
+        <div className="flex-shrink-0">
+          <EventMenuCards
+            onMenuItemTap={handleEventMenuTap}
+            userRole="operator"
+          />
           </div>
-        ) : (
-          /* Split screen layout */
-          <div className="h-screen flex flex-col">
-            {/* Suggestion Queue - Top half (non-complete events) */}
-            <div className="flex-1">
-              <TodaysSuggestionCards
-                suggestions={getSuggestions()}
-                onCardTap={handleSuggestionTap}
-                onCardSwipeUp={handleSuggestionSwipeUp}
-                onCardSwipeDown={handleSuggestionSwipeDown}
-                className="h-full"
-              />
-            </div>
-            
-            {/* Event Menu - Bottom half (full menu as cards) */}
-            <div className="flex-1 bg-white/10 backdrop-blur-sm">
-              <EventMenuCards
-                onMenuItemTap={handleEventMenuTap}
-                className="h-full"
-              />
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
