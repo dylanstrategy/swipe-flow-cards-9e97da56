@@ -57,27 +57,20 @@ const TodaysSuggestionCards = ({
 
     return (
       <div className={`mb-6 ${className}`}>
-        <div className="bg-yellow-100 px-4 pt-4 pb-8 rounded-t-2xl">
-          <h2 className="text-xl font-semibold text-gray-900 mb-1">Today's Suggestions</h2>
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">Today's Suggestions</h2>
           <p className="text-sm text-gray-600">Events from yesterday that still need your attention</p>
         </div>
 
-        <div className="bg-yellow-100 overflow-x-auto scrollbar-hide pb-8">
-          <div className="flex space-x-4 px-4" style={{ width: 'max-content' }}>
+        <div className="overflow-x-auto scrollbar-hide">
+          <div className="flex space-x-6 pb-4 px-4" style={{ width: 'max-content' }}>
             {infiniteEvents.map((event, index) => (
               <div
                 key={`${event.id}-${index}`}
-                className="flex-shrink-0 w-80 relative"
+                className="flex-shrink-0 w-80"
                 onClick={() => onCardTap(event)}
               >
-                {/* Left accent strip */}
-                <div className="absolute left-0 top-0 bottom-0 w-6 bg-orange-400 rounded-l-2xl z-10"></div>
-                
-                {/* Right accent strip */}
-                <div className="absolute right-0 top-0 bottom-0 w-6 bg-orange-400 rounded-r-2xl z-10"></div>
-
-                {/* Main card */}
-                <div className="bg-green-500 rounded-2xl h-80 flex flex-col justify-between text-white relative cursor-pointer hover:scale-[1.02] transition-transform duration-300 mx-3 p-6">
+                <div className="bg-green-500 rounded-2xl h-80 flex flex-col justify-between text-white relative cursor-pointer hover:scale-[1.02] transition-transform duration-300 p-6">
                   {/* Priority badge */}
                   <div className="flex justify-start">
                     <span className="bg-white bg-opacity-30 px-3 py-1 rounded-full text-xs font-bold tracking-wide">
@@ -113,7 +106,7 @@ const TodaysSuggestionCards = ({
         </div>
 
         {/* Dots indicator */}
-        <div className="bg-yellow-100 flex justify-center space-x-2 pb-4 rounded-b-2xl">
+        <div className="flex justify-center space-x-2 mt-6">
           {Array.from({ length: Math.min(5, infiniteEvents.length) }).map((_, index) => (
             <div
               key={index}
