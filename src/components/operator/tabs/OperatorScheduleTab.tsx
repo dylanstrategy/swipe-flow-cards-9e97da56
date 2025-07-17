@@ -593,6 +593,7 @@ const OperatorScheduleTab = () => {
                 onCardTap={handleSuggestionTap}
                 onCardSwipeUp={handleSuggestionSwipeUp}
                 onCardSwipeDown={handleSuggestionSwipeDown}
+                onEventClick={handleEventClick}
                 className="flex-1"
               />
             </div>
@@ -608,6 +609,7 @@ const OperatorScheduleTab = () => {
                 onCardSwipeUp={handleSuggestionSwipeUp}
                 onCardSwipeDown={handleSuggestionSwipeDown}
                 onCurrentIndexChange={setCurrentSuggestionIndex}
+                onEventClick={handleEventClick}
                 className="h-full"
               />
             </div>

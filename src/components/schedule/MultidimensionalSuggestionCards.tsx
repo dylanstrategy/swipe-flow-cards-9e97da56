@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSwipeGestures } from '@/hooks/useSwipeGestures';
 import SwipeActionOverlays from './SwipeActionOverlays';
+import { sharedEventService } from '@/services/sharedEventService';
+import { UniversalEvent } from '@/types/eventTasks';
+import { isSameDay, isPast, startOfDay } from 'date-fns';
 
 interface SuggestionCard {
   id: number;
@@ -18,6 +21,7 @@ interface MultidimensionalSuggestionCardsProps {
   onCardSwipeUp: (suggestion: SuggestionCard) => void;
   onCardSwipeDown: (suggestion: SuggestionCard) => void;
   onCurrentIndexChange?: (index: number) => void;
+  onEventClick?: (event: UniversalEvent) => void;
   className?: string;
 }
 
@@ -27,13 +31,31 @@ const MultidimensionalSuggestionCards = ({
   onCardSwipeUp, 
   onCardSwipeDown, 
   onCurrentIndexChange,
+  onEventClick,
   className = '' 
 }: MultidimensionalSuggestionCardsProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const [incompleteEvents, setIncompleteEvents] = useState<UniversalEvent[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollIndex, setScrollIndex] = useState(0);
+
+  // Get incomplete events from yesterday that need attention
+  useEffect(() => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const allEvents = sharedEventService.getEventsForRole('resident');
+    const incompleteFromYesterday = allEvents.filter(event => {
+      const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+      const isFromYesterday = isSameDay(eventDate, yesterday);
+      const hasIncompleteTasks = event.tasks.some(task => !task.isComplete);
+      return isFromYesterday && hasIncompleteTasks;
+    });
+    
+    setIncompleteEvents(incompleteFromYesterday);
+  }, []);
 
   // Filter out completed events
   const activeEvents = suggestions.filter(s => s.title !== 'Complete work order');
@@ -178,7 +200,21 @@ const MultidimensionalSuggestionCards = ({
         style={{
           transformStyle: 'preserve-3d'
         }}
-        onClick={() => isCenter && onCardTap(suggestion)}
+        onClick={() => {
+          if (isCenter) {
+            // Find matching incomplete event and open its modal
+            const matchingEvent = incompleteEvents.find(event => 
+              event.title.toLowerCase().includes(suggestion.title.toLowerCase()) ||
+              suggestion.title.toLowerCase().includes(event.title.toLowerCase())
+            );
+            
+            if (matchingEvent && onEventClick) {
+              onEventClick(matchingEvent);
+            } else {
+              onCardTap(suggestion);
+            }
+          }
+        }}
         onMouseEnter={() => setHoveredCard(index)}
         onMouseLeave={() => setHoveredCard(null)}
         {...(isCenter ? swipeGestures : {})}
@@ -263,6 +299,14 @@ const MultidimensionalSuggestionCards = ({
 
   return (
     <div className={`relative h-full ${className}`}>
+      {/* Today's Suggestions Title */}
+      <div className="px-6 mb-4">
+        <h2 className="text-xl font-semibold text-foreground">Today's Suggestions</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Events from yesterday that still need your attention
+        </p>
+      </div>
+      
       {/* Floating CSS Animations */}
       <style>{`
         @keyframes float {
