@@ -39,120 +39,75 @@ const MultidimensionalSuggestionCards = ({
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [incompleteEvents, setIncompleteEvents] = useState<UniversalEvent[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scrollIndex, setScrollIndex] = useState(0);
 
-  // Get incomplete events from yesterday that need attention
-  useEffect(() => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    const allEvents = sharedEventService.getEventsForRole('resident');
-    const incompleteFromYesterday = allEvents.filter(event => {
-      const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
-      const isFromYesterday = isSameDay(eventDate, yesterday);
-      const hasIncompleteTasks = event.tasks.some(task => !task.isComplete);
-      return isFromYesterday && hasIncompleteTasks;
-    });
-    
-    setIncompleteEvents(incompleteFromYesterday);
-  }, []);
-
-  // Ensure we always have exactly 5 suggestion cards
-  const getSuggestionCards = () => {
-    const mockSuggestions: SuggestionCard[] = [
+  // Always use diverse mock suggestions - no more real events causing duplicates
+  const getSuggestionCards = (): SuggestionCard[] => {
+    return [
       { id: 1, title: "Complete Move-in Inspection", description: "Final walkthrough and documentation needed", priority: "high", category: "inspection" },
       { id: 2, title: "Submit Utility Setup", description: "Electric and gas accounts need activation", priority: "urgent", category: "utilities" },
       { id: 3, title: "Upload Renter's Insurance", description: "Policy documentation required for lease", priority: "medium", category: "insurance" },
       { id: 4, title: "Schedule Maintenance Check", description: "HVAC system needs routine inspection", priority: "low", category: "maintenance" },
       { id: 5, title: "Confirm Welcome Package", description: "Pick up keys and building access cards", priority: "medium", category: "welcome" }
     ];
-
-    // If we have real events, use them to replace mock suggestions
-    if (incompleteEvents.length > 0) {
-      incompleteEvents.slice(0, 5).forEach((event, index) => {
-        if (index < mockSuggestions.length) {
-          mockSuggestions[index] = {
-            id: parseInt(event.id),
-            title: event.title,
-            description: event.description || "Event needs attention",
-            priority: "high",
-            category: event.type
-          };
-        }
-      });
-    }
-
-    return mockSuggestions;
   };
 
-  // Filter out completed events and ensure 5 cards
-  const activeEvents = getSuggestionCards().filter(s => s.title !== 'Complete work order');
+  // Use diverse mock suggestions always
+  const activeEvents = getSuggestionCards();
 
-  // Simplified scroll handling without aggressive infinite scroll
+  // Simple scroll handling - NO INFINITE SCROLL
   useEffect(() => {
     const container = containerRef.current;
     if (!container || activeEvents.length === 0) return;
 
-    // Set initial scroll position to middle array for infinite scroll
-    const cardWidth = 296; // 280px card + 16px gap = 296px total
-    const initialScrollPosition = activeEvents.length * cardWidth;
-    
-    // Use setTimeout to ensure DOM is ready and data is loaded
-    const timer = setTimeout(() => {
-      if (container && activeEvents.length > 0) {
-        container.scrollLeft = initialScrollPosition;
-        setScrollIndex(0);
-        setCurrentIndex(0);
-      }
-    }, 100);
-
     const handleScroll = () => {
-      if (activeEvents.length === 0) return;
-      
       const scrollLeft = container.scrollLeft;
-      const totalArrayWidth = activeEvents.length * cardWidth;
+      const cardWidth = 296; // 280px card + 16px gap = 296px total
       
-      // Calculate current card index more reliably
-      const relativeScroll = scrollLeft - totalArrayWidth; // Position relative to middle array
-      const cardIndex = Math.round(relativeScroll / cardWidth);
-      let normalizedIndex = ((cardIndex % activeEvents.length) + activeEvents.length) % activeEvents.length;
+      // Calculate current card index
+      const cardIndex = Math.round(scrollLeft / cardWidth);
+      const normalizedIndex = Math.max(0, Math.min(cardIndex, activeEvents.length - 1));
       
-      setScrollIndex(normalizedIndex);
       setCurrentIndex(normalizedIndex);
       onCurrentIndexChange?.(normalizedIndex);
-
-      // Simple infinite scroll - only reset at extreme boundaries
-      if (scrollLeft < cardWidth) {
-        // Near beginning - jump to equivalent position in middle section
-        container.scrollLeft = totalArrayWidth + scrollLeft;
-      } else if (scrollLeft > totalArrayWidth * 2 + cardWidth) {
-        // Past end - jump to equivalent position in middle section  
-        container.scrollLeft = totalArrayWidth + (scrollLeft - totalArrayWidth * 2);
-      }
     };
 
     container.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
-      clearTimeout(timer);
-    };
+    return () => container.removeEventListener('scroll', handleScroll);
   }, [activeEvents.length, onCurrentIndexChange]);
 
   const goToNext = () => {
     if (isTransitioning || activeEvents.length === 0) return;
     setIsTransitioning(true);
-    const newIndex = (currentIndex + 1) % activeEvents.length;
+    const newIndex = Math.min(currentIndex + 1, activeEvents.length - 1);
     setCurrentIndex(newIndex);
     onCurrentIndexChange?.(newIndex);
+    
+    if (containerRef.current) {
+      const cardWidth = 296;
+      containerRef.current.scrollTo({
+        left: newIndex * cardWidth,
+        behavior: 'smooth'
+      });
+    }
+    
     setTimeout(() => setIsTransitioning(false), 500);
   };
 
   const goToPrev = () => {
     if (isTransitioning || activeEvents.length === 0) return;
     setIsTransitioning(true);
-    const newIndex = (currentIndex - 1 + activeEvents.length) % activeEvents.length;
+    const newIndex = Math.max(currentIndex - 1, 0);
     setCurrentIndex(newIndex);
     onCurrentIndexChange?.(newIndex);
+    
+    if (containerRef.current) {
+      const cardWidth = 296;
+      containerRef.current.scrollTo({
+        left: newIndex * cardWidth,
+        behavior: 'smooth'
+      });
+    }
+    
     setTimeout(() => setIsTransitioning(false), 500);
   };
 
@@ -169,12 +124,11 @@ const MultidimensionalSuggestionCards = ({
   const getCardStyle = (index: number) => {
     if (activeEvents.length === 0) return { transform: 'scale(0)', opacity: 0, zIndex: 0 };
     
-    const diff = (index - currentIndex + activeEvents.length) % activeEvents.length;
-    const normalizedDiff = diff > activeEvents.length / 2 ? diff - activeEvents.length : diff;
+    const diff = index - currentIndex;
     const isHovered = hoveredCard === index;
 
-    if (normalizedDiff === 0) {
-      // Center card - completely flat when centered, locks into place  
+    if (diff === 0) {
+      // Center card
       return {
         transform: `translateX(0%) scale(${isHovered ? 1.01 : 1}) rotateY(0deg) translateZ(${isHovered ? '15px' : '8px'})`,
         zIndex: 30,
@@ -182,8 +136,8 @@ const MultidimensionalSuggestionCards = ({
         filter: 'brightness(1)',
         animation: 'none'
       };
-    } else if (normalizedDiff === 1 || normalizedDiff === -(activeEvents.length - 1)) {
-      // Right card with reduced rotation for better snap behavior
+    } else if (diff === 1) {
+      // Right card
       return {
         transform: `translateX(85%) scale(${isHovered ? 0.88 : 0.85}) rotateY(-8deg) translateZ(${isHovered ? '5px' : '0px'})`,
         zIndex: 20,
@@ -191,8 +145,8 @@ const MultidimensionalSuggestionCards = ({
         filter: 'brightness(0.85)',
         animation: 'floatRight 8s ease-in-out infinite'
       };
-    } else if (normalizedDiff === -1 || normalizedDiff === (activeEvents.length - 1)) {
-      // Left card with reduced rotation for better snap behavior
+    } else if (diff === -1) {
+      // Left card
       return {
         transform: `translateX(-85%) scale(${isHovered ? 0.88 : 0.85}) rotateY(8deg) translateZ(${isHovered ? '5px' : '0px'})`,
         zIndex: 20,
@@ -203,14 +157,13 @@ const MultidimensionalSuggestionCards = ({
     } else {
       // Hidden cards
       return {
-        transform: `translateX(${normalizedDiff > 0 ? '200%' : '-200%'}) scale(0.6)`,
+        transform: `translateX(${diff > 0 ? '200%' : '-200%'}) scale(0.6)`,
         zIndex: 10,
         opacity: 0,
         filter: 'brightness(0.6)'
       };
     }
   };
-
 
   const SuggestionCardComponent = ({ suggestion, index }: { suggestion: SuggestionCard; index: number }) => {
     const swipeGestures = useSwipeGestures({
@@ -222,7 +175,7 @@ const MultidimensionalSuggestionCards = ({
     });
 
     const style = getCardStyle(index);
-    const isCenter = (index - currentIndex + activeEvents.length) % activeEvents.length === 0;
+    const isCenter = index === currentIndex;
 
     return (
       <div
@@ -234,17 +187,7 @@ const MultidimensionalSuggestionCards = ({
         }}
         onClick={() => {
           if (isCenter) {
-            // Find matching incomplete event and open its modal
-            const matchingEvent = incompleteEvents.find(event => 
-              event.title.toLowerCase().includes(suggestion.title.toLowerCase()) ||
-              suggestion.title.toLowerCase().includes(event.title.toLowerCase())
-            );
-            
-            if (matchingEvent && onEventClick) {
-              onEventClick(matchingEvent);
-            } else {
-              onCardTap(suggestion);
-            }
+            onCardTap(suggestion);
           }
         }}
         onMouseEnter={() => setHoveredCard(index)}
@@ -315,12 +258,6 @@ const MultidimensionalSuggestionCards = ({
     );
   };
 
-  // Touch handlers for the container
-  const containerSwipeGestures = useSwipeGestures({
-    onSwipeLeft: goToNext,
-    onSwipeRight: goToPrev
-  });
-
   if (activeEvents.length === 0) {
     return (
       <div className={`text-center py-12 ${className}`}>
@@ -335,7 +272,7 @@ const MultidimensionalSuggestionCards = ({
       <div className="px-6 mb-4 mt-6">
         <h2 className="text-xl font-semibold text-foreground">Today's Suggestions</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Events from yesterday that still need your attention
+          Important tasks that need your attention
         </p>
       </div>
       
@@ -355,48 +292,48 @@ const MultidimensionalSuggestionCards = ({
         }
       `}</style>
 
-      {/* Main Card Container - Infinite scroll with consistent card sizing */}
+      {/* Main Card Container - Simple horizontal scroll */}
       <div
         ref={containerRef}
         className="overflow-x-auto overflow-y-hidden scroll-smooth snap-x snap-mandatory scrollbar-hide h-[360px] mx-6 mb-8"
         style={{ 
-          touchAction: 'pan-x pinch-zoom',
+          touchAction: 'pan-x',
           scrollSnapType: 'x mandatory'
         }}
       >
         <div className="flex px-[50vw] py-8" style={{ width: 'max-content', gap: '16px' }}>
-          {/* Create infinite scroll by tripling cards */}
-          {[...activeEvents, ...activeEvents, ...activeEvents].map((suggestion, index) => (
+          {activeEvents.map((suggestion, index) => (
             <div
-              key={`${suggestion.id}-${Math.floor(index / activeEvents.length)}`}
+              key={suggestion.id}
               className="flex-shrink-0 w-[280px] h-[300px] snap-center"
+              style={getCardStyle(index)}
             >
               <SuggestionCardComponent 
                 suggestion={suggestion} 
-                index={index % activeEvents.length} 
+                index={index} 
               />
             </div>
           ))}
         </div>
       </div>
 
-      {/* Navigation Dots - Synced with infinite scroll */}
+      {/* Navigation Dots */}
       <div className="flex justify-center space-x-3 mb-8">
         {activeEvents.map((_, index) => (
           <button
             key={index}
             onClick={() => {
+              setCurrentIndex(index);
               if (containerRef.current) {
-                const cardWidth = 296; // 280px + 16px gap = 296px
-                const targetScroll = (activeEvents.length * cardWidth) + (index * cardWidth);
+                const cardWidth = 296;
                 containerRef.current.scrollTo({
-                  left: targetScroll,
+                  left: index * cardWidth,
                   behavior: 'smooth'
                 });
               }
             }}
             className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              index === scrollIndex
+              index === currentIndex
                 ? 'bg-blue-500 scale-125'
                 : 'bg-gray-300 hover:bg-gray-400'
             }`}
