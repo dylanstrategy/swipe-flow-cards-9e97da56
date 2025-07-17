@@ -97,3 +97,39 @@
 .overdue-event.wiggle-overdue.pulse-overdue {
   animation: wiggle-overdue 0.5s ease-in-out infinite, pulse-overdue 2s infinite;
 }
+
+/* Scrolling optimization */
+* {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbars */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Improve touch scrolling performance */
+.overflow-x-auto,
+.overflow-y-auto,
+.overflow-auto {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Smooth momentum scrolling for mobile */
+body {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none;
+}
+
+/* Optimize rendering for smooth scrolling */
+.flex {
+  backface-visibility: hidden;
+  perspective: 1000px;
+}

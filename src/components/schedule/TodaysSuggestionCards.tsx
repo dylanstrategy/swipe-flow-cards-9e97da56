@@ -85,7 +85,14 @@ const TodaysSuggestionCards = ({
       </div>
 
       <div className="px-4">
-        <div className="overflow-x-scroll scrollbar-hide snap-x snap-mandatory" ref={scrollContainerRef}>
+        <div 
+          className="overflow-x-auto scrollbar-hide" 
+          ref={scrollContainerRef}
+          style={{ 
+            WebkitOverflowScrolling: 'touch',
+            scrollBehavior: 'smooth'
+          }}
+        >
           <div 
             className="flex gap-6 pb-4"
             style={{ width: `${infiniteEvents.length * 344}px` }}
@@ -93,7 +100,7 @@ const TodaysSuggestionCards = ({
             {infiniteEvents.map((event, index) => (
               <div
                 key={`${event.id}-${index}`}
-                className="flex-shrink-0 w-80 snap-center"
+                className="flex-shrink-0 w-80"
                 onClick={() => onCardTap(event)}
               >
                 <div className="bg-green-500 rounded-2xl h-80 flex flex-col justify-between text-white relative cursor-pointer hover:scale-[1.02] transition-transform duration-300 p-6">
