@@ -668,19 +668,6 @@ const ScheduleTab = () => {
           />
         </div>
         
-        {/* Swipe Hint - Aligned to Event Menu */}
-        <div className="text-center px-4 pb-4">
-          <p className="text-xs text-gray-500 max-w-sm mx-auto leading-relaxed">
-            <span className="block sm:inline">Swipe left or right to explore</span>
-            <span className="hidden sm:inline"> • </span>
-            <span className="block sm:inline">Tap to view</span>
-            <span className="hidden sm:inline"> • </span>
-            <span className="block sm:inline">Swipe up to schedule</span>
-            <span className="hidden sm:inline"> • </span>
-            <span className="block sm:inline">Swipe down for later</span>
-          </p>
-        </div>
-
         {/* Event Menu Section */}
         <div className="flex-shrink-0">
           <EventMenuCards

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 interface SuggestionCard {
   id: number;
@@ -24,6 +24,25 @@ const TodaysSuggestionCards = ({
   onCardSwipeDown, 
   className = '' 
 }: TodaysSuggestionCardsProps) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Track scroll position to update dots
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const scrollLeft = container.scrollLeft;
+      const cardWidth = 320 + 24; // 320px card width + 24px gap
+      const index = Math.round(scrollLeft / cardWidth);
+      setCurrentIndex(index);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // Filter out completed events
   const activeEvents = suggestions.filter(s => s.title !== 'Complete work order');
 
@@ -66,7 +85,7 @@ const TodaysSuggestionCards = ({
           </h2>
         </div>
 
-        <div className="overflow-x-auto scrollbar-hide">
+        <div className="overflow-x-auto scrollbar-hide" ref={scrollContainerRef}>
           <div className="flex space-x-6 pb-4 px-4" style={{ width: 'max-content' }}>
             {infiniteEvents.map((event, index) => (
               <div
@@ -115,7 +134,7 @@ const TodaysSuggestionCards = ({
             <div
               key={index}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === 0 ? 'bg-blue-500' : 'bg-gray-300'
+                index === (currentIndex % 5) ? 'bg-blue-500' : 'bg-gray-300'
               }`}
             />
           ))}
