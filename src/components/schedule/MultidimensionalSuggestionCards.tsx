@@ -57,16 +57,38 @@ const MultidimensionalSuggestionCards = ({
     setIncompleteEvents(incompleteFromYesterday);
   }, []);
 
-  // Filter out completed events
-  const activeEvents = suggestions.filter(s => s.title !== 'Complete work order');
+  // Ensure we always have exactly 5 suggestion cards
+  const getSuggestionCards = () => {
+    const mockSuggestions: SuggestionCard[] = [
+      { id: 1, title: "Complete Move-in Inspection", description: "Final walkthrough and documentation needed", priority: "high", category: "inspection" },
+      { id: 2, title: "Submit Utility Setup", description: "Electric and gas accounts need activation", priority: "urgent", category: "utilities" },
+      { id: 3, title: "Upload Renter's Insurance", description: "Policy documentation required for lease", priority: "medium", category: "insurance" },
+      { id: 4, title: "Schedule Maintenance Check", description: "HVAC system needs routine inspection", priority: "low", category: "maintenance" },
+      { id: 5, title: "Confirm Welcome Package", description: "Pick up keys and building access cards", priority: "medium", category: "welcome" }
+    ];
 
-  useEffect(() => {
-    if (currentIndex >= activeEvents.length && activeEvents.length > 0) {
-      setCurrentIndex(0);
+    // If we have real events, use them to replace mock suggestions
+    if (incompleteEvents.length > 0) {
+      incompleteEvents.slice(0, 5).forEach((event, index) => {
+        if (index < mockSuggestions.length) {
+          mockSuggestions[index] = {
+            id: parseInt(event.id),
+            title: event.title,
+            description: event.description || "Event needs attention",
+            priority: "high",
+            category: event.type
+          };
+        }
+      });
     }
-  }, [activeEvents.length, currentIndex]);
 
-  // Initialize infinite scroll position and handle scroll events
+    return mockSuggestions;
+  };
+
+  // Filter out completed events and ensure 5 cards
+  const activeEvents = getSuggestionCards().filter(s => s.title !== 'Complete work order');
+
+  // Simplified scroll handling without aggressive infinite scroll
   useEffect(() => {
     const container = containerRef.current;
     if (!container || activeEvents.length === 0) return;
@@ -79,6 +101,8 @@ const MultidimensionalSuggestionCards = ({
     const timer = setTimeout(() => {
       if (container && activeEvents.length > 0) {
         container.scrollLeft = initialScrollPosition;
+        setScrollIndex(0);
+        setCurrentIndex(0);
       }
     }, 100);
 
@@ -88,21 +112,22 @@ const MultidimensionalSuggestionCards = ({
       const scrollLeft = container.scrollLeft;
       const totalArrayWidth = activeEvents.length * cardWidth;
       
-      // Calculate which card is centered for navigation dots
-      const cardIndex = Math.round(scrollLeft / cardWidth);
-      const normalizedIndex = cardIndex % activeEvents.length;
+      // Calculate current card index more reliably
+      const relativeScroll = scrollLeft - totalArrayWidth; // Position relative to middle array
+      const cardIndex = Math.round(relativeScroll / cardWidth);
+      let normalizedIndex = ((cardIndex % activeEvents.length) + activeEvents.length) % activeEvents.length;
       
       setScrollIndex(normalizedIndex);
       setCurrentIndex(normalizedIndex);
       onCurrentIndexChange?.(normalizedIndex);
 
-      // Infinite scroll logic - only reset when actually at boundaries, not near them
-      if (scrollLeft <= 0) {
-        // At the very beginning, jump to end of middle array
-        container.scrollLeft = totalArrayWidth * 2;
-      } else if (scrollLeft >= totalArrayWidth * 3 - container.clientWidth) {
-        // At the very end, jump to start of middle array
-        container.scrollLeft = totalArrayWidth;
+      // Simple infinite scroll - only reset at extreme boundaries
+      if (scrollLeft < cardWidth) {
+        // Near beginning - jump to equivalent position in middle section
+        container.scrollLeft = totalArrayWidth + scrollLeft;
+      } else if (scrollLeft > totalArrayWidth * 2 + cardWidth) {
+        // Past end - jump to equivalent position in middle section  
+        container.scrollLeft = totalArrayWidth + (scrollLeft - totalArrayWidth * 2);
       }
     };
 

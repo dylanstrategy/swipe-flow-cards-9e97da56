@@ -634,7 +634,7 @@ const ScheduleTab = () => {
         {/* Suggestions Section */}
         <div className="flex-shrink-0">
           <MultidimensionalSuggestionCards
-            suggestions={getSuggestions()}
+            suggestions={[]} // Not used anymore - cards generated internally
             onCardTap={handleSuggestionTap}
             onCardSwipeUp={handleSuggestionSwipeUp}
             onCardSwipeDown={handleSuggestionSwipeDown}
