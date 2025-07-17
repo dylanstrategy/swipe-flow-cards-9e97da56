@@ -43,6 +43,15 @@ export interface EmailFollowUp {
   stopOnResponse?: boolean;
 }
 
+export interface MessageEntry {
+  id: string;
+  timestamp: Date;
+  type: 'message' | 'gentle-reminder' | 'system-note';
+  content: string;
+  sentBy: Role | string;
+  recipientType?: string;
+}
+
 export interface FallbackRule {
   id: string;
   condition: string;
@@ -85,7 +94,7 @@ export interface UniversalEvent {
   updatedAt: Date;
   completedAt?: Date;
   rescheduledCount: number;
-  followUpHistory: EmailFollowUp[];
+  followUpHistory: (EmailFollowUp | MessageEntry)[];
   metadata: Record<string, any>; // event-specific data
   taskCompletionStamps: TaskCompletionStamp[]; // Track all task completions
 }

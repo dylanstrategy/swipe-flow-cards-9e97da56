@@ -57,6 +57,18 @@ const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
       color: 'text-green-600 bg-green-100'
     }));
 
+    // Add message entries from follow-up history
+    const messageItems: TimelineItem[] = (event.followUpHistory || []).map((entry: any) => ({
+      id: entry.id || `msg-${entry.timestamp}`,
+      timestamp: new Date(entry.timestamp),
+      type: 'message',
+      title: entry.type === 'gentle-reminder' ? 'Gentle Reminder Sent' : 'Message Sent',
+      description: entry.content || entry.message || 'Message content',
+      icon: MessageSquare,
+      user: entry.sentBy || entry.from || 'User',
+      color: 'text-purple-600 bg-purple-100'
+    }));
+
     // Add type-specific timeline items
     let typeSpecificItems: TimelineItem[] = [];
     
@@ -108,7 +120,7 @@ const EventTimeline = ({ event, userRole }: EventTimelineProps) => {
     }
 
     // Combine and sort all items by timestamp (newest first)
-    return [...baseItems, ...typeSpecificItems, ...taskCompletionItems]
+    return [...baseItems, ...typeSpecificItems, ...taskCompletionItems, ...messageItems]
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   };
 

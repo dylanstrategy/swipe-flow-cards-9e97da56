@@ -118,7 +118,9 @@ export class EventMonitoringService {
   }
 
   private hasFollowUpBeenSent(event: UniversalEvent, templateId: string): boolean {
-    return event.followUpHistory.some(followUp => followUp.templateId === templateId);
+    return event.followUpHistory.some(followUp => 
+      'templateId' in followUp && followUp.templateId === templateId
+    );
   }
 
   private async sendFollowUpEmail(event: UniversalEvent, template: any): Promise<void> {

@@ -213,7 +213,9 @@ export class EventFallbackService {
   private isNoResponseToFinalFollowup(event: UniversalEvent, now: Date): boolean {
     // Check if final follow-up was sent and no response received
     return event.followUpHistory.some(followUp => 
+      'templateId' in followUp && 
       followUp.templateId === 'tour-final-follow-up' && 
+      'delayHours' in followUp &&
       followUp.delayHours < 0 // Final follow-up sent
     ) && !event.metadata?.hasResponded;
   }

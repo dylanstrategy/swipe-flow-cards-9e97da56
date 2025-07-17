@@ -259,6 +259,27 @@ const UniversalEventDetailModal = ({
   const handleSendMessage = () => {
     if (!messageText.trim()) return;
     
+    // Add message to event's follow-up history
+    const messageEntry = {
+      id: `msg-${Date.now()}`,
+      timestamp: new Date(),
+      type: 'message' as const,
+      content: messageText.trim(),
+      sentBy: userRole,
+      recipientType: 'management'
+    };
+
+    const updatedEvent = {
+      ...universalEvent,
+      followUpHistory: [...(universalEvent.followUpHistory || []), messageEntry],
+      updatedAt: new Date()
+    };
+
+    // Update through shared service
+    sharedEventService.updateEvent(universalEvent.id, updatedEvent);
+    setCurrentEvent(updatedEvent);
+    onEventUpdate?.(updatedEvent);
+    
     toast({
       title: "Message Sent",
       description: `Message sent regarding ${universalEvent.title}`,
@@ -469,8 +490,8 @@ const UniversalEventDetailModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-3">
-      <div className="bg-white rounded-xl w-full max-w-2xl max-h-[95vh] flex flex-col" style={{ maxWidth: 'calc(100% - 24px)' }}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-start justify-center p-2 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-xl w-full max-w-2xl min-h-[80vh] max-h-[95vh] flex flex-col my-2 sm:my-4" style={{ maxWidth: 'calc(100% - 16px)' }}>
         {/* Header */}
         <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center gap-3 min-w-0 flex-1">
