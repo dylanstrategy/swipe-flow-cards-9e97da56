@@ -51,12 +51,16 @@ const TodaysSuggestionCards = ({
   };
 
   const navigateLeft = () => {
+    console.log('Navigating left from index:', currentIndex);
     const newIndex = currentIndex > 0 ? currentIndex - 1 : activeEvents.length - 1;
+    console.log('New index:', newIndex);
     setCurrentIndex(newIndex);
   };
 
   const navigateRight = () => {
+    console.log('Navigating right from index:', currentIndex);
     const newIndex = currentIndex < activeEvents.length - 1 ? currentIndex + 1 : 0;
+    console.log('New index:', newIndex);
     setCurrentIndex(newIndex);
   };
 
@@ -83,11 +87,12 @@ const TodaysSuggestionCards = ({
 
       <div className="relative">
         <div
-          className="relative bg-amber-50 rounded-2xl p-1 overflow-hidden"
+          className="relative bg-amber-50 rounded-2xl p-1 overflow-hidden touch-pan-y"
           onTouchStart={swipeGestures.handleTouchStart}
           onTouchMove={swipeGestures.handleTouchMove}
           onTouchEnd={swipeGestures.handleTouchEnd}
           onClick={() => onCardTap(currentCard)}
+          style={{ touchAction: 'pan-y' }}
         >
           {/* Left accent */}
           <div className="absolute left-0 top-4 bottom-4 w-6 bg-yellow-400 rounded-r-lg"></div>
