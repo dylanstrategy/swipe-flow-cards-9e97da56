@@ -654,12 +654,10 @@ const ScheduleTab = () => {
 
 
   return (
-    <div 
-      className="min-h-screen transition-all duration-700 ease-in-out pb-20 overflow-x-hidden"
-      style={{ background: createMatchingGradient() }}
-    >
-      {/* Main content - Full page scroll layout */}
-      <div className="flex flex-col overflow-x-hidden">
+    <div className="min-h-screen pb-24">
+      <div className="px-4 py-6">
+        {/* Main content */}
+        <div className="flex flex-col">
         {/* Suggestions Section */}
         <div className="flex-shrink-0">
           <TodaysSuggestionCards
@@ -689,6 +687,7 @@ const ScheduleTab = () => {
             onMenuItemTap={handleMenuItemTap}
             userRole="resident"
           />
+          </div>
         </div>
       </div>
     </div>
