@@ -325,7 +325,7 @@ const ScheduleTab = () => {
     });
 
     // Convert real events to suggestion format
-    return incompleteEvents.map((event, index) => ({
+    const realSuggestions = incompleteEvents.map((event, index) => ({
       id: index + 1, // Use numeric ID for compatibility
       title: event.title,
       description: event.description,
@@ -334,6 +334,35 @@ const ScheduleTab = () => {
       type: event.type,
       originalEvent: event // Store reference to original event
     }));
+
+    // If no real suggestions, show mock data for demo
+    if (realSuggestions.length === 0) {
+      return [
+        {
+          id: 1,
+          title: "Book community room",
+          description: "Reserve for weekend event",
+          priority: 'low' as const,
+          category: 'Community',
+        },
+        {
+          id: 2,
+          title: "Schedule maintenance",
+          description: "Kitchen faucet needs repair",
+          priority: 'high' as const,
+          category: 'Maintenance',
+        },
+        {
+          id: 3,
+          title: "Pay rent",
+          description: "Monthly payment due soon",
+          priority: 'urgent' as const,
+          category: 'Payment',
+        }
+      ];
+    }
+
+    return realSuggestions;
   };
 
   const handleCardTap = (cardType: string) => {
