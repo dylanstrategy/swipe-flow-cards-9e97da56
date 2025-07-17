@@ -44,6 +44,11 @@ const TodaysSuggestionCards = ({
     { id: 10, title: 'Schedule move-out', description: 'Coordinate inspection', priority: 'high' as const, category: 'Moving' },
     ...activeEvents
   ];
+
+  // Create infinite scroll with variety - make it truly infinite
+  const infiniteEvents = Array.from({ length: 1000 }, (_, i) => 
+    enhancedEvents[i % enhancedEvents.length]
+  ).filter(Boolean);
   
   // Track scroll position to update dots
   useEffect(() => {
@@ -52,19 +57,14 @@ const TodaysSuggestionCards = ({
 
     const handleScroll = () => {
       const scrollLeft = container.scrollLeft;
-      const cardWidth = 320 + 24; // 320px card width + 24px gap
+      const cardWidth = 344; // 320px card width + 24px gap
       const index = Math.round(scrollLeft / cardWidth);
-      setCurrentIndex(index % enhancedEvents.length); // Cycle through actual cards
+      setCurrentIndex(index % enhancedEvents.length);
     };
 
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
   }, [enhancedEvents.length]);
-
-  // Create infinite scroll with variety - make it truly infinite
-  const infiniteEvents = Array.from({ length: 1000 }, (_, i) => 
-    enhancedEvents[i % enhancedEvents.length]
-  ).filter(Boolean);
 
   const getPriorityText = (priority: string) => {
     return priority.toUpperCase();
@@ -74,23 +74,26 @@ const TodaysSuggestionCards = ({
     return null;
   }
 
-    return (
-      <div className={className}>
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Today's Suggestions
-            <span className="text-sm font-normal text-gray-600 ml-2">
-              (Events from yesterday that still need your attention)
-            </span>
-          </h2>
-        </div>
+  return (
+    <div className={className}>
+      <div className="px-4 mb-4">
+        <h3 className="text-xl font-semibold text-gray-900">Today's Suggestions
+          <span className="text-sm font-normal text-gray-600 ml-2">
+            (Events from yesterday that still need your attention)
+          </span>
+        </h3>
+      </div>
 
-        <div className="px-4 overflow-x-auto scrollbar-hide" ref={scrollContainerRef}>
-          <div className="flex space-x-6 pb-4" style={{ width: 'max-content' }}>
+      <div className="px-4">
+        <div className="overflow-x-scroll scrollbar-hide snap-x snap-mandatory" ref={scrollContainerRef}>
+          <div 
+            className="flex gap-6 pb-4"
+            style={{ width: `${infiniteEvents.length * 344}px` }}
+          >
             {infiniteEvents.map((event, index) => (
               <div
                 key={`${event.id}-${index}`}
-                className="flex-shrink-0 w-80"
+                className="flex-shrink-0 w-80 snap-center"
                 onClick={() => onCardTap(event)}
               >
                 <div className="bg-green-500 rounded-2xl h-80 flex flex-col justify-between text-white relative cursor-pointer hover:scale-[1.02] transition-transform duration-300 p-6">
@@ -115,10 +118,10 @@ const TodaysSuggestionCards = ({
                     </div>
                     <div className="text-right">
                       <p className="text-3xl font-bold mb-1">
-                        {String(index + 1).padStart(2, '0')}
+                        {String((index % enhancedEvents.length) + 1).padStart(2, '0')}
                       </p>
                       <p className="text-sm opacity-75">
-                        of {String(infiniteEvents.length).padStart(2, '0')}
+                        of {String(enhancedEvents.length).padStart(2, '0')}
                       </p>
                     </div>
                   </div>
@@ -127,20 +130,21 @@ const TodaysSuggestionCards = ({
             ))}
           </div>
         </div>
-
-        {/* Dots indicator */}
-        <div className="flex justify-center space-x-2 mt-6 px-4">
-          {Array.from({ length: Math.min(5, enhancedEvents.length) }).map((_, index) => (
-            <div
-              key={index}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === (currentIndex % enhancedEvents.length) % 5 ? 'bg-blue-500' : 'bg-gray-300'
-              }`}
-            />
-          ))}
-        </div>
       </div>
-    );
+
+      {/* Dots indicator */}
+      <div className="flex justify-center space-x-2 mt-6 px-4">
+        {Array.from({ length: Math.min(5, enhancedEvents.length) }).map((_, index) => (
+          <div
+            key={index}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              index === (currentIndex % enhancedEvents.length) % 5 ? 'bg-blue-500' : 'bg-gray-300'
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
 };
 
 export default TodaysSuggestionCards;
