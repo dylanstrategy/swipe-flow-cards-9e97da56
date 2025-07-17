@@ -570,56 +570,74 @@ const OperatorScheduleTab = () => {
 
   return (
     <div 
-      className="flex flex-col h-full transition-all duration-700 ease-in-out overflow-hidden"
-      style={{ background: createMatchingGradient() }}
+      className="min-h-screen pb-24" 
+      style={{ 
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'none',
+        transform: 'translateZ(0)'
+      }}
     >
-      {/* Main content - Card-focused layout */}
-      <div className="relative flex-1 overflow-hidden">
-        {suggestionsExpanded ? (
-          /* Expanded suggestions view - covers whole page */
-          <div className="fixed inset-0 bg-white z-40 pt-20">
-            <div className="p-4 h-full flex flex-col">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Operator Suggestions</h2>
-                <button
-                  onClick={() => setSuggestionsExpanded(false)}
-                  className="text-gray-600 hover:text-gray-900 text-xl p-2"
-                >
-                  ✕
-                </button>
+      <div className="px-4 py-6">
+        {/* Main content */}
+        <div className="flex flex-col">
+          {suggestionsExpanded ? (
+            /* Expanded suggestions view - covers whole page */
+            <div className="fixed inset-0 bg-white z-40 pt-20">
+              <div className="p-4 h-full flex flex-col">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">Operator Suggestions</h2>
+                  <button
+                    onClick={() => setSuggestionsExpanded(false)}
+                    className="text-gray-600 hover:text-gray-900 text-xl p-2"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <TodaysSuggestionCards
+                  suggestions={getSuggestions()}
+                  onCardTap={handleSuggestionTap}
+                  onCardSwipeUp={handleSuggestionSwipeUp}
+                  onCardSwipeDown={handleSuggestionSwipeDown}
+                  className="flex-1"
+                />
               </div>
-              <TodaysSuggestionCards
-                suggestions={getSuggestions()}
-                onCardTap={handleSuggestionTap}
-                onCardSwipeUp={handleSuggestionSwipeUp}
-                onCardSwipeDown={handleSuggestionSwipeDown}
-                className="flex-1"
-              />
             </div>
-          </div>
-        ) : (
-          /* Split screen layout */
-          <div className="h-screen flex flex-col">
-            {/* Suggestion Queue - Top half (non-complete events) */}
-            <div className="flex-1">
-              <TodaysSuggestionCards
-                suggestions={getSuggestions()}
-                onCardTap={handleSuggestionTap}
-                onCardSwipeUp={handleSuggestionSwipeUp}
-                onCardSwipeDown={handleSuggestionSwipeDown}
-                className="h-full"
-              />
-            </div>
-            
-            {/* Event Menu - Bottom half (full menu as cards) */}
-            <div className="flex-1 bg-white/10 backdrop-blur-sm">
-              <EventMenuCards
-                onMenuItemTap={handleEventMenuTap}
-                className="h-full"
-              />
-            </div>
-          </div>
-        )}
+          ) : (
+            /* Main layout */
+            <>
+              {/* Suggestion Queue with same title formatting as ScheduleTab */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-3xl font-bold text-gray-900">Operator Queue</h2>
+                  <button
+                    onClick={() => setSuggestionsExpanded(true)}
+                    className="text-gray-600 hover:text-gray-900 text-sm font-medium"
+                  >
+                    View All
+                  </button>
+                </div>
+                <TodaysSuggestionCards
+                  suggestions={getSuggestions()}
+                  onCardTap={handleSuggestionTap}
+                  onCardSwipeUp={handleSuggestionSwipeUp}
+                  onCardSwipeDown={handleSuggestionSwipeDown}
+                  className="h-[360px]"
+                />
+              </div>
+              
+              {/* Event Menu with same title formatting */}
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-3xl font-bold text-gray-900">Schedule Event</h2>
+                </div>
+                <EventMenuCards
+                  onMenuItemTap={handleEventMenuTap}
+                  className="h-[400px]"
+                />
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
