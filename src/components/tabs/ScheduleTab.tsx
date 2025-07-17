@@ -356,16 +356,39 @@ const ScheduleTab = () => {
   };
 
   const handleSuggestionTap = (suggestion: any) => {
-    setSelectedUniversalEvent({
-      id: suggestion.id.toString(),
-      title: suggestion.title,
-      description: suggestion.description,
-      category: suggestion.category,
-      priority: suggestion.priority,
-      date: selectedDate,
-      time: '12:00 PM',
-      status: 'scheduled'
+    console.log('Suggestion tapped in ScheduleTab:', suggestion);
+    
+    // Check if this suggestion maps to a real incomplete event
+    const incompleteEvents = sharedEventService.getEventsForRole('resident').filter(event => {
+      const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const isFromYesterday = eventDate.toDateString() === yesterday.toDateString();
+      const hasIncompleteTasks = event.tasks.some(task => !task.isComplete);
+      return isFromYesterday && hasIncompleteTasks;
     });
+    
+    const matchingEvent = incompleteEvents.find(event => 
+      event.title.toLowerCase().includes(suggestion.title.toLowerCase()) ||
+      suggestion.title.toLowerCase().includes(event.title.toLowerCase())
+    );
+    
+    if (matchingEvent) {
+      // Use the real event
+      setSelectedUniversalEvent(matchingEvent);
+    } else {
+      // Fallback to mock event for demo
+      setSelectedUniversalEvent({
+        id: suggestion.id.toString(),
+        title: suggestion.title,
+        description: suggestion.description,
+        category: suggestion.category,
+        priority: suggestion.priority,
+        date: selectedDate,
+        time: '12:00 PM',
+        status: 'scheduled'
+      });
+    }
     setShowUniversalEventDetail(true);
   };
 

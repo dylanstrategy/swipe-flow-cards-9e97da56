@@ -300,7 +300,7 @@ const MultidimensionalSuggestionCards = ({
   return (
     <div className={`relative h-full ${className}`}>
       {/* Today's Suggestions Title */}
-      <div className="px-6 mb-4">
+      <div className="px-6 mb-4 mt-6">
         <h2 className="text-xl font-semibold text-foreground">Today's Suggestions</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Events from yesterday that still need your attention
