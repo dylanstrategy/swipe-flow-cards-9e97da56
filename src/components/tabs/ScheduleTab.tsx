@@ -638,8 +638,6 @@ const ScheduleTab = () => {
             onCardTap={handleSuggestionTap}
             onCardSwipeUp={handleSuggestionSwipeUp}
             onCardSwipeDown={handleSuggestionSwipeDown}
-            onCurrentIndexChange={setCurrentSuggestionIndex}
-            onEventClick={handleEventClick}
           />
         </div>
         
