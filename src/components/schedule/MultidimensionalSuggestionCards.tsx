@@ -39,8 +39,9 @@ const MultidimensionalSuggestionCards = ({
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [incompleteEvents, setIncompleteEvents] = useState<UniversalEvent[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Always use diverse mock suggestions - no more real events causing duplicates
+  // Always use diverse mock suggestions
   const getSuggestionCards = (): SuggestionCard[] => {
     return [
       { id: 1, title: "Complete Move-in Inspection", description: "Final walkthrough and documentation needed", priority: "high", category: "inspection" },
@@ -51,43 +52,73 @@ const MultidimensionalSuggestionCards = ({
     ];
   };
 
-  // Use diverse mock suggestions always
   const activeEvents = getSuggestionCards();
 
-  // Simple scroll handling - NO INFINITE SCROLL
+  // FIXED Infinite scroll handling
   useEffect(() => {
     const container = containerRef.current;
     if (!container || activeEvents.length === 0) return;
 
+    const cardWidth = 296; // 280px card + 16px gap
+    const totalArrayWidth = activeEvents.length * cardWidth;
+    
+    // Initialize scroll position only once
+    if (!isInitialized) {
+      const initialPosition = totalArrayWidth; // Start at middle array
+      container.scrollLeft = initialPosition;
+      setIsInitialized(true);
+      setCurrentIndex(0);
+      return;
+    }
+
+    let isScrolling = false;
+
     const handleScroll = () => {
-      const scrollLeft = container.scrollLeft;
-      const cardWidth = 296; // 280px card + 16px gap = 296px total
+      if (isScrolling || activeEvents.length === 0) return;
       
-      // Calculate current card index
-      const cardIndex = Math.round(scrollLeft / cardWidth);
+      const scrollLeft = container.scrollLeft;
+      
+      // Calculate current card index based on scroll position
+      const relativePosition = scrollLeft % totalArrayWidth;
+      const cardIndex = Math.round(relativePosition / cardWidth);
       const normalizedIndex = Math.max(0, Math.min(cardIndex, activeEvents.length - 1));
       
       setCurrentIndex(normalizedIndex);
       onCurrentIndexChange?.(normalizedIndex);
+
+      // Infinite scroll boundary detection - FIXED
+      const threshold = cardWidth * 0.5; // Half a card width threshold
+      
+      if (scrollLeft < threshold) {
+        // Too far left - jump to end of middle array
+        isScrolling = true;
+        const newPosition = totalArrayWidth * 2 - cardWidth + scrollLeft;
+        container.scrollLeft = newPosition;
+        setTimeout(() => { isScrolling = false; }, 50);
+      } else if (scrollLeft > totalArrayWidth * 2 + totalArrayWidth - threshold) {
+        // Too far right - jump to start of middle array
+        isScrolling = true;
+        const newPosition = totalArrayWidth + (scrollLeft - totalArrayWidth * 2);
+        container.scrollLeft = newPosition;
+        setTimeout(() => { isScrolling = false; }, 50);
+      }
     };
 
     container.addEventListener('scroll', handleScroll, { passive: true });
     return () => container.removeEventListener('scroll', handleScroll);
-  }, [activeEvents.length, onCurrentIndexChange]);
+  }, [activeEvents.length, onCurrentIndexChange, isInitialized]);
 
   const goToNext = () => {
     if (isTransitioning || activeEvents.length === 0) return;
     setIsTransitioning(true);
-    const newIndex = Math.min(currentIndex + 1, activeEvents.length - 1);
+    const newIndex = (currentIndex + 1) % activeEvents.length;
     setCurrentIndex(newIndex);
     onCurrentIndexChange?.(newIndex);
     
     if (containerRef.current) {
       const cardWidth = 296;
-      containerRef.current.scrollTo({
-        left: newIndex * cardWidth,
-        behavior: 'smooth'
-      });
+      const currentScroll = containerRef.current.scrollLeft;
+      containerRef.current.scrollLeft = currentScroll + cardWidth;
     }
     
     setTimeout(() => setIsTransitioning(false), 500);
@@ -96,16 +127,14 @@ const MultidimensionalSuggestionCards = ({
   const goToPrev = () => {
     if (isTransitioning || activeEvents.length === 0) return;
     setIsTransitioning(true);
-    const newIndex = Math.max(currentIndex - 1, 0);
+    const newIndex = (currentIndex - 1 + activeEvents.length) % activeEvents.length;
     setCurrentIndex(newIndex);
     onCurrentIndexChange?.(newIndex);
     
     if (containerRef.current) {
       const cardWidth = 296;
-      containerRef.current.scrollTo({
-        left: newIndex * cardWidth,
-        behavior: 'smooth'
-      });
+      const currentScroll = containerRef.current.scrollLeft;
+      containerRef.current.scrollLeft = currentScroll - cardWidth;
     }
     
     setTimeout(() => setIsTransitioning(false), 500);
@@ -124,10 +153,11 @@ const MultidimensionalSuggestionCards = ({
   const getCardStyle = (index: number) => {
     if (activeEvents.length === 0) return { transform: 'scale(0)', opacity: 0, zIndex: 0 };
     
-    const diff = index - currentIndex;
+    const diff = (index - currentIndex + activeEvents.length) % activeEvents.length;
+    const normalizedDiff = diff > activeEvents.length / 2 ? diff - activeEvents.length : diff;
     const isHovered = hoveredCard === index;
 
-    if (diff === 0) {
+    if (normalizedDiff === 0) {
       // Center card
       return {
         transform: `translateX(0%) scale(${isHovered ? 1.01 : 1}) rotateY(0deg) translateZ(${isHovered ? '15px' : '8px'})`,
@@ -136,7 +166,7 @@ const MultidimensionalSuggestionCards = ({
         filter: 'brightness(1)',
         animation: 'none'
       };
-    } else if (diff === 1) {
+    } else if (normalizedDiff === 1 || normalizedDiff === -(activeEvents.length - 1)) {
       // Right card
       return {
         transform: `translateX(85%) scale(${isHovered ? 0.88 : 0.85}) rotateY(-8deg) translateZ(${isHovered ? '5px' : '0px'})`,
@@ -145,7 +175,7 @@ const MultidimensionalSuggestionCards = ({
         filter: 'brightness(0.85)',
         animation: 'floatRight 8s ease-in-out infinite'
       };
-    } else if (diff === -1) {
+    } else if (normalizedDiff === -1 || normalizedDiff === (activeEvents.length - 1)) {
       // Left card
       return {
         transform: `translateX(-85%) scale(${isHovered ? 0.88 : 0.85}) rotateY(8deg) translateZ(${isHovered ? '5px' : '0px'})`,
@@ -157,7 +187,7 @@ const MultidimensionalSuggestionCards = ({
     } else {
       // Hidden cards
       return {
-        transform: `translateX(${diff > 0 ? '200%' : '-200%'}) scale(0.6)`,
+        transform: `translateX(${normalizedDiff > 0 ? '200%' : '-200%'}) scale(0.6)`,
         zIndex: 10,
         opacity: 0,
         filter: 'brightness(0.6)'
@@ -175,7 +205,7 @@ const MultidimensionalSuggestionCards = ({
     });
 
     const style = getCardStyle(index);
-    const isCenter = index === currentIndex;
+    const isCenter = (index - currentIndex + activeEvents.length) % activeEvents.length === 0;
 
     return (
       <div
@@ -292,25 +322,26 @@ const MultidimensionalSuggestionCards = ({
         }
       `}</style>
 
-      {/* Main Card Container - Simple horizontal scroll */}
+      {/* Main Card Container - FIXED infinite scroll */}
       <div
         ref={containerRef}
         className="overflow-x-auto overflow-y-hidden scroll-smooth snap-x snap-mandatory scrollbar-hide h-[360px] mx-6 mb-8"
         style={{ 
-          touchAction: 'pan-x',
+          touchAction: 'pan-x pinch-zoom',
           scrollSnapType: 'x mandatory'
         }}
       >
         <div className="flex px-[50vw] py-8" style={{ width: 'max-content', gap: '16px' }}>
-          {activeEvents.map((suggestion, index) => (
+          {/* Triple the cards for infinite scroll */}
+          {[...activeEvents, ...activeEvents, ...activeEvents].map((suggestion, globalIndex) => (
             <div
-              key={suggestion.id}
+              key={`${suggestion.id}-${Math.floor(globalIndex / activeEvents.length)}`}
               className="flex-shrink-0 w-[280px] h-[300px] snap-center"
-              style={getCardStyle(index)}
+              style={getCardStyle(globalIndex % activeEvents.length)}
             >
               <SuggestionCardComponent 
                 suggestion={suggestion} 
-                index={index} 
+                index={globalIndex % activeEvents.length} 
               />
             </div>
           ))}
@@ -323,11 +354,12 @@ const MultidimensionalSuggestionCards = ({
           <button
             key={index}
             onClick={() => {
-              setCurrentIndex(index);
               if (containerRef.current) {
                 const cardWidth = 296;
+                const totalArrayWidth = activeEvents.length * cardWidth;
+                const targetScroll = totalArrayWidth + (index * cardWidth);
                 containerRef.current.scrollTo({
-                  left: index * cardWidth,
+                  left: targetScroll,
                   behavior: 'smooth'
                 });
               }
