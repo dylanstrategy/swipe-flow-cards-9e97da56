@@ -75,12 +75,16 @@ const MultidimensionalSuggestionCards = ({
     const cardWidth = 296; // 280px card + 16px gap = 296px total
     const initialScrollPosition = activeEvents.length * cardWidth;
     
-    // Use setTimeout to ensure DOM is ready
-    setTimeout(() => {
-      container.scrollLeft = initialScrollPosition;
-    }, 0);
+    // Use setTimeout to ensure DOM is ready and data is loaded
+    const timer = setTimeout(() => {
+      if (container && activeEvents.length > 0) {
+        container.scrollLeft = initialScrollPosition;
+      }
+    }, 100);
 
     const handleScroll = () => {
+      if (activeEvents.length === 0) return;
+      
       const scrollLeft = container.scrollLeft;
       const totalArrayWidth = activeEvents.length * cardWidth;
       
@@ -103,7 +107,10 @@ const MultidimensionalSuggestionCards = ({
     };
 
     container.addEventListener('scroll', handleScroll, { passive: true });
-    return () => container.removeEventListener('scroll', handleScroll);
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      clearTimeout(timer);
+    };
   }, [activeEvents.length, onCurrentIndexChange]);
 
   const goToNext = () => {
