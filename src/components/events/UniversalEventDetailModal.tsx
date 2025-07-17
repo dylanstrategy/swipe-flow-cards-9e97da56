@@ -491,7 +491,7 @@ const UniversalEventDetailModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-start justify-center p-2 sm:p-4 overflow-y-auto">
-      <div className="bg-white rounded-xl w-full max-w-2xl min-h-[80vh] max-h-[95vh] flex flex-col my-2 sm:my-4" style={{ maxWidth: 'calc(100% - 16px)' }}>
+      <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col">
         {/* Header */}
         <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center gap-3 min-w-0 flex-1">
