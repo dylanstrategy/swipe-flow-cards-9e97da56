@@ -654,7 +654,14 @@ const ScheduleTab = () => {
 
 
   return (
-    <div className="min-h-screen pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div 
+      className="min-h-screen pb-24" 
+      style={{ 
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'none',
+        transform: 'translateZ(0)'
+      }}
+    >
       <div className="px-4 py-6">
         {/* Main content */}
         <div className="flex flex-col">

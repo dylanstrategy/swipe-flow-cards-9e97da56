@@ -98,38 +98,51 @@
   animation: wiggle-overdue 0.5s ease-in-out infinite, pulse-overdue 2s infinite;
 }
 
-/* Scrolling optimization */
-* {
+/* Scrolling optimization - Remove all sticky behaviors */
+html {
+  scroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
 }
 
-/* Hide scrollbars */
+body {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
+  overflow-x: hidden;
+}
+
+/* Remove all scroll snapping globally */
+* {
+  scroll-snap-type: none !important;
+  scroll-snap-align: none !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbars completely */
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+  overflow: -moz-scrollbars-none;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+  width: 0;
+  height: 0;
 }
 
-/* Improve touch scrolling performance */
+/* Optimize all overflow containers */
 .overflow-x-auto,
 .overflow-y-auto,
 .overflow-auto {
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  overscroll-behavior: none;
+  scroll-snap-type: none;
+  transform: translateZ(0);
+  will-change: scroll-position;
 }
 
-/* Smooth momentum scrolling for mobile */
-body {
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: none;
-}
-
-/* Optimize rendering for smooth scrolling */
+/* Ensure smooth flex layouts */
 .flex {
-  backface-visibility: hidden;
-  perspective: 1000px;
+  transform: translateZ(0);
+  will-change: transform;
 }
