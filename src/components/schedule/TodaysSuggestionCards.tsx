@@ -27,9 +27,24 @@ const TodaysSuggestionCards = ({
   // Filter out completed events
   const activeEvents = suggestions.filter(s => s.title !== 'Complete work order');
 
-  // Create infinite scroll by repeating the events multiple times
-  const infiniteEvents = Array.from({ length: 20 }, (_, i) => 
-    activeEvents[i % activeEvents.length]
+  // Enhanced event suggestions with more variety
+  const enhancedEvents: SuggestionCard[] = [
+    { id: 1, title: 'Book community room', description: 'Reserve for weekend event', priority: 'low' as const, category: 'Community' },
+    { id: 2, title: 'Schedule maintenance', description: 'Fix kitchen faucet leak', priority: 'high' as const, category: 'Maintenance' },
+    { id: 3, title: 'Pay monthly rent', description: 'Rent due in 3 days', priority: 'urgent' as const, category: 'Payment' },
+    { id: 4, title: 'Submit work order', description: 'Bathroom light not working', priority: 'medium' as const, category: 'Maintenance' },
+    { id: 5, title: 'Renew lease', description: 'Lease expires next month', priority: 'high' as const, category: 'Leasing' },
+    { id: 6, title: 'Schedule tour', description: 'Show friend available unit', priority: 'low' as const, category: 'Leasing' },
+    { id: 7, title: 'Update emergency contact', description: 'Required information missing', priority: 'medium' as const, category: 'Profile' },
+    { id: 8, title: 'Book gym session', description: 'Reserve fitness center time', priority: 'low' as const, category: 'Amenities' },
+    { id: 9, title: 'Submit parking request', description: 'Need guest parking pass', priority: 'medium' as const, category: 'Parking' },
+    { id: 10, title: 'Schedule move-out', description: 'Coordinate inspection', priority: 'high' as const, category: 'Moving' },
+    ...activeEvents
+  ];
+
+  // Create infinite scroll with variety
+  const infiniteEvents = Array.from({ length: 30 }, (_, i) => 
+    enhancedEvents[i % enhancedEvents.length]
   ).filter(Boolean);
 
   const getPriorityColor = (priority: string) => {
@@ -58,52 +73,49 @@ const TodaysSuggestionCards = ({
       </div>
 
       <div className="overflow-x-auto scrollbar-hide">
-        <div className="flex space-x-4 pb-4" style={{ width: 'max-content' }}>
+        <div className="flex space-x-6 pb-4 px-4" style={{ width: 'max-content' }}>
           {infiniteEvents.map((event, index) => (
             <div
               key={`${event.id}-${index}`}
               className="flex-shrink-0 w-80"
               onClick={() => onCardTap(event)}
             >
-              <div className="relative bg-amber-50 rounded-2xl p-1 overflow-hidden">
-                {/* Left accent */}
-                <div className="absolute left-0 top-4 bottom-4 w-6 bg-yellow-400 rounded-r-lg"></div>
+              <div className="relative bg-stone-200 rounded-2xl p-1 overflow-hidden">
+                {/* Left accent - matching reference image */}
+                <div className="absolute left-0 top-6 bottom-6 w-4 bg-amber-400 rounded-r-lg"></div>
                 
-                {/* Right accent */}
-                <div className="absolute right-0 top-4 bottom-4 w-6 bg-yellow-400 rounded-l-lg"></div>
+                {/* Right accent - matching reference image */}
+                <div className="absolute right-0 top-6 bottom-6 w-4 bg-amber-400 rounded-l-lg"></div>
 
                 <div
-                  className={`${getPriorityColor(event.priority)} rounded-xl p-6 mx-3 min-h-[200px] flex flex-col justify-between text-white relative cursor-pointer hover:scale-105 transition-transform duration-200`}
+                  className={`${getPriorityColor(event.priority)} rounded-xl p-6 mx-2 min-h-[280px] flex flex-col justify-between text-white relative cursor-pointer hover:scale-[1.02] transition-transform duration-300`}
                 >
-                  {/* Priority badge */}
-                  <div className="inline-block">
-                    <span className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm font-medium">
+                  {/* Priority badge - top left like in reference */}
+                  <div className="flex justify-start">
+                    <span className="bg-white bg-opacity-30 px-3 py-1 rounded-full text-xs font-bold tracking-wide">
                       {getPriorityText(event.priority)}
                     </span>
                   </div>
 
-                  {/* Main content */}
-                  <div className="flex-1 flex flex-col justify-center py-4">
-                    <h3 className="text-2xl font-bold mb-2 leading-tight">{event.title}</h3>
-                    <p className="text-lg opacity-90 mb-1">{event.description}</p>
-                    <p className="text-base opacity-75 capitalize">{event.category}</p>
+                  {/* Main content - centered */}
+                  <div className="flex-1 flex flex-col justify-center items-start">
+                    <h3 className="text-3xl font-bold mb-3 leading-tight">{event.title}</h3>
+                    <p className="text-lg opacity-90 mb-2">{event.description}</p>
+                    <p className="text-base opacity-80 font-medium">{event.category}</p>
                   </div>
 
-                  {/* Bottom section */}
+                  {/* Bottom section - matching reference layout */}
                   <div className="flex items-end justify-between">
                     <div>
-                      <p className="text-sm opacity-75">Tap to open</p>
+                      <p className="text-sm opacity-75">Swipe to navigate</p>
                     </div>
                     <div className="text-right">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onCardSwipeUp(event);
-                        }}
-                        className="bg-white bg-opacity-20 hover:bg-opacity-30 px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 mb-2"
-                      >
-                        Schedule
-                      </button>
+                      <p className="text-2xl font-bold mb-1">
+                        {String(index + 1).padStart(2, '0')}
+                      </p>
+                      <p className="text-sm opacity-75">
+                        of {String(infiniteEvents.length).padStart(2, '0')}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -111,6 +123,18 @@ const TodaysSuggestionCards = ({
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Dots indicator like in reference */}
+      <div className="flex justify-center space-x-2 mt-6">
+        {Array.from({ length: Math.min(5, infiniteEvents.length) }).map((_, index) => (
+          <div
+            key={index}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              index === 0 ? 'bg-blue-500' : 'bg-gray-300'
+            }`}
+          />
+        ))}
       </div>
     </div>
   );
