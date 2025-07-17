@@ -89,20 +89,20 @@ const MultidimensionalSuggestionCards = ({
       const totalArrayWidth = activeEvents.length * cardWidth;
       
       // Calculate which card is centered for navigation dots
-      const cardIndex = Math.round(scrollLeft / cardWidth) % activeEvents.length;
-      const normalizedIndex = ((cardIndex % activeEvents.length) + activeEvents.length) % activeEvents.length;
+      const cardIndex = Math.round(scrollLeft / cardWidth);
+      const normalizedIndex = cardIndex % activeEvents.length;
       
       setScrollIndex(normalizedIndex);
       setCurrentIndex(normalizedIndex);
       onCurrentIndexChange?.(normalizedIndex);
 
-      // Infinite scroll logic - reset position when reaching boundaries
-      if (scrollLeft <= cardWidth / 2) {
-        // Scrolled too far left, jump to end of middle array
-        container.scrollLeft = totalArrayWidth + scrollLeft;
-      } else if (scrollLeft >= totalArrayWidth * 2 - cardWidth / 2) {
-        // Scrolled too far right, jump to start of middle array
-        container.scrollLeft = totalArrayWidth + (scrollLeft - totalArrayWidth * 2);
+      // Infinite scroll logic - only reset when actually at boundaries, not near them
+      if (scrollLeft <= 0) {
+        // At the very beginning, jump to end of middle array
+        container.scrollLeft = totalArrayWidth * 2;
+      } else if (scrollLeft >= totalArrayWidth * 3 - container.clientWidth) {
+        // At the very end, jump to start of middle array
+        container.scrollLeft = totalArrayWidth;
       }
     };
 
