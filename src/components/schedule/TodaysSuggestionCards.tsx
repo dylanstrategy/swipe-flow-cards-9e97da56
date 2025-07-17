@@ -84,7 +84,9 @@ const TodaysSuggestionCards = ({
       <div className="relative">
         <div
           className="relative bg-amber-50 rounded-2xl p-1 overflow-hidden"
-          {...swipeGestures}
+          onTouchStart={swipeGestures.handleTouchStart}
+          onTouchMove={swipeGestures.handleTouchMove}
+          onTouchEnd={swipeGestures.handleTouchEnd}
           onClick={() => onCardTap(currentCard)}
         >
           {/* Left accent */}
