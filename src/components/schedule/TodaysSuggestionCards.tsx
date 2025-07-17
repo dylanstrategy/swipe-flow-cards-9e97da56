@@ -57,12 +57,12 @@ const TodaysSuggestionCards = ({
 
     return (
       <div className={className}>
-        <div className="mb-6">
+        <div className="mt-8 mb-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-1">Today's Suggestions</h2>
           <p className="text-sm text-gray-600">Events from yesterday that still need your attention</p>
         </div>
 
-        <div className="overflow-x-auto scrollbar-hide">
+        <div className="bg-gray-50 overflow-x-auto scrollbar-hide">
           <div className="flex space-x-6 pb-4 px-4" style={{ width: 'max-content' }}>
             {infiniteEvents.map((event, index) => (
               <div
