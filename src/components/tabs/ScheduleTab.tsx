@@ -13,7 +13,7 @@ import DroppableCalendar from '../schedule/DroppableCalendar';
 import SwipeableEventCards from '../schedule/SwipeableEventCards';
 import SwipeableSuggestionCards from '../schedule/SwipeableSuggestionCards';
 import MultidimensionalEventCards from '../schedule/MultidimensionalEventCards';
-import MultidimensionalSuggestionCards from '../schedule/MultidimensionalSuggestionCards';
+import TodaysSuggestionCards from '../schedule/TodaysSuggestionCards';
 import EventMenuCards from '../schedule/EventMenuCards';
 import MessageModule from '../message/MessageModule';
 import ServiceModule from '../service/ServiceModule';
@@ -633,8 +633,8 @@ const ScheduleTab = () => {
       <div className="flex flex-col overflow-x-hidden">
         {/* Suggestions Section */}
         <div className="flex-shrink-0">
-          <MultidimensionalSuggestionCards
-            suggestions={[]} // Not used anymore - cards generated internally
+          <TodaysSuggestionCards
+            suggestions={getSuggestions()}
             onCardTap={handleSuggestionTap}
             onCardSwipeUp={handleSuggestionSwipeUp}
             onCardSwipeDown={handleSuggestionSwipeDown}

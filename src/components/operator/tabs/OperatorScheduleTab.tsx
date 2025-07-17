@@ -13,7 +13,7 @@ import DraggableSuggestionsSection from '../../schedule/DraggableSuggestionsSect
 import SwipeableEventCards from '../../schedule/SwipeableEventCards';
 import SwipeableSuggestionCards from '../../schedule/SwipeableSuggestionCards';
 import MultidimensionalEventCards from '../../schedule/MultidimensionalEventCards';
-import MultidimensionalSuggestionCards from '../../schedule/MultidimensionalSuggestionCards';
+import TodaysSuggestionCards from '../../schedule/TodaysSuggestionCards';
 import EventMenuCards from '../../schedule/EventMenuCards';
 import MessageModule from '../../message/MessageModule';
 import ServiceModule from '../../service/ServiceModule';
@@ -588,7 +588,7 @@ const OperatorScheduleTab = () => {
                   ✕
                 </button>
               </div>
-              <MultidimensionalSuggestionCards
+              <TodaysSuggestionCards
                 suggestions={getSuggestions()}
                 onCardTap={handleSuggestionTap}
                 onCardSwipeUp={handleSuggestionSwipeUp}
@@ -602,7 +602,7 @@ const OperatorScheduleTab = () => {
           <div className="h-screen flex flex-col">
             {/* Suggestion Queue - Top half (non-complete events) */}
             <div className="flex-1">
-              <MultidimensionalSuggestionCards
+              <TodaysSuggestionCards
                 suggestions={getSuggestions()}
                 onCardTap={handleSuggestionTap}
                 onCardSwipeUp={handleSuggestionSwipeUp}
