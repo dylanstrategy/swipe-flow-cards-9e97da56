@@ -27,22 +27,6 @@ const TodaysSuggestionCards = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
-  // Track scroll position to update dots
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      const scrollLeft = container.scrollLeft;
-      const cardWidth = 320 + 24; // 320px card width + 24px gap
-      const index = Math.round(scrollLeft / cardWidth);
-      setCurrentIndex(index);
-    };
-
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, []);
-
   // Filter out completed events
   const activeEvents = suggestions.filter(s => s.title !== 'Complete work order');
 
@@ -60,9 +44,25 @@ const TodaysSuggestionCards = ({
     { id: 10, title: 'Schedule move-out', description: 'Coordinate inspection', priority: 'high' as const, category: 'Moving' },
     ...activeEvents
   ];
+  
+  // Track scroll position to update dots
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
 
-  // Create infinite scroll with variety
-  const infiniteEvents = Array.from({ length: 30 }, (_, i) => 
+    const handleScroll = () => {
+      const scrollLeft = container.scrollLeft;
+      const cardWidth = 320 + 24; // 320px card width + 24px gap
+      const index = Math.round(scrollLeft / cardWidth);
+      setCurrentIndex(index % enhancedEvents.length); // Cycle through actual cards
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [enhancedEvents.length]);
+
+  // Create infinite scroll with variety - make it truly infinite
+  const infiniteEvents = Array.from({ length: 1000 }, (_, i) => 
     enhancedEvents[i % enhancedEvents.length]
   ).filter(Boolean);
 
@@ -85,8 +85,8 @@ const TodaysSuggestionCards = ({
           </h2>
         </div>
 
-        <div className="overflow-x-auto scrollbar-hide" ref={scrollContainerRef}>
-          <div className="flex space-x-6 pb-4 px-4" style={{ width: 'max-content' }}>
+        <div className="px-4 overflow-x-auto scrollbar-hide" ref={scrollContainerRef}>
+          <div className="flex space-x-6 pb-4" style={{ width: 'max-content' }}>
             {infiniteEvents.map((event, index) => (
               <div
                 key={`${event.id}-${index}`}
@@ -129,12 +129,12 @@ const TodaysSuggestionCards = ({
         </div>
 
         {/* Dots indicator */}
-        <div className="flex justify-center space-x-2 mt-6">
-          {Array.from({ length: Math.min(5, infiniteEvents.length) }).map((_, index) => (
+        <div className="flex justify-center space-x-2 mt-6 px-4">
+          {Array.from({ length: Math.min(5, enhancedEvents.length) }).map((_, index) => (
             <div
               key={index}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === (currentIndex % 5) ? 'bg-blue-500' : 'bg-gray-300'
+                index === (currentIndex % enhancedEvents.length) % 5 ? 'bg-blue-500' : 'bg-gray-300'
               }`}
             />
           ))}

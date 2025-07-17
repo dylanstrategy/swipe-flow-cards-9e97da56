@@ -189,10 +189,13 @@ const EventMenuCards: React.FC<EventMenuCardsProps> = ({
   const eventMenuItems = getEventMenuItems();
 
   return (
-    <div className={`p-4 ${className}`}>
+    <div className={`px-4 ${className}`}>
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">Event Menu</h3>
-        <p className="text-sm text-gray-600">Tap to create new events</p>
+        <h3 className="text-xl font-semibold text-gray-900">Event Menu
+          <span className="text-sm font-normal text-gray-600 ml-2">
+            (Tap to create new events)
+          </span>
+        </h3>
       </div>
       
       <div className="grid grid-cols-3 gap-3">
