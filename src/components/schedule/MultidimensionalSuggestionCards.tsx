@@ -213,7 +213,8 @@ const MultidimensionalSuggestionCards = ({
           isTransitioning ? 'pointer-events-none' : ''
         }`}
         style={{
-          transformStyle: 'preserve-3d'
+          transformStyle: 'preserve-3d',
+          ...style  // Apply the 3D transform styles here
         }}
         onClick={() => {
           if (isCenter) {
@@ -337,7 +338,6 @@ const MultidimensionalSuggestionCards = ({
             <div
               key={`${suggestion.id}-${Math.floor(globalIndex / activeEvents.length)}`}
               className="flex-shrink-0 w-[280px] h-[300px] snap-center"
-              style={getCardStyle(globalIndex % activeEvents.length)}
             >
               <SuggestionCardComponent 
                 suggestion={suggestion} 
