@@ -47,16 +47,6 @@ const TodaysSuggestionCards = ({
     enhancedEvents[i % enhancedEvents.length]
   ).filter(Boolean);
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return 'bg-red-500';
-      case 'high': return 'bg-orange-500';
-      case 'medium': return 'bg-yellow-500';
-      case 'low': return 'bg-green-500';
-      default: return 'bg-green-500';
-    }
-  };
-
   const getPriorityText = (priority: string) => {
     return priority.toUpperCase();
   };
@@ -88,7 +78,7 @@ const TodaysSuggestionCards = ({
                 <div className="absolute right-0 top-6 bottom-6 w-4 bg-amber-400 rounded-l-lg"></div>
 
                 <div
-                  className={`${getPriorityColor(event.priority)} rounded-xl p-6 mx-2 min-h-[280px] flex flex-col justify-between text-white relative cursor-pointer hover:scale-[1.02] transition-transform duration-300`}
+                  className="bg-green-500 rounded-xl p-6 mx-2 h-[280px] flex flex-col justify-between text-white relative cursor-pointer hover:scale-[1.02] transition-transform duration-300"
                 >
                   {/* Priority badge - top left like in reference */}
                   <div className="flex justify-start">
