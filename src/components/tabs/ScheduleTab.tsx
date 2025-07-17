@@ -38,6 +38,7 @@ const ScheduleTab = () => {
   const [selectedScheduleType, setSelectedScheduleType] = useState<string>('');
   const [showMessageModule, setShowMessageModule] = useState(false);
   const [showServiceModule, setShowServiceModule] = useState(false);
+  const [showWorkOrderFlow, setShowWorkOrderFlow] = useState(false);
   const [showUniversalEventDetail, setShowUniversalEventDetail] = useState(false);
   const [showRescheduleFlow, setShowRescheduleFlow] = useState(false);
   const [selectedUniversalEvent, setSelectedUniversalEvent] = useState<any>(null);
@@ -309,21 +310,30 @@ const ScheduleTab = () => {
     });
   };
 
-  // Mock suggestions data
+  // Get real incomplete events as suggestions
   const getSuggestions = () => {
-    const baseSuggestions = [
-      { id: 1, title: "Schedule maintenance check", description: "Yearly HVAC inspection", priority: 'medium' as const, category: 'Maintenance', type: 'work-order' },
-      { id: 2, title: "Update emergency contacts", description: "Review contact information", priority: 'low' as const, category: 'Personal' },
-      { id: 3, title: "Pay monthly rent", description: "Due in 3 days", priority: 'high' as const, category: 'Financial' },
-      { id: 4, title: "Submit package request", description: "Arrange package delivery", priority: 'medium' as const, category: 'Services' },
-      { id: 5, title: "Book community room", description: "Reserve for weekend event", priority: 'low' as const, category: 'Community' },
-    ];
+    // Get events from yesterday that have incomplete tasks
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const allEvents = sharedEventService.getEventsForRole('resident');
+    const incompleteEvents = allEvents.filter(event => {
+      const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+      const isFromYesterday = eventDate.toDateString() === yesterday.toDateString();
+      const hasIncompleteTasks = event.tasks.some(task => !task.isComplete);
+      return isFromYesterday && hasIncompleteTasks;
+    });
 
-    return baseSuggestions.filter(s => 
-      !scheduledSuggestionIds.includes(s.id) && 
-      !completedSuggestionIds.includes(s.id) &&
-      !scheduledForLaterIds.includes(s.id)
-    );
+    // Convert real events to suggestion format
+    return incompleteEvents.map((event, index) => ({
+      id: index + 1, // Use numeric ID for compatibility
+      title: event.title,
+      description: event.description,
+      priority: event.priority,
+      category: event.category,
+      type: event.type,
+      originalEvent: event // Store reference to original event
+    }));
   };
 
   const handleCardTap = (cardType: string) => {
@@ -341,8 +351,53 @@ const ScheduleTab = () => {
   };
 
   const handleMenuItemTap = (item: any) => {
-    const cardType = item.title;
-    handleCardTap(cardType);
+    console.log('Menu item tapped:', item);
+    
+    // Route to specific modules/flows based on item type
+    switch (item.id) {
+      case 'maintenance':
+      case 'work-order':
+        setShowWorkOrderFlow(true);
+        break;
+      case 'message':
+        setShowMessageModule(true);
+        break;
+      case 'service':
+        setShowServiceModule(true);
+        break;
+      case 'payment':
+      case 'renewal':
+      case 'amenity':
+      case 'package':
+      case 'guest':
+      case 'community':
+      case 'appointment':
+      case 'document':
+      case 'inspection':
+      case 'meeting':
+      case 'follow-up':
+      case 'emergency':
+        // Create and show universal event for these types
+        const newEvent = {
+          id: `new-${Date.now()}`,
+          type: item.id,
+          title: item.title,
+          description: item.description,
+          category: item.category,
+          priority: item.id === 'emergency' ? 'urgent' : 'medium',
+          date: selectedDate,
+          time: '12:00',
+          status: 'scheduled',
+          tasks: []
+        };
+        setSelectedUniversalEvent(newEvent);
+        setShowUniversalEventDetail(true);
+        break;
+      default:
+        // Fallback to old behavior
+        const cardType = item.title;
+        handleCardTap(cardType);
+    }
   };
 
   const handleCardSwipeUp = (cardType: string) => {
@@ -358,37 +413,24 @@ const ScheduleTab = () => {
   const handleSuggestionTap = (suggestion: any) => {
     console.log('Suggestion tapped in ScheduleTab:', suggestion);
     
-    // Check if this suggestion maps to a real incomplete event
-    const incompleteEvents = sharedEventService.getEventsForRole('resident').filter(event => {
-      const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const isFromYesterday = eventDate.toDateString() === yesterday.toDateString();
-      const hasIncompleteTasks = event.tasks.some(task => !task.isComplete);
-      return isFromYesterday && hasIncompleteTasks;
-    });
-    
-    const matchingEvent = incompleteEvents.find(event => 
-      event.title.toLowerCase().includes(suggestion.title.toLowerCase()) ||
-      suggestion.title.toLowerCase().includes(event.title.toLowerCase())
-    );
-    
-    if (matchingEvent) {
-      // Use the real event
-      setSelectedUniversalEvent(matchingEvent);
-    } else {
-      // Fallback to mock event for demo
-      setSelectedUniversalEvent({
-        id: suggestion.id.toString(),
-        title: suggestion.title,
-        description: suggestion.description,
-        category: suggestion.category,
-        priority: suggestion.priority,
-        date: selectedDate,
-        time: '12:00 PM',
-        status: 'scheduled'
-      });
+    // If suggestion has originalEvent, use that
+    if (suggestion.originalEvent) {
+      setSelectedUniversalEvent(suggestion.originalEvent);
+      setShowUniversalEventDetail(true);
+      return;
     }
+    
+    // Fallback to mock event for demo
+    setSelectedUniversalEvent({
+      id: suggestion.id.toString(),
+      title: suggestion.title,
+      description: suggestion.description,
+      category: suggestion.category,
+      priority: suggestion.priority,
+      date: selectedDate,
+      time: '12:00 PM',
+      status: 'scheduled'
+    });
     setShowUniversalEventDetail(true);
   };
 
@@ -447,6 +489,39 @@ const ScheduleTab = () => {
           } else if (type === 'Service Request') {
             setShowServiceModule(true);
           }
+        }}
+      />
+    );
+  }
+
+  if (showWorkOrderFlow) {
+    return (
+      <WorkOrderFlow
+        selectedScheduleType="Work Order"
+        currentStep={currentStep}
+        onNextStep={() => {
+          if (currentStep < 4) {
+            setCurrentStep(currentStep + 1);
+          } else {
+            setShowWorkOrderFlow(false);
+            setCurrentStep(1);
+            toast({
+              title: "Work Order Submitted",
+              description: "Your work order has been successfully submitted.",
+            });
+          }
+        }}
+        onPrevStep={() => {
+          if (currentStep > 1) {
+            setCurrentStep(currentStep - 1);
+          } else {
+            setShowWorkOrderFlow(false);
+            setCurrentStep(1);
+          }
+        }}
+        onClose={() => {
+          setShowWorkOrderFlow(false);
+          setCurrentStep(1);
         }}
       />
     );
