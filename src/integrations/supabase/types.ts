@@ -56,6 +56,59 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_events: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          props: Json
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          props?: Json
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          props?: Json
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      assignments: {
+        Row: {
+          assignee_id: string
+          created_at: string
+          event_id: string
+          strategy: string
+        }
+        Insert: {
+          assignee_id: string
+          created_at?: string
+          event_id: string
+          strategy?: string
+        }
+        Update: {
+          assignee_id?: string
+          created_at?: string
+          event_id?: string
+          strategy?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_events: {
         Row: {
           created_at: string | null
@@ -125,6 +178,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          due_at: string | null
+          id: string
+          payload: Json
+          priority: string | null
+          property_id: string | null
+          scheduled_for: string | null
+          status: string
+          subject_id: string | null
+          type: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          payload?: Json
+          priority?: string | null
+          property_id?: string | null
+          scheduled_for?: string | null
+          status?: string
+          subject_id?: string | null
+          type: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          payload?: Json
+          priority?: string | null
+          property_id?: string | null
+          scheduled_for?: string | null
+          status?: string
+          subject_id?: string | null
+          type?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       inspections: {
         Row: {
@@ -963,6 +1064,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ensure_events_update_trigger: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_available_units: {
         Args: { property_uuid: string }
         Returns: {
@@ -993,6 +1098,15 @@ export type Database = {
       is_super_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      perform_event_action: {
+        Args: {
+          event_id: string
+          action: string
+          data: Json
+          idempotency_key?: string
+        }
+        Returns: Json
       }
     }
     Enums: {
